@@ -2589,7 +2589,24 @@ function buildView(id){
 // ════════════════════════════════════════════
 function opTurno(turno,btn){
   document.querySelectorAll('#op-turno-btns .pill').forEach(p=>{p.classList.toggle('on',p===btn);p.classList.toggle('off',p!==btn);});
+  _opTurnoActual = turno;
+  _opSelOT = null; // limpiar filtro OT al cambiar turno
+  // Actualizar header
+  const turnos = {'1ro':'1er Turno  06:00–14:00','2do':'2do Turno  14:00–22:00','3ro':'3er Turno  22:00–06:00'};
+  const header = document.querySelector('#view-operaciones .grid > div:first-child div:last-child div:last-child');
+  // Rebuild proyectos con el turno activo
+  buildOpProyectos();
+  // Rebuild sparklines de máquinas por turno
+  const maqPorTurno = {'1ro':[16,17,18,18,18,18,16],'2do':[16,17,18,18,18,18,18],'3ro':[12,13,14,14,15,15,14]};
+  buildMini('km-op3',colors.green, maqPorTurno[turno]||maqPorTurno['2do']);
+  showToast('Turno '+turno+' seleccionado');
 }
+
+// Sobreescribir _opProyectos dinámicamente según turno
+const _opProyectosOrig = _opProyectos.slice();
+Object.defineProperty(window,'_opProyectosFiltrados',{
+  get(){ return _opTurnoActual ? _opProyectosPorTurno[_opTurnoActual] : _opProyectosOrig; }
+});
 let _opSectorMode='hoy';
 function opSectorToggle(mode,btn){
   _opSectorMode=mode;
@@ -3789,14 +3806,26 @@ function opFiltrarOT(id) {
   buildOpProyectos();
 }
 
-const _opProyectos = [
-  { id:'1800', nom:'Casamiento·Linea Ehb',      planos:83, piezas:852, hs:24,  kg:9031, comp:97.19, actMaq:2,  actSinMaq:1, scrap:0 },
-  { id:'1644', nom:'Ampliación Planta Afg',      planos:9,  piezas:5280,hs:558, kg:7969, comp:82.00, actMaq:5,  actSinMaq:2, scrap:1 },
-  { id:'1801', nom:'Reformas Skillet',           planos:23, piezas:4696,hs:306, kg:3667, comp:91.50, actMaq:3,  actSinMaq:0, scrap:0 },
-  { id:'1729', nom:'Depósito Automático',        planos:24, piezas:143, hs:3,   kg:295,  comp:78.00, actMaq:1,  actSinMaq:1, scrap:0 },
-  { id:'1802', nom:'Reformas Rolling Chassis',   planos:52, piezas:133, hs:6,   kg:133,  comp:65.00, actMaq:2,  actSinMaq:0, scrap:0 },
-  { id:'1803', nom:'Manten. Equipos',            planos:18, piezas:23,  hs:5,   kg:181,  comp:55.00, actMaq:1,  actSinMaq:0, scrap:0 },
-];
+const _opProyectosPorTurno = {
+  '1ro': [
+    { id:'OT-2401', nom:'Estructura Galpón Norte',      planos:74, piezas:920, hs:312, kg:8420, comp:94.00, actMaq:3, actSinMaq:1, scrap:0, turno:'1ro' },
+    { id:'OT-2405', nom:'Pasarela Planta B',            planos:18, piezas:340, hs:88,  kg:2100, comp:71.00, actMaq:2, actSinMaq:0, scrap:0, turno:'1ro' },
+    { id:'OT-2408', nom:'Mantenimiento Puente Grúa',   planos:12, piezas:95,  hs:45,  kg:680,  comp:60.00, actMaq:1, actSinMaq:1, scrap:0, turno:'1ro' },
+  ],
+  '2do': [
+    { id:'OT-2410', nom:'Chasis Transportador #4',      planos:56, piezas:2840,hs:445, kg:7650, comp:88.00, actMaq:4, actSinMaq:2, scrap:1, turno:'2do' },
+    { id:'OT-2412', nom:'Tanque de Almacenamiento 80k', planos:31, piezas:1120,hs:280, kg:5320, comp:76.00, actMaq:3, actSinMaq:0, scrap:0, turno:'2do' },
+    { id:'OT-2415', nom:'Reforma Línea de Corte CNC',   planos:22, piezas:480, hs:130, kg:1940, comp:55.00, actMaq:2, actSinMaq:1, scrap:0, turno:'2do' },
+    { id:'OT-2418', nom:'Soporte Mezzanine Industrial', planos:9,  piezas:210, hs:42,  kg:890,  comp:42.00, actMaq:1, actSinMaq:0, scrap:0, turno:'2do' },
+  ],
+  '3ro': [
+    { id:'OT-2420', nom:'Tolva de Descarga x3',         planos:38, piezas:1560,hs:198, kg:4200, comp:82.00, actMaq:3, actSinMaq:1, scrap:0, turno:'3ro' },
+    { id:'OT-2422', nom:'Plataforma de Carga Pesada',   planos:25, piezas:760, hs:165, kg:3100, comp:67.00, actMaq:2, actSinMaq:0, scrap:1, turno:'3ro' },
+    { id:'OT-2425', nom:'Módulo Soldadura Robotizada',  planos:14, piezas:320, hs:88,  kg:1480, comp:48.00, actMaq:1, actSinMaq:2, scrap:0, turno:'3ro' },
+  ],
+};
+let _opTurnoActual = '2do';
+const _opProyectos = Object.values(_opProyectosPorTurno).flat();
 
 const _opPlanos = [
   { proceso:'Corte Laser',    planos:25, peso:370,  hs:7,  cant:3028 },
@@ -3810,18 +3839,19 @@ const _opPlanos = [
 ];
 
 const _opProyeccion = [
-  { mes:'Jun',   ots:[{nom:'OT1800',h:840,c:'#60a5fa'},{nom:'OT1801',h:445,c:'#a78bfa'},{nom:'OT1644',h:1500,c:'#f59e0b'},{nom:'OT1802',h:415,c:'#f87171'},{nom:'OT1729',h:400,c:'#34d399'},{nom:'OT1803',h:120,c:'#2dd4bf'}] },
-  { mes:'Jul',   ots:[{nom:'OT1800',h:1750,c:'#60a5fa'},{nom:'OT1644',h:325,c:'#f59e0b'},{nom:'OT1802',h:400,c:'#f87171'},{nom:'OT1729',h:280,c:'#34d399'}] },
-  { mes:'Ago',   ots:[{nom:'OT1800',h:1600,c:'#60a5fa'},{nom:'OT1644',h:400,c:'#f59e0b'},{nom:'OT1802',h:290,c:'#f87171'}] },
-  { mes:'Sep',   ots:[{nom:'OT1800',h:1355,c:'#60a5fa'},{nom:'OT1644',h:750,c:'#f59e0b'},{nom:'OT1719',h:400,c:'#34d399'}] },
-  { mes:'Oct',   ots:[{nom:'OT1800',h:2460,c:'#60a5fa'},{nom:'OT1820',h:1060,c:'#f87171'},{nom:'OT1809',h:750,c:'#a78bfa'}] },
-  { mes:'Nov',   ots:[{nom:'OT1820',h:1230,c:'#f87171'},{nom:'OT1809',h:630,c:'#a78bfa'},{nom:'OT1837',h:380,c:'#34d399'}] },
-  { mes:'Dic',   ots:[{nom:'OT1820',h:1435,c:'#f87171'},{nom:'OT1841',h:750,c:'#2dd4bf'},{nom:'OT1837',h:685,c:'#34d399'}] },
-  { mes:'Ene 27',ots:[{nom:'OT1875',h:2405,c:'#f472b6'},{nom:'OT1841',h:1430,c:'#2dd4bf'},{nom:'OT1837',h:685,c:'#34d399'},{nom:'OT1819',h:290,c:'#60a5fa'}] },
+  { mes:'Jun',   ots:[{nom:'OT-2410',h:840,c:'#60a5fa'},{nom:'OT-2401',h:445,c:'#a78bfa'},{nom:'OT-2412',h:1200,c:'#f59e0b'},{nom:'OT-2415',h:415,c:'#f87171'},{nom:'OT-2420',h:400,c:'#34d399'},{nom:'OT-2408',h:120,c:'#2dd4bf'}] },
+  { mes:'Jul',   ots:[{nom:'OT-2410',h:1550,c:'#60a5fa'},{nom:'OT-2412',h:325,c:'#f59e0b'},{nom:'OT-2415',h:400,c:'#f87171'},{nom:'OT-2420',h:280,c:'#34d399'}] },
+  { mes:'Ago',   ots:[{nom:'OT-2410',h:1400,c:'#60a5fa'},{nom:'OT-2412',h:400,c:'#f59e0b'},{nom:'OT-2415',h:290,c:'#f87171'},{nom:'OT-2422',h:380,c:'#a78bfa'}] },
+  { mes:'Sep',   ots:[{nom:'OT-2401',h:1355,c:'#a78bfa'},{nom:'OT-2412',h:750,c:'#f59e0b'},{nom:'OT-2422',h:400,c:'#34d399'}] },
+  { mes:'Oct',   ots:[{nom:'OT-2401',h:2100,c:'#a78bfa'},{nom:'OT-2425',h:1060,c:'#f87171'},{nom:'OT-2422',h:750,c:'#34d399'}] },
+  { mes:'Nov',   ots:[{nom:'OT-2425',h:1230,c:'#f87171'},{nom:'OT-2418',h:630,c:'#2dd4bf'},{nom:'OT-2422',h:380,c:'#34d399'}] },
+  { mes:'Dic',   ots:[{nom:'OT-2425',h:1435,c:'#f87171'},{nom:'OT-2418',h:750,c:'#2dd4bf'},{nom:'OT-2405',h:685,c:'#f59e0b'}] },
+  { mes:'Ene 27',ots:[{nom:'OT-2430',h:2200,c:'#f472b6'},{nom:'OT-2418',h:1430,c:'#2dd4bf'},{nom:'OT-2405',h:685,c:'#f59e0b'},{nom:'OT-2432',h:290,c:'#60a5fa'}] },
 ];
 
 function buildOpProyectos() {
-  const data = _opSelOT ? _opProyectos.filter(p=>p.id===_opSelOT) : _opProyectos;
+  const base = _opTurnoActual ? (_opProyectosPorTurno[_opTurnoActual]||_opProyectos) : _opProyectos;
+  const data = _opSelOT ? base.filter(p=>p.id===_opSelOT) : base;
   const lbl  = document.getElementById('op-filtro-lbl');
   if (lbl) lbl.textContent = _opSelOT
     ? '▶ Filtrando por OT '+_opSelOT+' — todos los gráficos actualizados · Clic en "Limpiar filtro" para ver todo'
@@ -3851,7 +3881,7 @@ function buildOpProyectos() {
   // Lista OTs
   const listaEl = document.getElementById('op-proy-lista');
   if (listaEl) {
-    listaEl.innerHTML = _opProyectos.map(p=>{
+    listaEl.innerHTML = base.map(p=>{
       const sel = _opSelOT === p.id;
       return `<div onclick="opFiltrarOT('${p.id}')" style="padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;
         background:${sel?'rgba(245,158,11,.1)':'transparent'};
@@ -3929,7 +3959,7 @@ function buildOpDonutEstado(data) {
 
 function buildOpKGProyectos(data) {
   const el = document.getElementById('op-kg-proyectos'); if(!el) return;
-  const all = _opProyectos; // siempre mostrar todas pero resaltar seleccionada
+  const all = _opTurnoActual ? (_opProyectosPorTurno[_opTurnoActual]||_opProyectos) : _opProyectos;
   const sorted = [...all].sort((a,b)=>b.kg-a.kg);
   const maxKG = sorted[0]?.kg || 1;
   const fmt = n => n>=1000?(n/1000).toFixed(1)+'k':n;
@@ -3952,7 +3982,7 @@ function buildOpKGProyectos(data) {
 
 function buildOpHSProyectos(data) {
   const el = document.getElementById('op-hs-proyectos'); if(!el) return;
-  const all = _opProyectos;
+  const all = _opTurnoActual ? (_opProyectosPorTurno[_opTurnoActual]||_opProyectos) : _opProyectos;
   const sorted = [...all].sort((a,b)=>b.hs-a.hs);
   const maxHS = sorted[0]?.hs || 1;
   el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.35rem">'
