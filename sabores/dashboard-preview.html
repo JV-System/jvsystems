@@ -891,75 +891,63 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
     <div class="pb" id="op-acumulada"></div>
   </div>
 
-  <!-- ═══ GESTIÓN DE PROYECTOS ═══ -->
+  <!-- ═══ GESTIÓN DE ÓRDENES DE TRABAJO ═══ -->
 
-  <!-- Selector proyecto + KPIs superiores -->
-  <div style="grid-column:span 6;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.75rem 1rem;">
-    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+  <!-- Header con filtro activo -->
+  <div style="grid-column:span 6;background:linear-gradient(90deg,rgba(96,165,250,.06),rgba(245,158,11,.04));border:1px solid rgba(96,165,250,.15);border-radius:12px;padding:.65rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span style="font-size:1.1rem">📂</span>
       <div>
-        <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:3px">Proyecto</div>
-        <select id="op-proy-sel" onchange="buildOpProyectos()" style="background:#0d1b2e;border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:.3rem .6rem;font-size:.72rem;cursor:pointer">
-          <option value="todas">Todas</option>
-          <option value="1800">1800 Casamiento·Linea Ehb</option>
-          <option value="1644">1644 Ampliación Planta Afg</option>
-          <option value="1801">1801 Reformas Skillet</option>
-          <option value="1729">1729 Depósito Automático</option>
-          <option value="1802">1802 Reformas Rolling Chassis</option>
-          <option value="1803">1803 Manten. Equipos</option>
-        </select>
-        <div style="font-size:.58rem;color:rgba(255,255,255,.3);margin-top:3px" id="op-proy-lbl">Están todos los proyectos seleccionados</div>
+        <div style="font-size:.82rem;font-weight:800;color:#fff">Gestión de Órdenes de Trabajo</div>
+        <div style="font-size:.62rem;color:rgba(255,255,255,.4)" id="op-filtro-lbl">Mostrando todos los proyectos · Hacé clic en cualquier elemento para filtrar</div>
       </div>
-      <div style="display:flex;gap:.5rem;flex:1;flex-wrap:wrap" id="op-proy-kpis"></div>
     </div>
+    <button onclick="opFiltrarOT(null)" style="font-size:.65rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:6px;padding:.3rem .8rem;cursor:pointer">✕ Limpiar filtro</button>
   </div>
 
-  <!-- Lista proyectos + donut + KG totales + HS totales -->
-  <div class="panel" style="grid-column:span 2;max-height:380px;overflow-y:auto">
-    <div class="ph"><div><div class="pt">📋 Detalles de proyectos</div></div></div>
-    <div id="op-proy-lista" style="padding:.4rem 0"></div>
+  <!-- KPIs dinámicos -->
+  <div style="grid-column:span 6;display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem" id="op-proy-kpis"></div>
+
+  <!-- Donut estado + KG barras + HS barras -->
+  <div class="panel" style="grid-column:span 2">
+    <div class="ph"><div><div class="pt">🥧 Estado de piezas</div><div class="ps">Por OT seleccionada</div></div></div>
+    <div class="pb" id="op-donut-estado" style="min-height:220px;display:flex;align-items:center;justify-content:center"></div>
   </div>
 
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">🥧 División por estado</div><div class="ps" id="op-donut-ps">Activos y completados</div></div>
-      <div class="pills" id="op-estado-pills">
-        <div class="pill off" onclick="opEstadoToggle('completados',this)">Completados</div>
-        <div class="pill on" onclick="opEstadoToggle('activos',this)">Activos</div>
-      </div>
-    </div>
-    <div class="pb" id="op-donut-estado" style="display:flex;align-items:center;justify-content:center;min-height:200px"></div>
+    <div class="ph"><div><div class="pt">⚖️ KG por OT</div><div class="ps">Clic para filtrar todo</div></div></div>
+    <div class="pb" id="op-kg-proyectos" style="min-height:220px"></div>
   </div>
 
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">⚖️ Total de KG por proyecto</div></div></div>
-    <div class="pb" id="op-kg-proyectos" style="min-height:200px"></div>
-  </div>
-
-  <div class="panel" style="grid-column:span 3">
-    <div class="ph"><div><div class="pt">⏱ Total de HS por proyecto</div></div></div>
-    <div class="pb" id="op-hs-proyectos" style="min-height:200px"></div>
-  </div>
-
-  <!-- Gestión de planos -->
-  <div class="panel" style="grid-column:span 3">
-    <div class="ph"><div><div class="pt">📐 Gestión de planos — por proceso</div><div class="ps">Activos en máquinas</div></div></div>
-    <div class="pb" id="op-planos"></div>
+    <div class="ph"><div><div class="pt">⏱ Horas por OT</div><div class="ps">Clic para filtrar todo</div></div></div>
+    <div class="pb" id="op-hs-proyectos" style="min-height:220px"></div>
   </div>
 
   <!-- Proyección carga de trabajo -->
   <div class="panel" style="grid-column:span 5">
     <div class="ph">
-      <div><div class="pt">📅 Proyección de carga de trabajo</div><div class="ps">Horas proyectadas por OT · próximos 8 meses</div></div>
-      <div style="display:flex;gap:.4rem;align-items:center">
-        <div style="font-size:.6rem;color:rgba(255,255,255,.4)">Capacidad real: <span style="color:#f59e0b;font-weight:700">3.230h</span></div>
-      </div>
+      <div><div class="pt">📅 Proyección de carga de trabajo</div><div class="ps">Horas por OT · próximos 8 meses · Clic en barra para filtrar</div></div>
+      <div style="font-size:.62rem;color:rgba(255,255,255,.4)">Cap. real: <span style="color:#f59e0b;font-weight:700">3.230h</span></div>
     </div>
     <div class="pb" id="op-proyeccion" style="min-height:220px"></div>
   </div>
 
-  <!-- KPIs proyección -->
+  <!-- Resumen lateral -->
   <div class="panel" style="grid-column:span 1">
-    <div class="ph"><div><div class="pt">🔢 Resumen</div></div></div>
+    <div class="ph"><div><div class="pt">🔢 Totales</div></div></div>
     <div class="pb" id="op-proy-resumen"></div>
+  </div>
+
+  <!-- Lista OTs (tabla) + Gestión planos (tabla) -->
+  <div class="panel" style="grid-column:span 3;max-height:320px;overflow-y:auto">
+    <div class="ph"><div><div class="pt">📋 Órdenes de Trabajo</div><div class="ps">Clic para filtrar paneles</div></div></div>
+    <div id="op-proy-lista" style="padding:.3rem 0"></div>
+  </div>
+
+  <div class="panel" style="grid-column:span 3">
+    <div class="ph"><div><div class="pt">📐 Gestión de planos — por proceso</div><div class="ps" id="op-planos-ps">Activos en máquinas</div></div></div>
+    <div class="pb" id="op-planos"></div>
   </div>
 
   <div class="dash-footer"><div>Dashboard · <span>Metalúrgica del Sur S.A.</span> · JV Systems</div><div>© 2026 <span>JV Systems</span></div></div>
@@ -3791,8 +3779,15 @@ function clearMapFilter() {
 setTimeout(initMap, 300);
 
 // ════════════════════════════════════════════
-// ── OPERACIONES: GESTIÓN DE PROYECTOS ──
+// ── OPERACIONES: GESTIÓN DE OTs (FILTRADO CRUZADO) ──
 // ════════════════════════════════════════════
+
+let _opSelOT = null; // OT seleccionada para filtrar todo
+
+function opFiltrarOT(id) {
+  _opSelOT = (_opSelOT === id) ? null : id; // toggle
+  buildOpProyectos();
+}
 
 const _opProyectos = [
   { id:'1800', nom:'Casamiento·Linea Ehb',      planos:83, piezas:852, hs:24,  kg:9031, comp:97.19, actMaq:2,  actSinMaq:1, scrap:0 },
@@ -3825,18 +3820,12 @@ const _opProyeccion = [
   { mes:'Ene 27',ots:[{nom:'OT1875',h:2405,c:'#f472b6'},{nom:'OT1841',h:1430,c:'#2dd4bf'},{nom:'OT1837',h:685,c:'#34d399'},{nom:'OT1819',h:290,c:'#60a5fa'}] },
 ];
 
-let _opEstadoMode = 'activos';
-function opEstadoToggle(mode, btn) {
-  _opEstadoMode = mode;
-  document.querySelectorAll('#op-estado-pills .pill').forEach(p=>{p.classList.toggle('on',p===btn);p.classList.toggle('off',p!==btn);});
-  buildOpDonutEstado();
-}
-
 function buildOpProyectos() {
-  const sel = document.getElementById('op-proy-sel')?.value || 'todas';
-  const data = sel === 'todas' ? _opProyectos : _opProyectos.filter(p=>p.id===sel);
-  const lbl  = document.getElementById('op-proy-lbl');
-  if (lbl) lbl.textContent = sel === 'todas' ? 'Están todos los proyectos seleccionados' : 'Proyecto '+sel+' seleccionado';
+  const data = _opSelOT ? _opProyectos.filter(p=>p.id===_opSelOT) : _opProyectos;
+  const lbl  = document.getElementById('op-filtro-lbl');
+  if (lbl) lbl.textContent = _opSelOT
+    ? '▶ Filtrando por OT '+_opSelOT+' — todos los gráficos actualizados · Clic en "Limpiar filtro" para ver todo'
+    : 'Mostrando todos los proyectos · Hacé clic en cualquier elemento para filtrar';
 
   // KPIs superiores
   const totHS = data.reduce((a,p)=>a+p.hs,0);
@@ -3859,36 +3848,39 @@ function buildOpProyectos() {
     </div>`).join('');
   }
 
-  // Lista proyectos
+  // Lista OTs
   const listaEl = document.getElementById('op-proy-lista');
   if (listaEl) {
-    listaEl.innerHTML = data.map(p=>`
-      <div style="padding:.6rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer" onclick="document.getElementById('op-proy-sel').value='${p.id}';buildOpProyectos()">
-        <div style="font-size:.72rem;font-weight:800;color:#f59e0b;margin-bottom:3px">${p.id} ${p.nom}</div>
-        <div style="display:flex;gap:1rem;font-size:.62rem;color:rgba(255,255,255,.5)">
-          <span><span style="color:rgba(255,255,255,.7);font-weight:700">${p.planos}</span> Planos</span>
-          <span><span style="color:rgba(255,255,255,.7);font-weight:700">${p.piezas.toLocaleString()}</span> Piezas</span>
+    listaEl.innerHTML = _opProyectos.map(p=>{
+      const sel = _opSelOT === p.id;
+      return `<div onclick="opFiltrarOT('${p.id}')" style="padding:.55rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;
+        background:${sel?'rgba(245,158,11,.1)':'transparent'};
+        border-left:3px solid ${sel?'#f59e0b':'transparent'}">
+        <div style="font-size:.72rem;font-weight:800;color:${sel?'#f59e0b':'rgba(255,255,255,.8)'};margin-bottom:3px">OT ${p.id} — ${p.nom}</div>
+        <div style="display:flex;gap:1rem;font-size:.62rem;color:rgba(255,255,255,.45)">
+          <span><b style="color:rgba(255,255,255,.7)">${p.planos}</b> Planos</span>
+          <span><b style="color:rgba(255,255,255,.7)">${p.piezas.toLocaleString()}</b> Piezas</span>
+          <span><b style="color:#f59e0b">${p.hs}</b> HS</span>
+          <span><b style="color:#60a5fa">${p.kg.toLocaleString()}</b> KG</span>
         </div>
-        <div style="display:flex;gap:1rem;font-size:.62rem;color:rgba(255,255,255,.5);margin-top:2px">
-          <span><span style="color:#f59e0b;font-weight:700">${p.hs}</span> HS</span>
-          <span><span style="color:#f59e0b;font-weight:700">${p.kg.toLocaleString()}</span> KG</span>
+        <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:5px">
+          <div style="height:100%;width:${p.comp}%;background:${sel?'#f59e0b':'linear-gradient(90deg,#34d399,#60a5fa)'};border-radius:2px"></div>
         </div>
-        <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:6px">
-          <div style="height:100%;width:${p.comp}%;background:linear-gradient(90deg,#34d399,#f59e0b);border-radius:2px;transition:width 1s"></div>
-        </div>
-        <div style="font-size:.55rem;color:rgba(255,255,255,.3);margin-top:2px">${p.comp}% completado</div>
-      </div>`).join('');
+        <div style="font-size:.55rem;color:rgba(255,255,255,.25);margin-top:2px">${p.comp}% completado</div>
+      </div>`;
+    }).join('');
   }
 
-  buildOpDonutEstado();
+  buildOpDonutEstado(data);
   buildOpKGProyectos(data);
   buildOpHSProyectos(data);
-  buildOpPlanosTabla();
-  buildOpProyeccionCarga();
-  buildOpProyResumen();
+  buildOpPlanosTabla(data);
+  buildOpProyeccionCarga(data);
+  buildOpProyResumen(data);
 }
 
-function buildOpDonutEstado() {
+function buildOpDonutEstado(data) {
+  data = data || (_opSelOT ? _opProyectos.filter(p=>p.id===_opSelOT) : _opProyectos);
   const el = document.getElementById('op-donut-estado'); if(!el) return;
   const mode = _opEstadoMode;
   // Total piezas activas vs completadas (usando comp%)
@@ -3937,51 +3929,59 @@ function buildOpDonutEstado() {
 
 function buildOpKGProyectos(data) {
   const el = document.getElementById('op-kg-proyectos'); if(!el) return;
-  const sorted = [...data].sort((a,b)=>b.kg-a.kg);
-  const maxKG  = sorted[0]?.kg || 1;
-  const fmt = n => n>=1000 ? (n/1000).toFixed(1)+'k' : n;
-  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.4rem">'
+  const all = _opProyectos; // siempre mostrar todas pero resaltar seleccionada
+  const sorted = [...all].sort((a,b)=>b.kg-a.kg);
+  const maxKG = sorted[0]?.kg || 1;
+  const fmt = n => n>=1000?(n/1000).toFixed(1)+'k':n;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.35rem">'
     + sorted.map(p=>{
       const pct = p.kg/maxKG*100;
-      const c = pct>80?'#f87171':pct>40?'#f59e0b':'#34d399';
-      return `<div style="display:flex;align-items:center;gap:.5rem">
-        <div style="width:55px;font-size:.62rem;color:rgba(255,255,255,.5);text-align:right;flex-shrink:0">${p.id}</div>
-        <div style="flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:0%;background:linear-gradient(90deg,${c},${c}88);border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 6px ${c}66" data-w="${pct}%"></div>
+      const sel = _opSelOT === p.id;
+      const dim = _opSelOT && !sel;
+      const c = sel?'#f59e0b':pct>80?'#f87171':pct>40?'#60a5fa':'#34d399';
+      return `<div onclick="opFiltrarOT('${p.id}')" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;opacity:${dim?.4:1};transition:opacity .2s">
+        <div style="width:48px;font-size:.62rem;color:${sel?'#f59e0b':'rgba(255,255,255,.5)'};font-weight:${sel?'800':'400'};text-align:right;flex-shrink:0">${p.id}</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:0%;background:${sel?'#f59e0b':c};border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 8px ${c}66" data-w="${pct}%"></div>
         </div>
         <div style="font-size:.65rem;font-weight:700;color:${c};width:40px;text-align:right;flex-shrink:0">${fmt(p.kg)}</div>
       </div>`;
-    }).join('')
-    + '</div>';
+    }).join('') + '</div>';
   setTimeout(()=>el.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w;}),60);
 }
 
 function buildOpHSProyectos(data) {
   const el = document.getElementById('op-hs-proyectos'); if(!el) return;
-  const sorted = [...data].sort((a,b)=>b.hs-a.hs);
-  const maxHS  = sorted[0]?.hs || 1;
-  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.4rem">'
+  const all = _opProyectos;
+  const sorted = [...all].sort((a,b)=>b.hs-a.hs);
+  const maxHS = sorted[0]?.hs || 1;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.35rem">'
     + sorted.map(p=>{
       const pct = p.hs/maxHS*100;
-      const c = pct>80?'#f87171':pct>40?'#60a5fa':'#34d399';
-      return `<div style="display:flex;align-items:center;gap:.5rem">
-        <div style="width:55px;font-size:.62rem;color:rgba(255,255,255,.5);text-align:right;flex-shrink:0">${p.id}</div>
-        <div style="flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:0%;background:linear-gradient(90deg,${c},${c}88);border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 6px ${c}66" data-w="${pct}%"></div>
+      const sel = _opSelOT === p.id;
+      const dim = _opSelOT && !sel;
+      const c = sel?'#f59e0b':pct>80?'#f87171':pct>40?'#60a5fa':'#34d399';
+      return `<div onclick="opFiltrarOT('${p.id}')" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;opacity:${dim?.4:1};transition:opacity .2s">
+        <div style="width:48px;font-size:.62rem;color:${sel?'#f59e0b':'rgba(255,255,255,.5)'};font-weight:${sel?'800':'400'};text-align:right;flex-shrink:0">${p.id}</div>
+        <div style="flex:1;height:20px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:0%;background:${sel?'#f59e0b':c};border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 8px ${c}66" data-w="${pct}%"></div>
         </div>
         <div style="font-size:.65rem;font-weight:700;color:${c};width:35px;text-align:right;flex-shrink:0">${p.hs}</div>
       </div>`;
-    }).join('')
-    + '</div>';
+    }).join('') + '</div>';
   setTimeout(()=>el.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w;}),80);
 }
 
-function buildOpPlanosTabla() {
+function buildOpPlanosTabla(data) {
   const el = document.getElementById('op-planos'); if(!el) return;
+  // Si hay OT seleccionada, escalar los planos proporcionalmente
+  const factor = data && data.length < _opProyectos.length ? data[0]?.planos/_opProyectos.reduce((a,p)=>a+p.planos,0)*_opPlanos.length : 1;
+  const ps = document.getElementById('op-planos-ps');
+  if(ps) ps.textContent = _opSelOT ? 'OT '+_opSelOT+' — activos en máquinas' : 'Todos los proyectos · activos en máquinas';
   el.innerHTML = '<table class="tbl" style="font-size:.65rem">'
     + '<thead><tr><th>Proceso</th><th style="text-align:right">Planos</th><th style="text-align:right">Peso(kg)</th><th style="text-align:right">HS</th><th style="text-align:right">Cant.</th></tr></thead>'
     + '<tbody>'
-    + _opPlanos.map(p=>`<tr>
+    + _opPlanos.map(p=>`<tr style="cursor:default">
       <td style="color:#f59e0b;font-weight:700">${p.proceso}</td>
       <td style="text-align:right">${p.planos}</td>
       <td style="text-align:right">${p.peso.toLocaleString()}</td>
@@ -3991,11 +3991,17 @@ function buildOpPlanosTabla() {
     + '</tbody></table>';
 }
 
-function buildOpProyeccionCarga() {
+function buildOpProyeccionCarga(data) {
   const el = document.getElementById('op-proyeccion'); if(!el) return;
   const CAP = 3230;
-  const maxH = Math.max(..._opProyeccion.map(m=>m.ots.reduce((a,o)=>a+o.h,0)));
-  const barW = 80, gap = 18, totW = _opProyeccion.length*(barW+gap);
+  // Filtrar OTs por selección
+  const proyFiltro = _opSelOT ? [_opSelOT] : null;
+  const proyData = _opProyeccion.map(m=>({
+    ...m,
+    ots: proyFiltro ? m.ots.filter(o=>o.nom.includes(_opSelOT)||!proyFiltro) : m.ots
+  }));
+  const maxH = Math.max(...proyData.map(m=>m.ots.reduce((a,o)=>a+o.h,0)), CAP);
+  const barW = 80, gap = 18, totW = proyData.length*(barW+gap);
   const svgH = 200, top=20, bot=30;
 
   let bars='', labels='', capLine='';
@@ -4004,7 +4010,7 @@ function buildOpProyeccionCarga() {
   capLine=`<line x1="0" y1="${capY}" x2="${totW}" y2="${capY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3"/>
     <text x="${totW-5}" y="${capY-4}" font-size="8" fill="#f59e0b" text-anchor="end">Capacidad: ${CAP.toLocaleString()}h</text>`;
 
-  _opProyeccion.forEach((m,i)=>{
+  proyData.forEach((m,i)=>{
     const x = i*(barW+gap);
     const total = m.ots.reduce((a,o)=>a+o.h,0);
     let yStack = svgH-bot;
@@ -4036,17 +4042,22 @@ function buildOpProyeccionCarga() {
   </div>`;
 }
 
-function buildOpProyResumen() {
+function buildOpProyResumen(data) {
+  data = data || _opProyectos;
   const el = document.getElementById('op-proy-resumen'); if(!el) return;
-  const totalH = _opProyeccion.reduce((a,m)=>a+m.ots.reduce((b,o)=>b+o.h,0),0);
+  const totalH = data.reduce((a,p)=>a+p.hs,0);
+  const totalKG = data.reduce((a,p)=>a+p.kg,0);
+  const totalPiezas = data.reduce((a,p)=>a+p.piezas,0);
   const items = [
-    {l:'Horas AFG Internas',v:totalH.toLocaleString('es-AR')+' h',c:'#f59e0b'},
-    {l:'Horas Tercerizadas',v:'(En blanco)',c:'rgba(255,255,255,.3)'},
-    {l:'Horas Totales',v:totalH.toLocaleString('es-AR')+' h',c:'#60a5fa'},
+    {l:'Horas totales',       v:totalH.toLocaleString('es-AR')+' h', c:'#f59e0b'},
+    {l:'KG totales',          v:totalKG.toLocaleString('es-AR')+' kg',c:'#60a5fa'},
+    {l:'Piezas totales',      v:totalPiezas.toLocaleString('es-AR'),  c:'#34d399'},
+    {l:'OTs seleccionadas',   v:data.length+' / '+_opProyectos.length,c:_opSelOT?'#f59e0b':'rgba(255,255,255,.5)'},
   ];
-  el.innerHTML = items.map(i=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.65rem .75rem;margin-bottom:.5rem;border:1px solid rgba(255,255,255,.07)">
-    <div style="font-size:.58rem;color:rgba(255,255,255,.4);margin-bottom:3px">${i.l}</div>
-    <div style="font-size:.95rem;font-weight:800;color:${i.c}">${i.v}</div>
+  el.innerHTML = (_opSelOT?`<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:.5rem .75rem;margin-bottom:.5rem;font-size:.6rem;color:#f59e0b;font-weight:700">▶ OT ${_opSelOT} activa</div>`:'')
+    + items.map(i=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.55rem .75rem;margin-bottom:.4rem;border:1px solid rgba(255,255,255,.07)">
+    <div style="font-size:.55rem;color:rgba(255,255,255,.4);margin-bottom:2px">${i.l}</div>
+    <div style="font-size:.9rem;font-weight:800;color:${i.c}">${i.v}</div>
   </div>`).join('');
 }
 
