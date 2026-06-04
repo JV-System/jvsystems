@@ -10,16 +10,24 @@
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f0;width:1440px;overflow-x:hidden}
 
 /* ── TOP BAR ── */
-.topbar{background:#0c1020;padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid rgba(245,158,11,.2);position:sticky;top:0;z-index:100}
-.tb-logo{font-size:.9rem;font-weight:900;letter-spacing:.06em;color:#fff}.tb-logo span{color:#f59e0b}
-.tb-tabs{display:flex;gap:.3rem;margin-left:1.5rem}
-.tb-tab{font-size:.75rem;font-weight:600;padding:.38rem 1.1rem;border-radius:7px;border:1px solid transparent;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.45)}
-.tb-tab:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.05)}
-.tb-tab.active{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.4);color:#f59e0b;font-weight:700}
-.tb-right{display:flex;align-items:center;gap:.75rem}
-.tb-sel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.65);font-size:.72rem;padding:.3rem .8rem;outline:none;cursor:pointer}
+.topbar{background:#0c1020;padding:.55rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;z-index:100}
+.tb-logo{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+.tb-logo img{width:38px;height:38px;border-radius:8px}
+.tb-logo-txt{font-size:.82rem;font-weight:900;letter-spacing:.04em;color:#fff;line-height:1.1}
+.tb-logo-txt span{color:#f59e0b;display:block;font-size:.6rem;font-weight:500;letter-spacing:.06em;opacity:.7}
+.tb-tabs{display:flex;gap:.15rem;margin-left:1.25rem;overflow-x:auto;scrollbar-width:none}
+.tb-tab{font-size:.72rem;font-weight:600;padding:.5rem .9rem;border-radius:8px;border:none;cursor:pointer;transition:all .2s;color:rgba(255,255,255,.4);background:none;display:flex;flex-direction:column;align-items:center;gap:.2rem;white-space:nowrap;min-width:60px}
+.tb-tab .tb-tab-icon{font-size:1.1rem;opacity:.6;transition:opacity .2s}
+.tb-tab:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.05)}
+.tb-tab:hover .tb-tab-icon{opacity:1}
+.tb-tab.active{background:rgba(245,158,11,.12);color:#f59e0b;border-bottom:2px solid #f59e0b;border-radius:8px 8px 0 0}
+.tb-tab.active .tb-tab-icon{opacity:1}
+.tb-right{display:flex;align-items:center;gap:.6rem}
+.tb-filter-btn{display:flex;align-items:center;gap:.4rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:rgba(255,255,255,.7);font-size:.72rem;padding:.32rem .75rem;outline:none;cursor:pointer;transition:all .15s;font-family:inherit}
+.tb-filter-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2)}
+.tb-filter-btn select{background:none;border:none;color:inherit;font-size:.72rem;outline:none;cursor:pointer;font-family:inherit}
 .tb-dot{width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 6px #34d399;animation:pulse 2s infinite}
-.tb-live{font-size:.65rem;color:rgba(255,255,255,.35)}
+.tb-live{font-size:.62rem;color:rgba(255,255,255,.35);line-height:1.3;text-align:right}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ── VIEWS ── */
@@ -32,14 +40,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
 
 /* ── KPI ROW ── */
 .kpi-row{display:grid;gap:.65rem}
-.kpi{background:#1a2035;border-radius:10px;padding:.9rem 1.1rem;border:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
-.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
-.kpi::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;border-radius:0 10px 10px 0}
-.kpi-lbl{font-size:.62rem;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem;font-weight:600}
-.kpi-val{font-size:1.6rem;font-weight:900;line-height:1;letter-spacing:-.02em}
-.kpi-sub{font-size:.63rem;margin-top:.3rem;display:flex;align-items:center;gap:.35rem}
+.kpi{background:#161d30;border-radius:16px;padding:1.1rem 1.25rem;border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;gap:.5rem}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}
+.kpi-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.kpi-body{flex:1}
+.kpi-lbl{font-size:.62rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.3rem;font-weight:700}
+.kpi-val{font-size:1.85rem;font-weight:900;line-height:1;letter-spacing:-.03em}
+.kpi-spark{width:90px;flex-shrink:0;align-self:center}
+.kpi-sub{font-size:.65rem;display:flex;align-items:center;gap:.4rem;padding-top:.25rem;border-top:1px solid rgba(255,255,255,.05)}
 .up{color:#34d399}.down{color:#f87171}.neu{color:rgba(255,255,255,.3)}
-.kpi-mini{height:28px;margin-top:.5rem;display:flex;align-items:flex-end;gap:2px}
+.kpi-mini{height:40px;display:flex;align-items:flex-end;gap:1.5px}
 .km-bar{flex:1;border-radius:2px 2px 0 0;transition:height .6s ease;min-height:3px}
 
 /* ── PANEL ── */
@@ -248,35 +259,48 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div style="display:flex;align-items:center">
-    <div class="tb-logo">JV <span>SYSTEMS</span></div>
-    <div class="tb-tabs" style="overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none">
-      <div class="tb-tab" onclick="showView('resumen')">📊 Resumen</div>
-      <div class="tb-tab active" onclick="showView('ventas')">💰 Ventas</div>
-      <div class="tb-tab" onclick="showView('logistica')">🚚 Logística</div>
-      <div class="tb-tab" onclick="showView('rrhh')">👥 RRHH</div>
-      <div class="tb-tab" onclick="showView('finanzas')">📈 Finanzas</div>
-      <div class="tb-tab" onclick="showView('operaciones')">🏗️ Metalúrgica del Sur</div>
-      <div class="tb-tab" onclick="showView('ensamble')">📦 SmartStore Solutions</div>
-      <div class="tb-tab" onclick="showView('compras')">🤝 Nexo Procurement</div>
-      <div class="tb-tab" onclick="showView('marketing')">📣 Impulso Digital</div>
-      <div class="tb-tab" onclick="showView('sistemas')">💻 Sistemas/IT</div>
+  <div style="display:flex;align-items:center;gap:0;overflow:hidden">
+    <div class="tb-logo">
+      <img src="jvs-icon.png" alt="JV Systems" onerror="this.style.display='none'">
+      <div class="tb-logo-txt">JV Systems<span>Soluciones Digitales</span></div>
+    </div>
+    <div class="tb-tabs">
+      <div class="tb-tab" onclick="showView('resumen')"><span class="tb-tab-icon">📊</span>Resumen</div>
+      <div class="tb-tab active" onclick="showView('ventas')"><span class="tb-tab-icon">🛍</span>Ventas</div>
+      <div class="tb-tab" onclick="showView('logistica')"><span class="tb-tab-icon">🚚</span>Logística</div>
+      <div class="tb-tab" onclick="showView('rrhh')"><span class="tb-tab-icon">👥</span>RRHH</div>
+      <div class="tb-tab" onclick="showView('finanzas')"><span class="tb-tab-icon">💲</span>Finanzas</div>
+      <div class="tb-tab" onclick="showView('operaciones')"><span class="tb-tab-icon">🏭</span>Metalúrgica del Sur</div>
+      <div class="tb-tab" onclick="showView('ensamble')"><span class="tb-tab-icon">🛒</span>SmartStore Solutions</div>
+      <div class="tb-tab" onclick="showView('compras')"><span class="tb-tab-icon">🤝</span>Nexo Procurement</div>
+      <div class="tb-tab" onclick="showView('marketing')"><span class="tb-tab-icon">🚀</span>Impulso Digital</div>
+      <div class="tb-tab" onclick="showView('sistemas')"><span class="tb-tab-icon">🖥</span>Sistemas/IT</div>
     </div>
   </div>
   <div class="tb-right">
-    <select class="tb-sel" id="sel-periodo" onchange="applyFilters()">
-      <option value="h1-2026">Enero – Junio 2026</option>
-      <option value="2025">2025 completo</option>
-      <option value="q4-2025">Último trimestre</option>
-    </select>
-    <select class="tb-sel" id="sel-sucursal" onchange="applyFilters()">
-      <option value="todas">Todas las sucursales</option>
-      <option value="bsas">Buenos Aires</option>
-      <option value="cba">Córdoba</option>
-      <option value="mza">Mendoza</option>
-    </select>
-    <div class="tb-dot"></div>
-    <div class="tb-live" id="tb-live-txt">En vivo · actualizado <span id="tb-hora">09:14</span></div>
+    <div class="tb-filter-btn">
+      <span>📅</span>
+      <select id="sel-periodo" onchange="applyFilters()" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:.72rem;outline:none;cursor:pointer;font-family:inherit">
+        <option value="h1-2026">Enero – Junio 2026</option>
+        <option value="2025">2025 completo</option>
+        <option value="q4-2025">Último trimestre</option>
+      </select>
+      <span style="opacity:.4">▾</span>
+    </div>
+    <div class="tb-filter-btn">
+      <span>🏢</span>
+      <select id="sel-sucursal" onchange="applyFilters()" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:.72rem;outline:none;cursor:pointer;font-family:inherit">
+        <option value="todas">Todas las sucursales</option>
+        <option value="bsas">Buenos Aires</option>
+        <option value="cba">Córdoba</option>
+        <option value="mza">Mendoza</option>
+      </select>
+      <span style="opacity:.4">▾</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.35rem">
+      <div class="tb-dot"></div>
+      <div class="tb-live">En vivo<br>actualizado <span id="tb-hora">09:14</span></div>
+    </div>
   </div>
 </div>
 
@@ -365,13 +389,65 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="view active" id="view-ventas">
 <div class="grid" style="grid-template-columns:repeat(4,1fr)">
-  <div class="kpi g-full" style="grid-column:span 4;padding:0">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem">
-      <div class="kpi"><div class="kpi-lbl">Ingresos brutos</div><div class="kpi-val anim-num" style="color:#34d399" data-target="5960000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div><div class="kpi-sub"><span class="up">▲ 21%</span><span class="neu">vs sem. pasada</span></div><div class="kpi-mini" id="km-v1"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Nuevas órdenes</div><div class="kpi-val anim-num" style="color:#60a5fa" data-target="3840">0</div><div class="kpi-sub"><span class="up">▲ 14%</span><span class="neu">esta semana</span></div><div class="kpi-mini" id="km-v2"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Conversión</div><div class="kpi-val anim-num" style="color:#f59e0b" data-target="68.4" data-prefix="" data-suffix="%">0%</div><div class="kpi-sub"><span class="up">▲ 3.2pp</span><span class="neu">tasa de cierre</span></div><div class="kpi-mini" id="km-v3"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Devoluciones</div><div class="kpi-val anim-num" style="color:#f87171" data-target="1.8" data-prefix="" data-suffix="%">0%</div><div class="kpi-sub"><span class="down">▼ 0.4pp</span><span class="neu">meta: &lt;2%</span></div><div class="kpi-mini" id="km-v4"></div></div>
+
+  <!-- KPI: Ingresos Brutos -->
+  <div class="kpi">
+    <div class="kpi-top">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;flex:1">
+        <div class="kpi-icon" style="background:rgba(52,211,153,.15)">💲</div>
+        <div class="kpi-body">
+          <div class="kpi-lbl">Ingresos Brutos</div>
+          <div class="kpi-val anim-num" style="color:#34d399" data-target="4600000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div>
+        </div>
+      </div>
+      <div class="kpi-spark"><div class="kpi-mini" id="km-v1"></div></div>
     </div>
+    <div class="kpi-sub"><span class="up">↗ +12.4%</span><span class="neu">vs. período anterior</span></div>
+  </div>
+
+  <!-- KPI: Nuevas Órdenes -->
+  <div class="kpi">
+    <div class="kpi-top">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;flex:1">
+        <div class="kpi-icon" style="background:rgba(96,165,250,.15)">🗒</div>
+        <div class="kpi-body">
+          <div class="kpi-lbl">Nuevas Órdenes</div>
+          <div class="kpi-val anim-num" style="color:#60a5fa" data-target="2248">0</div>
+        </div>
+      </div>
+      <div class="kpi-spark"><div class="kpi-mini" id="km-v2"></div></div>
+    </div>
+    <div class="kpi-sub"><span class="up">↗ +8.7%</span><span class="neu">vs. período anterior</span></div>
+  </div>
+
+  <!-- KPI: Conversión -->
+  <div class="kpi">
+    <div class="kpi-top">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;flex:1">
+        <div class="kpi-icon" style="background:rgba(245,158,11,.15)">📈</div>
+        <div class="kpi-body">
+          <div class="kpi-lbl">Conversión</div>
+          <div class="kpi-val anim-num" style="color:#f59e0b" data-target="12.4" data-suffix="%">0%</div>
+        </div>
+      </div>
+      <div class="kpi-spark"><div class="kpi-mini" id="km-v3"></div></div>
+    </div>
+    <div class="kpi-sub"><span class="up">↗ +1.8 pp</span><span class="neu">vs. período anterior</span></div>
+  </div>
+
+  <!-- KPI: Devoluciones -->
+  <div class="kpi">
+    <div class="kpi-top">
+      <div style="display:flex;align-items:flex-start;gap:.65rem;flex:1">
+        <div class="kpi-icon" style="background:rgba(248,113,113,.15)">🔄</div>
+        <div class="kpi-body">
+          <div class="kpi-lbl">Devoluciones</div>
+          <div class="kpi-val anim-num" style="color:#f87171" data-target="1.8" data-suffix="%">0%</div>
+        </div>
+      </div>
+      <div class="kpi-spark"><div class="kpi-mini" id="km-v4"></div></div>
+    </div>
+    <div class="kpi-sub"><span class="down">↘ -0.6 pp</span><span class="neu">vs. período anterior</span></div>
   </div>
 
   <!-- Tendencia diaria -->
@@ -1099,13 +1175,28 @@ function animNum(el){
 // ── MINI SPARKLINES FOR KPIs ──
 function buildMini(id,color,vals){
   const el=document.getElementById(id);if(!el)return;
-  el.innerHTML='';
-  vals.forEach(h=>{
-    const b=document.createElement('div');
-    b.className='km-bar';
-    b.style.cssText=`height:${h}%;background:${color};opacity:.7;flex:1;border-radius:2px 2px 0 0;transition:height .6s`;
-    el.appendChild(b);
+  const w=90,h=40,pad=3;
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>{
+    const x=pad+i*(w-pad*2)/(vals.length-1);
+    const y=h-pad-(v-mn)/rng*(h-pad*2);
+    return `${x},${y}`;
   });
+  const area=`M${pts.join('L')} L${w-pad},${h} L${pad},${h} Z`;
+  const line=`M${pts.join('L')}`;
+  const lastX=parseFloat(pts[pts.length-1].split(',')[0]);
+  const lastY=parseFloat(pts[pts.length-1].split(',')[1]);
+  el.innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible">
+    <defs>
+      <linearGradient id="sg-${id}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${area}" fill="url(#sg-${id})"/>
+    <path d="${line}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lastX}" cy="${lastY}" r="3" fill="${color}" stroke="${color}" stroke-width="1"/>
+  </svg>`;
 }
 
 // ── VENTAS MES VS PRESUPUESTO ──
@@ -1725,7 +1816,7 @@ function svgPickup(color='#a78bfa',w=115,h=68){
 
 // Imagen real o fallback SVG
 function vehImg(tipo,svgFn,color,vid){
-  const map={camion:'screenshots/vehiculo-camion.png',auto:'screenshots/vehiculo-auto.png',moto:'screenshots/vehiculo-moto.png'};
+  const map={camion:'vehiculo-camion.png',auto:'vehiculo-auto.png',moto:'vehiculo-moto.png'};
   const src=map[tipo];
   return `<img id="vi-${vid}" src="${src}" style="max-height:82px;max-width:92%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))"
     onload="document.getElementById('vs-${vid}').style.display='none'"
@@ -3613,26 +3704,44 @@ function applyFilters() {
   const sm  = _sucData[suc]?.mult || 1;
   const m   = pm * sm;
 
-  // Actualizar todos los anim-num visibles
+  // Guardar base y actualizar todos los anim-num
   document.querySelectorAll('.anim-num').forEach(el => {
-    const base = parseFloat(el.dataset.base || el.dataset.target);
-    if (!el.dataset.base) el.dataset.base = el.dataset.target; // guardar original
+    if (!el.dataset.base) el.dataset.base = el.dataset.target;
+    const base    = parseFloat(el.dataset.base);
     const noScale = el.dataset.noscale;
     const newVal  = noScale ? base : Math.round(base * m * 10) / 10;
     el.dataset.target = newVal;
     animNum(el);
   });
 
+  // Actualizar variaciones en kpi-sub según multiplicador
+  const varMap = {
+    'h1-2026': { v1:'+12.4%', v2:'+8.7%', v3:'+1.8 pp', v4:'-0.6 pp' },
+    '2025':    { v1:'+18.2%', v2:'+14.1%', v3:'+3.1 pp', v4:'-1.2 pp' },
+    'q4-2025': { v1:'+6.3%',  v2:'+4.2%',  v3:'+0.8 pp', v4:'+0.2 pp' },
+  };
+  const vr = varMap[per] || varMap['h1-2026'];
+  ['v1','v2','v3','v4'].forEach((k,i) => {
+    const sub = document.querySelectorAll('#view-ventas .kpi-sub')[i];
+    if (!sub) return;
+    const isDown = vr[k].startsWith('+') && k==='v4' || vr[k].startsWith('+') && false;
+    const isNeg  = vr[k].startsWith('+') && k==='v4';
+    const icon   = isNeg ? '↗' : vr[k].startsWith('-') ? '↘' : '↗';
+    const cls    = isNeg ? 'down' : vr[k].startsWith('-') && k!=='v4' ? 'down' : 'up';
+    sub.innerHTML = `<span class="${cls}">${icon} ${vr[k]}</span><span class="neu">vs. período anterior</span>`;
+  });
+
   // Actualizar hora
   const now = new Date();
-  const h = now.getHours().toString().padStart(2,'0');
-  const mn = now.getMinutes().toString().padStart(2,'0');
-  const el = document.getElementById('tb-hora');
-  if (el) el.textContent = h + ':' + mn;
+  const hEl = document.getElementById('tb-hora');
+  if (hEl) hEl.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
 
-  // Re-renderizar la vista actual
+  // Re-renderizar la vista actual (rebuilds charts + sparklines)
   const activeView = document.querySelector('.view.active');
-  if (activeView) buildView(activeView.id.replace('view-',''));
+  if (activeView) {
+    const vid = activeView.id.replace('view-','');
+    setTimeout(() => buildView(vid), 30);
+  }
 }
 
 // ════════════════════════════════════════════
