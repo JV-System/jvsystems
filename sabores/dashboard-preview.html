@@ -891,6 +891,77 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
     <div class="pb" id="op-acumulada"></div>
   </div>
 
+  <!-- ═══ GESTIÓN DE PROYECTOS ═══ -->
+
+  <!-- Selector proyecto + KPIs superiores -->
+  <div style="grid-column:span 6;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.75rem 1rem;">
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <div style="font-size:.6rem;color:rgba(255,255,255,.4);margin-bottom:3px">Proyecto</div>
+        <select id="op-proy-sel" onchange="buildOpProyectos()" style="background:#0d1b2e;border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:.3rem .6rem;font-size:.72rem;cursor:pointer">
+          <option value="todas">Todas</option>
+          <option value="1800">1800 Casamiento·Linea Ehb</option>
+          <option value="1644">1644 Ampliación Planta Afg</option>
+          <option value="1801">1801 Reformas Skillet</option>
+          <option value="1729">1729 Depósito Automático</option>
+          <option value="1802">1802 Reformas Rolling Chassis</option>
+          <option value="1803">1803 Manten. Equipos</option>
+        </select>
+        <div style="font-size:.58rem;color:rgba(255,255,255,.3);margin-top:3px" id="op-proy-lbl">Están todos los proyectos seleccionados</div>
+      </div>
+      <div style="display:flex;gap:.5rem;flex:1;flex-wrap:wrap" id="op-proy-kpis"></div>
+    </div>
+  </div>
+
+  <!-- Lista proyectos + donut + KG totales + HS totales -->
+  <div class="panel" style="grid-column:span 2;max-height:380px;overflow-y:auto">
+    <div class="ph"><div><div class="pt">📋 Detalles de proyectos</div></div></div>
+    <div id="op-proy-lista" style="padding:.4rem 0"></div>
+  </div>
+
+  <div class="panel" style="grid-column:span 2">
+    <div class="ph"><div><div class="pt">🥧 División por estado</div><div class="ps" id="op-donut-ps">Activos y completados</div></div>
+      <div class="pills" id="op-estado-pills">
+        <div class="pill off" onclick="opEstadoToggle('completados',this)">Completados</div>
+        <div class="pill on" onclick="opEstadoToggle('activos',this)">Activos</div>
+      </div>
+    </div>
+    <div class="pb" id="op-donut-estado" style="display:flex;align-items:center;justify-content:center;min-height:200px"></div>
+  </div>
+
+  <div class="panel" style="grid-column:span 2">
+    <div class="ph"><div><div class="pt">⚖️ Total de KG por proyecto</div></div></div>
+    <div class="pb" id="op-kg-proyectos" style="min-height:200px"></div>
+  </div>
+
+  <div class="panel" style="grid-column:span 3">
+    <div class="ph"><div><div class="pt">⏱ Total de HS por proyecto</div></div></div>
+    <div class="pb" id="op-hs-proyectos" style="min-height:200px"></div>
+  </div>
+
+  <!-- Gestión de planos -->
+  <div class="panel" style="grid-column:span 3">
+    <div class="ph"><div><div class="pt">📐 Gestión de planos — por proceso</div><div class="ps">Activos en máquinas</div></div></div>
+    <div class="pb" id="op-planos"></div>
+  </div>
+
+  <!-- Proyección carga de trabajo -->
+  <div class="panel" style="grid-column:span 5">
+    <div class="ph">
+      <div><div class="pt">📅 Proyección de carga de trabajo</div><div class="ps">Horas proyectadas por OT · próximos 8 meses</div></div>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        <div style="font-size:.6rem;color:rgba(255,255,255,.4)">Capacidad real: <span style="color:#f59e0b;font-weight:700">3.230h</span></div>
+      </div>
+    </div>
+    <div class="pb" id="op-proyeccion" style="min-height:220px"></div>
+  </div>
+
+  <!-- KPIs proyección -->
+  <div class="panel" style="grid-column:span 1">
+    <div class="ph"><div><div class="pt">🔢 Resumen</div></div></div>
+    <div class="pb" id="op-proy-resumen"></div>
+  </div>
+
   <div class="dash-footer"><div>Dashboard · <span>Metalúrgica del Sur S.A.</span> · JV Systems</div><div>© 2026 <span>JV Systems</span></div></div>
 </div>
 </div>
@@ -2490,6 +2561,7 @@ function buildView(id){
     buildOpHeatmap(); buildOpMaquinas(); buildOpSectores(); buildOpOEE(); buildOpTemp(); buildOpIncidencias(); buildOpAcumulada();
     buildOpFlujoMaquina(); buildOpTurnos(); buildOpParadas(); buildOpRendimientoSector();
     buildMini('km-op5',colors.red,[1220,1225,1230,1235,1238,1240,1240]);
+    buildOpProyectos();
   }
   if(id==='ensamble'){
     buildMini('km-en1',colors.teal,[4,5,5,6,6,6,7]);
@@ -3717,6 +3789,266 @@ function clearMapFilter() {
 
 // Llamar al iniciar y cuando se muestre el tab resumen
 setTimeout(initMap, 300);
+
+// ════════════════════════════════════════════
+// ── OPERACIONES: GESTIÓN DE PROYECTOS ──
+// ════════════════════════════════════════════
+
+const _opProyectos = [
+  { id:'1800', nom:'Casamiento·Linea Ehb',      planos:83, piezas:852, hs:24,  kg:9031, comp:97.19, actMaq:2,  actSinMaq:1, scrap:0 },
+  { id:'1644', nom:'Ampliación Planta Afg',      planos:9,  piezas:5280,hs:558, kg:7969, comp:82.00, actMaq:5,  actSinMaq:2, scrap:1 },
+  { id:'1801', nom:'Reformas Skillet',           planos:23, piezas:4696,hs:306, kg:3667, comp:91.50, actMaq:3,  actSinMaq:0, scrap:0 },
+  { id:'1729', nom:'Depósito Automático',        planos:24, piezas:143, hs:3,   kg:295,  comp:78.00, actMaq:1,  actSinMaq:1, scrap:0 },
+  { id:'1802', nom:'Reformas Rolling Chassis',   planos:52, piezas:133, hs:6,   kg:133,  comp:65.00, actMaq:2,  actSinMaq:0, scrap:0 },
+  { id:'1803', nom:'Manten. Equipos',            planos:18, piezas:23,  hs:5,   kg:181,  comp:55.00, actMaq:1,  actSinMaq:0, scrap:0 },
+];
+
+const _opPlanos = [
+  { proceso:'Corte Laser',    planos:25, peso:370,  hs:7,  cant:3028 },
+  { proceso:'Corte Serrucho', planos:16, peso:6305, hs:631,cant:3119 },
+  { proceso:'Fresado CNC',    planos:5,  peso:18,   hs:7,  cant:22   },
+  { proceso:'Fresado Universal',planos:2,peso:13,   hs:7,  cant:6    },
+  { proceso:'Perforado',      planos:1,  peso:52,   hs:0,  cant:20   },
+  { proceso:'Plegado',        planos:2,  peso:8,    hs:0,  cant:10   },
+  { proceso:'Soldadura MIG',  planos:8,  peso:1240, hs:44, cant:892  },
+  { proceso:'Granallado',     planos:4,  peso:430,  hs:12, cant:340  },
+];
+
+const _opProyeccion = [
+  { mes:'Jun',   ots:[{nom:'OT1800',h:840,c:'#60a5fa'},{nom:'OT1801',h:445,c:'#a78bfa'},{nom:'OT1644',h:1500,c:'#f59e0b'},{nom:'OT1802',h:415,c:'#f87171'},{nom:'OT1729',h:400,c:'#34d399'},{nom:'OT1803',h:120,c:'#2dd4bf'}] },
+  { mes:'Jul',   ots:[{nom:'OT1800',h:1750,c:'#60a5fa'},{nom:'OT1644',h:325,c:'#f59e0b'},{nom:'OT1802',h:400,c:'#f87171'},{nom:'OT1729',h:280,c:'#34d399'}] },
+  { mes:'Ago',   ots:[{nom:'OT1800',h:1600,c:'#60a5fa'},{nom:'OT1644',h:400,c:'#f59e0b'},{nom:'OT1802',h:290,c:'#f87171'}] },
+  { mes:'Sep',   ots:[{nom:'OT1800',h:1355,c:'#60a5fa'},{nom:'OT1644',h:750,c:'#f59e0b'},{nom:'OT1719',h:400,c:'#34d399'}] },
+  { mes:'Oct',   ots:[{nom:'OT1800',h:2460,c:'#60a5fa'},{nom:'OT1820',h:1060,c:'#f87171'},{nom:'OT1809',h:750,c:'#a78bfa'}] },
+  { mes:'Nov',   ots:[{nom:'OT1820',h:1230,c:'#f87171'},{nom:'OT1809',h:630,c:'#a78bfa'},{nom:'OT1837',h:380,c:'#34d399'}] },
+  { mes:'Dic',   ots:[{nom:'OT1820',h:1435,c:'#f87171'},{nom:'OT1841',h:750,c:'#2dd4bf'},{nom:'OT1837',h:685,c:'#34d399'}] },
+  { mes:'Ene 27',ots:[{nom:'OT1875',h:2405,c:'#f472b6'},{nom:'OT1841',h:1430,c:'#2dd4bf'},{nom:'OT1837',h:685,c:'#34d399'},{nom:'OT1819',h:290,c:'#60a5fa'}] },
+];
+
+let _opEstadoMode = 'activos';
+function opEstadoToggle(mode, btn) {
+  _opEstadoMode = mode;
+  document.querySelectorAll('#op-estado-pills .pill').forEach(p=>{p.classList.toggle('on',p===btn);p.classList.toggle('off',p!==btn);});
+  buildOpDonutEstado();
+}
+
+function buildOpProyectos() {
+  const sel = document.getElementById('op-proy-sel')?.value || 'todas';
+  const data = sel === 'todas' ? _opProyectos : _opProyectos.filter(p=>p.id===sel);
+  const lbl  = document.getElementById('op-proy-lbl');
+  if (lbl) lbl.textContent = sel === 'todas' ? 'Están todos los proyectos seleccionados' : 'Proyecto '+sel+' seleccionado';
+
+  // KPIs superiores
+  const totHS = data.reduce((a,p)=>a+p.hs,0);
+  const totPlanos = data.reduce((a,p)=>a+p.planos,0);
+  const totKG = data.reduce((a,p)=>a+p.kg,0);
+  const totPiezas = data.reduce((a,p)=>a+p.piezas,0);
+  const kghs = data.length ? Math.round(totKG / Math.max(totHS,1)) : 0;
+  const kpisEl = document.getElementById('op-proy-kpis');
+  if (kpisEl) {
+    const kpis = [
+      {l:'Horas Activas',v:totHS.toLocaleString('es-AR'),c:'#f59e0b'},
+      {l:'Cantidad de Planos',v:totPlanos,c:'#60a5fa'},
+      {l:'Peso Total',v:totKG.toLocaleString('es-AR'),c:'#f59e0b'},
+      {l:'Cantidad de Piezas',v:totPiezas.toLocaleString('es-AR'),c:'#f59e0b'},
+      {l:'kg/hs',v:kghs,c:'#f59e0b'},
+    ];
+    kpisEl.innerHTML = kpis.map(k=>`<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.5rem .9rem;min-width:90px;text-align:center">
+      <div style="font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${k.l}</div>
+      <div style="font-size:1.3rem;font-weight:900;color:${k.c}">${k.v}</div>
+    </div>`).join('');
+  }
+
+  // Lista proyectos
+  const listaEl = document.getElementById('op-proy-lista');
+  if (listaEl) {
+    listaEl.innerHTML = data.map(p=>`
+      <div style="padding:.6rem 1rem;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer" onclick="document.getElementById('op-proy-sel').value='${p.id}';buildOpProyectos()">
+        <div style="font-size:.72rem;font-weight:800;color:#f59e0b;margin-bottom:3px">${p.id} ${p.nom}</div>
+        <div style="display:flex;gap:1rem;font-size:.62rem;color:rgba(255,255,255,.5)">
+          <span><span style="color:rgba(255,255,255,.7);font-weight:700">${p.planos}</span> Planos</span>
+          <span><span style="color:rgba(255,255,255,.7);font-weight:700">${p.piezas.toLocaleString()}</span> Piezas</span>
+        </div>
+        <div style="display:flex;gap:1rem;font-size:.62rem;color:rgba(255,255,255,.5);margin-top:2px">
+          <span><span style="color:#f59e0b;font-weight:700">${p.hs}</span> HS</span>
+          <span><span style="color:#f59e0b;font-weight:700">${p.kg.toLocaleString()}</span> KG</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:6px">
+          <div style="height:100%;width:${p.comp}%;background:linear-gradient(90deg,#34d399,#f59e0b);border-radius:2px;transition:width 1s"></div>
+        </div>
+        <div style="font-size:.55rem;color:rgba(255,255,255,.3);margin-top:2px">${p.comp}% completado</div>
+      </div>`).join('');
+  }
+
+  buildOpDonutEstado();
+  buildOpKGProyectos(data);
+  buildOpHSProyectos(data);
+  buildOpPlanosTabla();
+  buildOpProyeccionCarga();
+  buildOpProyResumen();
+}
+
+function buildOpDonutEstado() {
+  const el = document.getElementById('op-donut-estado'); if(!el) return;
+  const mode = _opEstadoMode;
+  // Total piezas activas vs completadas (usando comp%)
+  const totalPiezas = _opProyectos.reduce((a,p)=>a+p.piezas,0);
+  const compPiezas  = Math.round(_opProyectos.reduce((a,p)=>a+(p.piezas*p.comp/100),0));
+  const actMaq      = _opProyectos.reduce((a,p)=>a+p.actMaq,0);
+  const actSinMaq   = _opProyectos.reduce((a,p)=>a+p.actSinMaq,0);
+  const scrap       = _opProyectos.reduce((a,p)=>a+p.scrap,0);
+  const restantes   = totalPiezas - compPiezas - actMaq - actSinMaq - scrap;
+
+  const segs = [
+    {l:'Completados',v:compPiezas,c:'#34d399'},
+    {l:'Activos en Máq.',v:actMaq,c:'#60a5fa'},
+    {l:'Activos sin Máq.',v:actSinMaq,c:'#f59e0b'},
+    {l:'Scrap',v:scrap,c:'#f87171'},
+  ];
+  const total = segs.reduce((a,s)=>a+s.v,0)||1;
+  const r=70, cx=90, cy=90, circ=2*Math.PI*r;
+  let offset=0;
+  let paths='';
+  segs.forEach(s=>{
+    const pct=s.v/total;
+    const dash=pct*circ;
+    paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c}" stroke-width="20"
+      stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}"
+      transform="rotate(-90 ${cx} ${cy})" style="transition:all 1s;filter:drop-shadow(0 0 4px ${s.c}66)"/>`;
+    offset+=dash;
+  });
+  const pctComp=(compPiezas/total*100).toFixed(1);
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:1.5rem;width:100%">
+    <svg width="180" height="180" viewBox="0 0 180 180" style="flex-shrink:0">
+      ${paths}
+      <text x="${cx}" y="${cy-8}" text-anchor="middle" font-size="22" font-weight="900" fill="#34d399">${compPiezas.toLocaleString()}</text>
+      <text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.4)">(${pctComp}%)</text>
+    </svg>
+    <div style="display:flex;flex-direction:column;gap:.5rem;flex:1">
+      ${segs.map(s=>`<div style="display:flex;align-items:center;gap:.5rem;font-size:.65rem">
+        <div style="width:10px;height:10px;border-radius:3px;background:${s.c};flex-shrink:0"></div>
+        <span style="color:rgba(255,255,255,.6);flex:1">${s.l}</span>
+        <span style="font-weight:700;color:#fff">${s.v.toLocaleString()}</span>
+      </div>`).join('')}
+      <div style="font-size:.58rem;color:rgba(255,255,255,.3);margin-top:4px">Total: ${total.toLocaleString()} piezas</div>
+    </div>
+  </div>`;
+}
+
+function buildOpKGProyectos(data) {
+  const el = document.getElementById('op-kg-proyectos'); if(!el) return;
+  const sorted = [...data].sort((a,b)=>b.kg-a.kg);
+  const maxKG  = sorted[0]?.kg || 1;
+  const fmt = n => n>=1000 ? (n/1000).toFixed(1)+'k' : n;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.4rem">'
+    + sorted.map(p=>{
+      const pct = p.kg/maxKG*100;
+      const c = pct>80?'#f87171':pct>40?'#f59e0b':'#34d399';
+      return `<div style="display:flex;align-items:center;gap:.5rem">
+        <div style="width:55px;font-size:.62rem;color:rgba(255,255,255,.5);text-align:right;flex-shrink:0">${p.id}</div>
+        <div style="flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:0%;background:linear-gradient(90deg,${c},${c}88);border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 6px ${c}66" data-w="${pct}%"></div>
+        </div>
+        <div style="font-size:.65rem;font-weight:700;color:${c};width:40px;text-align:right;flex-shrink:0">${fmt(p.kg)}</div>
+      </div>`;
+    }).join('')
+    + '</div>';
+  setTimeout(()=>el.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w;}),60);
+}
+
+function buildOpHSProyectos(data) {
+  const el = document.getElementById('op-hs-proyectos'); if(!el) return;
+  const sorted = [...data].sort((a,b)=>b.hs-a.hs);
+  const maxHS  = sorted[0]?.hs || 1;
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:.4rem">'
+    + sorted.map(p=>{
+      const pct = p.hs/maxHS*100;
+      const c = pct>80?'#f87171':pct>40?'#60a5fa':'#34d399';
+      return `<div style="display:flex;align-items:center;gap:.5rem">
+        <div style="width:55px;font-size:.62rem;color:rgba(255,255,255,.5);text-align:right;flex-shrink:0">${p.id}</div>
+        <div style="flex:1;height:18px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:0%;background:linear-gradient(90deg,${c},${c}88);border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 6px ${c}66" data-w="${pct}%"></div>
+        </div>
+        <div style="font-size:.65rem;font-weight:700;color:${c};width:35px;text-align:right;flex-shrink:0">${p.hs}</div>
+      </div>`;
+    }).join('')
+    + '</div>';
+  setTimeout(()=>el.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w;}),80);
+}
+
+function buildOpPlanosTabla() {
+  const el = document.getElementById('op-planos'); if(!el) return;
+  el.innerHTML = '<table class="tbl" style="font-size:.65rem">'
+    + '<thead><tr><th>Proceso</th><th style="text-align:right">Planos</th><th style="text-align:right">Peso(kg)</th><th style="text-align:right">HS</th><th style="text-align:right">Cant.</th></tr></thead>'
+    + '<tbody>'
+    + _opPlanos.map(p=>`<tr>
+      <td style="color:#f59e0b;font-weight:700">${p.proceso}</td>
+      <td style="text-align:right">${p.planos}</td>
+      <td style="text-align:right">${p.peso.toLocaleString()}</td>
+      <td style="text-align:right;color:${p.hs>0?'#60a5fa':'rgba(255,255,255,.3)'}">${p.hs}</td>
+      <td style="text-align:right;font-weight:700">${p.cant.toLocaleString()}</td>
+    </tr>`).join('')
+    + '</tbody></table>';
+}
+
+function buildOpProyeccionCarga() {
+  const el = document.getElementById('op-proyeccion'); if(!el) return;
+  const CAP = 3230;
+  const maxH = Math.max(..._opProyeccion.map(m=>m.ots.reduce((a,o)=>a+o.h,0)));
+  const barW = 80, gap = 18, totW = _opProyeccion.length*(barW+gap);
+  const svgH = 200, top=20, bot=30;
+
+  let bars='', labels='', capLine='';
+  // Línea de capacidad
+  const capY = top + (1-CAP/maxH)*(svgH-top-bot);
+  capLine=`<line x1="0" y1="${capY}" x2="${totW}" y2="${capY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,3"/>
+    <text x="${totW-5}" y="${capY-4}" font-size="8" fill="#f59e0b" text-anchor="end">Capacidad: ${CAP.toLocaleString()}h</text>`;
+
+  _opProyeccion.forEach((m,i)=>{
+    const x = i*(barW+gap);
+    const total = m.ots.reduce((a,o)=>a+o.h,0);
+    let yStack = svgH-bot;
+    m.ots.forEach(ot=>{
+      const h = (ot.h/maxH)*(svgH-top-bot);
+      yStack -= h;
+      bars+=`<rect x="${x}" y="${yStack}" width="${barW}" height="${h}" fill="${ot.c}" rx="2" style="filter:drop-shadow(0 0 3px ${ot.c}66)">
+        <title>${ot.nom}: ${ot.h.toLocaleString()}h</title>
+      </rect>`;
+      if(h>18) bars+=`<text x="${x+barW/2}" y="${yStack+h/2+4}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(0,0,0,.8)">${ot.h>=1000?(ot.h/1000).toFixed(1)+'k':ot.h}h</text>`;
+    });
+    // Total encima
+    const totalY = svgH-bot-(total/maxH)*(svgH-top-bot)-4;
+    bars+=`<text x="${x+barW/2}" y="${totalY}" text-anchor="middle" font-size="9" font-weight="900" fill="#fff">${total.toLocaleString()}h</text>`;
+    labels+=`<text x="${x+barW/2}" y="${svgH-3}" text-anchor="middle" font-size="9" fill="rgba(255,255,255,.5)">${m.mes}</text>`;
+  });
+
+  el.innerHTML=`<div style="overflow-x:auto;padding-bottom:.3rem">
+    <svg width="${totW+20}" height="${svgH}" viewBox="0 0 ${totW+20} ${svgH}" style="display:block">
+      ${capLine}${bars}${labels}
+    </svg>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;padding:.3rem 0">
+    ${[...new Set(_opProyeccion.flatMap(m=>m.ots.map(o=>({nom:o.nom,c:o.c})))
+      .filter((v,i,a)=>a.findIndex(x=>x.nom===v.nom)===i))]
+      .map(o=>`<span style="display:flex;align-items:center;gap:3px;font-size:.55rem;color:rgba(255,255,255,.5)">
+        <span style="width:8px;height:8px;border-radius:2px;background:${o.c};display:inline-block"></span>${o.nom}</span>`)
+      .join('')}
+  </div>`;
+}
+
+function buildOpProyResumen() {
+  const el = document.getElementById('op-proy-resumen'); if(!el) return;
+  const totalH = _opProyeccion.reduce((a,m)=>a+m.ots.reduce((b,o)=>b+o.h,0),0);
+  const items = [
+    {l:'Horas AFG Internas',v:totalH.toLocaleString('es-AR')+' h',c:'#f59e0b'},
+    {l:'Horas Tercerizadas',v:'(En blanco)',c:'rgba(255,255,255,.3)'},
+    {l:'Horas Totales',v:totalH.toLocaleString('es-AR')+' h',c:'#60a5fa'},
+  ];
+  el.innerHTML = items.map(i=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:.65rem .75rem;margin-bottom:.5rem;border:1px solid rgba(255,255,255,.07)">
+    <div style="font-size:.58rem;color:rgba(255,255,255,.4);margin-bottom:3px">${i.l}</div>
+    <div style="font-size:.95rem;font-weight:800;color:${i.c}">${i.v}</div>
+  </div>`).join('');
+}
 
 // ════════════════════════════════════════════
 // ── OPERACIONES: NUEVOS GRÁFICOS ──
