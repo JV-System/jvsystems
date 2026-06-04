@@ -2374,7 +2374,7 @@ function crearNuevaOrden() {
     id: Date.now(),
     numero: getNextNum(),
     estado: 'open',
-    fecha: new Date().toLocaleDateString('es-AR'),
+    fecha: new Date().toISOString().split('T')[0],
     // CREADOR
     creadorId: cu ? cu.id : 0,
     creadorNombre: cu ? cu.nombre : 'Desconocido',
@@ -2389,7 +2389,7 @@ function crearNuevaOrden() {
     repuestos: [],
     comentarios: '', condicion: [],
     // VISITAS
-    visitas: [{ fecha: '', tiempo: '', causa: '' }],
+    visitas: [{ fecha: new Date().toISOString().split('T')[0], tiempo: '', causa: '' }],
     servicioPlanta: false, trasladoSn: '',
     // SEGUIMIENTO
     fechaCierre: '', fechaCobro: '',
@@ -2983,7 +2983,7 @@ function renderTabCliente() {
       <div class="form-row cols-2">
         <div class="form-group">
           <label>Fecha <span class="req">*</span></label>
-          <input type="text" id="f-fecha" value="${esc(o.fecha)}" ${locked?'readonly':''}>
+          <input type="date" id="f-fecha" value="${esc(o.fecha)}" ${locked?'readonly':''} onchange="ordenActual.fecha=this.value;saveData()">
         </div>
         <div class="form-group">
           <label>N° de orden</label>
