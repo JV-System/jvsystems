@@ -43,10 +43,12 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadEmpleados() {
+  // Empleado demo siempre disponible
+  empleados = ['Demo Prueba'];
   try {
     const r = await fetch(`${CONFIG.SCRIPT_URL}?action=empleados`);
     const d = await r.json();
-    if (d.success) empleados = d.empleados;
+    if (d.success) empleados = [...new Set([...empleados, ...d.empleados])];
   } catch {}
 }
 
@@ -128,6 +130,18 @@ async function doLogin() {
   if (!selectedEmp) { showPortalToast('Seleccioná tu nombre primero','error'); return; }
   if (!dni)         { errEl.textContent='Ingresá tu DNI'; errEl.style.display='block'; return; }
   errEl.style.display = 'none';
+
+  // ── Modo demo ──
+  if (selectedEmp === 'Demo Prueba' && dni === '12345678') {
+    showPortalLoading('Verificando...');
+    await new Promise(r => setTimeout(r, 800));
+    hidePortalLoading();
+    showScreen('marcScreen');
+    document.getElementById('marcNombre').textContent = selectedEmp;
+    marcTipo = 'Entrada';
+    return;
+  }
+
   showPortalLoading('Verificando...');
   try {
     const vr = await fetch(`${CONFIG.SCRIPT_URL}?action=validarDNI&empleado=${encodeURIComponent(selectedEmp)}&dni=${encodeURIComponent(dni)}`);
