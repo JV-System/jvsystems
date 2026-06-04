@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JVS System — Software a medida</title>
+<meta name="description" content="Sistemas de gestión a medida para empresas. JVS System — Misiones, Argentina.">
+<meta property="og:title"       content="JVS System · Software a medida">
+<meta property="og:description" content="2 proyectos activos: Sabores de Misiones y Ingeniería Branca SRL">
+<meta property="og:image"       content="https://jv-system.github.io/Sabores-de-misiones/jvs-logo.png">
+<meta property="og:type"        content="website">
+<meta name="theme-color"        content="#06144A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --nv:  #06144A; --nv2: #0B1F5F;
+  --bl:  #1565D8; --bl2: #2979FF; --bl3: #6BAEFF;
+  --or:  #E8770A; --or2: #F59420;
+  --grn: #25D366; --amb: #F5A623;
+  --w:   #fff; --w85:rgba(255,255,255,.85);
+  --w60:rgba(255,255,255,.60); --w35:rgba(255,255,255,.35);
+  --w15:rgba(255,255,255,.15); --w08:rgba(255,255,255,.08);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Exo 2','Segoe UI',sans-serif;background:var(--nv);color:#fff;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ════════ HEADER ════════ */
+.hdr{position:sticky;top:0;z-index:200;background:rgba(6,20,74,.9);backdrop-filter:blur(14px);border-bottom:1px solid rgba(41,121,255,.18)}
+.hdr-in{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:11px 24px;gap:16px}
+.hdr-brand{display:flex;align-items:center;gap:11px}
+.hdr-logo{height:36px;width:36px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.hdr-name{font-size:14px;font-weight:900;color:#fff;letter-spacing:.5px;line-height:1}
+.hdr-sub{font-size:9.5px;font-weight:500;color:var(--w35);letter-spacing:.5px;margin-top:1px}
+.hdr-pills{display:flex;gap:6px}
+.hdr-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}
+.hp-grn{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.28);color:#A5D6A7}
+.hp-amb{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.28);color:#FFD180}
+.pulse{width:6px;height:6px;border-radius:50%;flex-shrink:0;animation:pdot 2s ease-in-out infinite}
+.pulse.grn{background:#A5D6A7;box-shadow:0 0 4px #A5D6A7}
+.pulse.amb{background:#FFD180;box-shadow:0 0 4px #FFD180}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+
+/* ════════ HERO ════════ */
+.hero{background:radial-gradient(ellipse at 70% 30%,rgba(41,121,255,.14) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(232,119,10,.07) 0%,transparent 50%),linear-gradient(160deg,#04112F 0%,#0B1F5F 60%,#081840 100%);padding:72px 24px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(41,121,255,.3),transparent)}
+.hero-logo{width:80px;height:80px;object-fit:contain;background:#fff;border-radius:18px;padding:5px;box-shadow:0 8px 28px rgba(0,0,0,.4);margin-bottom:24px;animation:logo-pop .9s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes logo-pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
+.hero-t{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,60px);font-weight:900;line-height:1.1;margin-bottom:14px;background:linear-gradient(130deg,#fff 10%,#A8C8FF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(13px,1.8vw,16px);color:var(--w60);max-width:520px;margin:0 auto 28px;line-height:1.7}
+.pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pill{background:var(--w08);border:1px solid var(--w15);padding:7px 14px;border-radius:30px;font-size:11.5px;font-weight:600;color:var(--w85)}
+
+/* ════════ CASES SECTION ════════ */
+.cases-sec{padding:52px 24px 56px;background:linear-gradient(180deg,#081840 0%,#06144A 100%)}
+.sec-head{text-align:center;margin-bottom:32px}
+.sec-tag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--or2);background:rgba(232,119,10,.1);border:1px solid rgba(232,119,10,.28);padding:3px 11px;border-radius:20px;margin-bottom:11px}
+.sec-h{font-family:'Playfair Display',serif;font-size:clamp(20px,3.2vw,32px);font-weight:900;color:#fff;margin-bottom:8px}
+.sec-d{font-size:13px;color:var(--w60);max-width:440px;margin:0 auto;line-height:1.65}
+.cases-grid{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.case-card{background:var(--w08);border:1px solid var(--w15);border-radius:16px;padding:22px;border-top:3px solid transparent;transition:transform .2s,box-shadow .2s;cursor:pointer}
+.case-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.case-card.cc-grn{border-top-color:var(--grn)}
+.case-card.cc-amb{border-top-color:var(--amb)}
+.cc-icon{font-size:28px;margin-bottom:12px}
+.cc-name{font-size:16px;font-weight:800;color:#fff;margin-bottom:3px}
+.cc-sub{font-size:11px;color:var(--w35);margin-bottom:12px}
+.cc-active{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.cca-grn{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);color:#A5D6A7}
+.cca-amb{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);color:#FFD180}
+.cc-tags{display:flex;gap:5px;flex-wrap:wrap}
+.cc-tag{background:var(--w08);border:1px solid var(--w15);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;color:var(--w60)}
+.cc-desc{font-size:12px;color:var(--w60);line-height:1.6;margin-bottom:14px}
+.cc-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--w35);margin-top:4px}
+.case-card.cc-grn:hover .cc-btn{color:#A5D6A7}
+.case-card.cc-amb:hover .cc-btn{color:#FFD180}
+
+/* ════════ SHOWCASE / CAROUSEL ════════ */
+.showcase{padding:52px 24px 60px;background:linear-gradient(180deg,#06144A 0%,#091845 60%,#06144A 100%);position:relative}
+.showcase::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(41,121,255,.25),transparent)}
+
+/* system selector */
+.sys-sel{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);border-radius:50px;padding:4px;gap:4px;max-width:480px;margin:0 auto 28px}
+.sys-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 14px;border-radius:40px;border:none;cursor:pointer;background:transparent;color:var(--w35);font-family:'Exo 2',sans-serif;transition:all .3s}
+.sys-btn:hover{color:var(--w60)}
+.sys-btn.on{background:rgba(255,255,255,.1);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.sys-btn.sb.on{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.28);color:#A5D6A7}
+.sys-btn.br.on{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.28);color:#FFD180}
+.sys-btn-ico{font-size:18px}
+.sys-btn-t{font-size:12.5px;font-weight:700;display:block;line-height:1.2}
+.sys-btn-s{font-size:9px;opacity:.65;display:block}
+
+/* carousel wrap */
+.car-wrap{max-width:760px;margin:0 auto;position:relative}
+.car-frame{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04)}
+.frame-bar{background:rgba(0,0,0,.25);padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);user-select:none}
+.frame-dots{display:flex;gap:5px}
+.frame-dots span{width:9px;height:9px;border-radius:50%;display:block}
+.frame-url{flex:1;text-align:center;font-size:10.5px;font-weight:600;color:var(--w35);letter-spacing:.3px}
+.car-prog{height:2px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.car-prog-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--or),var(--bl2));transition:width .08s linear;box-shadow:0 0 6px rgba(232,119,10,.5)}
+.car-viewport{overflow:hidden;width:100%}
+.car-strip{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.sys-car{display:none}
+.sys-car.active-car{display:block}
+.cslide{flex:0 0 100%;min-height:360px;padding:16px 18px;background:linear-gradient(145deg,#0A1B50 0%,#0D2468 100%);position:relative;overflow:hidden}
+
+/* arrows */
+.car-arr{position:absolute;top:50%;transform:translateY(calc(-50% + 18px));z-index:10;width:38px;height:38px;border-radius:50%;background:rgba(6,20,74,.8);border:1px solid rgba(255,255,255,.2);color:var(--w60);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;transition:all .2s;backdrop-filter:blur(8px)}
+.car-arr:hover{background:rgba(41,121,255,.3);color:#fff;border-color:rgba(41,121,255,.5)}
+.car-prev{left:-18px}
+.car-next{right:-18px}
+
+/* caption */
+.car-cap{text-align:center;margin-top:20px;min-height:62px;transition:opacity .3s}
+.car-cap h3{font-size:17px;font-weight:800;color:#fff;margin-bottom:4px;font-family:'Playfair Display',serif}
+.car-cap p{font-size:13px;color:var(--w60);line-height:1.5}
+
+/* dots */
+.car-dots{display:flex;gap:7px;justify-content:center;margin-top:16px}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--w15);border:none;cursor:pointer;padding:0;transition:all .3s}
+.cdot.on{width:22px;border-radius:4px;background:var(--or);box-shadow:0 0 7px rgba(232,119,10,.6)}
+
+/* ══════════════════════════════
+   SABORES — dark mock UI
+══════════════════════════════ */
+.mock-topbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.07);margin:-16px -18px 12px}
+.mock-tb-t{font-size:11.5px;font-weight:700;color:var(--w85)}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.kcard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;position:relative;overflow:hidden}
+.kcard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2.5px}
+.k-b::after{background:var(--bl2)} .k-o::after{background:var(--or)} .k-g::after{background:#43A047} .k-p::after{background:#9C27B0}
+.kic{font-size:15px;margin-bottom:3px} .kv{font-size:20px;font-weight:800;color:#fff;line-height:1;margin-bottom:2px} .kl{font-size:8.5px;font-weight:700;color:var(--w35);text-transform:uppercase;letter-spacing:.8px}
+.mbars{display:flex;align-items:flex-end;gap:3px;height:34px}
+.mbar{flex:1;border-radius:3px 3px 0 0;background:rgba(41,121,255,.25)} .mbar.hi{background:rgba(41,121,255,.7);box-shadow:0 0 5px rgba(41,121,255,.4)}
+.mbl{font-size:7px;color:var(--w20);text-align:center;margin-top:2px} .mbl.now{color:var(--w60);font-weight:700}
+.fchips{display:flex;gap:4px;flex-wrap:wrap;padding:7px 0 9px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:7px}
+.fchip{padding:2.5px 8px;border-radius:20px;font-size:9px;font-weight:700;border:1.5px solid rgba(255,255,255,.13);color:var(--w35)}
+.fc-all{background:rgba(255,255,255,.13);color:#fff;border-color:transparent} .fc-co{background:rgba(41,121,255,.13);color:#90C0FF;border-color:rgba(41,121,255,.28)} .fc-de{background:rgba(76,175,80,.13);color:#A5D6A7;border-color:rgba(76,175,80,.28)} .fc-cb{background:rgba(156,39,176,.13);color:#CE93D8;border-color:rgba(156,39,176,.28)}
+.prow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.prow:last-child{border:none}
+.pav{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--bl),var(--bl2))}
+.pname{font-size:11px;font-weight:700;color:#fff;margin-bottom:1px} .psub{font-size:9px;color:var(--w35)}
+.pright{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pbdg{padding:1.5px 6px;border-radius:20px;font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px}
+.b-de2{background:rgba(76,175,80,.17);color:#A5D6A7;border:1px solid rgba(76,175,80,.3)} .b-co2{background:rgba(41,121,255,.17);color:#90C0FF;border:1px solid rgba(41,121,255,.3)} .b-cb2{background:rgba(156,39,176,.17);color:#CE93D8;border:1px solid rgba(156,39,176,.3)}
+.pval{font-size:8.5px;color:var(--w20)}
+.bal-bg{height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin:4px 0}
+.bal-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#43A047,#66BB6A)}
+.clav{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--nv2),var(--bl));border:2px solid rgba(41,121,255,.35);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff}
+.cstat{background:rgba(255,255,255,.05);border-radius:7px;padding:8px;text-align:center}
+.cstatv{font-size:15px;font-weight:800;color:#fff;margin-bottom:1px} .cstatl{font-size:8px;color:var(--w35);text-transform:uppercase;letter-spacing:.5px}
+.mord{display:flex;align-items:center;justify-content:space-between;padding:4px 7px;border-radius:5px;background:rgba(255,255,255,.04);margin-bottom:3px;font-size:10px}
+.chhead{display:flex;align-items:center;gap:9px;padding:9px 12px;background:rgba(0,0,0,.18);border-bottom:1px solid rgba(255,255,255,.07);margin:-16px -18px 11px}
+.chav{width:27px;height:27px;border-radius:50%;background:linear-gradient(135deg,#6A1B9A,#9C27B0);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.chmsg{display:flex;flex-direction:column;gap:7px}
+.msg-in,.msg-out{max-width:85%}
+.msg-out{align-self:flex-end;margin-left:auto}
+.bbl{padding:7px 10px;border-radius:11px;font-size:10.5px;line-height:1.5}
+.msg-in .bbl{background:rgba(255,255,255,.09);color:var(--w85);border-radius:4px 11px 11px 11px}
+.msg-out .bbl{background:linear-gradient(135deg,rgba(21,101,216,.55),rgba(41,121,255,.45));color:#fff;border-radius:11px 4px 11px 11px}
+.msender{font-size:8px;font-weight:700;color:var(--bl3);margin-bottom:1.5px} .mmeta{font-size:8px;color:var(--w20);margin-top:1.5px;text-align:right}
+.chinput{display:flex;gap:7px;align-items:center;padding:7px 0 0;border-top:1px solid rgba(255,255,255,.07);margin-top:7px}
+.chfake{flex:1;background:rgba(255,255,255,.07);border-radius:20px;padding:5px 11px;font-size:10px;color:var(--w20)}
+.doc2col{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.doccard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+.dch{background:rgba(0,0,0,.2);padding:7px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
+.dct{font-size:9.5px;font-weight:800;color:#fff;letter-spacing:.4px} .dcn{font-size:9px;color:var(--w35)}
+.dcb{padding:10px 11px}
+.dr{display:flex;justify-content:space-between;padding:4.5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:10px}
+.dr:last-child{border:none} .dprod{color:var(--w85);font-weight:500} .dprice{color:var(--w35)}
+.dtotal{background:rgba(41,121,255,.09);border:1px solid rgba(41,121,255,.18);border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:800}
+.dtotal span{color:var(--bl3)} .dwsp{margin-top:8px;width:100%;padding:5px 0;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);border-radius:6px;color:#A5D6A7;font-size:10px;font-weight:700;text-align:center}
+.ocnum{background:var(--nv2);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.4px}
+.r3col{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rc{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:13px 11px;text-align:center}
+.rc.ra{border-color:rgba(232,119,10,.28)} .rc.rv{border-color:rgba(41,121,255,.28)} .rc.rg{border-color:rgba(76,175,80,.28)}
+.rcico{font-size:22px;margin-bottom:6px} .rcname{font-size:11px;font-weight:800;color:#fff;margin-bottom:2px}
+.rctag{font-size:7.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:1.5px 7px;border-radius:20px;display:inline-block;margin-bottom:9px}
+.ra .rctag{background:rgba(232,119,10,.15);color:var(--or2)} .rv .rctag{background:rgba(41,121,255,.15);color:var(--bl3)} .rg .rctag{background:rgba(76,175,80,.15);color:#A5D6A7}
+.rp{list-style:none;text-align:left;display:flex;flex-direction:column;gap:5px}
+.rp li{font-size:9.5px;color:var(--w85);display:flex;align-items:center;gap:5px}
+.rp li.no{color:var(--w20)} .rok{color:#A5D6A7;font-size:10px} .rno{color:rgba(255,80,80,.55);font-size:10px}
+/* phone */
+.phone{width:148px;background:linear-gradient(145deg,#14183A,#1E2252);border-radius:24px;border:2px solid rgba(255,255,255,.13);padding:9px;box-shadow:0 24px 50px rgba(0,0,0,.5);transform:perspective(700px) rotateY(-8deg) rotateX(3deg)}
+.pnotch{width:46px;height:4px;background:rgba(255,255,255,.13);border-radius:2px;margin:0 auto 8px}
+.pscr{background:linear-gradient(145deg,#06144A,#0B1F5F);border-radius:14px;padding:10px 9px}
+.pst{display:flex;justify-content:space-between;font-size:6.5px;color:var(--w35);margin-bottom:10px}
+.hgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.hico{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.hico.jvs{background:linear-gradient(135deg,var(--nv2),var(--bl));border:1.5px solid rgba(41,121,255,.4);box-shadow:0 3px 12px rgba(21,101,216,.4);font-size:0;overflow:hidden}
+.hico.jvs img{width:100%;height:100%;object-fit:contain;padding:3px}
+.hico.wapp{background:linear-gradient(135deg,#075E54,#25D366)} .hico.cam{background:#222} .hico.cal{background:linear-gradient(135deg,#c62828,#ef5350)} .hico.gm{background:linear-gradient(135deg,#1565D8,#1976D2)} .hico.mu{background:linear-gradient(135deg,#880E4F,#C2185B)} .hico.mp{background:linear-gradient(135deg,#1B5E20,#388E3C)} .hico.fo{background:linear-gradient(135deg,#E65100,#F57C00)}
+.hname{font-size:5px;color:var(--w35);text-align:center;margin-top:1px}
+.pnotif{background:rgba(232,119,10,.17);border:1px solid rgba(232,119,10,.28);border-radius:6px;padding:6px 8px;font-size:7px;color:#FFB74D}
+.pnotif-t{font-weight:800;margin-bottom:1px}
+.phone-feats{display:flex;flex-direction:column;gap:11px;justify-content:center}
+.pfeat{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--w85);font-weight:500}
+.ck2{width:17px;height:17px;border-radius:50%;background:rgba(41,121,255,.18);border:1px solid rgba(41,121,255,.4);display:flex;align-items:center;justify-content:center;font-size:8.5px;color:var(--bl3);flex-shrink:0}
+
+/* ══════════════════════════════
+   BRANCA — light mock UI
+══════════════════════════════ */
+.cslide-b{background:#f0f4f9!important;color:#1a1a1a!important}
+.b-appbar{background:linear-gradient(135deg,#060E1F,#0A1628);padding:8px 13px;display:flex;align-items:center;border-bottom:2px solid #1565D8;margin:-16px -18px 11px}
+.b-logo-sq{background:linear-gradient(135deg,#1565D8,#0d47a1);color:#fff;font-size:8.5px;font-weight:800;letter-spacing:1px;padding:3px 6px;border-radius:5px;margin-right:8px;box-shadow:0 0 10px rgba(21,101,216,.4);white-space:nowrap}
+.b-appbar-name{font-size:11.5px;font-weight:700;color:#fff}
+.b-appbar-sub{margin-left:auto;font-size:9px;color:rgba(255,255,255,.4)}
+.b-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.b-sec-t{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#777;margin-bottom:6px}
+.b-cli-badge{background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:6px 10px;font-size:11.5px;font-weight:600;color:#0F6E56;display:flex;align-items:center;justify-content:space-between}
+.b-type-row{display:flex;gap:6px}
+.b-type-btn{flex:1;padding:7px;border:2px solid #ddd;border-radius:6px;font-size:10.5px;font-weight:600;text-align:center;color:#888;background:#fff}
+.b-type-btn.act{border-color:#0A1628;background:#0A1628;color:#fff}
+.b-type-btn.mp{border-color:#f5c0c0;background:#FCEBEB;color:#C0392B}
+.b-form2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
+.b-field{background:#fff;border:1px solid #ddd;border-radius:6px;padding:6px 9px}
+.b-lbl{font-size:9px;font-weight:600;color:#777;margin-bottom:1.5px} .b-val{font-size:11.5px;font-weight:600;color:#1a1a1a}
+.b-textarea{background:#f8f9fb;border:1px solid #ddd;border-radius:6px;padding:7px 9px;font-size:10.5px;color:#333;line-height:1.5}
+.b-formtabs{display:flex;background:#fff;border-bottom:1px solid #ddd;margin:-16px -18px 11px;padding:0 11px;overflow-x:auto}
+.b-ftab{padding:9px 13px;font-size:11px;font-weight:600;color:#999;border-bottom:3px solid transparent;white-space:nowrap}
+.b-ftab.ba{color:#0A1628;border-bottom-color:#0A1628} .b-ftab.bd{color:#1D9E75}
+.b-table{width:100%;border-collapse:collapse;font-size:10.5px;background:#fff;border-radius:7px;overflow:hidden;border:1px solid #ddd}
+.b-table th{background:#f0f4f9;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#666;border-bottom:1px solid #ddd}
+.b-table td{padding:6px 8px;border-bottom:1px solid #f0f0f0;color:#333}
+.b-table tr:last-child td{border-bottom:none}
+.b-total{text-align:right;font-size:11px;color:#666;padding:5px 0}
+.b-total strong{color:#0A1628;font-weight:800}
+.b-add-row{border:1px dashed #ccc;border-radius:6px;padding:5px;text-align:center;font-size:10.5px;color:#aaa;margin-top:4px}
+.b-rep-row{display:grid;grid-template-columns:1fr 46px;gap:5px;align-items:center;margin-bottom:5px}
+.b-rep-name{background:#fff;border:1px solid #ddd;border-radius:6px;padding:6px 9px;font-size:10.5px;color:#333}
+.b-rep-qty{background:#f0f4f9;border:1px solid #ddd;border-radius:6px;padding:6px;font-size:11.5px;font-weight:800;color:#0A1628;text-align:center}
+.b-sig-box{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;text-align:center}
+.b-sig-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#777;margin-bottom:6px}
+.b-sig-area{background:#f8f9fb;border:1px dashed #ccc;border-radius:6px;padding:6px;display:flex;align-items:center;justify-content:center}
+.b-comp{background:#fff;border:1px solid #ddd;border-radius:10px;overflow:hidden}
+.b-comp-hd{background:#0A1628;color:#fff;padding:12px 13px;display:flex;justify-content:space-between;align-items:flex-start}
+.b-comp-brand{font-size:13px;font-weight:800;letter-spacing:1.5px;margin-bottom:1px}
+.b-comp-srl{font-size:8.5px;color:rgba(255,255,255,.45)}
+.b-comp-num{font-size:20px;font-weight:800;color:#F5A623;text-align:right;line-height:1}
+.b-comp-num-l{font-size:7.5px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1px}
+.b-comp-body{padding:10px 13px}
+.b-comp-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5;font-size:10.5px}
+.b-comp-row:last-child{border:none} .b-comp-l{color:#888} .b-comp-v{font-weight:600;color:#1a1a1a}
+.b-comp-status{display:inline-flex;align-items:center;gap:5px;background:#E1F5EE;border:1px solid #1D9E75;border-radius:20px;padding:3px 11px;font-size:10.5px;font-weight:700;color:#0F6E56;margin-top:8px}
+.b-hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.b-hist-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;border-left:3px solid #ddd}
+.b-hist-card.bh-cl{border-left-color:#1D9E75} .b-hist-card.bh-pe{border-left-color:#8B5CF6} .b-hist-card.bh-op{border-left-color:#1565D8}
+.b-hist-num{font-size:11.5px;font-weight:800;color:#0A1628;margin-bottom:2px}
+.b-hist-co{font-size:10.5px;color:#333;font-weight:500;margin-bottom:4px}
+.b-hist-meta{font-size:9px;color:#888;margin-bottom:5px}
+.b-bdg{display:inline-block;padding:1.5px 7px;border-radius:10px;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.hb-t{background:#E1F5EE;color:#1D9E75} .hb-p{background:#EDE9FE;color:#6D28D9} .hb-b{background:#EBF8FF;color:#1565D8}
+.b-cfg-hd{background:linear-gradient(135deg,#0A1628,#0D2044);padding:9px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #1565D8;border-radius:8px 8px 0 0}
+.b-cfg-t{font-size:11.5px;font-weight:700;color:#fff}
+.b-cfg-row{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-bottom:1px solid #f0f0f0;font-size:11px}
+.b-cfg-row:last-child{border:none} .b-cfg-name{font-weight:600;color:#1a1a1a} .b-cfg-sub{font-size:9px;color:#888;margin-top:1px}
+.b-btn-sm{background:none;border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:10px;color:#888;cursor:pointer}
+
+/* ════════ FEATURES ════════ */
+.features{padding:56px 24px;background:linear-gradient(180deg,#06144A 0%,#070F2E 100%)}
+.feat-grid{max-width:880px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px}
+.fcard{background:var(--w08);border:1px solid var(--w15);border-radius:13px;padding:20px 17px;transition:transform .2s,border-color .2s,box-shadow .2s;opacity:0;transform:translateY(26px)}
+.fcard.vis{animation:fadeUp .55s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.fcard:hover{transform:translateY(-3px)!important;border-color:rgba(41,121,255,.28);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.fc-ico{font-size:26px;margin-bottom:11px} .fc-t{font-size:13.5px;font-weight:800;color:#fff;margin-bottom:5px} .fc-d{font-size:11.5px;color:var(--w60);line-height:1.6}
+
+/* ════════ CTA ════════ */
+.cta-sec{background:radial-gradient(ellipse at 50% 40%,rgba(41,121,255,.12) 0%,transparent 60%),linear-gradient(160deg,#07112E 0%,#0B1F5F 55%,#07112E 100%);padding:72px 24px;text-align:center;position:relative;overflow:hidden}
+.cta-sec::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(41,121,255,.3),transparent)}
+.cta-logo-wrap{display:inline-block;background:#fff;border-radius:16px;padding:7px 12px;margin-bottom:18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+.cta-logo{height:40px;object-fit:contain}
+.cta-jvs{font-size:9.5px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--or2);margin-bottom:10px}
+.cta-t{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,46px);font-weight:900;margin-bottom:12px;background:linear-gradient(130deg,#fff 0%,#A8C8FF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cta-sub{font-size:14px;color:var(--w60);max-width:440px;margin:0 auto 32px;line-height:1.7}
+.cta-chips{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-bottom:32px}
+.cta-chip{background:var(--w08);border:1px solid var(--w15);padding:8px 15px;border-radius:30px;font-size:11px;font-weight:600;color:var(--w85)}
+.cta-btn{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(135deg,#1FAD5F,#25D366);color:#fff;font-size:14px;font-weight:800;padding:13px 32px;border-radius:40px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,.3);transition:transform .2s,box-shadow .2s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(37,211,102,.42)}
+.cta-note{font-size:10.5px;color:var(--w20);margin-top:13px}
+footer{background:#040E24;padding:16px 24px;text-align:center;font-size:11px;color:var(--w20);border-top:1px solid rgba(255,255,255,.06)}
+
+/* ════════ RESPONSIVE ════════ */
+@media(max-width:720px){
+  .cases-grid{grid-template-columns:1fr}
+  .car-prev{left:-8px} .car-next{right:-8px}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .r3col{grid-template-columns:1fr}
+  .doc2col,.b-hist-grid{grid-template-columns:1fr}
+  .phone{transform:none;width:140px}
+  .phone-wrap-inner{flex-direction:column!important;gap:16px!important}
+  .sys-sel{max-width:100%}
+  .hdr-pills{display:none}
+  .cslide{padding:12px 13px}
+  .mock-topbar{margin:-12px -13px 10px}
+  .b-appbar,.b-formtabs,.chhead{margin:-12px -13px 10px}
+}
+@media(max-width:480px){
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .sys-btn-s{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-brand">
+      <img src="https://jv-system.github.io/Sabores-de-misiones/jvs-logo.png" class="hdr-logo" alt="JVS">
+      <div>
+        <div class="hdr-name">JVS System</div>
+        <div class="hdr-sub">Software a medida</div>
+      </div>
+    </div>
+    <div class="hdr-pills">
+      <div class="hdr-pill hp-grn"><span class="pulse grn"></span>Sabores de Misiones</div>
+      <div class="hdr-pill hp-amb"><span class="pulse amb"></span>Ingeniería Branca SRL</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <img src="https://jv-system.github.io/Sabores-de-misiones/jvs-logo.png" class="hero-logo" alt="JVS">
+  <h1 class="hero-t">Software a medida<br>para tu empresa</h1>
+  <p class="hero-sub">Cada sistema desarrollado desde cero según las necesidades reales del negocio. Tus datos, tu marca, sin cuotas mensuales.</p>
+  <div class="pills">
+    <div class="pill">⚙️ 100% a medida</div>
+    <div class="pill">🔐 Tus datos, tuyos</div>
+    <div class="pill">📱 App instalable</div>
+    <div class="pill">🚀 Entrega rápida</div>
+    <div class="pill">💰 Sin suscripción</div>
+  </div>
+</section>
+
+<!-- ══ CASOS ACTIVOS ══ -->
+<section class="cases-sec">
+  <div class="sec-head">
+    <div class="sec-tag">Proyectos en producción</div>
+    <h2 class="sec-h">2 sistemas activos hoy</h2>
+    <p class="sec-d">Soluciones reales para negocios reales — funcionando a diario en Misiones.</p>
+  </div>
+  <div class="cases-grid">
+    <div class="case-card cc-grn" onclick="document.getElementById('showcase').scrollIntoView({behavior:'smooth'});setTimeout(()=>switchSys(0),400)">
+      <div class="cc-icon">🌿</div>
+      <div class="cc-name">Sabores de Misiones</div>
+      <div class="cc-sub">Comercio de yerba mate · Posadas, Misiones</div>
+      <div class="cc-active cca-grn"><span class="pulse grn"></span> Activo desde enero 2025</div>
+      <div class="cc-desc">Sistema de gestión para comercialización de yerba mate: pedidos, clientes, stock, comunicación y análisis de ventas.</div>
+      <div class="cc-tags">
+        <span class="cc-tag">📦 Pedidos</span>
+        <span class="cc-tag">👥 Clientes</span>
+        <span class="cc-tag">💬 Chat</span>
+        <span class="cc-tag">📊 Dashboard</span>
+        <span class="cc-tag">📄 Presupuestos</span>
+      </div>
+      <div class="cc-btn">Ver demo → </div>
+    </div>
+    <div class="case-card cc-amb" onclick="document.getElementById('showcase').scrollIntoView({behavior:'smooth'});setTimeout(()=>switchSys(1),400)">
+      <div class="cc-icon">🔧</div>
+      <div class="cc-name">Ingeniería Branca SRL</div>
+      <div class="cc-sub">Servicio técnico industrial · Misiones</div>
+      <div class="cc-active cca-amb"><span class="pulse amb"></span> Activo desde octubre 2024</div>
+      <div class="cc-desc">Sistema de órdenes de servicio técnico: carga de OS, visitas y horas, repuestos, firma digital del cliente y comprobante imprimible.</div>
+      <div class="cc-tags">
+        <span class="cc-tag">📋 Órdenes de Servicio</span>
+        <span class="cc-tag">⏱ Horas técnicas</span>
+        <span class="cc-tag">✍️ Firma digital</span>
+        <span class="cc-tag">🖨 Comprobante</span>
+      </div>
+      <div class="cc-btn">Ver demo →</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CAROUSEL ══ -->
+<section class="showcase" id="showcase">
+  <div class="sec-head">
+    <div class="sec-tag">Demo interactivo</div>
+    <h2 class="sec-h">Mirá los sistemas en acción</h2>
+    <p class="sec-d">Seleccioná un proyecto y navegá por las pantallas reales de cada sistema.</p>
+  </div>
+
+  <!-- system tabs -->
+  <div class="sys-sel">
+    <button class="sys-btn sb on" onclick="switchSys(0)">
+      <span class="sys-btn-ico">🌿</span>
+      <span><span class="sys-btn-t">Sabores de Misiones</span><span class="sys-btn-s">Gestión yerba mate</span></span>
+    </button>
+    <button class="sys-btn br" onclick="switchSys(1)">
+      <span class="sys-btn-ico">🔧</span>
+      <span><span class="sys-btn-t">Ingeniería Branca</span><span class="sys-btn-s">Órdenes de servicio</span></span>
+    </button>
+  </div>
+
+  <div class="car-wrap">
+    <div class="car-frame">
+      <div class="frame-bar">
+        <div class="frame-dots">
+          <span style="background:#FF5F57"></span>
+          <span style="background:#FFBD2E"></span>
+          <span style="background:#28C840"></span>
+        </div>
+        <div class="frame-url" id="frame-url">📊 Dashboard</div>
+        <div style="flex:0 0 60px"></div>
+      </div>
+      <div class="car-prog"><div class="car-prog-fill" id="progfill"></div></div>
+
+      <!-- SABORES carousel -->
+      <div class="sys-car active-car" id="car-0">
+        <div class="car-viewport">
+          <div class="car-strip" id="strip-0">
+
+            <!-- S1: Dashboard -->
+            <div class="cslide">
+              <div class="mock-topbar"><span style="font-size:13px">📊</span><span class="mock-tb-t">Dashboard</span><span style="margin-left:auto;font-size:9px;color:rgba(255,255,255,.3)">Mayo 2026</span></div>
+              <div class="kgrid">
+                <div class="kcard k-b"><div class="kic">📦</div><div class="kv">2.840 kg</div><div class="kl">KG Vendidos</div></div>
+                <div class="kcard k-o"><div class="kic">💰</div><div class="kv">$847.200</div><div class="kl">Ingresos</div></div>
+                <div class="kcard k-g"><div class="kic">🛒</div><div class="kv">12</div><div class="kl">Pedidos</div></div>
+                <div class="kcard k-p"><div class="kic">👥</div><div class="kv">8</div><div class="kl">Clientes</div></div>
+              </div>
+              <div style="font-size:7.5px;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Últimos 6 meses</div>
+              <div style="display:flex;gap:3px">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar" style="height:36%"></div><div class="mbl">Dic</div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar" style="height:54%"></div><div class="mbl">Ene</div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar" style="height:43%"></div><div class="mbl">Feb</div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar" style="height:68%"></div><div class="mbl">Mar</div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar" style="height:57%"></div><div class="mbl">Abr</div></div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center"><div class="mbar hi" style="height:90%"></div><div class="mbl now">May</div></div>
+              </div>
+            </div>
+
+            <!-- S2: Pedidos -->
+            <div class="cslide">
+              <div class="mock-topbar"><span style="font-size:13px">🛒</span><span class="mock-tb-t">Pedidos</span><span style="margin-left:auto;background:rgba(41,121,255,.15);border:1px solid rgba(41,121,255,.3);border-radius:20px;padding:1px 8px;font-size:9px;color:#90C0FF">12 activos</span></div>
+              <div class="fchips">
+                <span class="fchip fc-all">Todos (12)</span>
+                <span class="fchip">⏳ Pendiente (2)</span>
+                <span class="fchip fc-co">✅ Confirmado (3)</span>
+                <span class="fchip fc-de">🚚 Despachado (4)</span>
+                <span class="fchip fc-cb">💜 Cobrado (3)</span>
+              </div>
+              <div class="prow"><div class="pav">SC</div><div><div class="pname">Secadero Don Carlos</div><div class="psub">#012 · 200 kg · 22 may</div></div><div class="pright"><span class="pbdg b-de2">🚚 despachado</span><span class="pval">$124.000</span></div></div>
+              <div class="prow"><div class="pav" style="background:linear-gradient(135deg,#7B1FA2,#9C27B0)">AL</div><div><div class="pname">Almacén Los Colonos</div><div class="psub">#011 · 80 kg · 20 may</div></div><div class="pright"><span class="pbdg b-co2">✅ confirmado</span><span class="pval">$49.600</span></div></div>
+              <div class="prow"><div class="pav" style="background:linear-gradient(135deg,#00695C,#00897B)">AN</div><div><div class="pname">Anahí Torres</div><div class="psub">#010 · 40 kg · 15 may</div></div><div class="pright"><span class="pbdg b-cb2">💜 cobrado</span><span class="pval">$24.800</span></div></div>
+              <div class="prow" style="border:none"><div class="pav" style="background:linear-gradient(135deg,#E65100,#F57C00)">EP</div><div><div class="pname">El Pinar Distribuidora</div><div class="psub">#009 · 120 kg · 12 may</div></div><div class="pright"><span class="pbdg b-cb2">💜 cobrado</span><span class="pval">$74.400</span></div></div>
+            </div>
+
+            <!-- S3: Cliente -->
+            <div class="cslide">
+              <div class="mock-topbar"><span style="font-size:13px">👥</span><span class="mock-tb-t">Ficha de cliente</span></div>
+              <div style="display:flex;align-items:center;gap:11px;margin-bottom:13px">
+                <div class="clav">SC</div>
+                <div style="flex:1"><div style="font-size:13px;font-weight:800;color:#fff;margin-bottom:1px">Secadero Don Carlos</div><div style="font-size:9.5px;color:var(--w35)">📞 +54 376 4XX XXXX · Posadas</div></div>
+                <span style="background:rgba(76,175,80,.12);border:1px solid rgba(76,175,80,.28);border-radius:20px;padding:2px 9px;font-size:8.5px;font-weight:700;color:#A5D6A7">activo</span>
+              </div>
+              <div style="margin-bottom:11px"><div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--w35);margin-bottom:4px">Cuenta corriente</div><div class="bal-bg"><div class="bal-fill" style="width:70%"></div></div><div style="font-size:13px;font-weight:800;color:#A5D6A7">$45.600 a favor</div></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px">
+                <div class="cstat"><div class="cstatv">18</div><div class="cstatl">Pedidos</div></div>
+                <div class="cstat"><div class="cstatv">2.840</div><div class="cstatl">KG Total</div></div>
+                <div class="cstat"><div class="cstatv">ene 25</div><div class="cstatl">Desde</div></div>
+              </div>
+              <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--w20);margin-bottom:6px">Últimos pedidos</div>
+              <div class="mord"><span style="font-weight:600;color:var(--w85)">#012 · 22 may</span><span style="color:var(--w35)">200 kg · $124.000</span></div>
+              <div class="mord"><span style="font-weight:600;color:var(--w85)">#008 · 10 abr</span><span style="color:var(--w35)">180 kg · $111.600</span></div>
+              <div class="mord"><span style="font-weight:600;color:var(--w85)">#005 · 02 mar</span><span style="color:var(--w35)">160 kg · $96.000</span></div>
+            </div>
+
+            <!-- S4: Chat -->
+            <div class="cslide">
+              <div class="chhead"><div class="chav">L</div><div><div style="font-size:11px;font-weight:700;color:#fff">Lucía (vendedora)</div><div style="font-size:9px;color:#A5D6A7">● En línea</div></div><span style="margin-left:auto;font-size:9px;color:var(--w35)">💬 Chat interno</span></div>
+              <div class="chmsg">
+                <div class="msg-in"><div class="msender">Darío (admin)</div><div class="bbl">Confirmé el pedido #012 de Secadero Don Carlos, 200 kg para mañana 🟢</div><div class="mmeta">10:24 · leído ✓✓</div></div>
+                <div class="msg-out"><div class="bbl">Perfecto, lo mando con el flete de la mañana 👍</div><div class="mmeta">10:26 · leído ✓✓</div></div>
+                <div class="msg-in"><div class="msender">Darío (admin)</div><div class="bbl">Dale. Don Carlos tiene saldo pendiente de $28.000 del mes pasado 💰</div><div class="mmeta">10:28 · leído ✓✓</div></div>
+                <div class="msg-out"><div class="bbl">Anotado, le aviso cuando despache 📦</div><div class="mmeta">10:29 · leído ✓✓</div></div>
+              </div>
+              <div class="chinput"><div class="chfake">Escribir mensaje...</div><div style="width:25px;height:25px;background:rgba(41,121,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">➤</div></div>
+            </div>
+
+            <!-- S5: Docs -->
+            <div class="cslide">
+              <div class="mock-topbar"><span style="font-size:13px">📄</span><span class="mock-tb-t">Documentos</span><span style="margin-left:auto;font-size:9px;color:var(--w35)">Presupuestos · OC</span></div>
+              <div class="doc2col">
+                <div class="doccard">
+                  <div class="dch"><span class="dct">📋 PRESUPUESTO</span><span class="dcn">#003</span></div>
+                  <div class="dcb">
+                    <div style="font-size:9px;color:var(--w85);font-weight:600;margin-bottom:6px">Sec. Don Carlos</div>
+                    <div class="dr"><span class="dprod">YM 1 kg × 30</span><span class="dprice">$42.000</span></div>
+                    <div class="dr"><span class="dprod">YM 500g × 20</span><span class="dprice">$18.000</span></div>
+                    <div class="dr"><span class="dprod">Detox 250g × 10</span><span class="dprice">$12.000</span></div>
+                    <div class="dtotal"><span style="color:var(--w35)">Total</span><span>$72.000</span></div>
+                    <div class="dwsp">📲 Enviar por WhatsApp</div>
+                  </div>
+                </div>
+                <div class="doccard">
+                  <div class="dch"><div style="display:flex;align-items:center;gap:6px"><span class="ocnum">OC-004</span><span class="dct">COMPRA</span></div></div>
+                  <div class="dcb">
+                    <div style="font-size:9.5px;color:var(--w85);font-weight:600;margin-bottom:1px">Yerba Madre S.A.</div>
+                    <div style="font-size:8.5px;color:var(--w20);margin-bottom:6px">22 may 2026</div>
+                    <div class="dr"><span class="dprod">YM 1 kg × 100</span><span class="dprice">$98.000</span></div>
+                    <div class="dr"><span class="dprod">YM 500g × 60</span><span class="dprice">$41.400</span></div>
+                    <div class="dr"><span class="dprod">YM 250g × 40</span><span class="dprice">$17.200</span></div>
+                    <div class="dtotal"><span style="color:var(--w35)">Total OC</span><span>$156.600</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- S6: Roles -->
+            <div class="cslide">
+              <div class="mock-topbar"><span style="font-size:13px">🔐</span><span class="mock-tb-t">Roles y accesos</span><span style="margin-left:auto;font-size:9px;color:var(--w35)">Cada usuario ve lo que necesita</span></div>
+              <div class="r3col">
+                <div class="rc ra"><div class="rcico">👑</div><div class="rcname">Admin</div><div class="rctag">Control total</div><ul class="rp"><li><span class="rok">✓</span> Dashboard</li><li><span class="rok">✓</span> Todos los pedidos</li><li><span class="rok">✓</span> Compras y precios</li><li><span class="rok">✓</span> Config. sistema</li></ul></div>
+                <div class="rc rv"><div class="rcico">🧑‍💼</div><div class="rcname">Vendedor</div><div class="rctag">Operativo</div><ul class="rp"><li><span class="rok">✓</span> Pedidos</li><li><span class="rok">✓</span> Clientes</li><li><span class="rok">✓</span> Chat y pres.</li><li class="no"><span class="rno">✗</span> Precios compra</li></ul></div>
+                <div class="rc rg"><div class="rcico">👤</div><div class="rcname">Cliente</div><div class="rctag">Solo lo suyo</div><ul class="rp"><li><span class="rok">✓</span> Sus pedidos</li><li><span class="rok">✓</span> Estado real</li><li><span class="rok">✓</span> Cuenta cte.</li><li class="no"><span class="rno">✗</span> Datos internos</li></ul></div>
+              </div>
+            </div>
+
+            <!-- S7: PWA -->
+            <div class="cslide" style="display:flex;align-items:center">
+              <div class="phone-wrap-inner" style="display:flex;width:100%;align-items:center;gap:32px">
+                <div class="phone">
+                  <div class="pnotch"></div>
+                  <div class="pscr">
+                    <div class="pst"><span>9:41</span><span>●●● 📶 🔋</span></div>
+                    <div class="hgrid">
+                      <div><div class="hico jvs"><img src="https://jv-system.github.io/Sabores-de-misiones/jvs-logo.png" alt="JVS"></div><div class="hname">JVS</div></div>
+                      <div><div class="hico wapp">💬</div><div class="hname">WhatsApp</div></div>
+                      <div><div class="hico cam">📷</div><div class="hname">Cámara</div></div>
+                      <div><div class="hico cal">📅</div><div class="hname">Agenda</div></div>
+                      <div><div class="hico gm">📧</div><div class="hname">Gmail</div></div>
+                      <div><div class="hico mu">🎵</div><div class="hname">Música</div></div>
+                      <div><div class="hico mp">🗺️</div><div class="hname">Maps</div></div>
+                      <div><div class="hico fo">📸</div><div class="hname">Fotos</div></div>
+                    </div>
+                    <div class="pnotif"><div class="pnotif-t">🔔 JVS Sistema</div><div style="opacity:.8">Pedido #012 despachado ✅</div></div>
+                  </div>
+                </div>
+                <div class="phone-feats">
+                  <div class="pfeat"><span class="ck2">✓</span> iPhone y Android</div>
+                  <div class="pfeat"><span class="ck2">✓</span> Sin App Store</div>
+                  <div class="pfeat"><span class="ck2">✓</span> Funciona offline</div>
+                  <div class="pfeat"><span class="ck2">✓</span> Se actualiza sola</div>
+                  <div class="pfeat"><span class="ck2">✓</span> Desde computadora</div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /strip-0 -->
+        </div>
+      </div><!-- /car-0 -->
+
+      <!-- BRANCA carousel -->
+      <div class="sys-car" id="car-1">
+        <div class="car-viewport">
+          <div class="car-strip" id="strip-1">
+
+            <!-- B1: Nueva Orden -->
+            <div class="cslide cslide-b">
+              <div class="b-appbar">
+                <div class="b-logo-sq">BRANCA</div>
+                <div class="b-appbar-name">Ingeniería Branca SRL</div>
+                <div class="b-appbar-sub">+ Nueva Orden</div>
+              </div>
+              <div class="b-card">
+                <div class="b-sec-t">Cliente</div>
+                <div class="b-cli-badge">🏢 SOSA HNOS. S.R.L. <span style="font-size:11px;color:#1D9E75">✕</span></div>
+              </div>
+              <div class="b-card">
+                <div class="b-sec-t">Tipo de servicio</div>
+                <div class="b-type-row">
+                  <div class="b-type-btn act">● Normal</div>
+                  <div class="b-type-btn">⚠ Máquina parada</div>
+                </div>
+              </div>
+              <div class="b-form2">
+                <div class="b-field"><div class="b-lbl">Fecha</div><div class="b-val">22/05/2026</div></div>
+                <div class="b-field"><div class="b-lbl">Técnico</div><div class="b-val">Rodrigo M.</div></div>
+              </div>
+              <div class="b-card" style="margin-bottom:0">
+                <div class="b-sec-t">Descripción del problema</div>
+                <div class="b-textarea">Bomba hidráulica sin presión en circuito principal. Se requiere revisión de válvulas y sello...</div>
+              </div>
+            </div>
+
+            <!-- B2: Visitas / Horas -->
+            <div class="cslide cslide-b">
+              <div class="b-formtabs">
+                <div class="b-ftab bd">Datos ✓</div>
+                <div class="b-ftab ba">Visitas</div>
+                <div class="b-ftab">Repuestos</div>
+                <div class="b-ftab">Firma</div>
+              </div>
+              <table class="b-table" style="margin-bottom:8px">
+                <thead><tr><th>Fecha</th><th>Técnico</th><th>Ingreso</th><th>Egreso</th><th>Hs</th></tr></thead>
+                <tbody>
+                  <tr><td>22/05</td><td>Rodrigo M.</td><td>08:00</td><td>13:30</td><td><strong>5.5</strong></td></tr>
+                  <tr><td>23/05</td><td>Rodrigo M.</td><td>14:00</td><td>18:00</td><td><strong>4.0</strong></td></tr>
+                </tbody>
+              </table>
+              <div class="b-total">Total registrado: <strong>9.5 hs</strong></div>
+              <div class="b-add-row">+ Agregar visita</div>
+              <div style="margin-top:10px;background:#EBF8FF;border:1px solid rgba(21,101,216,.3);border-radius:7px;padding:8px 10px;font-size:10.5px;color:#1565D8">
+                <strong>Cálculo automático de horas</strong> por técnico en cada OS.
+              </div>
+            </div>
+
+            <!-- B3: Repuestos -->
+            <div class="cslide cslide-b">
+              <div class="b-formtabs">
+                <div class="b-ftab bd">Datos ✓</div>
+                <div class="b-ftab bd">Visitas ✓</div>
+                <div class="b-ftab ba">Repuestos</div>
+                <div class="b-ftab">Firma</div>
+              </div>
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#777;margin-bottom:7px">Materiales utilizados</div>
+              <div class="b-rep-row"><div class="b-rep-name">Empaque hidráulico 50 mm</div><div class="b-rep-qty">×2</div></div>
+              <div class="b-rep-row"><div class="b-rep-name">Sello de aceite 25 mm</div><div class="b-rep-qty">×1</div></div>
+              <div class="b-rep-row"><div class="b-rep-name">Resorte tensor ref. 4417</div><div class="b-rep-qty">×3</div></div>
+              <div class="b-rep-row"><div class="b-rep-name">O-ring 12 × 2 mm</div><div class="b-rep-qty">×4</div></div>
+              <div class="b-add-row">+ Agregar repuesto</div>
+              <div style="margin-top:10px;background:#f8f9fb;border:1px solid #ddd;border-radius:7px;padding:7px 10px;display:flex;justify-content:space-between;font-size:11px">
+                <span style="color:#666">4 ítems cargados</span>
+                <span style="font-weight:700;color:#0A1628">OS #0043</span>
+              </div>
+            </div>
+
+            <!-- B4: Firma digital -->
+            <div class="cslide cslide-b">
+              <div class="b-formtabs">
+                <div class="b-ftab bd">Datos ✓</div>
+                <div class="b-ftab bd">Visitas ✓</div>
+                <div class="b-ftab bd">Repuestos ✓</div>
+                <div class="b-ftab ba">Firma</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+                <div class="b-sig-box">
+                  <div class="b-sig-lbl">Firma cliente</div>
+                  <div class="b-sig-area">
+                    <svg width="100%" height="56" viewBox="0 0 160 56"><path d="M8,38 C18,18 32,48 50,30 C68,12 76,42 96,32 C112,24 124,46 140,38 C150,33 155,42 158,38" fill="none" stroke="#0A1628" stroke-width="2.2" stroke-linecap="round"/></svg>
+                  </div>
+                  <div class="b-sig-lbl" style="margin-top:5px;color:#0F6E56">✓ Guardada</div>
+                </div>
+                <div class="b-sig-box">
+                  <div class="b-sig-lbl">Firma técnico</div>
+                  <div class="b-sig-area">
+                    <svg width="100%" height="56" viewBox="0 0 160 56"><path d="M10,42 C24,24 36,50 54,34 C70,20 82,46 104,28 C122,14 136,44 152,36" fill="none" stroke="#1565D8" stroke-width="2.2" stroke-linecap="round"/></svg>
+                  </div>
+                  <div class="b-sig-lbl" style="margin-top:5px;color:#0F6E56">✓ Guardada</div>
+                </div>
+              </div>
+              <div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:8px;padding:9px 12px;font-size:11px;color:#0F6E56;font-weight:600;text-align:center">
+                ✓ Firma digital capturada en el celular — sin papel
+              </div>
+            </div>
+
+            <!-- B5: Comprobante -->
+            <div class="cslide cslide-b">
+              <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#777;margin-bottom:8px">Vista previa del comprobante</div>
+              <div class="b-comp">
+                <div class="b-comp-hd">
+                  <div><div class="b-comp-brand">INGENIERÍA BRANCA</div><div class="b-comp-srl">SRL · Misiones, Argentina</div></div>
+                  <div><div class="b-comp-num-l">Orden de servicio</div><div class="b-comp-num">#0043</div></div>
+                </div>
+                <div class="b-comp-body">
+                  <div class="b-comp-row"><span class="b-comp-l">Cliente</span><span class="b-comp-v">SOSA HNOS. S.R.L.</span></div>
+                  <div class="b-comp-row"><span class="b-comp-l">Tipo</span><span class="b-comp-v">Reparación · Normal</span></div>
+                  <div class="b-comp-row"><span class="b-comp-l">Técnico</span><span class="b-comp-v">Rodrigo M.</span></div>
+                  <div class="b-comp-row"><span class="b-comp-l">Visitas</span><span class="b-comp-v">2 visitas · 9.5 hs</span></div>
+                  <div class="b-comp-row"><span class="b-comp-l">Repuestos</span><span class="b-comp-v">4 ítems</span></div>
+                  <div class="b-comp-row"><span class="b-comp-l">Fecha</span><span class="b-comp-v">23/05/2026</span></div>
+                  <div class="b-comp-status">✓ ORDEN CERRADA</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;background:#f0f4f9;border:1px solid #ddd;border-radius:7px;padding:7px 10px;font-size:10.5px;color:#555;text-align:center">🖨 Listo para imprimir o guardar como PDF</div>
+            </div>
+
+            <!-- B6: Historial -->
+            <div class="cslide cslide-b">
+              <div class="b-appbar" style="margin-bottom:12px">
+                <div class="b-logo-sq">BRANCA</div>
+                <div class="b-appbar-name">Historial de Órdenes</div>
+                <div class="b-appbar-sub">📋 28 registros</div>
+              </div>
+              <div class="b-hist-grid">
+                <div class="b-hist-card bh-cl">
+                  <div class="b-hist-num">OS #0043</div>
+                  <div class="b-hist-co">SOSA HNOS. S.R.L.</div>
+                  <div class="b-hist-meta">Rodrigo M. · 23/05/26 · 9.5 hs</div>
+                  <span class="b-bdg hb-t">✓ Cerrada</span>
+                </div>
+                <div class="b-hist-card bh-pe">
+                  <div class="b-hist-num">OS #0042</div>
+                  <div class="b-hist-co">Metalúrgica Sur SRL</div>
+                  <div class="b-hist-meta">Juan V. · 20/05/26 · 6.0 hs</div>
+                  <span class="b-bdg hb-p">⏳ Pendiente</span>
+                </div>
+                <div class="b-hist-card bh-cl">
+                  <div class="b-hist-num">OS #0041</div>
+                  <div class="b-hist-co">Agro Misiones S.A.</div>
+                  <div class="b-hist-meta">Rodrigo M. · 18/05/26 · 4.5 hs</div>
+                  <span class="b-bdg hb-t">✓ Cerrada</span>
+                </div>
+                <div class="b-hist-card bh-op">
+                  <div class="b-hist-num">OS #0040</div>
+                  <div class="b-hist-co">Servicio Norte SRL</div>
+                  <div class="b-hist-meta">Juan V. · 15/05/26 · 3.0 hs</div>
+                  <span class="b-bdg hb-b">↗ Abierta</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /strip-1 -->
+        </div>
+      </div><!-- /car-1 -->
+
+    </div><!-- /car-frame -->
+
+    <button class="car-arr car-prev" onclick="cmov(-1)">‹</button>
+    <button class="car-arr car-next" onclick="cmov(1)">›</button>
+  </div><!-- /car-wrap -->
+
+  <div class="car-cap" id="carcap">
+    <h3 id="cap-t">Dashboard en tiempo real</h3>
+    <p id="cap-d">Todos los KPIs del negocio en un vistazo: KG vendidos, ingresos, pedidos activos y clientes.</p>
+  </div>
+  <div class="car-dots" id="cdots"></div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section class="features" id="features">
+  <div class="sec-head" style="margin-bottom:0">
+    <div class="sec-tag" id="feat-tag">Sabores de Misiones</div>
+    <h2 class="sec-h">Funcionalidades del sistema</h2>
+    <p class="sec-d">Todo lo que se construyó a partir de las necesidades reales del negocio.</p>
+  </div>
+  <div class="feat-grid" id="featgrid"></div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta-sec">
+  <div class="cta-logo-wrap">
+    <img src="https://jv-system.github.io/Sabores-de-misiones/jvs-logo.png" class="cta-logo" alt="JVS">
+  </div>
+  <div class="cta-jvs">JVS System</div>
+  <div class="cta-t">¿Tu empresa necesita<br>un sistema así?</div>
+  <p class="cta-sub">Cada proyecto es único. Analizamos tu negocio y desarrollamos exactamente lo que necesitás.</p>
+  <div class="cta-chips">
+    <div class="cta-chip">✅ Sistema propio</div>
+    <div class="cta-chip">🔐 Tus datos, tuyos</div>
+    <div class="cta-chip">📱 App instalable</div>
+    <div class="cta-chip">⚙️ A tu medida</div>
+    <div class="cta-chip">🚀 Entrega rápida</div>
+  </div>
+  <a href="https://wa.me/5493764000000?text=Hola%20JVS%2C%20vi%20la%20presentaci%C3%B3n%20y%20quiero%20informaci%C3%B3n%20sobre%20un%20sistema%20a%20medida" class="cta-btn" target="_blank">
+    <span style="font-size:18px">💬</span> Contactar por WhatsApp
+  </a>
+  <div class="cta-note">JVS System · Desarrollo de software a medida · Misiones, Argentina</div>
+</section>
+
+<footer>© 2025 JVS System · Todos los derechos reservados</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   DATA
+══════════════════════════════════════════ */
+const SYSTEMS = [
+  {
+    slides:[
+      {url:'📊 Dashboard',        t:'Dashboard en tiempo real',        d:'KPIs del negocio: KG vendidos, ingresos, pedidos activos y clientes, con selector de mes.'},
+      {url:'🛒 Pedidos',           t:'Gestión de pedidos',              d:'Estados personalizables, filtros por chip, historial y envío automático por WhatsApp.'},
+      {url:'👥 Clientes',          t:'Ficha completa por cliente',      d:'Cuenta corriente automática, balance en tiempo real e historial de todos sus pedidos.'},
+      {url:'💬 Chat interno',      t:'Chat interno del equipo',         d:'Mensajería entre admin y vendedores dentro del sistema, sin mezclar el WhatsApp personal.'},
+      {url:'📄 Documentos',        t:'Presupuestos y Órdenes de Compra',d:'Cotizaciones con envío por WhatsApp y control de compras a proveedores.'},
+      {url:'🔐 Roles',             t:'Roles y permisos',                d:'Admin, vendedor y cliente: cada uno ve solo lo que le corresponde.'},
+      {url:'📱 App instalable',    t:'Se instala como app en el celular',d:'Sin App Store. Se instala desde el navegador en iPhone y Android. Funciona sin conexión.'},
+    ],
+    feats:[
+      {ico:'📊',t:'Dashboard en tiempo real',d:'KPIs del negocio con selector de mes: KG vendidos, ingresos, pedidos y clientes.'},
+      {ico:'🛒',t:'Gestión de pedidos',d:'Estados personalizables, filtros, envío por WhatsApp y numeración correlativa.'},
+      {ico:'👥',t:'Ficha de clientes',d:'Historial completo, cuenta corriente automática y balance en tiempo real.'},
+      {ico:'💬',t:'Chat interno',d:'Mensajería integrada entre el equipo, sin mezclar el WhatsApp personal.'},
+      {ico:'📄',t:'Presupuestos y OC',d:'Presupuestos con envío por WhatsApp y control de compras a proveedores.'},
+      {ico:'🔐',t:'Roles y permisos',d:'Admin, vendedor y cliente: cada uno ve solo lo que le corresponde.'},
+      {ico:'📱',t:'App instalable (PWA)',d:'Sin App Store. Instalable desde el navegador. Funciona sin conexión.'},
+      {ico:'🌙',t:'Modo oscuro',d:'Diseño adaptable claro/oscuro para cualquier hora del día.'},
+    ]
+  },
+  {
+    slides:[
+      {url:'📋 Nueva Orden',       t:'Nueva Orden de Servicio',         d:'Carga rápida con cliente, tipo de servicio (Normal / Máquina parada), técnico y descripción.'},
+      {url:'⏱ Visitas y horas',    t:'Registro de visitas técnicas',    d:'Tabla de visitas con ingreso/egreso y cálculo automático de horas por técnico.'},
+      {url:'🔩 Repuestos',         t:'Control de repuestos',            d:'Lista de materiales y repuestos utilizados en cada intervención, con cantidades.'},
+      {url:'✍️ Firma digital',     t:'Firma digital del cliente',       d:'Pad de firma táctil directamente en el celular. El cliente firma sin papel.'},
+      {url:'🖨 Comprobante',       t:'Comprobante imprimible',          d:'Documento final listo para imprimir o guardar como PDF con toda la intervención.'},
+      {url:'📋 Historial de OS',   t:'Historial de Órdenes de Servicio',d:'Todas las OS con estados (abierta, pendiente, cerrada) y acceso inmediato.'},
+    ],
+    feats:[
+      {ico:'📋',t:'Órdenes de Servicio',d:'Alta de OS con cliente, tipo de servicio, técnico y descripción del trabajo.'},
+      {ico:'⏱',t:'Visitas y horas técnicas',d:'Registro de entradas/salidas por técnico con cálculo automático de horas.'},
+      {ico:'🔩',t:'Control de repuestos',d:'Lista de materiales utilizados en cada intervención con cantidades.'},
+      {ico:'✍️',t:'Firma digital',d:'Pad de firma táctil en el celular — cliente y técnico firman sin papel.'},
+      {ico:'🖨',t:'Comprobante imprimible',d:'Documento listo para imprimir o guardar como PDF con todo el detalle.'},
+      {ico:'📂',t:'Historial de OS',d:'Todas las órdenes con estados, cliente y técnico. Acceso inmediato.'},
+      {ico:'👥',t:'Base de clientes',d:'Directorio de clientes con historial de intervenciones por empresa.'},
+      {ico:'🔐',t:'Área protegida',d:'Config. de técnicos y clientes protegida con contraseña.'},
+    ]
+  }
+];
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let activeSys = 0;
+const curSlide = [0,0];
+let rafId=null, pStart=0, paused=false;
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+function init(){
+  rebuildDots();
+  renderFeats(0);
+  updateCaption();
+  startProg();
+}
+
+/* ══════════════════════════════════════════
+   SYSTEM SWITCH
+══════════════════════════════════════════ */
+function switchSys(n){
+  if(n===activeSys)return;
+  cancelAnimationFrame(rafId);
+  document.getElementById('car-'+activeSys).classList.remove('active-car');
+  document.getElementById('car-'+n).classList.add('active-car');
+  document.querySelectorAll('.sys-btn').forEach((b,i)=>b.classList.toggle('on',i===n));
+  activeSys=n;
+  rebuildDots();
+  goTo(0,false);
+  updateCaption();
+  renderFeats(n);
+  resetProg();
+}
+
+/* ══════════════════════════════════════════
+   SLIDE NAVIGATION
+══════════════════════════════════════════ */
+function goTo(n,doReset=true){
+  const total=SYSTEMS[activeSys].slides.length;
+  curSlide[activeSys]=((n%total)+total)%total;
+  document.getElementById('strip-'+activeSys).style.transform=`translateX(-${curSlide[activeSys]*100}%)`;
+  updateCaption();
+  updateDots();
+  if(doReset)resetProg();
+}
+function cmov(dir){goTo(curSlide[activeSys]+dir);}
+
+function updateCaption(){
+  const s=SYSTEMS[activeSys].slides[curSlide[activeSys]];
+  document.getElementById('frame-url').textContent=s.url;
+  const cap=document.getElementById('carcap');
+  cap.style.opacity='0';
+  setTimeout(()=>{
+    document.getElementById('cap-t').textContent=s.t;
+    document.getElementById('cap-d').textContent=s.d;
+    cap.style.opacity='1';cap.style.transition='opacity .3s';
+  },160);
+}
+
+/* ══════════════════════════════════════════
+   DOTS
+══════════════════════════════════════════ */
+function rebuildDots(){
+  const el=document.getElementById('cdots');
+  el.innerHTML='';
+  SYSTEMS[activeSys].slides.forEach((_,i)=>{
+    const d=document.createElement('button');
+    d.className='cdot'+(i===curSlide[activeSys]?' on':'');
+    d.onclick=()=>goTo(i);
+    el.appendChild(d);
+  });
+}
+function updateDots(){
+  document.querySelectorAll('.cdot').forEach((d,i)=>d.classList.toggle('on',i===curSlide[activeSys]));
+}
+
+/* ══════════════════════════════════════════
+   PROGRESS BAR
+══════════════════════════════════════════ */
+const MS=5500;
+function resetProg(){
+  cancelAnimationFrame(rafId);
+  document.getElementById('progfill').style.width='0%';
+  if(!paused)startProg();
+}
+function startProg(){
+  pStart=performance.now();
+  const fill=document.getElementById('progfill');
+  (function step(now){
+    const pct=Math.min(100,((now-pStart)/MS)*100);
+    fill.style.width=pct+'%';
+    if(pct<100){rafId=requestAnimationFrame(step);}
+    else{goTo(curSlide[activeSys]+1);}
+  })(pStart);
+}
+
+/* pause on hover */
+const frame=document.querySelector('.car-frame');
+frame.addEventListener('mouseenter',()=>{paused=true;cancelAnimationFrame(rafId);document.getElementById('progfill').style.width='0%'});
+frame.addEventListener('mouseleave',()=>{paused=false;startProg()});
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight')cmov(1);
+  if(e.key==='ArrowLeft')cmov(-1);
+  if(e.key==='1')switchSys(0);
+  if(e.key==='2')switchSys(1);
+});
+
+/* touch */
+let tx=null;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(tx===null)return;
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50){dx<0?cmov(1):cmov(-1);}
+  tx=null;
+});
+
+/* ══════════════════════════════════════════
+   FEATURES GRID
+══════════════════════════════════════════ */
+const featTagLabels=['Sabores de Misiones','Ingeniería Branca SRL'];
+function renderFeats(sysIdx){
+  document.getElementById('feat-tag').textContent=featTagLabels[sysIdx];
+  const grid=document.getElementById('featgrid');
+  grid.innerHTML=SYSTEMS[sysIdx].feats.map((f,i)=>`
+    <div class="fcard vis" style="animation-delay:${(i*.07).toFixed(2)}s">
+      <div class="fc-ico">${f.ico}</div>
+      <div class="fc-t">${f.t}</div>
+      <div class="fc-d">${f.d}</div>
+    </div>`).join('');
+}
+
+/* scroll reveal for initial load */
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.animationDelay=e.target.style.getPropertyValue('--d')||'0s';
+      e.target.classList.add('vis');
+      obs.unobserve(e.target);
+    }
+  });
+},{threshold:.12});
+
+/* ══════════════════════════════════════════
+   START
+══════════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>

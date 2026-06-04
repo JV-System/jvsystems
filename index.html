@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JV Systems</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .logo {
+      width: 100px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    p.sub {
+      color: #888;
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+    .cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+      max-width: 900px;
+    }
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 260px;
+      text-decoration: none;
+      color: #fff;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #4f8ef7;
+    }
+    .card .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .card h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .card p { color: #888; font-size: 0.9rem; line-height: 1.5; }
+    footer {
+      margin-top: 60px;
+      color: #444;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <img src="sabores/jvs-logo.png" alt="JV Systems" class="logo" onerror="this.style.display='none'">
+  <h1>JV Systems</h1>
+  <p class="sub">Soluciones digitales a medida</p>
+
+  <div class="cards">
+    <a href="sabores/index.html" class="card">
+      <div class="icon">🌿</div>
+      <h2>Sabores de Misiones</h2>
+      <p>Sistema de gestión de producción y ventas de yerba mate.</p>
+    </a>
+    <a href="branca/index.html" class="card">
+      <div class="icon">🔧</div>
+      <h2>Branca</h2>
+      <p>Sistema de gestión de mantenimiento y servicios técnicos.</p>
+    </a>
+    <a href="marcacion/index.html" class="card">
+      <div class="icon">📍</div>
+      <h2>Marcación Laboral</h2>
+      <p>Control de asistencia con geolocalización y seguimiento por proyecto.</p>
+    </a>
+  </div>
+
+  <footer>© 2026 JV Systems · Juan Villanueva</footer>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0D1B2E" />
+  <title>Panel de Control — JV Systems</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/chart.min.js"></script>
+  <style>
+    /* ── Tabs ──────────────────────────── */
+    .tabs-bar {
+      background: var(--navy);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex; padding: 0 1.5rem;
+    }
+    .tab-btn {
+      padding: .75rem 1.25rem; background: none; border: none;
+      border-bottom: 3px solid transparent;
+      color: rgba(255,255,255,.4); font-size: .875rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+      display: flex; align-items: center; gap: .4rem; white-space: nowrap;
+    }
+    .tab-btn:hover { color: rgba(255,255,255,.75); }
+    .tab-btn.tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Header mejorado ─────────────────── */
+    /* Contenido por encima del overlay de wave */
+    #loginPage, #dashPage { position: relative; z-index: 1; }
+
+    .dash-header {
+      background: linear-gradient(135deg, rgba(13,27,46,.95) 0%, rgba(26,47,78,.95) 100%);
+      border-bottom: 2px solid var(--accent);
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+      backdrop-filter: blur(8px);
+    }
+    .dash-header-logo {
+      width: 48px; height: 48px; border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(255,184,0,.3);
+    }
+    .dash-header h1 { font-size: 1.15rem; font-weight: 800; color: white; }
+    .dash-header p  { font-size: .72rem; color: var(--accent); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+
+    /* ── Login mejorado ──────────────────── */
+    .login-page {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #0D1B2E 0%, #1a2f4e 60%, #0d2040 100%);
+      padding: 1rem; position: relative; overflow: hidden;
+    }
+    .login-page::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(255,184,0,.08) 0%, transparent 60%),
+                  radial-gradient(circle at 70% 80%, rgba(59,130,246,.08) 0%, transparent 50%);
+    }
+    .login-card {
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px; padding: 2.5rem 2rem;
+      width: 100%; max-width: 380px; position: relative; z-index: 1;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.1);
+    }
+    .login-logo { text-align: center; margin-bottom: 2rem; }
+    .login-logo-img {
+      width: 72px; height: 72px; border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(13,27,46,.2); margin-bottom: 1rem;
+    }
+    .login-logo h2 { font-size: 1.35rem; font-weight: 800; color: var(--navy); margin-bottom: .25rem; }
+    .login-logo p  { font-size: .82rem; color: var(--gray-400); }
+    .login-divider {
+      display: flex; align-items: center; gap: .75rem;
+      margin: 1.25rem 0; color: var(--gray-300); font-size: .75rem;
+    }
+    .login-divider::before, .login-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--gray-200);
+    }
+
+    /* ── Avatar empleado ─────────────────── */
+    .emp-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 800; color: white;
+      flex-shrink: 0; letter-spacing: .02em;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .emp-cell { display: flex; align-items: center; gap: .6rem; }
+    .emp-name  { font-weight: 700; line-height: 1.2; }
+    .emp-sub   { font-size: .7rem; color: var(--gray-400); }
+
+    /* ── Jornada table extras ──────────── */
+    .fecha-chip {
+      font-size: .8rem; background: var(--gray-100);
+      color: var(--gray-700); padding: .2rem .5rem;
+      border-radius: 99px; font-weight: 600; white-space: nowrap;
+    }
+    .time-in  { font-size: .9rem; font-weight: 700; color: var(--success); letter-spacing:.02em; }
+    .time-out { font-size: .9rem; font-weight: 700; color: var(--danger);  letter-spacing:.02em; }
+    .horas-badge {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .3rem .7rem; border-radius: 99px;
+      font-size: .8rem; font-weight: 700; white-space: nowrap;
+    }
+    .horas-badge.overtime   { background:#F0FDF4; color:#16A34A; }
+    .horas-badge.normal     { background:#EFF6FF; color:#1565C0; }
+    .horas-badge.short      { background:#FEF2F2; color:#DC2626; }
+    .horas-badge.sin-salida { background:#FFFBEB; color:#D97706; }
+    .row-warning td { background:#FFFBEB !important; }
+    .row-absent  td { background:#FEF2F2 !important; opacity:.8; }
+
+    /* ── Admin buttons ─────────────────── */
+    .btn-admin {
+      background: var(--primary-light); border: 1px solid var(--primary-border);
+      color: var(--primary); font-size: .72rem; font-weight: 700;
+      padding: .18rem .5rem; border-radius: 99px; cursor: pointer;
+      font-family: inherit; white-space: nowrap; transition: background .12s;
+      display: inline-flex; align-items: center; gap: .2rem;
+    }
+    .btn-admin:hover  { background: #BBDEFB; }
+    .btn-admin.danger { background: var(--danger-light); border-color: var(--danger-border); color: var(--danger); }
+    .btn-admin.danger:hover { background: #FECACA; }
+    .btn-admin.success-btn { background: var(--success-light); border-color: var(--success-border); color: var(--success); }
+    .btn-admin.success-btn:hover { background: #BBF7D0; }
+
+    /* ── Modal ─────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .modal-card {
+      background: white; border-radius: 16px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+      animation: modalIn .15s ease;
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform: scale(.94) translateY(-12px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem .875rem; border-bottom: 1px solid var(--gray-100);
+    }
+    .modal-header h3 { font-size: 1rem; font-weight: 800; color: var(--navy); }
+    .modal-close {
+      background: none; border: none; cursor: pointer; font-size: 1rem;
+      color: var(--gray-400); width: 30px; height: 30px; border-radius: 8px;
+      font-family: inherit; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: var(--gray-100); color: var(--gray-700); }
+    .modal-body { padding: 1.25rem; }
+    .modal-info {
+      background: var(--gray-50); border-left: 3px solid var(--primary);
+      border-radius: 0 6px 6px 0; padding: .55rem .875rem;
+      margin-bottom: 1rem; font-size: .83rem; color: var(--gray-600); line-height: 1.4;
+    }
+    .modal-info strong { color: var(--navy); font-weight: 700; }
+    .modal-footer {
+      display: flex; gap: .5rem; justify-content: flex-end;
+      padding: .875rem 1.25rem; border-top: 1px solid var(--gray-100);
+    }
+
+    /* ── Stat cards ────────────────────── */
+    .stat-card.horas   .stat-value { color: var(--accent); }
+    .stat-card.horas::before       { background: var(--accent); }
+    .stat-card.ausentes .stat-value { color: #D97706; }
+    .stat-card.ausentes::before     { background: #D97706; }
+
+    /* ── Charts ────────────────────────── */
+    .charts-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--gray-200); padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .chart-card-title {
+      font-size: .8rem; font-weight: 700; color: var(--gray-500);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem;
+    }
+    .chart-canvas-wrap { position: relative; height: 220px; }
+
+    /* KPI mini cards row (reemplaza tarjetas por OT) */
+    .proy-kpi-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: .75rem; margin-bottom: 1rem;
+    }
+    @media (max-width: 640px) { .proy-kpi-row { grid-template-columns: repeat(2,1fr); } }
+    .proy-kpi {
+      background: var(--navy); color: white;
+      border-radius: var(--radius); padding: .875rem 1rem;
+    }
+    .proy-kpi-val { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+    .proy-kpi-lbl { font-size: .7rem; opacity: .6; font-weight: 600;
+                    text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
+
+    /* ── Password confirm modal ────────── */
+    .pass-modal-overlay {
+      position: fixed; inset: 0; z-index: 1100;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .pass-modal-card {
+      background: white; border-radius: 16px; width: 100%; max-width: 340px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.3); animation: modalIn .15s ease;
+      overflow: hidden;
+    }
+    .pass-modal-header {
+      background: linear-gradient(135deg, var(--navy), #1a3a5c);
+      padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: .75rem;
+    }
+    .pass-modal-header .lock-icon { font-size: 1.5rem; }
+    .pass-modal-header h3 { color: white; font-size: .95rem; font-weight: 800; }
+    .pass-modal-header p  { color: rgba(255,255,255,.6); font-size: .75rem; }
+    .pass-modal-body { padding: 1.5rem; }
+    .pass-error { color: var(--danger); font-size: .8rem; margin-top: .4rem; font-weight: 600; display: none; }
+  </style>
+</head>
+<body>
+
+<!-- ════ SPLASH ════ -->
+<div class="splash" id="splash">
+  <div class="splash-logo-wrap">
+    <img src="jvs-icon.png" class="splash-logo-img" alt="JV Systems" />
+  </div>
+  <h1 class="splash-title">BIENVENIDO</h1>
+  <div class="splash-brand">
+    <img src="jvs-icon.png" class="splash-brand-logo" alt="" />
+    <p class="splash-brand-text"><strong>JV Systems</strong> · Soluciones Digitales</p>
+  </div>
+  <div class="splash-progress"></div>
+</div>
+
+<!-- ════ LOGIN ════ -->
+<div id="loginPage" class="hidden">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <img src="jvs-icon.png" class="login-logo-img" alt="JV Systems" />
+        <h2>Panel de Control</h2>
+        <p>JV Systems · Marcación Laboral</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Usuario</label>
+        <input type="text" class="form-input" id="loginUser" placeholder="admin"
+               autocomplete="username" />
+      </div>
+      <div class="form-group" style="margin-bottom:.5rem">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="loginPass"
+               placeholder="Ingresá tu contraseña" autocomplete="current-password" />
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button class="btn btn-primary btn-block" id="loginBtn" onclick="doLogin()"
+              style="margin-top:.75rem">
+        Ingresar al panel
+      </button>
+
+      <div class="login-divider">acceso rápido</div>
+      <p style="text-align:center;font-size:.8rem;color:var(--gray-400)">
+        ¿Necesitás marcar?
+        <a href="index.html" style="color:var(--accent);text-decoration:none;font-weight:700">
+          Ir al formulario →
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div id="dashPage" class="hidden">
+
+  <!-- Header -->
+  <header class="dash-header" style="padding:.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
+    <div class="dash-header-left" style="display:flex;align-items:center;gap:.875rem">
+      <img src="jvs-icon.png" class="dash-header-logo" alt="JV Systems" />
+      <div>
+        <h1 class="dash-header-title" style="font-size:1.15rem;font-weight:800;color:white;margin:0">Panel de Control</h1>
+        <p style="font-size:.7rem;color:var(--accent);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0">
+          Marcación Laboral
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <button id="btnEjemplos" class="btn btn-outline" onclick="cargarEjemplos()"
+              style="font-size:.78rem;padding:.4rem .8rem">
+        🧪 Datos de prueba
+      </button>
+      <a href="carga-horas.html" class="btn btn-outline"
+         style="font-size:.78rem;padding:.4rem .8rem;text-decoration:none">
+        📊 Cargar HS
+      </a>
+      <a href="index.html"
+         style="background:var(--accent);color:var(--navy);font-weight:800;font-size:.82rem;
+                padding:.45rem .975rem;border-radius:var(--radius);text-decoration:none;
+                display:inline-flex;align-items:center;gap:.3rem">
+        ＋ Marcación
+      </a>
+      <button class="btn btn-outline" onclick="logout()"
+              style="font-size:.78rem;padding:.4rem .8rem">Salir</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn tab-active" id="tabJornada"     onclick="switchTab('jornada')">📅 Jornada Laboral</button>
+    <button class="tab-btn"           id="tabMarcaciones"  onclick="switchTab('marcaciones')">📋 Marcaciones</button>
+    <button class="tab-btn"           id="tabProyectos"    onclick="switchTab('proyectos')">📊 Horas en Proyectos</button>
+  </div>
+
+  <main class="dash-main">
+
+    <!-- Stats top -->
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-label">Jornadas</div>
+      </div>
+      <div class="stat-card horas">
+        <div class="stat-value" id="statHoras">—</div>
+        <div class="stat-label">HS trabajadas</div>
+      </div>
+      <div class="stat-card ausentes">
+        <div class="stat-value" id="statAusentes">—</div>
+        <div class="stat-label">Sin salida</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-bar">
+      <div class="filters-grid">
+        <div class="form-group">
+          <label class="form-label">Desde</label>
+          <input type="date" class="form-input" id="filterFrom" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hasta</label>
+          <input type="date" class="form-input" id="filterTo" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Empleado</label>
+          <div class="select-wrapper">
+            <select class="form-select" id="filterEmpleado">
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo / Estado</label>
+          <div class="select-wrapper">
+            <select class="form-select" id="filterTipo">
+              <option value="todos">Todos</option>
+              <option value="Entrada">Solo entradas</option>
+              <option value="Salida">Solo salidas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-top:.75rem">
+        <div class="filter-chips">
+          <span style="font-size:.75rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Filtrar:</span>
+          <button class="filter-chip chip-warning" id="chipSinSalida"  onclick="toggleChip('sinSalida')">⚠️ Sin Salida</button>
+          <button class="filter-chip chip-danger"  id="chipSinEntrada" onclick="toggleChip('sinEntrada')">❌ Sin Entrada</button>
+          <button class="filter-chip"              id="chipPresentes"  onclick="toggleChip('presentes')">✅ Presentes</button>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-primary" onclick="loadData()">🔍 Buscar</button>
+          <button class="btn btn-outline" onclick="clearFilters()">Limpiar</button>
+          <button class="btn btn-outline" onclick="exportCSV()">📥 Exportar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ JORNADA LABORAL ══ -->
+    <div id="viewJornada" class="table-wrapper">
+      <div class="table-header">
+        <h3>📅 Jornada Laboral</h3>
+        <span class="table-count" id="tableCount"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Empleado</th><th>Fecha</th><th>Estado</th>
+              <th>Ingreso</th><th>Salida</th><th>Total</th>
+              <th>Cargadas</th><th>Normales</th><th>50%</th><th>100%</th>
+            </tr>
+          </thead>
+          <tbody id="jornadaBody">
+            <tr><td colspan="10"><div class="no-data"><div class="no-data-icon">📋</div><p>Cargando...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ MARCACIONES RAW ══ -->
+    <div id="viewMarcaciones" class="table-wrapper hidden">
+      <div class="table-header">
+        <h3>📋 Todas las marcaciones</h3>
+        <span class="table-count"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Empleado</th><th>Tipo</th>
+              <th>Fecha</th><th>Hora</th><th>Ubicación</th>
+              <th style="text-align:center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="marcBody">
+            <tr><td colspan="7"><div class="no-data"><div class="no-data-icon">📋</div><p>Cargando...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ HORAS EN PROYECTOS ══ -->
+    <div id="viewProyectos" class="table-wrapper hidden">
+      <div class="table-header">
+        <h3>📊 Horas en Proyectos</h3>
+        <span class="table-count" id="tableCountProy"></span>
+      </div>
+
+      <!-- Filtro OT -->
+      <div style="padding:1rem 1rem 0;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        <label style="font-size:.78rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Filtrar por OT:</label>
+        <div class="select-wrapper" style="min-width:200px;max-width:320px">
+          <select class="form-select" id="filterOT" onchange="onFilterOT()" style="font-size:.85rem">
+            <option value="todos">Todas las OTs</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="proy-kpi-row" id="proyKpis" style="padding:.875rem 1rem 0"></div>
+
+      <!-- Charts 3 columnas -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;padding:1rem">
+        <div class="chart-card">
+          <div class="chart-card-title">⏱ Horas por empleado</div>
+          <div class="chart-canvas-wrap"><canvas id="chartEmpleado"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">📋 Distribución por OT</div>
+          <div class="chart-canvas-wrap"><canvas id="chartOT"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">🔧 Horas por tarea</div>
+          <div class="chart-canvas-wrap"><canvas id="chartTarea"></canvas></div>
+        </div>
+      </div>
+      <style>
+        @media(max-width:900px){
+          #viewProyectos .charts-grid-3 { grid-template-columns: 1fr !important; }
+        }
+      </style>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Empleado</th><th>Fecha</th><th>OT</th>
+              <th>Proyecto</th><th>Ítem</th><th>Horas</th>
+            </tr>
+          </thead>
+          <tbody id="proyBody">
+            <tr><td colspan="6"><div class="no-data"><div class="no-data-icon">📊</div><p>Cargando...</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer branding -->
+    <div style="text-align:center;padding:.75rem 0 .5rem;display:flex;align-items:center;justify-content:center;gap:.5rem">
+      <img src="jvs-icon.png" style="width:20px;height:20px;border-radius:5px;background:var(--navy);padding:2px" alt="" />
+      <span style="font-size:.72rem;color:var(--gray-400);font-weight:600;letter-spacing:.06em">JV SYSTEMS · SOLUCIONES DIGITALES</span>
+    </div>
+
+  </main>
+
+  <!-- KPI footer oculto (datos en stat cards) -->
+  <div id="kpiPresentes" style="display:none"></div>
+  <div id="kpiAusentes"  style="display:none"></div>
+  <div id="kpiSinSalida" style="display:none"></div>
+  <div id="kpiFeriados"  style="display:none"></div>
+  <div id="kpiAsistencia" style="display:none"></div>
+  <div id="kpiHsTotales" style="display:none"></div>
+  <div id="kpiHsNorm"    style="display:none"></div>
+  <div id="kpiHs50"      style="display:none"></div>
+  <div id="kpiHs100"     style="display:none"></div>
+
+</div><!-- /dashPage -->
+
+<!-- ════ MODAL EDICIÓN ════ -->
+<div class="modal-overlay hidden" id="editModal" onclick="closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modalTitle">✏️ Editar marcación</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info" id="modalInfo"></div>
+      <div class="form-group" id="modalTipoGroup">
+        <label class="form-label">Tipo de marcación</label>
+        <div class="select-wrapper">
+          <select class="form-select" id="modalTipo">
+            <option value="Entrada">🟢 Entrada</option>
+            <option value="Salida">🔴 Salida</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="modalFechaGroup">
+        <label class="form-label">Fecha (dd/MM/yyyy)</label>
+        <input type="text" class="form-input" id="modalFecha" placeholder="28/05/2026" maxlength="10" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" id="modalHoraLabel">Hora</label>
+        <input type="time" class="form-input" id="modalHora" step="60" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="guardarModal()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL CONTRASEÑA ADMIN ════ -->
+<div class="pass-modal-overlay hidden" id="passModal">
+  <div class="pass-modal-card">
+    <div class="pass-modal-header">
+      <div class="lock-icon">🔒</div>
+      <div>
+        <h3>Acceso de administrador</h3>
+        <p id="passModalSubtitle">Esta acción requiere contraseña</p>
+      </div>
+    </div>
+    <div class="pass-modal-body">
+      <div class="form-group" style="margin-bottom:.5rem">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="passModalInput"
+               placeholder="Contraseña de administrador"
+               onkeydown="if(event.key==='Enter')confirmPassModal()" />
+      </div>
+      <div class="pass-error" id="passModalError">Contraseña incorrecta</div>
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button class="btn btn-outline" style="flex:1" onclick="cancelPassModal()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="confirmPassModal()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      splash.classList.add('hiding');
+      setTimeout(() => { splash.style.display = 'none'; splashDone(); }, 600);
+    }, 2600);
+  });
+</script>
+<script src="js/config.js?v=3"></script>
+<script src="js/dashboard.js?v=3"></script>
+</body>
+</html>

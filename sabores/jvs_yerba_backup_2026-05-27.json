@@ -1,0 +1,975 @@
+{
+  "pedidos": [
+    {
+      "id": 2001,
+      "numero": 1,
+      "nombre": "Yesica Ramírez",
+      "dni": "29441832",
+      "tel": "2291554320",
+      "email": "yesica.ramirez@gmail.com",
+      "transporte": "Crucero cargo — Mar del Plata",
+      "presupuesto": 59000,
+      "fecha": "2026-01-03",
+      "estado": "cobrado",
+      "ingreso": 70000,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "especial",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2002,
+      "numero": 2,
+      "nombre": "Gisela Perez",
+      "dni": "31203941",
+      "tel": "1155023840",
+      "email": "gisela.p@hotmail.com",
+      "transporte": "Andremar — Capital Federal",
+      "presupuesto": 95500,
+      "fecha": "2026-01-04",
+      "estado": "cobrado",
+      "ingreso": 150000,
+      "obs": "Con estampillas",
+      "productos": [
+        {
+          "tipo": "trad_fina",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "trad_gruesa",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "gsp",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "barb_canch",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2003,
+      "numero": 3,
+      "nombre": "Abril Soto",
+      "dni": "40113029",
+      "tel": "3516622910",
+      "email": "abril.soto@gmail.com",
+      "transporte": "El Rápido — Córdoba",
+      "presupuesto": 31000,
+      "fecha": "2026-01-04",
+      "estado": "cobrado",
+      "ingreso": 45000,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "desp_gruesa",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2004,
+      "numero": 4,
+      "nombre": "Juan José Villalba",
+      "dni": "26880421",
+      "tel": "3814402291",
+      "email": "jjvillalba@yahoo.com",
+      "transporte": "Flecha Bus — Tucumán",
+      "presupuesto": 32500,
+      "fecha": "2026-01-05",
+      "estado": "cobrado",
+      "ingreso": 120000,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "desp_gruesa",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2005,
+      "numero": 5,
+      "nombre": "Sebastián López",
+      "dni": "28803214",
+      "tel": "2215531009",
+      "email": "seblopez@gmail.com",
+      "transporte": "Cóndor — Bahía Blanca",
+      "presupuesto": 45500,
+      "fecha": "2026-01-06",
+      "estado": "despachado",
+      "ingreso": null,
+      "obs": "Espera pago",
+      "productos": [
+        {
+          "tipo": "trad_fina",
+          "kg": 20,
+          "estampilla": false
+        },
+        {
+          "tipo": "canchada",
+          "kg": 15,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2006,
+      "numero": 6,
+      "nombre": "Anahí Torres",
+      "dni": "36101020",
+      "tel": "3764201983",
+      "email": "anahi.torres@gmail.com",
+      "transporte": "Expreso Posadas",
+      "presupuesto": 13000,
+      "fecha": "2026-01-06",
+      "estado": "cobrado",
+      "ingreso": 13000,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "barb_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2007,
+      "numero": 7,
+      "nombre": "Micaela Ruiz",
+      "dni": "41202933",
+      "tel": "1155601023",
+      "email": "micky.ruiz@outlook.com",
+      "transporte": "Plusmar — Buenos Aires",
+      "presupuesto": 64800,
+      "fecha": "2026-01-08",
+      "estado": "confirmado",
+      "ingreso": null,
+      "obs": "Confirmar transporte",
+      "productos": [
+        {
+          "tipo": "desp_fina",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "extra_fina",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "gsp",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2008,
+      "numero": 8,
+      "nombre": "Nadia Fernández",
+      "dni": "37201933",
+      "tel": "1164203312",
+      "email": "nadia.fern@gmail.com",
+      "transporte": "Vía Bariloche — La Plata",
+      "presupuesto": 35700,
+      "fecha": "2026-01-09",
+      "estado": "cobrado",
+      "ingreso": 35700,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "trad_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2009,
+      "numero": 9,
+      "nombre": "Mariano Godoy",
+      "dni": "33991020",
+      "tel": "2994418820",
+      "email": "",
+      "transporte": "Retira en persona",
+      "presupuesto": 42000,
+      "fecha": "2026-01-10",
+      "estado": "cobrado",
+      "ingreso": 42000,
+      "obs": "Paga en mano",
+      "productos": [
+        {
+          "tipo": "canchada",
+          "kg": 20,
+          "estampilla": false
+        },
+        {
+          "tipo": "extra_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2010,
+      "numero": 10,
+      "nombre": "Yesica Ramírez",
+      "dni": "29441832",
+      "tel": "2291554320",
+      "email": "yesica.ramirez@gmail.com",
+      "transporte": "Crucero cargo — Mar del Plata",
+      "presupuesto": 118000,
+      "fecha": "2026-01-12",
+      "estado": "confirmado",
+      "ingreso": null,
+      "obs": "Segundo pedido del mes",
+      "productos": [
+        {
+          "tipo": "extra_fina",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "desp_gruesa",
+          "kg": 20,
+          "estampilla": true
+        },
+        {
+          "tipo": "barb_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2011,
+      "numero": 11,
+      "nombre": "Gisela Perez",
+      "dni": "31203941",
+      "tel": "1155023840",
+      "email": "gisela.p@hotmail.com",
+      "transporte": "Andremar — Capital Federal",
+      "presupuesto": 83200,
+      "fecha": "2026-01-15",
+      "estado": "pendiente",
+      "ingreso": null,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "desp_gruesa",
+          "kg": 20,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2012,
+      "numero": 12,
+      "nombre": "Juan José Villalba",
+      "dni": "26880421",
+      "tel": "3814402291",
+      "email": "jjvillalba@yahoo.com",
+      "transporte": "Flecha Bus — Tucumán",
+      "presupuesto": 97500,
+      "fecha": "2026-01-17",
+      "estado": "despachado",
+      "ingreso": null,
+      "obs": "En tránsito",
+      "productos": [
+        {
+          "tipo": "trad_gruesa",
+          "kg": 15,
+          "estampilla": true
+        },
+        {
+          "tipo": "especial",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2013,
+      "numero": 13,
+      "nombre": "Sebastián López",
+      "dni": "28803214",
+      "tel": "2215531009",
+      "email": "seblopez@gmail.com",
+      "transporte": "Cóndor — Bahía Blanca",
+      "presupuesto": 71400,
+      "fecha": "2026-01-20",
+      "estado": "cobrado",
+      "ingreso": 71400,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "trad_fina",
+          "kg": 20,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2014,
+      "numero": 14,
+      "nombre": "Micaela Ruiz",
+      "dni": "41202933",
+      "tel": "1155601023",
+      "email": "micky.ruiz@outlook.com",
+      "transporte": "Plusmar — Buenos Aires",
+      "presupuesto": 54000,
+      "fecha": "2026-01-22",
+      "estado": "pendiente",
+      "ingreso": null,
+      "obs": "Aguarda confirmación",
+      "productos": [
+        {
+          "tipo": "cpch",
+          "kg": 10,
+          "estampilla": false
+        },
+        {
+          "tipo": "barb_canch",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2015,
+      "numero": 15,
+      "nombre": "Abril Soto",
+      "dni": "40113029",
+      "tel": "3516622910",
+      "email": "abril.soto@gmail.com",
+      "transporte": "El Rápido — Córdoba",
+      "presupuesto": 43200,
+      "fecha": "2026-01-24",
+      "estado": "cobrado",
+      "ingreso": 43200,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "desp_fina",
+          "kg": 10,
+          "estampilla": false
+        },
+        {
+          "tipo": "barb_fina",
+          "kg": 5,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2016,
+      "numero": 16,
+      "nombre": "Nadia Fernández",
+      "dni": "37201933",
+      "tel": "1164203312",
+      "email": "nadia.fern@gmail.com",
+      "transporte": "Vía Bariloche — La Plata",
+      "presupuesto": 67400,
+      "fecha": "2026-01-27",
+      "estado": "cobrado",
+      "ingreso": 67400,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "extra_fina",
+          "kg": 10,
+          "estampilla": true
+        },
+        {
+          "tipo": "trad_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2017,
+      "numero": 17,
+      "nombre": "Mariano Godoy",
+      "dni": "33991020",
+      "tel": "2994418820",
+      "email": "",
+      "transporte": "Retira en persona",
+      "presupuesto": 28000,
+      "fecha": "2026-02-02",
+      "estado": "cobrado",
+      "ingreso": 28000,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "barb_fina",
+          "kg": 10,
+          "estampilla": false
+        }
+      ],
+      "_active": false
+    },
+    {
+      "id": 2018,
+      "numero": 18,
+      "nombre": "Facundo Sotelo Colos",
+      "dni": "38790493",
+      "tel": "2931421379",
+      "email": "colossotelo@gmail.com",
+      "transporte": "Crucero cargo sucursal La Plata, Pcia Bs As",
+      "presupuesto": 24800,
+      "fecha": "2026-02-05",
+      "estado": "confirmado",
+      "ingreso": null,
+      "obs": "",
+      "productos": [
+        {
+          "tipo": "desp_gruesa",
+          "kg": 30,
+          "estampilla": false
+        },
+        {
+          "tipo": "desp_fina",
+          "kg": 20,
+          "estampilla": false
+        }
+      ],
+      "_active": true
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1001,
+      "nombre": "Yesica Ramírez",
+      "dni": "29441832",
+      "tel": "2291554320",
+      "email": "yesica.ramirez@gmail.com",
+      "transporte": "Crucero cargo — Mar del Plata, Bs As",
+      "ciudad": "Mar del Plata",
+      "lista": "1",
+      "notas": "Cliente frecuente"
+    },
+    {
+      "id": 1002,
+      "nombre": "Gisela Perez",
+      "dni": "31203941",
+      "tel": "1155023840",
+      "email": "gisela.p@hotmail.com",
+      "transporte": "Andremar — Capital Federal",
+      "ciudad": "CABA",
+      "lista": "2",
+      "notas": "Compra cada 2 semanas"
+    },
+    {
+      "id": 1003,
+      "nombre": "Abril Soto",
+      "dni": "40113029",
+      "tel": "3516622910",
+      "email": "abril.soto@gmail.com",
+      "transporte": "El Rápido — Córdoba",
+      "ciudad": "Córdoba",
+      "lista": "1",
+      "notas": ""
+    },
+    {
+      "id": 1004,
+      "nombre": "Juan José Villalba",
+      "dni": "26880421",
+      "tel": "3814402291",
+      "email": "jjvillalba@yahoo.com",
+      "transporte": "Flecha Bus — Tucumán",
+      "ciudad": "Tucumán",
+      "lista": "3",
+      "notas": "Descuento acordado"
+    },
+    {
+      "id": 1005,
+      "nombre": "Mariano Godoy",
+      "dni": "33991020",
+      "tel": "2994418820",
+      "email": "",
+      "transporte": "Retira en persona",
+      "ciudad": "Misiones",
+      "lista": "1",
+      "notas": ""
+    },
+    {
+      "id": 1006,
+      "nombre": "Nadia Fernández",
+      "dni": "37201933",
+      "tel": "1164203312",
+      "email": "nadia.fern@gmail.com",
+      "transporte": "Vía Bariloche — La Plata",
+      "ciudad": "La Plata",
+      "lista": "2",
+      "notas": ""
+    },
+    {
+      "id": 1007,
+      "nombre": "Sebastián López",
+      "dni": "28803214",
+      "tel": "2215531009",
+      "email": "seblopez@gmail.com",
+      "transporte": "Cóndor — Bahía Blanca",
+      "ciudad": "Bahía Blanca",
+      "lista": "1",
+      "notas": ""
+    },
+    {
+      "id": 1008,
+      "nombre": "Anahí Torres",
+      "dni": "36101020",
+      "tel": "3764201983",
+      "email": "anahi.torres@gmail.com",
+      "transporte": "Expreso Posadas — Posadas",
+      "ciudad": "Posadas",
+      "lista": "1",
+      "notas": "Vecina de Darío"
+    },
+    {
+      "id": 1009,
+      "nombre": "Micaela Ruiz",
+      "dni": "41202933",
+      "tel": "1155601023",
+      "email": "micky.ruiz@outlook.com",
+      "transporte": "Plusmar — Buenos Aires",
+      "ciudad": "CABA",
+      "lista": "2",
+      "notas": ""
+    },
+    {
+      "id": 1010,
+      "nombre": "Facundo Sotelo Colos",
+      "dni": "38790493",
+      "tel": "2931421379",
+      "email": "colossotelo@gmail.com",
+      "transporte": "Crucero cargo sucursal La Plata, Pcia Bs As",
+      "ciudad": "La Plata",
+      "lista": "2",
+      "notas": "Presupuesto pasado 24800"
+    }
+  ],
+  "dario": [
+    {
+      "id": 3001,
+      "fecha": "2026-01-01",
+      "tipo": "molienda",
+      "molienda": "especial",
+      "kg": 10,
+      "subtotal": 59000,
+      "obs": "Pedido 1 Yesica"
+    },
+    {
+      "id": 3002,
+      "fecha": "2026-01-04",
+      "tipo": "molienda",
+      "molienda": "trad_fina",
+      "kg": 40,
+      "subtotal": 95500,
+      "obs": "Pedido 2 Gisela"
+    },
+    {
+      "id": 3003,
+      "fecha": "2026-01-04",
+      "tipo": "molienda",
+      "molienda": "desp_gruesa",
+      "kg": 10,
+      "subtotal": 31000,
+      "obs": "Pedido 3 Abril"
+    },
+    {
+      "id": 3004,
+      "fecha": "2026-01-05",
+      "tipo": "transferencia",
+      "molienda": "",
+      "kg": null,
+      "subtotal": 50000,
+      "obs": "Transferencia bancaria"
+    },
+    {
+      "id": 3005,
+      "fecha": "2026-01-05",
+      "tipo": "molienda",
+      "molienda": "desp_gruesa",
+      "kg": 10,
+      "subtotal": 32500,
+      "obs": "Pedido 4 Juan José"
+    },
+    {
+      "id": 3006,
+      "fecha": "2026-01-07",
+      "tipo": "extraccion",
+      "molienda": "",
+      "kg": null,
+      "subtotal": 60000,
+      "obs": "Extracción en efectivo"
+    },
+    {
+      "id": 3007,
+      "fecha": "2026-01-08",
+      "tipo": "molienda",
+      "molienda": "barb_fina",
+      "kg": 120,
+      "subtotal": 192000,
+      "obs": "Barbacúa fina batch grande"
+    },
+    {
+      "id": 3008,
+      "fecha": "2026-01-10",
+      "tipo": "canchada",
+      "molienda": "canchada",
+      "kg": 100,
+      "subtotal": 175000,
+      "obs": "100kg canchada como pago"
+    },
+    {
+      "id": 3009,
+      "fecha": "2026-01-15",
+      "tipo": "molienda",
+      "molienda": "desp_gruesa",
+      "kg": 20,
+      "subtotal": 83200,
+      "obs": "Pedido 11 Gisela"
+    },
+    {
+      "id": 3010,
+      "fecha": "2026-01-17",
+      "tipo": "molienda",
+      "molienda": "trad_gruesa",
+      "kg": 25,
+      "subtotal": 97500,
+      "obs": "Pedido 12 Juan José"
+    },
+    {
+      "id": 3011,
+      "fecha": "2026-01-20",
+      "tipo": "transferencia",
+      "molienda": "",
+      "kg": null,
+      "subtotal": 80000,
+      "obs": "Transferencia enero"
+    },
+    {
+      "id": 3012,
+      "fecha": "2026-01-22",
+      "tipo": "molienda",
+      "molienda": "cpch",
+      "kg": 20,
+      "subtotal": 54000,
+      "obs": "Pedido 14 Micaela"
+    },
+    {
+      "id": 3013,
+      "fecha": "2026-01-24",
+      "tipo": "molienda",
+      "molienda": "desp_fina",
+      "kg": 15,
+      "subtotal": 43200,
+      "obs": "Pedido 15 Abril"
+    },
+    {
+      "id": 3014,
+      "fecha": "2026-02-01",
+      "tipo": "extraccion",
+      "molienda": "",
+      "kg": null,
+      "subtotal": 40000,
+      "obs": "Extracción inicio febrero"
+    },
+    {
+      "id": 3015,
+      "fecha": "2026-02-05",
+      "tipo": "molienda",
+      "molienda": "desp_gruesa",
+      "kg": 50,
+      "subtotal": 207000,
+      "obs": "Pedido 18 Facundo"
+    }
+  ],
+  "compras": [
+    {
+      "id": 4001,
+      "fecha": "2026-01-05",
+      "proveedor": "Secadero San Ignacio",
+      "items": [
+        {
+          "concepto": "Canchada",
+          "cantidad": 100,
+          "precio": 1750
+        },
+        {
+          "concepto": "Palito Molido",
+          "cantidad": 57,
+          "precio": 400
+        },
+        {
+          "concepto": "Estampillas",
+          "cantidad": 50,
+          "precio": 437.5
+        }
+      ]
+    },
+    {
+      "id": 4002,
+      "fecha": "2026-01-07",
+      "proveedor": "Secadero San Ignacio",
+      "items": [
+        {
+          "concepto": "Canchada",
+          "cantidad": 430,
+          "precio": 1750
+        },
+        {
+          "concepto": "Fina",
+          "cantidad": 70,
+          "precio": 2135
+        },
+        {
+          "concepto": "Estampillas",
+          "cantidad": 200,
+          "precio": 437.5
+        }
+      ]
+    },
+    {
+      "id": 4003,
+      "fecha": "2026-01-09",
+      "proveedor": "Secadero Don Ramón",
+      "items": [
+        {
+          "concepto": "Canchada",
+          "cantidad": 550,
+          "precio": 1750
+        },
+        {
+          "concepto": "Fina",
+          "cantidad": 70,
+          "precio": 2135
+        },
+        {
+          "concepto": "Estampillas",
+          "cantidad": 150,
+          "precio": 437.5
+        }
+      ]
+    },
+    {
+      "id": 4004,
+      "fecha": "2026-01-20",
+      "proveedor": "Secadero San Ignacio",
+      "items": [
+        {
+          "concepto": "Canchada",
+          "cantidad": 300,
+          "precio": 1800
+        },
+        {
+          "concepto": "Fina",
+          "cantidad": 50,
+          "precio": 2200
+        }
+      ]
+    },
+    {
+      "id": 4005,
+      "fecha": "2026-02-03",
+      "proveedor": "Secadero Don Ramón",
+      "items": [
+        {
+          "concepto": "Canchada",
+          "cantidad": 400,
+          "precio": 1800
+        },
+        {
+          "concepto": "Estampillas",
+          "cantidad": 100,
+          "precio": 437.5
+        },
+        {
+          "concepto": "Azúcar Mascabo",
+          "cantidad": 30,
+          "precio": 1200
+        }
+      ]
+    }
+  ],
+  "despachos": [
+    {
+      "id": 5001,
+      "fecha": "2026-01-05",
+      "pedidoId": "2001",
+      "pedidoNum": "1",
+      "cliente": "Yesica Ramírez",
+      "kg": 30,
+      "precio": 180,
+      "subtotal": 5400,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5002,
+      "fecha": "2026-01-05",
+      "pedidoId": "2002",
+      "pedidoNum": "2",
+      "cliente": "Gisela Perez",
+      "kg": 100,
+      "precio": 180,
+      "subtotal": 18000,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5003,
+      "fecha": "2026-01-05",
+      "pedidoId": "2003",
+      "pedidoNum": "3",
+      "cliente": "Abril Soto",
+      "kg": 30,
+      "precio": 180,
+      "subtotal": 5400,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5004,
+      "fecha": "2026-01-05",
+      "pedidoId": "2004",
+      "pedidoNum": "4",
+      "cliente": "Juan José Villalba",
+      "kg": 30,
+      "precio": 180,
+      "subtotal": 5400,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5005,
+      "fecha": "2026-01-06",
+      "pedidoId": "2005",
+      "pedidoNum": "5",
+      "cliente": "Sebastián López",
+      "kg": 35,
+      "precio": 130,
+      "subtotal": 4550,
+      "tipo": "solo_flete",
+      "obs": "Ya embalado"
+    },
+    {
+      "id": 5006,
+      "fecha": "2026-01-06",
+      "pedidoId": "2006",
+      "pedidoNum": "6",
+      "cliente": "Anahí Torres",
+      "kg": 10,
+      "precio": 130,
+      "subtotal": 1300,
+      "tipo": "solo_flete",
+      "obs": ""
+    },
+    {
+      "id": 5007,
+      "fecha": "2026-01-08",
+      "pedidoId": "2007",
+      "pedidoNum": "7",
+      "cliente": "Micaela Ruiz",
+      "kg": 60,
+      "precio": 180,
+      "subtotal": 10800,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5008,
+      "fecha": "2026-01-10",
+      "pedidoId": "2009",
+      "pedidoNum": "9",
+      "cliente": "Mariano Godoy",
+      "kg": 30,
+      "precio": 60,
+      "subtotal": 1800,
+      "tipo": "solo_flete",
+      "obs": "Retira local"
+    },
+    {
+      "id": 5009,
+      "fecha": "2026-01-15",
+      "pedidoId": "2010",
+      "pedidoNum": "10",
+      "cliente": "Yesica Ramírez",
+      "kg": 40,
+      "precio": 180,
+      "subtotal": 7200,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5010,
+      "fecha": "2026-01-20",
+      "pedidoId": "2012",
+      "pedidoNum": "12",
+      "cliente": "Juan José Villalba",
+      "kg": 25,
+      "precio": 180,
+      "subtotal": 4500,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5011,
+      "fecha": "2026-01-22",
+      "pedidoId": "2013",
+      "pedidoNum": "13",
+      "cliente": "Sebastián López",
+      "kg": 20,
+      "precio": 180,
+      "subtotal": 3600,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    },
+    {
+      "id": 5012,
+      "fecha": "2026-01-27",
+      "pedidoId": "2016",
+      "pedidoNum": "16",
+      "cliente": "Nadia Fernández",
+      "kg": 20,
+      "precio": 180,
+      "subtotal": 3600,
+      "tipo": "embalaje_flete",
+      "obs": ""
+    }
+  ],
+  "config": {
+    "nextPedido": 19
+  }
+}
