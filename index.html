@@ -1064,6 +1064,82 @@
       .porque { padding: 3.5rem 1.25rem; }
     }
 
+    /* ── PROCESO CARDS ── */
+    .historia-section { padding: 5rem 2rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .proceso-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 3rem;
+    }
+    .proceso-card {
+      background: rgba(13,27,46,0.85);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s, border-color .35s;
+      cursor: default;
+      animation-delay: var(--delay, 0s);
+    }
+    .proceso-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.18);
+    }
+    .pc-num {
+      position: absolute;
+      top: .7rem; left: .8rem;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 900; color: #fff;
+      z-index: 2;
+    }
+    .pc-img-wrap {
+      position: relative;
+      height: 180px;
+      overflow: hidden;
+    }
+    .pc-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .5s ease;
+      display: block;
+    }
+    .proceso-card:hover .pc-img { transform: scale(1.06); }
+    .pc-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(13,27,46,.95) 100%);
+    }
+    .pc-body {
+      padding: 1rem 1.1rem 1.2rem;
+    }
+    .pc-tag {
+      display: inline-flex; align-items: center; gap: .3rem;
+      font-size: .62rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; padding: .25rem .65rem;
+      border-radius: 99px; margin-bottom: .5rem;
+    }
+    .pc-title {
+      font-size: .88rem; font-weight: 800;
+      color: #fff; margin-bottom: .4rem; line-height: 1.2;
+    }
+    .pc-desc {
+      font-size: .72rem; color: rgba(255,255,255,.5); line-height: 1.6;
+    }
+    .pc-final { border-color: rgba(52,211,153,.25); }
+    @media(max-width:768px) {
+      .proceso-cards-grid { grid-template-columns: 1fr; }
+    }
+    @media(min-width:769px) and (max-width:1024px) {
+      .proceso-cards-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
     /* ── SCROLL REVEAL ── */
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.visible { opacity: 1; transform: none; }
@@ -1918,28 +1994,107 @@
 </section>
 
 <!-- PROCESO / HISTORIA -->
-<section class="historia-section" id="proceso" style="padding:5rem 0 4rem;max-width:100%;overflow:hidden">
+<section class="historia-section" id="proceso">
   <div class="section-header reveal">
     <span class="section-tag">— Cómo trabajo</span>
     <h2>De tu problema al sistema que necesitás</h2>
     <p>Una historia que se repite con cada cliente. ¿Te identificás?</p>
   </div>
 
-  <!-- Imagen con bordes escalonados por etapa -->
-  <div class="proceso-img-wrap reveal">
-    <div class="proceso-img-inner">
-      <img src="proceso.jpg" alt="Del problema al sistema — JV Systems" class="proceso-img" />
+  <div class="proceso-cards-grid">
+
+    <div class="proceso-card reveal" style="--delay:0s">
+      <div class="pc-num">1</div>
+      <div class="pc-img-wrap"><img src="proceso/1.png" alt="El Problema" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(248,113,113,.15);color:#f87171">⚠️ El Problema</div>
+        <h3 class="pc-title">Gestión ineficiente</h3>
+        <p class="pc-desc">El negocio crece pero los procesos siguen siendo manuales. Planillas, papeles e información dispersa que cuesta dinero.</p>
+      </div>
     </div>
-    <a href="#contacto" class="hp-cta" style="margin-top:2rem;display:inline-block">Quiero mi sistema →</a>
-  </div>
 
-  <!-- Footer historia -->
-  <div class="historia-footer reveal">
-    <img src="sabores/jvs-icon.png" width="32" height="32" style="border-radius:8px" onerror="this.style.display='none'">
-    <span><strong>JV Systems</strong> · Soluciones Digitales Inteligentes</span>
-    <span class="hf-tags">TECNOLOGÍA &nbsp;•&nbsp; ESTRATEGIA &nbsp;•&nbsp; RESULTADOS</span>
-  </div>
+    <div class="proceso-card reveal" style="--delay:.1s">
+      <div class="pc-num">2</div>
+      <div class="pc-img-wrap"><img src="proceso/2.png" alt="El Tiempo" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">⏰ El Tiempo</div>
+        <h3 class="pc-title">El tiempo no alcanza</h3>
+        <p class="pc-desc">Reportes tardíos, decisiones equivocadas. Las tareas se acumulan y el crecimiento se frena.</p>
+      </div>
+    </div>
 
+    <div class="proceso-card reveal" style="--delay:.2s">
+      <div class="pc-num">3</div>
+      <div class="pc-img-wrap"><img src="proceso/3.png" alt="Buscan Ayuda" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(167,139,250,.15);color:#a78bfa">🔍 La Búsqueda</div>
+        <h3 class="pc-title">Deciden buscar ayuda</h3>
+        <p class="pc-desc">Saben que así no pueden seguir creciendo y buscan una solución real, no una planilla más.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal" style="--delay:.3s">
+      <div class="pc-num">4</div>
+      <div class="pc-img-wrap"><img src="proceso/4.png" alt="Charla" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📞 El Contacto</div>
+        <h3 class="pc-title">Coordinamos una charla</h3>
+        <p class="pc-desc">Escucho cómo funciona el negocio hoy. Sin tecnicismos — entiendo el problema antes de proponer nada.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal" style="--delay:.4s">
+      <div class="pc-num">5</div>
+      <div class="pc-img-wrap"><img src="proceso/5.png" alt="Relevamiento" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(45,212,191,.15);color:#2dd4bf">🔎 Relevamiento</div>
+        <h3 class="pc-title">Analizo tu negocio a fondo</h3>
+        <p class="pc-desc">Procesos, recursos, flujos y oportunidades. Datos reales para decisiones reales.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal" style="--delay:.5s">
+      <div class="pc-num">6</div>
+      <div class="pc-img-wrap"><img src="proceso/6.png" alt="Diseño" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">🎯 Diseño</div>
+        <h3 class="pc-title">Diseño la solución</h3>
+        <p class="pc-desc">Sistema a medida con automatización, integración y reportes inteligentes. Te muestro el flujo antes de construirlo.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal" style="--delay:.6s">
+      <div class="pc-num">7</div>
+      <div class="pc-img-wrap"><img src="proceso/7.png" alt="Implementación" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">💻 Desarrollo</div>
+        <h3 class="pc-title">Implementación y pruebas</h3>
+        <p class="pc-desc">Desarrollo, pruebo, ajusto y capacito. Cada detalle bajo control antes de la puesta en marcha.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal" style="--delay:.7s">
+      <div class="pc-num">8</div>
+      <div class="pc-img-wrap"><img src="proceso/8.png" alt="Resultados" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📊 Resultados</div>
+        <h3 class="pc-title">Resultados reales</h3>
+        <p class="pc-desc">+54% ventas, +38% eficiencia, -62% tiempo administrativo. Información en tiempo real para decisiones inteligentes.</p>
+      </div>
+    </div>
+
+    <div class="proceso-card reveal pc-final" style="--delay:.8s">
+      <div class="pc-num">9</div>
+      <div class="pc-img-wrap"><img src="proceso/9.png" alt="Clientes Satisfechos" class="pc-img"/></div>
+      <div class="pc-body">
+        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">🎉 Resultado</div>
+        <h3 class="pc-title">Clientes satisfechos</h3>
+        <p class="pc-desc">Cuando tu negocio crece, nosotros también. Procesos ordenados, mejor gestión, crecimiento real.</p>
+        <a href="#contacto" class="hp-cta" style="display:inline-block;margin-top:.75rem">Quiero mi sistema →</a>
+      </div>
+    </div>
+
+  </div>
 </section>
 
 <!-- CONTACTO -->
