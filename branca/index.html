@@ -2306,6 +2306,7 @@ function getAdminPass() { return localStorage.getItem('branca_admin_pass') || DE
 
 async function syncOrden(orden) {
   if (!isScriptConfigured()) return;
+  if (!orden.empresa) return; // no sincronizar órdenes vacías sin empresa
   setSyncStatus('syncing', '⏳ Guardando...');
   try {
     await apiPost({ action: 'saveOrden', data: orden });
@@ -2407,7 +2408,7 @@ function crearNuevaOrden() {
     facturacion: null,
   };
   ordenes.unshift(nueva);
-  saveData();
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   renderOrderList();
   seleccionarOrden(nueva.id);
   switchView('nueva');
@@ -2471,7 +2472,7 @@ function renderOrderList() {
     <div class="order-item ${o.estado === 'pending' ? 'pending' : ''} ${o.estado === 'locked' ? 'locked' : ''} ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
          onclick="seleccionarOrden(${o.id})">
 
-      <div class="order-num">${o.numero}</div>
+      <div class="order-num">${o.numero || 'Nueva'}</div>
 
       <div class="order-empresa">
         ${o.empresa || '(Sin empresa)'}
