@@ -2602,11 +2602,6 @@ function opTurno(turno,btn){
   showToast('Turno '+turno+' seleccionado');
 }
 
-// Sobreescribir _opProyectos dinámicamente según turno
-const _opProyectosOrig = _opProyectos.slice();
-Object.defineProperty(window,'_opProyectosFiltrados',{
-  get(){ return _opTurnoActual ? _opProyectosPorTurno[_opTurnoActual] : _opProyectosOrig; }
-});
 let _opSectorMode='hoy';
 function opSectorToggle(mode,btn){
   _opSectorMode=mode;
@@ -3799,7 +3794,8 @@ setTimeout(initMap, 300);
 // ── OPERACIONES: GESTIÓN DE OTs (FILTRADO CRUZADO) ──
 // ════════════════════════════════════════════
 
-let _opSelOT = null; // OT seleccionada para filtrar todo
+let _opSelOT = null;
+let _opTurnoActual = '2do';
 
 function opFiltrarOT(id) {
   _opSelOT = (_opSelOT === id) ? null : id; // toggle
@@ -3824,7 +3820,6 @@ const _opProyectosPorTurno = {
     { id:'OT-2425', nom:'Módulo Soldadura Robotizada',  planos:14, piezas:320, hs:88,  kg:1480, comp:48.00, actMaq:1, actSinMaq:2, scrap:0, turno:'3ro' },
   ],
 };
-let _opTurnoActual = '2do';
 const _opProyectos = Object.values(_opProyectosPorTurno).flat();
 
 const _opPlanos = [
