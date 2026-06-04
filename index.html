@@ -1256,15 +1256,32 @@
     .proceso-img-inner {
       position: relative;
       display: inline-block;
-      border-radius: 20px;
+      border-radius: 16px;
       overflow: hidden;
+      /* Recortar el pie (footer JV Systems ~10% abajo) */
+      max-height: 680px;
     }
     .proceso-img {
       width: 100%;
       max-width: 1060px;
       display: block;
-      border-radius: 20px;
+      border-radius: 16px;
       animation: imgReveal 1s ease both;
+      /* Mostrar solo la parte superior, recortando el pie */
+      object-fit: cover;
+      object-position: top;
+    }
+    /* Grilla separadora entre cuadraditos */
+    .proceso-img-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(7,16,29,0.9) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(7,16,29,0.9) 2px, transparent 2px);
+      background-size: 33.33% 33.33%;
+      pointer-events: none;
+      border-radius: 16px;
     }
     @keyframes imgReveal {
       from { opacity:0; transform: scale(.97); }
