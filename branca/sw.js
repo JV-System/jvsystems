@@ -5,16 +5,16 @@
 //              Network-first para fuentes externas.
 // ================================================
 
-const CACHE_NAME = 'branca-v4';
+const CACHE_NAME = 'branca-v5';
 
 // Archivos que se cachean al instalar la app
 const CACHE_ASSETS = [
-  '/mantenimiento-app/',
-  '/mantenimiento-app/index.html',
-  '/mantenimiento-app/manifest.json',
-  '/mantenimiento-app/icon-192.png',
-  '/mantenimiento-app/icon-512.png',
-  '/mantenimiento-app/branca-logo.png'
+  '/branca/',
+  '/branca/index.html',
+  '/branca/manifest.json',
+  '/branca/icon-192.png',
+  '/branca/icon-512.png',
+  '/branca/branca-logo.png'
 ];
 
 // ── Instalación: pre-cache de assets locales ──

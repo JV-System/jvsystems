@@ -1,10 +1,10 @@
 {
-  "id": "/mantenimiento-app/",
+  "id": "/branca/",
   "name": "Ingeniería Branca SRL — Órdenes",
   "short_name": "Branca App",
   "description": "Sistema de gestión de órdenes de servicio técnico",
-  "start_url": "/mantenimiento-app/",
-  "scope": "/mantenimiento-app/",
+  "start_url": "/branca/",
+  "scope": "/branca/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
