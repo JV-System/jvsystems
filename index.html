@@ -249,6 +249,47 @@
     .o2 { animation: orbitSpin2 4.8s linear infinite; }
     .o3 { animation: orbitSpin3 6s linear infinite; }
 
+    /* ── HERO WIDGETS FLOTANTES ── */
+    .hw-widgets { position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden; }
+    .hw {
+      position:absolute;
+      background:rgba(13,27,46,0.82);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:14px;
+      padding:14px 16px;
+      backdrop-filter:blur(12px);
+      min-width:160px;
+      box-shadow:0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
+      opacity:.85;
+      transition:opacity .3s;
+    }
+    .hw-label { font-size:.62rem;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px; }
+    .hw-val { font-size:1.5rem;font-weight:900;display:flex;align-items:center;gap:8px; }
+    .hw-badge { font-size:.62rem;font-weight:700;padding:.15rem .45rem;border-radius:4px; }
+    .hw-badge.up { background:rgba(52,211,153,.15);color:#34d399; }
+    .hw-badge.down { background:rgba(248,113,113,.15);color:#f87171; }
+    .hw-sub { font-size:.6rem;color:rgba(255,255,255,.35);margin-top:2px; }
+    .hw-bar { flex:1;border-radius:3px 3px 0 0;min-width:14px; }
+    .hw-code { font-size:.65rem;color:rgba(255,255,255,.6);min-width:195px; }
+    .hw-step { display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.52rem;color:rgba(255,255,255,.45);text-align:center; }
+    .hw-step.active { color:#f59e0b; }
+    .hw-step.active div { color:#f59e0b;font-weight:700; }
+    @keyframes hwFloat1 {
+      0%,100% { transform:translateY(0px) rotate(-1deg); opacity:.85; }
+      33%      { transform:translateY(-14px) rotate(.5deg); opacity:.95; }
+      66%      { transform:translateY(-6px) rotate(-0.5deg); opacity:.9; }
+    }
+    @keyframes hwFloat2 {
+      0%,100% { transform:translateY(0px) rotate(1deg); opacity:.8; }
+      40%      { transform:translateY(-18px) rotate(-1deg); opacity:.95; }
+      70%      { transform:translateY(-8px) rotate(.5deg); opacity:.88; }
+    }
+    @keyframes hwFloat3 {
+      0%,100% { transform:translateY(0px); opacity:.75; }
+      50%      { transform:translateY(-12px); opacity:.9; }
+    }
+    @media(max-width:768px){ .hw-widgets { display:none; } }
+
     /* Ola hero */
     .hero-wave {
       position: absolute; inset: 0; z-index: 0;
@@ -1053,7 +1094,7 @@
 </div>
 
 <!-- HERO -->
-<section class="hero">
+<section class="hero" style="position:relative;overflow:hidden">
   <!-- Ola animada de fondo -->
   <div class="hero-wave" aria-hidden="true">
     <svg viewBox="0 0 1520 560" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
@@ -1073,18 +1114,107 @@
     </svg>
   </div>
 
-  <div class="hero-inner reveal">
+  <!-- ── WIDGETS FLOTANTES ── -->
+  <div class="hw-widgets" aria-hidden="true">
+
+    <!-- Widget: Ingresos (izq arriba) -->
+    <div class="hw" style="left:2%;top:15%;animation:hwFloat1 7s ease-in-out infinite">
+      <div class="hw-label">Ingresos</div>
+      <div class="hw-val" style="color:#34d399">$4.6M <span class="hw-badge up">+12.4%</span></div>
+      <div class="hw-sub">vs. período anterior</div>
+      <svg width="120" height="38" viewBox="0 0 120 38" style="margin-top:6px">
+        <defs><linearGradient id="hg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34d399" stop-opacity=".3"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></linearGradient></defs>
+        <polygon points="0,32 15,28 30,22 45,18 60,14 75,10 90,8 105,5 120,2 120,38 0,38" fill="url(#hg1)"/>
+        <polyline points="0,32 15,28 30,22 45,18 60,14 75,10 90,8 105,5 120,2" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="120" cy="2" r="3.5" fill="#34d399"/>
+      </svg>
+    </div>
+
+    <!-- Widget: Conversión (izq abajo) -->
+    <div class="hw" style="left:1%;top:62%;animation:hwFloat2 9s ease-in-out infinite">
+      <div class="hw-label">Conversión</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+          <circle cx="26" cy="26" r="20" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round"
+            stroke-dasharray="125.6" stroke-dashoffset="47" transform="rotate(-90 26 26)"
+            style="filter:drop-shadow(0 0 4px #f59e0b88)"/>
+          <text x="26" y="30" text-anchor="middle" font-size="11" font-weight="900" fill="#f59e0b">12.4%</text>
+        </svg>
+        <div><div style="font-size:.7rem;color:#f59e0b;font-weight:700">+1.8 pp</div><div style="font-size:.6rem;color:rgba(255,255,255,.4)">vs anterior</div></div>
+      </div>
+    </div>
+
+    <!-- Widget: Código (izq medio) -->
+    <div class="hw hw-code" style="left:3%;top:38%;animation:hwFloat3 11s ease-in-out infinite">
+      <div class="hw-label">⌨ Sistema JV</div>
+      <div style="font-family:monospace;font-size:.65rem;line-height:1.7;margin-top:4px">
+        <div><span style="color:#60a5fa">function</span> <span style="color:#34d399">resolverProblema</span>(x) {</div>
+        <div style="padding-left:12px"><span style="color:#f59e0b">analizar</span>(datos);</div>
+        <div style="padding-left:12px"><span style="color:#f59e0b">diseñar</span>Solución();</div>
+        <div style="padding-left:12px"><span style="color:#f59e0b">desarrollar</span>();</div>
+        <div style="padding-left:12px"><span style="color:#a78bfa">return</span> exito;</div>
+        <div>}</div>
+      </div>
+    </div>
+
+    <!-- Widget: Análisis de datos (der arriba) -->
+    <div class="hw" style="right:2%;top:12%;animation:hwFloat2 8s ease-in-out infinite;min-width:220px">
+      <div class="hw-label">📊 Análisis de datos</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:55px;margin-top:8px">
+        <div class="hw-bar" style="height:40%;background:#1a3a6e"></div>
+        <div class="hw-bar" style="height:55%;background:#1a3a6e"></div>
+        <div class="hw-bar" style="height:65%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
+        <div class="hw-bar" style="height:75%;background:#1a3a6e"></div>
+        <div class="hw-bar" style="height:85%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
+        <div class="hw-bar" style="height:100%;background:#60a5fa;box-shadow:0 0 8px #60a5fa88"></div>
+        <div class="hw-bar" style="height:90%;background:#1a3a6e"></div>
+        <div class="hw-bar" style="height:80%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
+        <div style="margin-left:8px;display:flex;flex-direction:column;gap:3px;justify-content:center">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
+            <circle cx="24" cy="24" r="18" fill="none" stroke="#60a5fa" stroke-width="6" stroke-dasharray="113" stroke-dashoffset="28" transform="rotate(-90 24 24)" style="filter:drop-shadow(0 0 4px #60a5fa88)"/>
+            <text x="24" y="28" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">78%</text>
+          </svg>
+          <div style="font-size:.55rem;color:rgba(255,255,255,.4);text-align:center">Obj. alcanz.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px;font-size:.55rem;color:rgba(255,255,255,.4)">
+        <span><span style="display:inline-block;width:8px;height:8px;background:#60a5fa;border-radius:2px;margin-right:3px"></span>Ventas</span>
+        <span><span style="display:inline-block;width:8px;height:2px;background:#f59e0b;border-radius:2px;margin-right:3px;vertical-align:middle"></span>Objetivo</span>
+      </div>
+    </div>
+
+    <!-- Widget: Proceso (der abajo) -->
+    <div class="hw" style="right:1%;top:58%;animation:hwFloat1 10s ease-in-out infinite 1s;min-width:200px">
+      <div class="hw-label">⚡ Flujo de trabajo</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <div class="hw-step">🔍<div>Análisis</div></div>
+        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
+        <div class="hw-step">✏️<div>Diseño</div></div>
+        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
+        <div class="hw-step active">💻<div>Desarrollo</div></div>
+        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
+        <div class="hw-step">✅<div>Pruebas</div></div>
+        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
+        <div class="hw-step">🚀<div>Deploy</div></div>
+      </div>
+    </div>
+
+  </div><!-- /hw-widgets -->
+
+  <div class="hero-inner reveal" style="position:relative;z-index:2">
     <div class="logo-atom">
-      <img src="jvs-logo.png" alt="JV Systems" class="hero-logo" />
+      <img src="sabores/jvs-logo.png" alt="JV Systems" class="hero-logo" onerror="this.src='sabores/jvs-icon.png'" />
       <div class="orbit o1"><span class="dot"></span></div>
       <div class="orbit o2"><span class="dot"></span></div>
       <div class="orbit o3"><span class="dot"></span></div>
     </div>
-    <div class="hero-badge">Sistemas a medida · Soluciones Digitales</div>
+    <div class="hero-badge">● Sistemas a medida · Soluciones Digitales</div>
     <h1>Tu negocio necesita<br><em>su propio sistema</em></h1>
     <p>Diseño y desarrollo sistemas digitales adaptados exactamente a como funciona tu empresa. Sin plantillas genéricas, sin funciones que no usás.</p>
     <div class="hero-btns">
-      <a href="#sistemas" class="btn-primary">Ver sistemas creados</a>
+      <a href="#sistemas" class="btn-primary">Ver sistemas creados →</a>
       <a href="#contacto" class="btn-outline">Contame tu idea →</a>
     </div>
   </div>
