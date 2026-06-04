@@ -2437,6 +2437,7 @@ function seleccionarOrden(id) {
   const idx = ordenes.findIndex(o => o.id == id);
   ordenActual = idx >= 0 ? ordenes[idx] : null;
   currentTab = 0;
+  window._clienteDesbloqueado = false; // resetear bloqueo al cambiar orden
   renderFormContent();
   renderOrderList();
 }
@@ -2928,14 +2929,20 @@ function renderTabCliente() {
       ` : ''}
 
       ${tieneEmpresa ? `
-        <div class="form-row cols-2" style="margin-top:10px;">
+        ${clienteEnDB && !locked ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px;padding:7px 12px;background:#f0f4f9;border:1px solid #dbe4f0;border-radius:8px;font-size:12px;color:#64748b;">
+            <span>🔒 Datos desde base de datos — solo lectura</span>
+            <button onclick="desbloquearDatosCliente()" style="font-size:11px;font-weight:700;color:#1565D8;background:none;border:1px solid #1565D8;border-radius:5px;padding:3px 10px;cursor:pointer;">✏ Editar</button>
+          </div>
+        ` : ''}
+        <div class="form-row cols-2" style="margin-top:6px;">
           <div class="form-group">
             <label>Contacto</label>
-            <input type="text" id="f-contacto" value="${esc(o.contacto)}" placeholder="Nombre del contacto" ${locked?'readonly':''}>
+            <input type="text" id="f-contacto" value="${esc(o.contacto)}" placeholder="Nombre del contacto" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
           </div>
           <div class="form-group">
             <label>CUIT</label>
-            <input type="text" id="f-cuit" value="${esc(o.cuit)}" placeholder="XX-XXXXXXXX-X" ${locked?'readonly':''}>
+            <input type="text" id="f-cuit" value="${esc(o.cuit)}" placeholder="XX-XXXXXXXX-X" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
           </div>
         </div>
         <div class="form-row cols-2">
@@ -2943,18 +2950,18 @@ function renderTabCliente() {
             <label>Teléfono</label>
             <div class="input-prefix">
               <span class="prefix">+54</span>
-              <input type="text" id="f-tel" value="${esc(o.tel)}" placeholder="341 XXXXXXX" ${locked?'readonly':''}>
+              <input type="text" id="f-tel" value="${esc(o.tel)}" placeholder="341 XXXXXXX" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
             </div>
           </div>
           <div class="form-group">
             <label>Ubicación</label>
-            <input type="text" id="f-ubicacion" value="${esc(o.ubicacion)}" placeholder="Rosario, Santa Fe" ${locked?'readonly':''}>
+            <input type="text" id="f-ubicacion" value="${esc(o.ubicacion)}" placeholder="Rosario, Santa Fe" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label>Email</label>
-            <input type="text" id="f-email" value="${esc(o.email)}" placeholder="cliente@empresa.com" ${locked?'readonly':''}>
+            <input type="text" id="f-email" value="${esc(o.email)}" placeholder="cliente@empresa.com" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
           </div>
         </div>
       ` : ''}
@@ -4576,6 +4583,18 @@ function renderUsuariosList() {
       + firmaBloque
       + '</div>';
   }).join('');
+}
+
+function desbloquearDatosCliente() {
+  const cu = getCurrentUser();
+  const users = getUsers();
+  const admin = users.find(u => u.role === 'admin');
+  if (!admin) { window._clienteDesbloqueado = true; renderForm(); return; }
+  const pass = prompt('Ingresá la contraseña de administrador para editar los datos del cliente:');
+  if (pass === null) return;
+  if (pass !== admin.password) { alert('Contraseña incorrecta.'); return; }
+  window._clienteDesbloqueado = true;
+  renderForm();
 }
 
 function adminCambiarPass(userId, nombreUsuario) {
