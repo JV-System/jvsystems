@@ -3796,6 +3796,7 @@ setTimeout(initMap, 300);
 
 let _opSelOT = null;
 let _opTurnoActual = '2do';
+let _opEstadoMode = 'activos';
 
 function opFiltrarOT(id) {
   _opSelOT = (_opSelOT === id) ? null : id; // toggle
@@ -4059,8 +4060,8 @@ function buildOpProyeccionCarga(data) {
     </svg>
   </div>
   <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;padding:.3rem 0">
-    ${[...new Set(_opProyeccion.flatMap(m=>m.ots.map(o=>({nom:o.nom,c:o.c})))
-      .filter((v,i,a)=>a.findIndex(x=>x.nom===v.nom)===i))]
+    ${_opProyeccion.flatMap(m=>m.ots)
+      .filter((o,i,a)=>a.findIndex(x=>x.nom===o.nom)===i)
       .map(o=>`<span style="display:flex;align-items:center;gap:3px;font-size:.55rem;color:rgba(255,255,255,.5)">
         <span style="width:8px;height:8px;border-radius:2px;background:${o.c};display:inline-block"></span>${o.nom}</span>`)
       .join('')}
