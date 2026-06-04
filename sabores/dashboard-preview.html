@@ -264,10 +264,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
     </div>
   </div>
   <div class="tb-right">
-    <select class="tb-sel"><option>Enero – Junio 2026</option><option>2025 completo</option><option>Último trimestre</option></select>
-    <select class="tb-sel"><option>Todas las sucursales</option><option>Buenos Aires</option><option>Córdoba</option></select>
+    <select class="tb-sel" id="sel-periodo" onchange="applyFilters()">
+      <option value="h1-2026">Enero – Junio 2026</option>
+      <option value="2025">2025 completo</option>
+      <option value="q4-2025">Último trimestre</option>
+    </select>
+    <select class="tb-sel" id="sel-sucursal" onchange="applyFilters()">
+      <option value="todas">Todas las sucursales</option>
+      <option value="bsas">Buenos Aires</option>
+      <option value="cba">Córdoba</option>
+      <option value="mza">Mendoza</option>
+    </select>
     <div class="tb-dot"></div>
-    <div class="tb-live">En vivo · actualizado 09:14</div>
+    <div class="tb-live" id="tb-live-txt">En vivo · actualizado <span id="tb-hora">09:14</span></div>
   </div>
 </div>
 
@@ -994,21 +1003,42 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
 <div class="view" id="view-sistemas">
 <div class="grid" style="grid-template-columns:repeat(4,1fr)">
 
+  <!-- KPIs -->
   <div class="kpi"><div class="kpi-lbl">🎫 Tickets abiertos</div><div class="kpi-val anim-num" data-target="23" style="color:#f87171">0</div><div class="kpi-sub"><span class="down">▲4 vs ayer</span></div><div class="kpi-mini" id="km-it1"></div></div>
   <div class="kpi"><div class="kpi-lbl">✅ Resueltos hoy</div><div class="kpi-val anim-num" data-target="31" style="color:#34d399">0</div><div class="kpi-sub"><span class="up">▲8 vs promedio</span></div><div class="kpi-mini" id="km-it2"></div></div>
   <div class="kpi"><div class="kpi-lbl">🟢 Uptime sistemas</div><div class="kpi-val anim-num" data-target="99.9" data-suffix="%" style="color:#34d399">0%</div><div class="kpi-sub"><span class="neu">SLA 99.5% cumplido</span></div><div class="kpi-mini" id="km-it3"></div></div>
-  <div class="kpi"><div class="kpi-lbl">⏱ Tiempo respuesta</div><div class="kpi-val anim-num" data-target="1.8" data-suffix="h" style="color:#f59e0b">0h</div><div class="kpi-sub"><span class="up">▼0.4h vs objetivo</span></div><div class="kpi-mini" id="km-it4"></div></div>
+  <div class="kpi"><div class="kpi-lbl">💻 Equipos activos</div><div class="kpi-val anim-num" data-target="47" style="color:#60a5fa">0</div><div class="kpi-sub"><span class="up">3 en mantenimiento</span></div><div class="kpi-mini" id="km-it4"></div></div>
 
-  <!-- Tickets por categoría -->
+  <!-- Inventario PCs -->
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">🗂 Tickets por categoría</div><div class="ps">Distribución del mes actual</div></div></div>
-    <div class="pb" id="it-categorias"></div>
+    <div class="ph"><div><div class="pt">🖥 Inventario — Computadoras de escritorio</div><div class="ps" id="it-pc-count"></div></div>
+      <div class="pills"><div class="pill on" onclick="itFiltrar('pc','todos',this)">Todos</div><div class="pill off" onclick="itFiltrar('pc','activo',this)">Activos</div><div class="pill off" onclick="itFiltrar('pc','mantenimiento',this)">Mant.</div></div>
+    </div>
+    <div class="pb" style="padding:.3rem .5rem"><div id="it-tabla-pc"></div></div>
   </div>
 
-  <!-- Tickets por semana -->
+  <!-- Inventario Notebooks -->
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">📊 Tickets por semana</div><div class="ps">Abiertos vs resueltos · últimas 8 semanas</div></div></div>
-    <div class="pb" id="it-semanas"></div>
+    <div class="ph"><div><div class="pt">💼 Inventario — Notebooks</div><div class="ps" id="it-nb-count"></div></div>
+      <div class="pills"><div class="pill on" onclick="itFiltrar('nb','todos',this)">Todos</div><div class="pill off" onclick="itFiltrar('nb','activo',this)">Activos</div><div class="pill off" onclick="itFiltrar('nb','mantenimiento',this)">Mant.</div></div>
+    </div>
+    <div class="pb" style="padding:.3rem .5rem"><div id="it-tabla-nb"></div></div>
+  </div>
+
+  <!-- Inventario Celulares -->
+  <div class="panel" style="grid-column:span 2">
+    <div class="ph"><div><div class="pt">📱 Inventario — Celulares corporativos</div><div class="ps" id="it-cel-count"></div></div>
+      <div class="pills"><div class="pill on" onclick="itFiltrar('cel','todos',this)">Todos</div><div class="pill off" onclick="itFiltrar('cel','activo',this)">Activos</div></div>
+    </div>
+    <div class="pb" style="padding:.3rem .5rem"><div id="it-tabla-cel"></div></div>
+  </div>
+
+  <!-- Inventario Servidores -->
+  <div class="panel" style="grid-column:span 2">
+    <div class="ph"><div><div class="pt">🖧 Inventario — Servidores</div><div class="ps" id="it-srv-count"></div></div>
+      <div class="pills"><div class="pill on" onclick="itFiltrar('srv','todos',this)">Todos</div><div class="pill off" onclick="itFiltrar('srv','activo',this)">Activos</div></div>
+    </div>
+    <div class="pb" style="padding:.3rem .5rem"><div id="it-tabla-srv"></div></div>
   </div>
 
   <!-- Estado de sistemas -->
@@ -1017,7 +1047,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
     <div class="pb" id="it-sistemas"></div>
   </div>
 
-  <!-- Tabla tickets recientes -->
+  <!-- Tickets recientes -->
   <div class="panel" style="grid-column:span 2">
     <div class="ph"><div><div class="pt">📄 Tickets recientes</div><div class="ps">Últimos 10 tickets activos</div></div></div>
     <div class="pb"><table class="tbl"><thead><tr><th>#</th><th>Asunto</th><th>Área</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody id="it-tabla"></tbody></table></div>
@@ -2360,8 +2390,10 @@ function buildView(id){
     buildMini('km-it1',colors.red,[18,20,22,19,24,21,23]);
     buildMini('km-it2',colors.green,[22,25,28,26,30,28,31]);
     buildMini('km-it3',colors.green,[99.7,99.8,99.9,99.9,99.8,99.9,99.9]);
-    buildMini('km-it4',colors.amber,[2.8,2.5,2.3,2.1,2.0,1.9,1.8]);
-    buildItCategorias(); buildItSemanas(); buildItSistemas(); buildItTabla();
+    buildMini('km-it4',colors.blue,[40,42,44,45,46,47,47]);
+    itRenderTabla('pc'); itRenderTabla('nb'); itRenderTabla('cel'); itRenderTabla('srv');
+    if(typeof buildItSistemas==='function') buildItSistemas();
+    if(typeof buildItTabla==='function') buildItTabla();
   }
 }
 
@@ -3558,6 +3590,195 @@ function clearMapFilter() {
 
 // Llamar al iniciar y cuando se muestre el tab resumen
 setTimeout(initMap, 300);
+
+// ════════════════════════════════════════════
+// ── FILTROS GLOBALES (Periodo + Sucursal) ──
+// ════════════════════════════════════════════
+const _filterData = {
+  'h1-2026': { mult: 1.0,   label: 'Ene–Jun 2026' },
+  '2025':    { mult: 1.85,  label: '2025 completo' },
+  'q4-2025': { mult: 0.48,  label: 'Q4 2025' },
+};
+const _sucData = {
+  'todas': { mult: 1.0,  label: 'Todas' },
+  'bsas':  { mult: 0.52, label: 'Buenos Aires' },
+  'cba':   { mult: 0.31, label: 'Córdoba' },
+  'mza':   { mult: 0.17, label: 'Mendoza' },
+};
+
+function applyFilters() {
+  const per = document.getElementById('sel-periodo')?.value || 'h1-2026';
+  const suc = document.getElementById('sel-sucursal')?.value || 'todas';
+  const pm  = _filterData[per]?.mult  || 1;
+  const sm  = _sucData[suc]?.mult || 1;
+  const m   = pm * sm;
+
+  // Actualizar todos los anim-num visibles
+  document.querySelectorAll('.anim-num').forEach(el => {
+    const base = parseFloat(el.dataset.base || el.dataset.target);
+    if (!el.dataset.base) el.dataset.base = el.dataset.target; // guardar original
+    const noScale = el.dataset.noscale;
+    const newVal  = noScale ? base : Math.round(base * m * 10) / 10;
+    el.dataset.target = newVal;
+    animNum(el);
+  });
+
+  // Actualizar hora
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2,'0');
+  const mn = now.getMinutes().toString().padStart(2,'0');
+  const el = document.getElementById('tb-hora');
+  if (el) el.textContent = h + ':' + mn;
+
+  // Re-renderizar la vista actual
+  const activeView = document.querySelector('.view.active');
+  if (activeView) buildView(activeView.id.replace('view-',''));
+}
+
+// ════════════════════════════════════════════
+// ── INVENTARIO IT ──
+// ════════════════════════════════════════════
+const _itInventario = {
+  pc: [
+    { id:'PC-001', nombre:'Dell OptiPlex 7090', area:'Administración', cpu:'Intel i7-11700', ram:'16 GB', disco:'512 GB SSD', so:'Windows 11 Pro', estado:'activo' },
+    { id:'PC-002', nombre:'Dell OptiPlex 7090', area:'Ventas',         cpu:'Intel i5-11500', ram:'8 GB',  disco:'256 GB SSD', so:'Windows 11 Pro', estado:'activo' },
+    { id:'PC-003', nombre:'HP EliteDesk 800',   area:'Contabilidad',   cpu:'Intel i7-10700', ram:'32 GB', disco:'1 TB SSD',   so:'Windows 10 Pro', estado:'activo' },
+    { id:'PC-004', nombre:'Lenovo ThinkCentre', area:'RRHH',           cpu:'Intel i5-10400', ram:'16 GB', disco:'512 GB SSD', so:'Windows 11 Pro', estado:'activo' },
+    { id:'PC-005', nombre:'Dell OptiPlex 3090', area:'Depósito',       cpu:'Intel i3-10100', ram:'8 GB',  disco:'256 GB HDD', so:'Windows 10 Pro', estado:'mantenimiento' },
+    { id:'PC-006', nombre:'HP ProDesk 400',     area:'Recepción',      cpu:'Intel i5-9500',  ram:'8 GB',  disco:'500 GB HDD', so:'Windows 10 Pro', estado:'activo' },
+  ],
+  nb: [
+    { id:'NB-001', nombre:'Dell Latitude 5520', area:'Gerencia',       cpu:'Intel i7-1165G7', ram:'16 GB', disco:'512 GB SSD', bat:'92%', estado:'activo' },
+    { id:'NB-002', nombre:'Lenovo ThinkPad X1', area:'Comercial',      cpu:'Intel i7-1260P',  ram:'32 GB', disco:'1 TB SSD',   bat:'85%', estado:'activo' },
+    { id:'NB-003', nombre:'HP EliteBook 840',   area:'Sistemas',       cpu:'AMD Ryzen 7',     ram:'16 GB', disco:'512 GB SSD', bat:'78%', estado:'activo' },
+    { id:'NB-004', nombre:'Dell Inspiron 15',   area:'Marketing',      cpu:'Intel i5-1235U',  ram:'8 GB',  disco:'256 GB SSD', bat:'91%', estado:'activo' },
+    { id:'NB-005', nombre:'Lenovo IdeaPad 5',   area:'Logística',      cpu:'AMD Ryzen 5',     ram:'16 GB', disco:'512 GB SSD', bat:'67%', estado:'mantenimiento' },
+    { id:'NB-006', nombre:'MacBook Pro 14"',    area:'Diseño',         cpu:'Apple M2 Pro',    ram:'16 GB', disco:'512 GB SSD', bat:'88%', estado:'activo' },
+  ],
+  cel: [
+    { id:'CEL-001', nombre:'Samsung Galaxy S24', area:'Gerencia',  imei:'35*****8401', almac:'256 GB', ram:'8 GB',  so:'Android 14', estado:'activo' },
+    { id:'CEL-002', nombre:'iPhone 15 Pro',      area:'Comercial', imei:'35*****2217', almac:'256 GB', ram:'8 GB',  so:'iOS 17',     estado:'activo' },
+    { id:'CEL-003', nombre:'Samsung A54',        area:'Ventas',    imei:'35*****9903', almac:'128 GB', ram:'6 GB',  so:'Android 14', estado:'activo' },
+    { id:'CEL-004', nombre:'Motorola Edge 40',   area:'Logística', imei:'35*****4412', almac:'256 GB', ram:'8 GB',  so:'Android 13', estado:'activo' },
+    { id:'CEL-005', nombre:'Samsung Galaxy A34', area:'Depósito',  imei:'35*****7731', almac:'128 GB', ram:'4 GB',  so:'Android 13', estado:'activo' },
+  ],
+  srv: [
+    { id:'SRV-001', nombre:'Dell PowerEdge R740',  rol:'Servidor principal',   cpu:'2× Xeon Gold 6226R', ram:'128 GB ECC', disco:'8 TB RAID-10', uptime:'99.98%', estado:'activo' },
+    { id:'SRV-002', nombre:'HP ProLiant DL380',    rol:'Base de datos',        cpu:'2× Xeon Silver 4214', ram:'64 GB ECC',  disco:'4 TB RAID-5',  uptime:'99.95%', estado:'activo' },
+    { id:'SRV-003', nombre:'Dell PowerEdge R640',  rol:'Aplicaciones web',     cpu:'Intel Xeon E-2288G', ram:'32 GB ECC',  disco:'2 TB SSD',      uptime:'99.91%', estado:'activo' },
+    { id:'SRV-004', nombre:'Synology RS1221+',     rol:'NAS / Backup',         cpu:'AMD Ryzen V1500B',   ram:'8 GB',       disco:'32 TB RAID-6',  uptime:'99.99%', estado:'activo' },
+    { id:'SRV-005', nombre:'HP ProLiant MicroSvr', rol:'DNS / DHCP interno',   cpu:'AMD EPYC 3151',      ram:'16 GB ECC',  disco:'1 TB SSD',      uptime:'99.80%', estado:'mantenimiento' },
+  ],
+};
+
+let _itFiltros = { pc:'todos', nb:'todos', cel:'todos', srv:'todos' };
+
+function itFiltrar(tipo, estado, btn) {
+  _itFiltros[tipo] = estado;
+  const parent = btn.closest('.pills');
+  parent.querySelectorAll('.pill').forEach(p => { p.classList.remove('on'); p.classList.add('off'); });
+  btn.classList.remove('off'); btn.classList.add('on');
+  itRenderTabla(tipo);
+}
+
+function itRenderTabla(tipo) {
+  const items = _itInventario[tipo] || [];
+  const filtro = _itFiltros[tipo] || 'todos';
+  const datos  = filtro === 'todos' ? items : items.filter(i => i.estado === filtro);
+  const el     = document.getElementById('it-tabla-' + tipo);
+  const cnt    = document.getElementById('it-' + tipo + '-count');
+  if (!el) return;
+
+  const activos = items.filter(i=>i.estado==='activo').length;
+  if (cnt) cnt.textContent = `${activos} activos · ${items.length} total`;
+
+  const stColor = { activo:'#34d399', mantenimiento:'#f87171', baja:'#64748b' };
+  const stLabel = { activo:'Activo', mantenimiento:'Mant.', baja:'Baja' };
+
+  let html = '<table style="width:100%;border-collapse:collapse;font-size:.68rem">';
+
+  if (tipo === 'pc' || tipo === 'nb') {
+    const batCol = tipo === 'nb' ? '<th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Batería</th>' : '';
+    html += `<thead><tr>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">ID</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Equipo</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Área</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">CPU</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">RAM</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Disco</th>
+      ${batCol}
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Estado</th>
+    </tr></thead><tbody>`;
+    datos.forEach(d => {
+      const bat = tipo === 'nb' ? `<td style="padding:.3rem .4rem;color:${parseFloat(d.bat)>80?'#34d399':parseFloat(d.bat)>50?'#f59e0b':'#f87171'};font-weight:700">${d.bat}</td>` : '';
+      html += `<tr style="border-top:1px solid rgba(255,255,255,.04)">
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.4);font-family:monospace">${d.id}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.8);font-weight:600">${d.nombre}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.5)">${d.area}</td>
+        <td style="padding:.3rem .4rem;color:#60a5fa">${d.cpu}</td>
+        <td style="padding:.3rem .4rem;color:#a78bfa;font-weight:700">${d.ram}</td>
+        <td style="padding:.3rem .4rem;color:#f59e0b">${d.disco}</td>
+        ${bat}
+        <td style="padding:.3rem .4rem"><span style="font-size:.62rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;background:${stColor[d.estado]}22;color:${stColor[d.estado]}">${stLabel[d.estado]}</span></td>
+      </tr>`;
+    });
+  } else if (tipo === 'cel') {
+    html += `<thead><tr>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">ID</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Dispositivo</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Área</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Almac.</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">RAM</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">SO</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Estado</th>
+    </tr></thead><tbody>`;
+    datos.forEach(d => {
+      html += `<tr style="border-top:1px solid rgba(255,255,255,.04)">
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.4);font-family:monospace">${d.id}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.8);font-weight:600">${d.nombre}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.5)">${d.area}</td>
+        <td style="padding:.3rem .4rem;color:#f59e0b;font-weight:700">${d.almac}</td>
+        <td style="padding:.3rem .4rem;color:#a78bfa;font-weight:700">${d.ram}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.5)">${d.so}</td>
+        <td style="padding:.3rem .4rem"><span style="font-size:.62rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;background:${stColor[d.estado]}22;color:${stColor[d.estado]}">${stLabel[d.estado]}</span></td>
+      </tr>`;
+    });
+  } else if (tipo === 'srv') {
+    html += `<thead><tr>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">ID</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Servidor</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Rol</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">CPU</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">RAM</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Disco</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Uptime</th>
+      <th style="color:rgba(255,255,255,.4);font-weight:600;padding:.3rem .4rem;text-align:left">Estado</th>
+    </tr></thead><tbody>`;
+    datos.forEach(d => {
+      html += `<tr style="border-top:1px solid rgba(255,255,255,.04)">
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.4);font-family:monospace">${d.id}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.8);font-weight:600">${d.nombre}</td>
+        <td style="padding:.3rem .4rem;color:rgba(255,255,255,.5)">${d.rol}</td>
+        <td style="padding:.3rem .4rem;color:#60a5fa;font-size:.62rem">${d.cpu}</td>
+        <td style="padding:.3rem .4rem;color:#a78bfa;font-weight:700">${d.ram}</td>
+        <td style="padding:.3rem .4rem;color:#f59e0b">${d.disco}</td>
+        <td style="padding:.3rem .4rem;color:#34d399;font-weight:700">${d.uptime}</td>
+        <td style="padding:.3rem .4rem"><span style="font-size:.62rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;background:${stColor[d.estado]}22;color:${stColor[d.estado]}">${stLabel[d.estado]}</span></td>
+      </tr>`;
+    });
+  }
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// Hora en vivo
+setInterval(() => {
+  const now = new Date();
+  const el  = document.getElementById('tb-hora');
+  if (el) el.textContent = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}, 30000);
+
 </script>
 
 <style>
