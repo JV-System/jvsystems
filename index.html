@@ -1058,6 +1058,193 @@
     /* ── SCROLL REVEAL ── */
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
     .reveal.visible { opacity: 1; transform: none; }
+
+    /* ════════════════════════════════
+       HISTORIA 9 PANELES
+    ════════════════════════════════ */
+    .historia-section { padding: 5rem 2rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .historia-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 3rem;
+    }
+    .hpanel {
+      background: rgba(13,27,46,0.9);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      padding: 1.4rem 1.25rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+    }
+    .hpanel:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,.5); border-color: rgba(255,255,255,.15); }
+    .hpanel::before { content:''; position:absolute; inset:0; border-radius:18px; background: linear-gradient(135deg, rgba(255,255,255,.03) 0%, transparent 60%); pointer-events:none; }
+
+    /* Colores por tipo */
+    .hpanel-problema { border-color: rgba(248,113,113,.25); background: rgba(20,10,10,.9); }
+    .hpanel-call     { border-color: rgba(245,158,11,.35); background: rgba(20,15,5,.9); }
+    .hpanel-final    { border-color: rgba(52,211,153,.3); background: rgba(5,20,15,.9); grid-column: 3; }
+
+    .hp-num {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 800; color: rgba(255,255,255,.5);
+    }
+    .hp-tag {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .68rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; padding: .3rem .75rem;
+      border-radius: 99px; margin-bottom: .4rem;
+    }
+    .hp-tag.problema     { background: rgba(248,113,113,.15); color: #f87171; }
+    .hp-tag.tiempo       { background: rgba(96,165,250,.15);  color: #60a5fa; }
+    .hp-tag.frustracion  { background: rgba(167,139,250,.15); color: #a78bfa; }
+    .hp-tag.solucion     { background: rgba(245,158,11,.15);  color: #f59e0b; }
+    .hp-tag.analisis     { background: rgba(45,212,191,.15);  color: #2dd4bf; }
+    .hp-tag.diseno       { background: rgba(96,165,250,.15);  color: #60a5fa; }
+    .hp-tag.implementacion { background: rgba(52,211,153,.15);color: #34d399; }
+    .hp-tag.resultados   { background: rgba(245,158,11,.15);  color: #f59e0b; }
+    .hp-tag.final        { background: rgba(52,211,153,.15);  color: #34d399; }
+
+    .hp-sub  { font-size: .65rem; color: rgba(255,255,255,.4); margin-bottom: .85rem; }
+    .hp-desc { font-size: .72rem; color: rgba(255,255,255,.5); line-height: 1.6; margin-top: .75rem; }
+
+    /* Visual area */
+    .hp-visual {
+      display: flex; align-items: center; gap: .75rem;
+      min-height: 90px; position: relative;
+      padding: .5rem 0;
+    }
+    .hp-emoji-big { font-size: 3.2rem; filter: drop-shadow(0 0 12px rgba(255,140,0,.4)); flex-shrink: 0; }
+
+    /* Burbujas */
+    .bubble {
+      position: absolute;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px 10px 10px 2px;
+      padding: .35rem .6rem;
+      font-size: .62rem; color: rgba(255,255,255,.75);
+      line-height: 1.4; max-width: 130px;
+      animation: bubblePop .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .b1 { top: 5%;  left: 30%; animation-delay: .1s; }
+    .b2 { top: 45%; left: 35%; animation-delay: .3s; }
+    .b3 { animation-delay: .5s; }
+    @keyframes bubblePop { from { opacity:0; transform: scale(.7); } to { opacity:1; transform: scale(1); } }
+
+    /* Reloj */
+    .hp-clock { flex-shrink: 0; }
+    @keyframes clockMin  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes clockHour { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .hp-bubble-center {
+      background: rgba(96,165,250,.1); border: 1px solid rgba(96,165,250,.25);
+      border-radius: 10px; padding: .5rem .7rem;
+      font-size: .62rem; color: #60a5fa; line-height: 1.5;
+      text-align: center;
+    }
+
+    /* Phone widget */
+    .hp-phone { flex-shrink: 0; }
+    .phone-screen {
+      width: 80px; background: #0a111c;
+      border: 2px solid rgba(245,158,11,.4);
+      border-radius: 14px; padding: 10px 8px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(245,158,11,.2);
+    }
+
+    /* Lista análisis */
+    .hp-list { display: flex; flex-direction: column; gap: .3rem; }
+    .hpl-item {
+      font-size: .7rem; font-weight: 700; color: #2dd4bf;
+      padding: .25rem .6rem;
+      background: rgba(45,212,191,.08); border-radius: 6px;
+      border-left: 2px solid #2dd4bf;
+      animation: slideInLeft .4s ease both;
+    }
+    .hpl-item:nth-child(1){animation-delay:.05s}
+    .hpl-item:nth-child(2){animation-delay:.15s}
+    .hpl-item:nth-child(3){animation-delay:.25s}
+    .hpl-item:nth-child(4){animation-delay:.35s}
+    .hpl-item:nth-child(5){animation-delay:.45s}
+    @keyframes slideInLeft { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:none; } }
+
+    /* Diagrama solución */
+    .hp-diagram {
+      position: relative; width: 110px; height: 100px;
+      flex-shrink: 0;
+    }
+    .hpd-center {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      background: rgba(96,165,250,.15); border: 1px solid rgba(96,165,250,.4);
+      border-radius: 8px; padding: .3rem .5rem;
+      font-size: .6rem; font-weight: 800; color: #60a5fa;
+      white-space: nowrap; text-align: center;
+    }
+    .hpd-item {
+      position: absolute; font-size: .52rem; color: rgba(255,255,255,.55);
+      white-space: nowrap;
+      animation: diagramPop .5s ease both;
+    }
+    .hpd-item:nth-child(2) { top: 0;   left: 50%; transform: translateX(-50%); animation-delay:.1s }
+    .hpd-item:nth-child(3) { top: 20%; right: 0;  animation-delay:.2s }
+    .hpd-item:nth-child(4) { bottom: 5%; right: 5%; animation-delay:.3s }
+    .hpd-item:nth-child(5) { bottom: 5%; left: 0;  animation-delay:.4s }
+    .hpd-item:nth-child(6) { top: 20%; left: 0;   animation-delay:.5s }
+    @keyframes diagramPop { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
+
+    /* Checklist + code */
+    .hp-checklist { display: flex; flex-direction: column; gap: .25rem; flex-shrink: 0; }
+    .hpck { font-size: .7rem; font-weight: 700; color: #34d399; padding: .2rem .5rem; background: rgba(52,211,153,.08); border-radius: 5px; }
+    .hp-code-mini { font-family: monospace; font-size: .65rem; color: rgba(255,255,255,.6); background: rgba(0,0,0,.3); border-radius: 8px; padding: .5rem .7rem; line-height: 1.6; margin-left: .5rem; }
+
+    /* Métricas */
+    .hp-metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: .4rem; width: 100%; }
+    .hpm { background: rgba(255,255,255,.04); border-radius: 8px; padding: .4rem .5rem; text-align: center; }
+    .hpm-val { font-size: 1.1rem; font-weight: 900; line-height: 1; }
+    .hpm-val.up   { color: #34d399; text-shadow: 0 0 12px rgba(52,211,153,.5); }
+    .hpm-val.down { color: #f87171; text-shadow: 0 0 12px rgba(248,113,113,.5); }
+    .hpm-lbl { font-size: .55rem; color: rgba(255,255,255,.4); margin-top: 2px; }
+
+    /* Panel final */
+    .hp-star-row { font-size: 1rem; letter-spacing: 2px; }
+    .hp-final-badge {
+      background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.3);
+      border-radius: 10px; padding: .5rem .8rem;
+      font-size: .68rem; font-weight: 700; color: #34d399;
+      text-align: center; line-height: 1.5;
+    }
+    .hp-cta {
+      display: inline-block; margin-top: .85rem;
+      background: var(--accent); color: #000; font-weight: 800;
+      padding: .6rem 1.4rem; border-radius: 99px; font-size: .8rem;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .hp-cta:hover { opacity: .85; }
+
+    /* Footer historia */
+    .historia-footer {
+      display: flex; align-items: center; gap: 1rem;
+      justify-content: center; margin-top: 2.5rem;
+      padding: 1.25rem; border-radius: 14px;
+      background: rgba(13,27,46,.7); border: 1px solid rgba(255,255,255,.07);
+      font-size: .8rem; color: rgba(255,255,255,.6);
+    }
+    .hf-tags { margin-left: auto; font-size: .7rem; font-weight: 700; color: rgba(255,140,0,.7); letter-spacing: .08em; }
+
+    @media(max-width:768px) {
+      .historia-grid { grid-template-columns: 1fr; }
+      .hpanel-final { grid-column: 1; }
+    }
+    @media(min-width:769px) and (max-width:1024px) {
+      .historia-grid { grid-template-columns: repeat(2,1fr); }
+      .hpanel-final { grid-column: auto; }
+    }
   </style>
 </head>
 <body>
@@ -1652,50 +1839,185 @@
   </div>
 </section>
 
-<!-- PROCESO -->
-<section class="proceso" id="proceso">
+<!-- PROCESO / HISTORIA -->
+<section class="historia-section" id="proceso">
   <div class="section-header reveal">
     <span class="section-tag">— Cómo trabajo</span>
-    <h2>Del problema al sistema en producción</h2>
-    <p>Un proceso claro, sin sorpresas ni demoras innecesarias.</p>
+    <h2>De tu problema al sistema que necesitás</h2>
+    <p>Una historia que se repite con cada cliente. ¿Te identificás?</p>
   </div>
-  <div class="proceso-steps">
-    <div class="paso reveal">
-      <div class="paso-num">1</div>
-      <div class="paso-text">
-        <h3>Entiendo tu negocio</h3>
-        <p>Hablamos por WhatsApp o videollamada. Me contás cómo trabajás hoy: qué hacés en planillas, papel o de memoria. Entiendo el problema antes de escribir una línea de código.</p>
+
+  <div class="historia-grid">
+
+    <!-- 1 -->
+    <div class="hpanel hpanel-problema reveal">
+      <div class="hp-num">1</div>
+      <div class="hp-tag problema">⚠️ El Problema</div>
+      <div class="hp-sub">Gestión ineficiente, tiempo perdido</div>
+      <div class="hp-visual">
+        <div class="hp-emoji-big">📋</div>
+        <div class="hp-bubbles">
+          <div class="bubble b1">¡Demasiadas facturas y sin control!</div>
+          <div class="bubble b2">¿Dónde está todo el dinero?</div>
+        </div>
       </div>
+      <p class="hp-desc">El negocio crece pero los procesos se hacen a mano. Planillas, papeles, información dispersa.</p>
     </div>
-    <div class="paso reveal">
-      <div class="paso-num">2</div>
-      <div class="paso-text">
-        <h3>Diseño la solución</h3>
-        <p>Te muestro un borrador del sistema antes de construirlo. Confirmamos juntos los flujos, campos y pantallas. Sin sorpresas al final.</p>
+
+    <!-- 2 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">2</div>
+      <div class="hp-tag tiempo">⏰ El Tiempo no alcanza</div>
+      <div class="hp-sub">El problema se acumula</div>
+      <div class="hp-visual">
+        <div class="hp-clock">
+          <svg viewBox="0 0 100 100" width="90" height="90">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(96,165,250,.3)" stroke-width="3"/>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="283" stroke-dashoffset="71" style="filter:drop-shadow(0 0 6px #60a5fa)"/>
+            <line x1="50" y1="50" x2="50" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round" style="transform-origin:50px 50px;animation:clockMin 4s linear infinite"/>
+            <line x1="50" y1="50" x2="68" y2="50" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" style="transform-origin:50px 50px;animation:clockHour 48s linear infinite"/>
+            <circle cx="50" cy="50" r="4" fill="#f59e0b"/>
+          </svg>
+        </div>
+        <div class="hp-bubble-center">Las tareas se acumulan,<br>el tiempo se escapa y<br>el crecimiento se detiene.</div>
       </div>
+      <p class="hp-desc">Reportes tardíos, decisiones equivocadas. La información llega cuando ya es demasiado tarde.</p>
     </div>
-    <div class="paso reveal">
-      <div class="paso-num">3</div>
-      <div class="paso-text">
-        <h3>Construyo y muestro avances</h3>
-        <p>Trabajo en iteraciones cortas. Vas viendo el sistema funcionar desde el primer día, no al final de meses de trabajo oculto.</p>
+
+    <!-- 3 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">3</div>
+      <div class="hp-tag frustracion">😤 La Frustración crece</div>
+      <div class="hp-sub">Y los resultados bajan</div>
+      <div class="hp-visual">
+        <div class="hp-emoji-big" style="font-size:3.5rem">📉</div>
+        <div class="hp-bubbles">
+          <div class="bubble b1">Clientes inconformes...</div>
+          <div class="bubble b2">Procesos caóticos...</div>
+          <div class="bubble b3" style="left:30%;top:70%">Sin datos, no hay rumbo...</div>
+        </div>
       </div>
+      <p class="hp-desc">El equipo trabaja más horas pero los resultados no mejoran. Algo tiene que cambiar.</p>
     </div>
-    <div class="paso reveal">
-      <div class="paso-num">4</div>
-      <div class="paso-text">
-        <h3>Entrego y capacito</h3>
-        <p>Te entrego el sistema funcionando, con todos tus datos cargados. Te explico cómo usarlo y quedás con acceso completo.</p>
+
+    <!-- 4 -->
+    <div class="hpanel hpanel-call reveal">
+      <div class="hp-num">4</div>
+      <div class="hp-tag solucion">📞 Me llaman a mí</div>
+      <div class="hp-sub">Un experto en soluciones digitales</div>
+      <div class="hp-visual" style="justify-content:center">
+        <div class="hp-phone">
+          <div class="phone-screen">
+            <div style="font-size:.6rem;color:rgba(255,255,255,.5);margin-bottom:4px">Llamada entrante</div>
+            <div style="font-weight:800;font-size:.85rem;color:#fff">EMPRESA</div>
+            <img src="sabores/jvs-icon.png" style="width:40px;height:40px;border-radius:10px;margin:8px auto;display:block" onerror="this.style.display='none'">
+            <div style="display:flex;justify-content:center;gap:20px;margin-top:8px">
+              <div style="width:28px;height:28px;border-radius:50%;background:#f87171;display:flex;align-items:center;justify-content:center;font-size:.8rem">✕</div>
+              <div style="width:28px;height:28px;border-radius:50%;background:#34d399;display:flex;align-items:center;justify-content:center;font-size:.8rem">✓</div>
+            </div>
+          </div>
+        </div>
+        <div class="bubble" style="position:relative;top:0;left:0;margin-left:12px;max-width:130px">¡Es hora de transformar el caos en eficiencia!</div>
       </div>
+      <p class="hp-desc">Me contactan empresas que necesitan orden, control y tecnología hecha exactamente para ellas.</p>
     </div>
-    <div class="paso reveal">
-      <div class="paso-num">5</div>
-      <div class="paso-text">
-        <h3>Soporte continuo</h3>
-        <p>No desaparezco después de la entrega. Correcciones, ajustes y nuevas funciones cuando las necesites.</p>
+
+    <!-- 5 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">5</div>
+      <div class="hp-tag analisis">🔍 Relevamiento y Análisis</div>
+      <div class="hp-sub">Entiendo tu negocio a fondo</div>
+      <div class="hp-visual">
+        <div class="hp-list">
+          <div class="hpl-item">▶ Procesos</div>
+          <div class="hpl-item">▶ Recursos</div>
+          <div class="hpl-item">▶ Flujos</div>
+          <div class="hpl-item">▶ Problemas</div>
+          <div class="hpl-item">▶ Oportunidades</div>
+        </div>
       </div>
+      <p class="hp-desc">Antes de escribir una línea de código, entiendo cómo funciona tu negocio. Sin supuestos.</p>
     </div>
+
+    <!-- 6 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">6</div>
+      <div class="hp-tag diseno">🎯 Diseño la Solución</div>
+      <div class="hp-sub">Tecnología a tu medida</div>
+      <div class="hp-visual">
+        <div class="hp-diagram">
+          <div class="hpd-center">Sistema JV</div>
+          <div class="hpd-item" style="--a:0deg">⚡ Automatización</div>
+          <div class="hpd-item" style="--a:72deg">🔗 Integración</div>
+          <div class="hpd-item" style="--a:144deg">📊 Reportes</div>
+          <div class="hpd-item" style="--a:216deg">📈 Indicadores</div>
+          <div class="hpd-item" style="--a:288deg">🔒 Control</div>
+        </div>
+        <div class="bubble" style="position:relative;top:0;left:0;margin-top:8px;font-size:.6rem">Creo sistemas inteligentes que se adaptan a vos.</div>
+      </div>
+      <p class="hp-desc">Diseño el sistema mostrándote el flujo completo antes de construirlo. Sin sorpresas.</p>
+    </div>
+
+    <!-- 7 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">7</div>
+      <div class="hp-tag implementacion">💻 Implementación y Pruebas</div>
+      <div class="hp-sub">Cada detalle, bajo control</div>
+      <div class="hp-visual">
+        <div class="hp-checklist">
+          <div class="hpck on">✅ Pruebas</div>
+          <div class="hpck on">✅ Validación</div>
+          <div class="hpck on">✅ Ajustes</div>
+          <div class="hpck on">✅ Calidad</div>
+        </div>
+        <div class="hp-code-mini">
+          <span style="color:#60a5fa">deploy</span>(<span style="color:#34d399">'producción'</span>)<br>
+          <span style="color:#a78bfa">status</span>: <span style="color:#34d399">✓ OK</span>
+        </div>
+      </div>
+      <p class="hp-desc">Pruebo, ajusto y me aseguro que todo funcione perfecto antes de la entrega final.</p>
+    </div>
+
+    <!-- 8 -->
+    <div class="hpanel reveal">
+      <div class="hp-num">8</div>
+      <div class="hp-tag resultados">📊 Resultados Reales</div>
+      <div class="hp-sub">Datos claros, decisiones inteligentes</div>
+      <div class="hp-visual">
+        <div class="hp-metrics">
+          <div class="hpm"><div class="hpm-val up">+54%</div><div class="hpm-lbl">Ventas</div></div>
+          <div class="hpm"><div class="hpm-val up">+38%</div><div class="hpm-lbl">Eficiencia</div></div>
+          <div class="hpm"><div class="hpm-val down">-62%</div><div class="hpm-lbl">Tiempo</div></div>
+          <div class="hpm"><div class="hpm-val down">-80%</div><div class="hpm-lbl">Errores</div></div>
+        </div>
+        <div style="font-size:.6rem;color:rgba(255,255,255,.4);text-align:center;margin-top:6px">Información en tiempo real para tomar decisiones que impulsan tu negocio.</div>
+      </div>
+      <p class="hp-desc">Los números hablan solos. Más control, menos tiempo perdido, mejores decisiones.</p>
+    </div>
+
+    <!-- 9 -->
+    <div class="hpanel hpanel-final reveal">
+      <div class="hp-num">9</div>
+      <div class="hp-tag final">🎉 Clientes felices</div>
+      <div class="hp-sub">Tu éxito, mi compromiso</div>
+      <div class="hp-visual" style="flex-direction:column;align-items:center;gap:8px">
+        <div style="font-size:3rem">🤝</div>
+        <div class="hp-star-row">⭐⭐⭐⭐⭐</div>
+        <div class="hp-final-badge">Soluciones digitales inteligentes que hacen la diferencia.</div>
+      </div>
+      <p class="hp-desc">Negocios que crecen con sistemas que funcionan. Eso es lo que entrego.</p>
+      <a href="#contacto" class="hp-cta">Quiero mi sistema →</a>
+    </div>
+
+  </div><!-- /historia-grid -->
+
+  <!-- Footer historia -->
+  <div class="historia-footer reveal">
+    <img src="sabores/jvs-icon.png" width="32" height="32" style="border-radius:8px" onerror="this.style.display='none'">
+    <span><strong>JV Systems</strong> · Soluciones Digitales Inteligentes</span>
+    <span class="hf-tags">TECNOLOGÍA &nbsp;•&nbsp; ESTRATEGIA &nbsp;•&nbsp; RESULTADOS</span>
   </div>
+
 </section>
 
 <!-- CONTACTO -->
