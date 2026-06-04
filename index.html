@@ -288,7 +288,8 @@
       0%,100% { transform:translateY(0px); opacity:.75; }
       50%      { transform:translateY(-12px); opacity:.9; }
     }
-    @media(max-width:768px){ .hw-widgets { display:none; } }
+    @media(max-width:768px){ .hw-widgets { display:none; } .code-deco-desktop { display:none!important; } }
+    @media(min-width:769px){ .code-deco-desktop { display:block!important; } }
 
     /* Ola hero */
     .hero-wave {
@@ -1352,7 +1353,7 @@
   </div>
 
   <!-- ── CÓDIGO DECORATIVO ── -->
-  <div aria-hidden="true" style="position:absolute;right:3%;top:50%;transform:translateY(-50%);z-index:1;opacity:.18;pointer-events:none;font-family:monospace;font-size:1.05rem;line-height:2;color:#fff;text-align:left;white-space:nowrap;user-select:none">
+  <div aria-hidden="true" style="position:absolute;right:3%;top:50%;transform:translateY(-50%);z-index:1;opacity:.18;pointer-events:none;font-family:monospace;font-size:1.05rem;line-height:2;color:#fff;text-align:left;white-space:nowrap;user-select:none;display:none" class="code-deco-desktop">
     <div><span style="color:#7dd3fc">function</span> <span style="color:#86efac">resolverProblema</span>(x) {</div>
     <div style="padding-left:2rem"><span style="color:#fbbf24">analizar</span>(datos);</div>
     <div style="padding-left:2rem"><span style="color:#fbbf24">diseñar</span>Solución();</div>
@@ -1461,7 +1462,6 @@
     <h1>Tu negocio necesita<br><em>su propio sistema</em></h1>
     <p>Diseño y desarrollo sistemas digitales adaptados exactamente a como funciona tu empresa. Sin plantillas genéricas, sin funciones que no usás.</p>
     <div class="hero-btns">
-      <a href="#sistemas" class="btn-primary">Ver sistemas creados →</a>
       <a href="#contacto" class="btn-outline">Contame tu idea →</a>
     </div>
   </div>
