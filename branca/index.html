@@ -3358,10 +3358,13 @@ function guardarFirmaCliente() {
   const c = document.getElementById('canvasCliente');
   ordenActual.firmaCliente = c.toDataURL();
   ordenActual.estado = 'locked';
+  registrarCambio('Orden cerrada y firmada por el cliente.');
   saveData();
   renderFormContent();
   renderOrderList();
   showToast('✅ Planilla firmada y bloqueada.');
+  // Notificación WhatsApp
+  mostrarNotifWhatsApp(ordenActual);
 }
 
 // ==================== TAB COMPROBANTE ====================
@@ -3374,14 +3377,22 @@ function renderTabComprobante() {
   ).join('');
   return `
     <div class="comprobante-wrap">
-<div class="comp-toolbar" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+<div class="comp-toolbar" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
 
   <button class="btn btn-success"
           onclick="exportarPDF()"
           id="btn-pdf">
-
     📄 Descargar PDF
+  </button>
 
+  <button class="btn" onclick="toggleHistorialPanel()"
+          style="background:#f0f4f9;color:#1565D8;border:1px solid #dbe4f0;font-size:13px;">
+    📋 Historial
+  </button>
+
+  <button class="btn" onclick="mostrarNotifWhatsApp(ordenActual)"
+          style="background:#e8f5e9;color:#2d7a31;border:1px solid #c8e6c9;font-size:13px;">
+    💬 WhatsApp
   </button>
 
   <span style="font-size:12px;color:var(--teal);font-weight:600;"
@@ -5249,6 +5260,116 @@ function initRoleUI() {
 
   sessionStorage.setItem('splashDone', '1');
 })();
+</script>
+
+<script>
+// ══════════════════════════════════════════════
+// HISTORIAL DE CAMBIOS
+// ══════════════════════════════════════════════
+
+function registrarCambio(descripcion) {
+  if (!ordenActual) return;
+  if (!ordenActual.historialCambios) ordenActual.historialCambios = [];
+  const cu = getCurrentUser();
+  ordenActual.historialCambios.push({
+    fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
+    usuario: cu ? cu.nombre : 'Sistema',
+    rol: cu ? cu.role : '',
+    descripcion: descripcion
+  });
+  saveData();
+}
+
+function renderHistorialCambios() {
+  if (!ordenActual) return '';
+  const h = ordenActual.historialCambios || [];
+  if (!h.length) return '<div style="color:#aaa;font-size:13px;padding:12px 0;">Sin cambios registrados aún.</div>';
+  return '<div style="display:flex;flex-direction:column;gap:6px;">'
+    + h.slice().reverse().map(function(c) {
+      const roleColor = {admin:'#1565D8', tecnico:'#1D9E75', facturacion:'#BA7517'}[c.rol] || '#888';
+      return '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:#f8f9fb;border-radius:8px;border-left:3px solid '+roleColor+';">'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:12px;font-weight:700;color:#333;">' + esc(c.descripcion) + '</div>'
+        + '<div style="font-size:11px;color:#aaa;margin-top:2px;">'
+        + esc(c.usuario) + ' · <span style="color:'+roleColor+';font-weight:600;">'+esc(c.rol)+'</span>'
+        + '</div></div>'
+        + '<div style="font-size:11px;color:#bbb;white-space:nowrap;flex-shrink:0;">' + esc(c.fecha) + '</div>'
+        + '</div>';
+    }).join('')
+    + '</div>';
+}
+
+// Interceptar saveData para registrar cambios automáticos en campos clave
+const _origSaveData = typeof saveData === 'function' ? saveData : null;
+
+// Registrar cuando se guarda la orden (desde el botón Guardar)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn || !ordenActual) return;
+  const txt = btn.textContent.trim();
+  if (txt.includes('Guardar')) registrarCambio('Orden guardada.');
+  if (txt.includes('Pendiente')) registrarCambio('Orden marcada como pendiente.');
+  if (txt.includes('Reabrir')) registrarCambio('Orden reabierta.');
+});
+
+// ══════════════════════════════════════════════
+// PANEL HISTORIAL — botón en la toolbar de acciones
+// ══════════════════════════════════════════════
+function toggleHistorialPanel() {
+  let panel = document.getElementById('historial-cambios-panel');
+  if (panel) { panel.remove(); return; }
+  panel = document.createElement('div');
+  panel.id = 'historial-cambios-panel';
+  panel.style.cssText = 'position:fixed;right:24px;bottom:80px;width:380px;max-height:420px;overflow-y:auto;'
+    + 'background:white;border-radius:14px;border:1px solid #dde3f0;box-shadow:0 8px 32px rgba(0,0,0,.15);z-index:9999;padding:16px 18px;';
+  panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
+    + '<div style="font-size:14px;font-weight:800;color:#0A1628;">📋 Historial de cambios</div>'
+    + '<button onclick="document.getElementById(\'historial-cambios-panel\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#aaa;">✕</button>'
+    + '</div>'
+    + renderHistorialCambios();
+  document.body.appendChild(panel);
+}
+
+// ══════════════════════════════════════════════
+// WHATSAPP AL CERRAR ORDEN
+// ══════════════════════════════════════════════
+function mostrarNotifWhatsApp(o) {
+  // Modal para enviar WhatsApp al cerrar
+  const fmt = function(n){ return '$ ' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:0}); };
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:24px 28px;max-width:440px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.25);">
+      <div style="font-size:18px;font-weight:800;color:#0A1628;margin-bottom:6px;">📲 Notificar al cliente</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px;">La orden <strong>${esc(o.numero)}</strong> fue cerrada. ¿Querés enviarle un WhatsApp a <strong>${esc(o.contacto||o.empresa||'el cliente')}</strong>?</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">Teléfono</label>
+        <input id="wa-tel" type="tel" value="${esc(o.tel||'')}" placeholder="3415082410" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px;">Mensaje</label>
+        <textarea id="wa-msg" rows="4" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:12px;resize:vertical;">${'Hola ' + (o.contacto||o.empresa||'') + ', le informamos que la orden de servicio ' + o.numero + ' correspondiente a su equipo (' + (o.marca||'') + ' ' + (o.modelo||'') + ') ha sido finalizada. Ante cualquier consulta no dude en contactarnos. — Ingeniería Branca SRL'}</textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="padding:9px 20px;border:1px solid #ddd;border-radius:8px;background:white;font-size:13px;cursor:pointer;">Omitir</button>
+        <button onclick="enviarWhatsApp()" style="padding:9px 20px;background:#25D366;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">💬 Enviar WhatsApp</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function enviarWhatsApp() {
+  const tel = (document.getElementById('wa-tel')?.value||'').replace(/\D/g,'');
+  const msg = document.getElementById('wa-msg')?.value || '';
+  if (!tel) { alert('Ingresá el teléfono.'); return; }
+  const url = 'https://wa.me/54' + tel + '?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
+  document.querySelector('[style*="position:fixed"][style*="inset:0"]')?.remove();
+  showToast('💬 WhatsApp abierto.');
+}
+
+// Agregar botón historial al render de acciones
+const _origRenderActions = typeof renderActions === 'function' ? renderActions : null;
 </script>
 
 </body>
