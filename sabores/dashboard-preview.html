@@ -310,77 +310,107 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#13182a;color:#e2e8f
 <div class="view" id="view-resumen">
 <div class="grid" style="grid-template-columns:repeat(6,1fr)">
 
-  <!-- KPIs -->
-  <div class="kpi g-full" style="grid-column:span 6;padding:0">
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:.65rem">
-      <div class="kpi" style="--c:#34d399"><div class="kpi-lbl">Ventas totales</div><div class="kpi-val anim-num" style="color:#34d399" data-target="4820000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div><div class="kpi-sub"><span class="up">▲ 18.4%</span><span class="neu">vs año anterior</span></div><div class="kpi-mini" id="km1"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Tickets emitidos</div><div class="kpi-val anim-num" style="color:#60a5fa" data-target="12340" data-prefix="" data-suffix="">0</div><div class="kpi-sub"><span class="up">▲ 9.1%</span><span class="neu">últimos 30 días</span></div><div class="kpi-mini" id="km2"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Ticket promedio</div><div class="kpi-val anim-num" style="color:#f59e0b" data-target="390" data-prefix="$" data-suffix="">$0</div><div class="kpi-sub"><span class="up">▲ 5.3%</span><span class="neu">sem. anterior</span></div><div class="kpi-mini" id="km3"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Clientes activos</div><div class="kpi-val anim-num" style="color:#a78bfa" data-target="2180" data-prefix="" data-suffix="">0</div><div class="kpi-sub"><span class="up">▲ 12.7%</span><span class="neu">este mes</span></div><div class="kpi-mini" id="km4"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Costo operativo</div><div class="kpi-val anim-num" style="color:#f87171" data-target="1140000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div><div class="kpi-sub"><span class="down">▼ 3.2%</span><span class="neu">bajo presup.</span></div><div class="kpi-mini" id="km5"></div></div>
-      <div class="kpi"><div class="kpi-lbl">Margen neto</div><div class="kpi-val anim-num" style="color:#34d399" data-target="34.2" data-prefix="" data-suffix="%">0%</div><div class="kpi-sub"><span class="up">▲ 2.1pp</span><span class="neu">meta: 30%</span></div><div class="kpi-mini" id="km6"></div></div>
+  <!-- Header ejecutivo -->
+  <div style="grid-column:span 6;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(96,165,250,.05));border:1px solid rgba(245,158,11,.15);border-radius:12px;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:.95rem;font-weight:900;color:#fff">📊 Resumen Ejecutivo — JV Systems</div>
+      <div style="font-size:.65rem;color:rgba(255,255,255,.4);margin-top:2px">Consolidado de todos los módulos · Ene–Jun 2026 · Actualización en tiempo real</div>
     </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap" id="res-alertas"></div>
   </div>
 
-  <!-- Mapa -->
-  <div class="panel" style="grid-column:span 3;grid-row:span 2">
-    <div class="ph"><div><div class="pt">📍 Puntos de venta por región</div><div class="ps" id="map-ps">847 puntos activos en Argentina</div></div><div style="display:flex;align-items:center;gap:.5rem"><span id="map-filter-badge" style="display:none;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:#f59e0b;font-size:.68rem;font-weight:700;padding:.2rem .65rem;border-radius:99px;cursor:pointer" onclick="clearMapFilter()">✕ <span id="map-filter-name"></span></span><div class="pills"><div class="pill on">Ventas</div><div class="pill off">Densidad</div></div></div></div>
-    <div class="map-wrap" style="background:none;position:relative">
-      <div id="leaflet-map" style="width:100%;height:100%"></div>
-      <div class="map-legend">
-        <div class="ml-title">COBERTURA</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#f59e0b"></div>+$1M en ventas</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#34d399"></div>$500K – $1M</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#60a5fa"></div>$100K – $500K</div>
-        <div class="ml-row"><div class="ml-dot" style="background:#a78bfa"></div>&lt; $100K</div>
-      </div>
-    </div>
+  <!-- ── FILA 1: KPIs cruzados de todos los módulos ── -->
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(52,211,153,.15)">💰</div>
+      <div class="kpi-body"><div class="kpi-lbl">Ingresos totales</div>
+      <div class="kpi-val anim-num" style="color:#34d399" data-target="4600000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km1"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +12.4%</span><span class="neu">vs período ant.</span></div>
   </div>
 
-  <!-- Ventas por mes -->
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(245,158,11,.15)">🏭</div>
+      <div class="kpi-body"><div class="kpi-lbl">Producción (ton/mes)</div>
+      <div class="kpi-val anim-num" style="color:#f59e0b" data-target="184.6" data-suffix="t">0t</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km2"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +12.4%</span><span class="neu">Metalúrgica del Sur</span></div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(96,165,250,.15)">🛒</div>
+      <div class="kpi-body"><div class="kpi-lbl">Nuevas órdenes</div>
+      <div class="kpi-val anim-num" style="color:#60a5fa" data-target="2248">0</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km3"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +8.7%</span><span class="neu">vs período ant.</span></div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(167,139,250,.15)">👥</div>
+      <div class="kpi-body"><div class="kpi-lbl">Clientes activos</div>
+      <div class="kpi-val anim-num" style="color:#a78bfa" data-target="38">0</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km4"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +3 nuevos</span><span class="neu">este trimestre</span></div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(45,212,191,.15)">💲</div>
+      <div class="kpi-body"><div class="kpi-lbl">Ahorro en compras</div>
+      <div class="kpi-val anim-num" style="color:#2dd4bf" data-target="2400000" data-prefix="$" data-suffix="M" data-div="1000000">$0</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km5"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +12%</span><span class="neu">vs objetivo</span></div>
+  </div>
+
+  <div class="kpi">
+    <div class="kpi-top"><div style="display:flex;align-items:flex-start;gap:.6rem;flex:1">
+      <div class="kpi-icon" style="background:rgba(248,113,113,.15)">📈</div>
+      <div class="kpi-body"><div class="kpi-lbl">Margen neto</div>
+      <div class="kpi-val anim-num" style="color:#34d399" data-target="34.2" data-suffix="%">0%</div></div>
+    </div><div class="kpi-spark"><div class="kpi-mini" id="km6"></div></div></div>
+    <div class="kpi-sub"><span class="up">↗ +2.1pp</span><span class="neu">meta: 30%</span></div>
+  </div>
+
+  <!-- ── SCORECARD por módulo ── -->
+  <div class="panel" style="grid-column:span 6">
+    <div class="ph"><div><div class="pt">🏆 Scorecard de módulos — estado general</div><div class="ps">Performance consolidada · clic para ir al módulo</div></div></div>
+    <div class="pb" id="res-scorecard"></div>
+  </div>
+
+  <!-- ── Top métricas por módulo ── -->
   <div class="panel" style="grid-column:span 3">
-    <div class="ph">
-      <div>
-        <div class="pt">📊 Ventas mensuales vs presupuesto</div>
-        <div class="ps">Ene–Jun 2026 · comparativa real vs objetivo</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:.75rem">
-        <div id="vmp-resumen" style="font-size:.62rem;color:rgba(255,255,255,.4)"></div>
-        <div class="pills" id="vmp-pills">
-          <div class="pill on" onclick="ventasMesToggle('barras',this)">Barras</div>
-          <div class="pill off" onclick="ventasMesToggle('linea',this)">Línea</div>
-        </div>
-      </div>
-    </div>
-    <div class="pb" style="padding-bottom:.6rem">
-      <div id="bc-ventas-mes" style="position:relative"></div>
-    </div>
+    <div class="ph"><div><div class="pt">📊 Tendencia de ingresos consolidada</div><div class="ps">Todos los módulos · Ene–Jun 2026</div></div></div>
+    <div class="pb"><div class="line-wrap" id="res-linea-ingresos"></div></div>
   </div>
 
-  <!-- Donut categorías -->
+  <div class="panel" style="grid-column:span 3">
+    <div class="ph"><div><div class="pt">🎯 Objetivos del período — cumplimiento</div><div class="ps">% alcanzado vs meta por área</div></div></div>
+    <div class="pb" id="res-objetivos"></div>
+  </div>
+
+  <!-- ── Alertas y destacados ── -->
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">🗂 Ventas por categoría</div></div></div>
-    <div class="pb"><div class="donut-wrap" id="donut-cat"></div></div>
+    <div class="ph"><div><div class="pt">🚨 Alertas activas</div><div class="ps">Situaciones que requieren atención</div></div></div>
+    <div class="pb" id="res-alertas-panel"></div>
   </div>
 
-  <!-- Top productos -->
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">🛒 Top productos</div><div class="ps">Por unidades vendidas</div></div></div>
-    <div class="pb" id="top-prods"></div>
+    <div class="ph"><div><div class="pt">⭐ Top rendimientos del período</div><div class="ps">Mejores métricas de cada módulo</div></div></div>
+    <div class="pb" id="res-top-metricas"></div>
   </div>
 
-  <!-- Tabla clientes -->
   <div class="panel" style="grid-column:span 2">
-    <div class="ph"><div><div class="pt">👥 Top clientes</div><div class="ps">Acumulado 2026</div></div></div>
-    <div class="pb" style="padding:.4rem .75rem">
-      <table class="tbl">
-        <thead><tr><th>Cliente</th><th>Seg.</th><th>$</th><th>Avance</th></tr></thead>
-        <tbody id="tabla-clientes"></tbody>
-      </table>
-    </div>
+    <div class="ph"><div><div class="pt">📅 Actividad reciente</div><div class="ps">Últimas actualizaciones del sistema</div></div></div>
+    <div class="pb" id="res-actividad"></div>
   </div>
 
-  <div class="dash-footer"><div>Dashboard generado por <span>JV Systems</span> · Power BI Integration</div><div>Actualización automática cada 15 min</div><div>© 2026 <span>JV Systems</span></div></div>
+  <!-- Mapa oculto para mantener compatibilidad -->
+  <div style="display:none"><div id="leaflet-map"></div><div id="map-ps"></div><div id="map-filter-badge"><span id="map-filter-name"></span></div></div>
+
+  <div class="dash-footer"><div>Resumen Ejecutivo · <span>JV Systems</span></div><div>© 2026 <span>JV Systems</span></div></div>
 </div>
 </div>
 
@@ -2453,25 +2483,13 @@ function buildView(id){
     if(v&&v.id==='view-'+id)animNum(el);
   });
   if(id==='resumen'){
-    buildMini('km1',colors.green,[40,55,45,70,60,85,78]);
-    buildMini('km2',colors.blue,[55,60,50,65,70,72,62]);
-    buildMini('km3',colors.amber,[50,52,48,56,60,58,55]);
-    buildMini('km4',colors.purple,[45,48,52,58,62,68,70]);
-    buildMini('km5',colors.red,[60,55,58,50,48,44,42]);
-    buildMini('km6',colors.green,[28,30,29,31,32,33,34]);
-    buildVentasMesChart([680,720,790,840,920,980],[720,700,780,800,880,940]);
-    buildDonut('donut-cat',[
-      {label:'Bebidas',val:38,color:colors.amber},{label:'Alimentos',val:20,color:colors.blue},
-      {label:'Frescos',val:15,color:colors.green},{label:'Limpieza',val:10,color:colors.purple},
-      {label:'Otros',val:17,color:colors.red},
-    ]);
-    const pp=document.getElementById('top-prods');
-    if(pp){
-      const prods=[['☕','Café Premium','8.420','$504K',82,colors.amber],['🥤','Yerba Mate','6.890','$310K',71,colors.green],['🍫','Chocolate','5.120','$256K',60,colors.blue],['🧃','Jugos','4.780','$191K',55,colors.purple]];
-      pp.innerHTML=`<div class="prod-grid">${prods.map(([ic,n,u,m,p,c])=>`<div class="prod-card"><div class="prod-icon" style="background:${c}22">${ic}</div><div class="prod-info"><div class="prod-name">${n}</div><div class="prod-bar-wrap"><div class="prod-bar-f" style="width:0%;background:${c}" data-w="${p}%"></div></div></div><div><div class="prod-val" style="color:${c}">${u}</div><div class="prod-pct" style="color:rgba(255,255,255,.35)">${m}</div></div></div>`).join('')}</div>`;
-      setTimeout(()=>pp.querySelectorAll('.prod-bar-f').forEach(f=>{f.style.width=f.dataset.w;}),100);
-    }
-    buildTablaClientes();
+    buildMini('km1',colors.green,[35,42,50,58,68,78,88]);
+    buildMini('km2',colors.amber,[148,155,160,168,175,180,185]);
+    buildMini('km3',colors.blue,[180,195,210,220,215,230,225]);
+    buildMini('km4',colors.purple,[30,32,33,35,36,37,38]);
+    buildMini('km5',colors.teal,[180,190,200,210,225,235,240]);
+    buildMini('km6',colors.green,[28,30,31,32,33,34,34]);
+    buildResumenEjecutivo();
   }
   if(id==='ventas'){
     buildMini('km-v1',colors.green,[50,60,70,75,80,88,95]);
@@ -3789,6 +3807,171 @@ function clearMapFilter() {
 
 // Llamar al iniciar y cuando se muestre el tab resumen
 setTimeout(initMap, 300);
+
+// ════════════════════════════════════════════
+// ── RESUMEN EJECUTIVO ──
+// ════════════════════════════════════════════
+
+function buildResumenEjecutivo() {
+
+  // ── SCORECARD ──
+  const scorecardEl = document.getElementById('res-scorecard');
+  if (scorecardEl) {
+    const modulos = [
+      { nom:'Ventas',           icon:'🛍',  score:88, kpi:'$4.6M ingresos',      trend:'+12.4%', color:'#34d399', status:'ok',   link:'ventas' },
+      { nom:'Logística',        icon:'🚚',  score:82, kpi:'94.2% entregas OK',   trend:'+3.1%',  color:'#60a5fa', status:'ok',   link:'logistica' },
+      { nom:'RRHH',             icon:'👥',  score:91, kpi:'147 empleados activos',trend:'+5',     color:'#a78bfa', status:'ok',   link:'rrhh' },
+      { nom:'Finanzas',         icon:'💲',  score:76, kpi:'Margen 34.2%',        trend:'+2.1pp', color:'#2dd4bf', status:'warn', link:'finanzas' },
+      { nom:'Metalúrgica Sur',  icon:'🏭',  score:87, kpi:'184.6t/mes · OEE 87%',trend:'+12.4%', color:'#f59e0b', status:'ok',   link:'operaciones' },
+      { nom:'SmartStore',       icon:'🛒',  score:94, kpi:'1.284 módulos YTD',   trend:'+22%',   color:'#34d399', status:'ok',   link:'ensamble' },
+      { nom:'Nexo Procurement', icon:'🤝',  score:85, kpi:'$2.4M ahorro',        trend:'+12%',   color:'#f472b6', status:'ok',   link:'compras' },
+      { nom:'Impulso Digital',  icon:'🚀',  score:79, kpi:'18.420 leads/mes',    trend:'+22.4%', color:'#f59e0b', status:'warn', link:'marketing' },
+      { nom:'Sistemas/IT',      icon:'🖥',  score:99, kpi:'47 equipos · 99.9% up',trend:'stable', color:'#60a5fa', status:'ok',  link:'sistemas' },
+    ];
+    const stColor = {ok:'#34d399', warn:'#f59e0b', alert:'#f87171'};
+    scorecardEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(9,1fr);gap:.5rem;padding:.2rem">
+      ${modulos.map(m=>{
+        const arc = 2*Math.PI*22;
+        const fill = arc * (m.score/100);
+        return `<div onclick="showView('${m.link}')" style="background:rgba(255,255,255,.03);border:1px solid ${m.color}33;border-radius:12px;padding:.65rem .5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative" onmouseover="this.style.background='${m.color}11'" onmouseout="this.style.background='rgba(255,255,255,.03)'">
+          <div style="font-size:1.1rem;margin-bottom:4px">${m.icon}</div>
+          <div style="font-size:.62rem;font-weight:800;color:rgba(255,255,255,.8);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.nom}</div>
+          <svg width="50" height="50" viewBox="0 0 50 50" style="display:block;margin:0 auto 6px">
+            <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+            <circle cx="25" cy="25" r="22" fill="none" stroke="${m.color}" stroke-width="5" stroke-linecap="round"
+              stroke-dasharray="${fill} ${arc-fill}" transform="rotate(-90 25 25)"
+              style="filter:drop-shadow(0 0 4px ${m.color}88)"/>
+            <text x="25" y="29" text-anchor="middle" font-size="11" font-weight="900" fill="${m.color}">${m.score}</text>
+          </svg>
+          <div style="font-size:.55rem;color:${stColor[m.status]};font-weight:700;margin-bottom:3px">${m.trend}</div>
+          <div style="font-size:.52rem;color:rgba(255,255,255,.35);line-height:1.3">${m.kpi}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // ── LÍNEA DE INGRESOS CONSOLIDADA ──
+  const lineaEl = document.getElementById('res-linea-ingresos');
+  if (lineaEl) {
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun'];
+    const ventas = [3200,3480,3750,4100,4320,4600];
+    const compras= [2100,2250,2380,2520,2680,2850];
+    const neto   = [780,890,950,1050,1120,1240];
+    const maxV = Math.max(...ventas);
+    const W=480,H=130,pL=35,pR=10,pT=15,pB=22;
+    const iW=W-pL-pR, iH=H-pT-pB, n=meses.length;
+    const px=i=>pL+i/(n-1)*iW;
+    const py=(v,mx)=>pT+iH*(1-v/mx*.95);
+    const datasets = [
+      {d:ventas, c:'#34d399', lbl:'Ingresos'},
+      {d:compras,c:'#f59e0b', lbl:'Compras'},
+      {d:neto,   c:'#60a5fa', lbl:'Margen'},
+    ];
+    let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:140px;overflow:visible"><defs>`;
+    datasets.forEach((ds,di)=>{
+      svg+=`<linearGradient id="rg${di}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${ds.c}" stop-opacity=".3"/><stop offset="100%" stop-color="${ds.c}" stop-opacity="0"/></linearGradient>`;
+    });
+    svg+='</defs>';
+    for(let g=0;g<=3;g++){const y=pT+g/3*iH;svg+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;svg+=`<text x="${pL-3}" y="${y+3}" font-size="6.5" fill="rgba(255,255,255,.25)" text-anchor="end">$${Math.round(maxV*(1-g/3)/1000)}K</text>`;}
+    datasets.forEach((ds,di)=>{
+      const pts=ds.d.map((_,i)=>`${px(i)},${py(ds.d[i],maxV)}`).join(' ');
+      svg+=`<polygon points="${pts} ${px(n-1)},${H-pB} ${px(0)},${H-pB}" fill="url(#rg${di})"/>`;
+      svg+=`<polyline points="${pts}" fill="none" stroke="${ds.c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 3px ${ds.c}88)"/>`;
+      svg+=`<circle cx="${px(n-1)}" cy="${py(ds.d[n-1],maxV)}" r="3.5" fill="${ds.c}"/>`;
+    });
+    meses.forEach((m,i)=>svg+=`<text x="${px(i)}" y="${H-4}" text-anchor="middle" font-size="8" fill="rgba(255,255,255,.3)">${m}</text>`);
+    svg+='</svg>';
+    svg+=`<div style="display:flex;gap:.75rem;margin-top:.3rem">${datasets.map(ds=>`<span style="display:flex;align-items:center;gap:3px;font-size:.6rem;color:rgba(255,255,255,.4)"><span style="width:10px;height:2px;background:${ds.c};display:inline-block;border-radius:1px"></span>${ds.lbl}</span>`).join('')}</div>`;
+    lineaEl.innerHTML=`<div>${svg}</div>`;
+  }
+
+  // ── OBJETIVOS ──
+  const objEl = document.getElementById('res-objetivos');
+  if (objEl) {
+    const obs = [
+      { area:'Ventas',          meta:100, real:92,  c:'#34d399' },
+      { area:'Logística',       meta:100, real:88,  c:'#60a5fa' },
+      { area:'Producción',      meta:100, real:87,  c:'#f59e0b' },
+      { area:'Compras (ahorro)',meta:100, real:112,  c:'#2dd4bf' },
+      { area:'Marketing ROI',   meta:100, real:79,  c:'#f472b6' },
+      { area:'RRHH (retención)',meta:100, real:95,  c:'#a78bfa' },
+      { area:'IT Uptime',       meta:100, real:99.9,c:'#34d399' },
+      { area:'Finanzas (margen)',meta:100, real:114, c:'#34d399' },
+    ];
+    objEl.innerHTML='<div style="display:flex;flex-direction:column;gap:.4rem">'
+      +obs.map(o=>{
+        const pct=Math.min(o.real,130);
+        const ok=o.real>=o.meta;
+        return `<div style="display:flex;align-items:center;gap:.5rem">
+          <div style="width:110px;font-size:.62rem;color:rgba(255,255,255,.6);flex-shrink:0">${o.area}</div>
+          <div style="flex:1;height:14px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;position:relative">
+            <div style="height:100%;width:0%;background:${ok?o.c:'#f87171'};border-radius:3px;transition:width 1.2s ease;box-shadow:0 0 6px ${ok?o.c:'#f87171'}66" data-w="${pct}%"></div>
+            <div style="position:absolute;top:0;left:100%;width:1px;height:100%;background:rgba(255,255,255,.3)"></div>
+          </div>
+          <div style="font-size:.62rem;font-weight:700;color:${ok?o.c:'#f87171'};width:38px;text-align:right;flex-shrink:0">${o.real}%</div>
+          <div style="font-size:.55rem;color:${ok?'#34d399':'#f87171'};flex-shrink:0">${ok?'✓':'⚠'}</div>
+        </div>`;
+      }).join('')+'</div>';
+    setTimeout(()=>objEl.querySelectorAll('[data-w]').forEach(b=>{b.style.width=b.dataset.w;}),100);
+  }
+
+  // ── ALERTAS ──
+  const alertEl = document.getElementById('res-alertas-panel');
+  if (alertEl) {
+    const alertas = [
+      { tipo:'warn',  mod:'Finanzas',   msg:'Egresos +8% sobre presupuesto trimestral' },
+      { tipo:'warn',  mod:'Marketing',  msg:'ROI campaña EduPro por debajo de meta' },
+      { tipo:'info',  mod:'Producción', msg:'Soldadora TIG-1 en mantenimiento · 2h14m' },
+      { tipo:'ok',    mod:'SmartStore', msg:'Proyecto FarmaCentro entregado en fecha' },
+      { tipo:'info',  mod:'RRHH',       msg:'3 contratos vencen este mes' },
+    ];
+    const tc={warn:'#f59e0b',ok:'#34d399',info:'#60a5fa',alert:'#f87171'};
+    alertEl.innerHTML='<div style="display:flex;flex-direction:column;gap:.35rem">'
+      +alertas.map(a=>`<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.4rem .5rem;background:${tc[a.tipo]}0d;border-left:3px solid ${tc[a.tipo]};border-radius:0 6px 6px 0">
+        <div style="flex:1"><div style="font-size:.62rem;font-weight:700;color:${tc[a.tipo]}">${a.mod}</div><div style="font-size:.6rem;color:rgba(255,255,255,.5);margin-top:1px">${a.msg}</div></div>
+      </div>`).join('')+'</div>';
+  }
+
+  // ── TOP MÉTRICAS ──
+  const topEl = document.getElementById('res-top-metricas');
+  if (topEl) {
+    const tops = [
+      { ico:'🏆', tit:'Mejor módulo',      val:'SmartStore · 94 pts',   c:'#34d399' },
+      { ico:'📈', tit:'Mayor crecimiento',  val:'Ventas +12.4%',          c:'#f59e0b' },
+      { ico:'💰', tit:'Mayor ahorro',       val:'Nexo Procurement $2.4M', c:'#2dd4bf' },
+      { ico:'⚙️', tit:'Mejor OEE',          val:'Metalúrgica 87.4%',      c:'#f59e0b' },
+      { ico:'🚀', tit:'+ Leads generados',  val:'18.420 · Impulso Digital',c:'#f472b6' },
+      { ico:'🎯', tit:'Mejor cumplimiento', val:'IT Uptime 99.9%',         c:'#60a5fa' },
+    ];
+    topEl.innerHTML='<div style="display:flex;flex-direction:column;gap:.35rem">'
+      +tops.map(t=>`<div style="display:flex;align-items:center;gap:.6rem;padding:.35rem .5rem;background:rgba(255,255,255,.03);border-radius:7px">
+        <span style="font-size:1rem">${t.ico}</span>
+        <div><div style="font-size:.58rem;color:rgba(255,255,255,.4)">${t.tit}</div>
+        <div style="font-size:.68rem;font-weight:700;color:${t.c}">${t.val}</div></div>
+      </div>`).join('')+'</div>';
+  }
+
+  // ── ACTIVIDAD RECIENTE ──
+  const actEl = document.getElementById('res-actividad');
+  if (actEl) {
+    const ahora = new Date();
+    const fmt=(min)=>{const d=new Date(ahora-min*60000);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');};
+    const acts = [
+      { t:fmt(3),   mod:'Ventas',      msg:'Nueva orden #2026-089 · $84.500',       c:'#34d399' },
+      { t:fmt(12),  mod:'Logística',   msg:'Camión CAM-003 llegó a Córdoba',         c:'#60a5fa' },
+      { t:fmt(28),  mod:'Producción',  msg:'OT-2410 alcanzó 88% completado',         c:'#f59e0b' },
+      { t:fmt(45),  mod:'RRHH',        msg:'Marcación de 147 empleados registrada',  c:'#a78bfa' },
+      { t:fmt(62),  mod:'SmartStore',  msg:'Módulo instalado en LogiPlex · OK',      c:'#2dd4bf' },
+      { t:fmt(90),  mod:'Finanzas',    msg:'Factura F-088 cobrada · $320.000',       c:'#34d399' },
+      { t:fmt(120), mod:'IT',          msg:'Servidor SRV-002 · backup completado',   c:'#60a5fa' },
+    ];
+    actEl.innerHTML='<div style="display:flex;flex-direction:column;gap:.3rem">'
+      +acts.map(a=>`<div style="display:flex;align-items:flex-start;gap:.5rem;padding:.3rem .4rem;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="font-size:.55rem;color:rgba(255,255,255,.25);white-space:nowrap;flex-shrink:0;margin-top:1px">${a.t}</div>
+        <div><span style="font-size:.58rem;font-weight:700;color:${a.c}">${a.mod}</span> <span style="font-size:.58rem;color:rgba(255,255,255,.45)">${a.msg}</span></div>
+      </div>`).join('')+'</div>';
+  }
+}
 
 // ════════════════════════════════════════════
 // ── OPERACIONES: GESTIÓN DE OTs (FILTRADO CRUZADO) ──
