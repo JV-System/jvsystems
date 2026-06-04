@@ -3809,7 +3809,7 @@ function renderFactRow(o) {
       + '<div class="fact-actions" style="margin-top:12px;">'
       + '<button class="fact-btn fact-btn-save" onclick="event.stopPropagation();guardarFacturacion('+o.id+')">💾 Guardar</button>'
       + (f.nroFactura ? '<button class="fact-btn fact-btn-pdf" onclick="event.stopPropagation();generarFacturaPDF('+o.id+')">📄 PDF Factura</button>' : '')
-      + (f.nroFactura&&(o.email||o.contacto) ? '<button class="fact-btn fact-btn-mail" onclick="event.stopPropagation();enviarMailFactura('+o.id+')">✉ Enviar por mail</button>' : '')
+      + (f.nroFactura ? '<button class="fact-btn fact-btn-mail" onclick="event.stopPropagation();enviarMailFactura('+o.id+')">✉ Enviar por mail</button>' : '')
       + '</div>'
       + '</div>';
   }
@@ -3992,7 +3992,7 @@ function enviarMailFactura(oid) {
     + 'Tel: 0341-5082410 · www.ingenieriabranca.com'
   );
   showToast('📧 Abriendo cliente de correo...');
-  window.open('mailto:' + dest + '?subject=' + asunto + '&body=' + cuerpo, '_blank');
+  location.href = 'mailto:' + dest + '?subject=' + asunto + '&body=' + cuerpo;
 }
 
 // ── FIN FACTURACIÓN ────────────────────────────────────
