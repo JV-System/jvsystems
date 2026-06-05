@@ -2362,8 +2362,8 @@ function getNextNum() {
 }
 
 function ordenIncompleta() {
-  // Hay un draft en progreso (aún no guardado)
-  return ordenes.some(o => o.draft === true);
+  // Solo bloquea si hay un draft activo en pantalla (nunca guardado)
+  return !!(ordenActual && ordenActual.draft === true);
 }
 
 function crearNuevaOrden() {
@@ -4104,7 +4104,12 @@ async function guardarParcial() {
   // Marcar como pendiente y guardar
   ordenActual.estado = 'pending';
   delete ordenActual.draft;
-  saveData();
+  const ordenPendiente = ordenActual;
+  const idxP = ordenes.findIndex(o => o.id === ordenPendiente.id);
+  if (idxP >= 0) { ordenes[idxP] = ordenPendiente; }
+  else           { ordenes.unshift(ordenPendiente); }
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  syncOrden(ordenPendiente); // sync explícito
 
   // VOLVER A PANTALLA LIMPIA
   ordenActual = null;
@@ -4131,21 +4136,16 @@ function setEstado(estado) {
 
 function guardarOrden() {
   if (!ordenActual) return;
-  // Guardar campos del tab activo en la orden
   saveTabCliente();
   saveTabDiagnostico();
-  // Quitar draft al guardar por primera vez
   delete ordenActual.draft;
-  // Asegurarse que la orden esté en el array
-  const idx = ordenes.findIndex(o => o.id === ordenActual.id);
-  if (idx >= 0) {
-    ordenes[idx] = ordenActual;
-  } else {
-    ordenes.unshift(ordenActual);
-  }
-  saveData(); // guarda en localStorage + sync nube
-
-  // VOLVER A PANTALLA LIMPIA
+  // Copiar referencia antes de limpiar
+  const ordenGuardada = ordenActual;
+  const idx = ordenes.findIndex(o => o.id === ordenGuardada.id);
+  if (idx >= 0) { ordenes[idx] = ordenGuardada; }
+  else          { ordenes.unshift(ordenGuardada); }
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  syncOrden(ordenGuardada); // sync explícito con copia segura
   ordenActual = null;
   renderOrderList();
   switchView('nueva');
@@ -4179,9 +4179,12 @@ function finalizarOrden() {
   // CAMBIAR ESTADO A COMPLETADA Y BLOQUEADA
   ordenActual.estado = 'locked';
   delete ordenActual.draft;
-
-  // GUARDAR
-  saveData();
+  const ordenFinal = ordenActual;
+  const idxF = ordenes.findIndex(o => o.id === ordenFinal.id);
+  if (idxF >= 0) { ordenes[idxF] = ordenFinal; }
+  else           { ordenes.unshift(ordenFinal); }
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  syncOrden(ordenFinal); // sync explícito
 
   // VOLVER A PANTALLA LIMPIA
   ordenActual = null;
