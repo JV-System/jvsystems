@@ -653,9 +653,10 @@ tr:hover td{background:#fafbfd}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       <span>Dashboard</span>
     </button>
-    <button class="nav-tab" onclick="showSection('pedidos')" data-sec="pedidos">
+    <button class="nav-tab" onclick="showSection('pedidos')" data-sec="pedidos" style="position:relative">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       <span>Pedidos</span>
+      <span id="badge-pedidos-nuevos" class="bnav-badge" style="display:none">0</span>
     </button>
     <button class="nav-tab" onclick="showSection('clientes')" data-sec="clientes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
@@ -1960,6 +1961,7 @@ function loadDB() {
         localStorage.setItem(DB_KEY, JSON.stringify(db));
         if (typeof renderAll === 'function') renderAll();
         else if (typeof render === 'function') render();
+        actualizarBadgePedidos();
       }
     })
     .catch(() => {}); // si falla usa localStorage
@@ -2022,6 +2024,7 @@ function showSection(sec){
   if(sec==='dashboard') renderDashboard();
   if(sec==='pedidos'){
     renderPedidoFiltros(); renderPedidosList(); populateClienteSelects();
+    marcarPedidosVistos();
     const rol=currentUser?.rol;
     const btnN=document.getElementById('btnNuevoPedido');
     const btnS=document.getElementById('btnSolicitarPedido');
@@ -3551,6 +3554,37 @@ function actualizarCarritoApp(){
   if(rEl)rEl.textContent='🧉 '+resumen;
 }
 
+// ── NOTIFICACIONES DE PEDIDOS NUEVOS ──
+function actualizarBadgePedidos() {
+  // Solo mostrar a admin/dario/lucia (no al cliente)
+  if (!currentUser || currentUser.rol === 'cliente') return;
+  // Pedidos del cliente no vistos: solicitadoPorCliente=true y estado='pendiente' y !vistoPorAdmin
+  const nuevos = db.pedidos.filter(p => p.solicitadoPorCliente && p.estado === 'pendiente' && !p.vistoPorAdmin);
+  const badge = document.getElementById('badge-pedidos-nuevos');
+  if (!badge) return;
+  if (nuevos.length > 0) {
+    badge.textContent = nuevos.length > 9 ? '9+' : nuevos.length;
+    badge.style.display = 'flex';
+    // Notificación toast si hay nuevos pedidos recién llegados
+    if (!window._lastBadgeCount || window._lastBadgeCount < nuevos.length) {
+      toast('🛒 Nuevo pedido de cliente recibido', 'success');
+    }
+    window._lastBadgeCount = nuevos.length;
+  } else {
+    badge.style.display = 'none';
+    window._lastBadgeCount = 0;
+  }
+}
+
+function marcarPedidosVistos() {
+  // Al entrar a Pedidos, marcar como vistos
+  db.pedidos.forEach(p => {
+    if (p.solicitadoPorCliente && !p.vistoPorAdmin) p.vistoPorAdmin = true;
+  });
+  saveDB();
+  actualizarBadgePedidos();
+}
+
 function catSolicitarPedidoApp(){
   const items=Object.entries(_appCarrito).filter(([,v])=>v.kg>0);
   if(!items.length){toast('Agregá al menos un producto','error');return;}
@@ -3572,6 +3606,7 @@ function catSolicitarPedidoApp(){
   _appCarrito={};renderCatalogoApp();
   toast('¡Pedido enviado! Te confirmamos precio y fecha.','success');
   setTimeout(()=>showSection('pedidos'),1200);
+  actualizarBadgePedidos();
 }
 
 function enviarPedidoCatalogo(){
@@ -4221,6 +4256,25 @@ function markAllMsgsRead(){
 }
 // Chequear mensajes nuevos cada 15 seg (simula push)
 setInterval(()=>{ if(currentUser) updateChatBadge(); }, 15000);
+
+// Polling: consultar Google Sheets cada 30s para detectar pedidos nuevos de clientes
+setInterval(()=>{
+  if(!currentUser || currentUser.rol === 'cliente') return;
+  fetch(SCRIPT_URL)
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success && res.db){
+        const pedidosNuevos = res.db.pedidos?.filter(p=>p.solicitadoPorCliente && !p.vistoPorAdmin) || [];
+        const locales = db.pedidos.filter(p=>p.solicitadoPorCliente && !p.vistoPorAdmin);
+        if(pedidosNuevos.length > locales.length){
+          db = res.db;
+          initDB();
+          localStorage.setItem(DB_KEY, JSON.stringify(db));
+          actualizarBadgePedidos();
+        }
+      }
+    }).catch(()=>{});
+}, 30000);
 
 // Override showSection to handle comunicacion
 const _origShowSection = showSection;
