@@ -2231,8 +2231,15 @@ function mergeById(local, cloud) {
   var result = local.slice();
   cloud.forEach(function(item) {
     var idx = result.findIndex(function(l){ return String(l.id) === String(item.id); });
-    if (idx >= 0) result[idx] = item; // actualizar existente
-    else result.push(item);           // agregar nuevo de la nube
+    if (idx >= 0) {
+      // Gana la versión con updatedAt más reciente; si no hay timestamp gana local
+      var localTs  = result[idx].updatedAt || 0;
+      var cloudTs  = item.updatedAt || 0;
+      if (cloudTs > localTs) result[idx] = item;
+      // si local es igual o más nuevo, no tocar
+    } else {
+      result.push(item); // orden nueva que viene de otro dispositivo
+    }
   });
   return result;
 }
@@ -2292,8 +2299,8 @@ async function loadFromCloud() {
 
 // ==================== SAVE CON SYNC ====================
 function saveData() {
-  // Asegurar que ordenActual esté reflejado en el array
   if (ordenActual) {
+    ordenActual.updatedAt = Date.now(); // timestamp para merge inteligente
     const idx = ordenes.findIndex(o => o.id === ordenActual.id);
     if (idx >= 0) ordenes[idx] = ordenActual;
     else ordenes.unshift(ordenActual);
