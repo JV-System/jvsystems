@@ -1932,9 +1932,10 @@ let db = {
   gastos: [], presupuestosGuardados: [],
   config: { nextPedido: 1, nextCompra: 1, stockEstampillas: 0, codigosDescuento: {} }
 };
-function loadDB(){
-  try{ const s=localStorage.getItem(DB_KEY); if(s) db=JSON.parse(s); } catch(e){}
-  // Init campos nuevos si no existen
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIelj-nG3CdorBHhNluESucHWuZSRGOQ4LpagRRg3vp55JbV6nR9aVIQA6_LKXJKI5/exec';
+
+function initDB(data) {
+  if (data) db = data;
   if(!db.gastos) db.gastos=[];
   if(!db.presupuestosGuardados) db.presupuestosGuardados=[];
   if(!db.config.codigosDescuento) db.config.codigosDescuento={};
@@ -1943,9 +1944,41 @@ function loadDB(){
   if(!db.config.precioDespachoDefault) db.config.precioDespachoDefault=180;
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
-  // NOTA: db.config.productos se inicializa DESPUÉS de que DEFAULT_PRODUCTOS esté definido
 }
-function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function loadDB() {
+  // Cargar desde localStorage como caché inmediata
+  try { const s = localStorage.getItem(DB_KEY); if(s) db = JSON.parse(s); } catch(e) {}
+  initDB();
+  // Luego sincronizar con Google Sheets en segundo plano
+  fetch(SCRIPT_URL)
+    .then(r => r.json())
+    .then(res => {
+      if (res.success && res.db) {
+        db = res.db;
+        initDB();
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        if (typeof renderAll === 'function') renderAll();
+        else if (typeof render === 'function') render();
+      }
+    })
+    .catch(() => {}); // si falla usa localStorage
+}
+
+let _saveTimer = null;
+function saveDB() {
+  // Guardar en localStorage inmediatamente
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  // Enviar a Google Sheets con debounce (espera 1.5s para no spamear)
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ db }),
+    }).catch(() => {});
+  }, 1500);
+}
+
 loadDB();
 
 // ════════════════════════════════════════════════
