@@ -1974,16 +1974,12 @@ const CLOUD_ENABLED = false; // se evalúa dinámicamente via isScriptConfigured
 // DEMO DATA — se carga una sola vez en instalaciones nuevas
 // ══════════════════════════════════════════════════════════════════
 (function() {
-  // DATOS DE DEMO DESACTIVADOS — sistema en producción
-  localStorage.setItem('branca_demo_v2', '1');
-  // Limpiar órdenes de prueba si existen
-  var _existentes = JSON.parse(localStorage.getItem('branca_ordenes') || '[]');
-  var tienePrueba = _existentes.some(o => o.id < 10000);
-  if (tienePrueba) {
-    localStorage.removeItem('branca_ordenes');
-    localStorage.removeItem('branca_clientes');
-    localStorage.removeItem('branca_tecnicos');
+  // RESET ÚNICO: limpiar datos de prueba si no se hizo ya
+  if (!localStorage.getItem('branca_reset_v1')) {
+    ['branca_ordenes','branca_clientes','branca_tecnicos','branca_demo_v2'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('branca_reset_v1', '1');
   }
+  localStorage.setItem('branca_demo_v2', '1');
   if (false) { // bloque desactivado
 
   // ── Usuarios ──────────────────────────────────────────────────
