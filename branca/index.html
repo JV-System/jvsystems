@@ -2459,13 +2459,17 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Filtrar: excluir solo drafts SIN datos (empresa y marca vacíos)
+  // Mostrar órdenes reales (con empresa), sin drafts vacíos
   let visible = ordenes.filter(function(o) {
-    if (!o.empresa && !o.marca) return false; // vacía sin datos
+    if (!o.empresa && !o.marca) return false;
+    if (o.draft) return false;
     return true;
   });
+  // Técnico: ve sus propias órdenes + las pendientes asignadas a él
   if (cu && cu.role === 'tecnico') {
-    visible = visible.filter(function(o) { return o.creadorId === cu.id; });
+    visible = visible.filter(function(o) {
+      return o.creadorId === cu.id || o.responsable === cu.nombre;
+    });
   }
 
   const filtered = visible.filter(function(o) {
@@ -2557,11 +2561,13 @@ function renderHistorial() {
       <div class="historial-grid" id="histGrid"></div>
     </div>`;
   const grid = document.getElementById('histGrid');
-  if (!ordenes.length) {
+  // Mostrar todas las órdenes reales (sin drafts) sin importar el creador
+  const ordenesHist = ordenes.filter(function(o){ return !o.draft && o.empresa; });
+  if (!ordenesHist.length) {
     grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No hay órdenes guardadas.</p>';
     return;
   }
-  grid.innerHTML = ordenes.map(o => `
+  grid.innerHTML = ordenesHist.map(o => `
     <div class="hist-card ${o.estado}" onclick="abrirDesdeHist(${o.id})">
       <div class="hist-top">
         <span class="hist-num">${o.numero}</span>
