@@ -4105,6 +4105,7 @@ async function guardarParcial() {
 
   // Marcar como pendiente y guardar
   ordenActual.estado = 'pending';
+  delete ordenActual.draft;
   saveData();
   renderOrderList();
   renderActions();
@@ -4179,6 +4180,7 @@ function finalizarOrden() {
 
   // CAMBIAR ESTADO A COMPLETADA Y BLOQUEADA
   ordenActual.estado = 'locked';
+  delete ordenActual.draft;
 
   // GUARDAR
   saveData();
