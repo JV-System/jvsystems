@@ -2249,6 +2249,21 @@ async function loadFromCloud() {
     // Merge: nube suma a local, nunca borra
     if (ro.ordenes !== undefined) {
       ordenes = mergeById(ordenes, ro.ordenes);
+      // Detectar órdenes vacías y agregar sus IDs a la lista de ignorados permanente
+      const ignoreIds = JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]');
+      ordenes.forEach(function(o) {
+        if (!o.empresa && !o.marca && !ignoreIds.includes(String(o.id))) {
+          ignoreIds.push(String(o.id));
+        }
+      });
+      localStorage.setItem('branca_ignore_ids', JSON.stringify(ignoreIds));
+      // Filtrar: drafts, vacías, y las de la lista de ignorados
+      ordenes = ordenes.filter(function(o) {
+        if (o.draft) return false;
+        if (!o.empresa && !o.marca) return false;
+        if (ignoreIds.includes(String(o.id))) return false;
+        return true;
+      });
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
     }
     if (rc.clientes !== undefined) {
@@ -2270,7 +2285,6 @@ async function loadFromCloud() {
 
     setSyncStatus('ok');
     renderOrderList();
-    if (ordenes.length && !ordenActual) { seleccionarOrden(ordenes[0].id); }
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Cloud load failed:', e.message);
@@ -2349,19 +2363,8 @@ function getNextNum() {
 }
 
 function ordenIncompleta() {
-
-  return ordenes.some(o =>
-
-    o.estado !== 'locked' && (
-
-      !o.empresa ||
-      !o.marca ||
-      !o.probDetectado
-
-    )
-
-  );
-
+  // Hay un draft en progreso (aún no guardado)
+  return ordenes.some(o => o.draft === true);
 }
 
 function crearNuevaOrden() {
@@ -2375,6 +2378,7 @@ function crearNuevaOrden() {
     id: Date.now(),
     numero: getNextNum(),
     estado: 'open',
+    draft: true,
     fecha: new Date().toISOString().split('T')[0],
     // CREADOR
     creadorId: cu ? cu.id : 0,
@@ -2400,7 +2404,7 @@ function crearNuevaOrden() {
     facturacion: null,
   };
   ordenes.unshift(nueva);
-  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  // No guardar en localStorage hasta que el usuario presione "Guardar"
   renderOrderList();
   seleccionarOrden(nueva.id);
   switchView('nueva');
@@ -2449,10 +2453,14 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Filtrar órdenes según rol
-  let visible = ordenes;
+  // Filtrar: excluir drafts y órdenes vacías abandonadas (sin empresa ni marca)
+  let visible = ordenes.filter(function(o) {
+    if (o.draft) return false;
+    if (o.estado === 'open' && !o.empresa && !o.marca) return false;
+    return true;
+  });
   if (cu && cu.role === 'tecnico') {
-    visible = ordenes.filter(function(o) { return o.creadorId === cu.id; });
+    visible = visible.filter(function(o) { return o.creadorId === cu.id; });
   }
 
   const filtered = visible.filter(function(o) {
@@ -4127,6 +4135,8 @@ function guardarOrden() {
   // Guardar campos del tab activo en la orden
   saveTabCliente();
   saveTabDiagnostico();
+  // Quitar draft al guardar por primera vez
+  delete ordenActual.draft;
   // Asegurarse que la orden esté en el array
   const idx = ordenes.findIndex(o => o.id === ordenActual.id);
   if (idx >= 0) {
@@ -4895,8 +4905,15 @@ function esc(str) {
 }
 
 // ==================== INIT ====================
+// Filtrar drafts y órdenes vacías sin tocar usuarios ni contraseñas
+ordenes = ordenes.filter(function(o) {
+  if (o.draft) return false;
+  if (!o.empresa && !o.marca) return false;
+  return true;
+});
+localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
-if (ordenes.length) { seleccionarOrden(ordenes[0].id); }
+// No auto-seleccionar: el usuario elige desde el sidebar o crea nueva
 // Cargar desde la nube al iniciar
 loadFromCloud();
 // Poll automático cada 30 segundos para mantener sincronizados todos los dispositivos
@@ -4982,6 +4999,22 @@ switchView = function(v) {
 };
 // Re-renderizar acciones si cambia orientación/tamaño
 window.addEventListener('resize', () => { if (ordenActual) renderActions(); });
+
+// ── RESET DE ESTADO AL VOLVER AL FRENTE ─────────────────────────────────────
+// En mobile el tab no se recarga al reabrir la app, así que reseteamos
+// manualmente si estuvo en segundo plano más de 60 segundos.
+let _lastHiddenAt = 0;
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') {
+    _lastHiddenAt = Date.now();
+  } else {
+    // Resetear siempre al volver al frente
+    if (ordenActual && ordenActual.estado !== 'locked') {
+      ordenActual = null;
+      switchView('nueva');
+    }
+  }
+});
 </script>
 
 <!-- ═══════════════════════════════════════════
