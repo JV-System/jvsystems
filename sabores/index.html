@@ -2092,6 +2092,7 @@ function moveDashMes(dir){
   if(_dashMes>11){_dashMes=0;_dashAnio++;}
   if(_dashMes<0){_dashMes=11;_dashAnio--;}
   renderDashboard();
+  actualizarBadgePedidos();
 }
 function calcSaldoLucia(){
   if(!db.despachos) return 0;
@@ -3449,7 +3450,10 @@ function catDoLogin(){
   document.getElementById('catLoginScreen').style.display='none';
   currentUser = found;
   initApp();
-  setTimeout(()=>showSection(found.rol==='cliente'?'catalogo':'dashboard'),100);
+  setTimeout(()=>{
+    showSection(found.rol==='cliente'?'catalogo':'dashboard');
+    actualizarBadgePedidos();
+  },100);
 }
 
 function catSugerirUsuario(){
