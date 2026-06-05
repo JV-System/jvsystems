@@ -4105,8 +4105,11 @@ async function guardarParcial() {
   ordenActual.estado = 'pending';
   delete ordenActual.draft;
   saveData();
+
+  // VOLVER A PANTALLA LIMPIA
+  ordenActual = null;
   renderOrderList();
-  renderActions();
+  switchView('nueva');
 
   // Mini-toast de confirmación
   const fa = document.getElementById('formActions');
@@ -4141,15 +4144,12 @@ function guardarOrden() {
     ordenes.unshift(ordenActual);
   }
   saveData(); // guarda en localStorage + sync nube
+
+  // VOLVER A PANTALLA LIMPIA
+  ordenActual = null;
   renderOrderList();
-  const fa = document.getElementById('formActions');
-  if (fa) {
-    const msg = document.createElement('span');
-    msg.style = 'font-size:13px;color:var(--teal);font-weight:600;';
-    msg.textContent = '✓ Guardado';
-    fa.appendChild(msg);
-    setTimeout(() => msg.remove(), 2000);
-  }
+  switchView('nueva');
+  showToast('✓ Orden guardada.');
 }
 
 function finalizarOrden() {
@@ -4183,10 +4183,11 @@ function finalizarOrden() {
   // GUARDAR
   saveData();
 
-  // ACTUALIZAR INTERFAZ
+  // VOLVER A PANTALLA LIMPIA
+  ordenActual = null;
   renderOrderList();
-  renderFormContent();
-  renderActions();
+  switchView('nueva');
+  showToast('✅ Planilla finalizada y guardada.');
 }
 
 // ==================== SAVE HELPERS ====================
