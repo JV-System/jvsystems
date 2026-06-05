@@ -3281,7 +3281,7 @@ function renderTabTiempos() {
           ${o.firmaCliente
             ? `<img src="${o.firmaCliente}" style="max-height:80px;border-bottom:1px solid var(--border);display:block;margin-bottom:4px;border:2px solid var(--teal);border-radius:4px;">
                <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Aclaración: <strong>${esc(o.firmaClienteNombre||'')}</strong></p>
-               <p style="font-size:11px;color:var(--teal);font-weight:600;">✓ Firmado — planilla bloqueada</p>`
+               <p style="font-size:11px;color:var(--teal);font-weight:600;">✓ Firma guardada</p>`
             : `<div class="sig-container">
                 <canvas id="canvasCliente" class="sig-canvas" width="280" height="100"></canvas>
                 <div class="sig-toolbar">
@@ -3290,7 +3290,7 @@ function renderTabTiempos() {
                 </div>
                </div>
                <input type="text" id="inputNombreCliente" placeholder="Aclaración (nombre y apellido) *" value="${esc(o.firmaClienteNombre||'')}" style="width:100%;margin-top:8px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" oninput="ordenActual.firmaClienteNombre=this.value">
-               ${!locked ? `<button class="btn btn-success btn-sm" style="margin-top:6px;width:100%" onclick="guardarFirmaCliente()">✍ Confirmar y bloquear planilla</button>` : ''}`
+               ${!locked ? `<button class="btn btn-success btn-sm" style="margin-top:6px;width:100%" onclick="guardarFirmaCliente()">✍ Guardar firma cliente</button>` : ''}`
           }
         </div>
       </div>
@@ -3372,14 +3372,11 @@ function guardarFirmaCliente() {
   if (!nombre) { showToast('✏ Ingresá el nombre y apellido del cliente.'); document.getElementById('inputNombreCliente') && document.getElementById('inputNombreCliente').focus(); return; }
   const c = document.getElementById('canvasCliente');
   ordenActual.firmaCliente = c.toDataURL();
-  ordenActual.estado = 'locked';
-  registrarCambio('Orden cerrada y firmada por el cliente.');
+  // NO bloquear aquí — solo se bloquea al presionar Finalizar
+  registrarCambio('Firma del cliente guardada.');
   saveData();
-  renderFormContent();
-  renderOrderList();
-  showToast('✅ Planilla firmada y bloqueada.');
-  // Notificación WhatsApp
-  mostrarNotifWhatsApp(ordenActual);
+  renderTab();
+  showToast('✅ Firma guardada. Presioná Finalizar para cerrar la planilla.');
 }
 
 // ==================== TAB COMPROBANTE ====================
