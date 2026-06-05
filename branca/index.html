@@ -3196,11 +3196,15 @@ function renderTabDiagnostico() {
 }
 
 function addRepuesto() {
+  saveTabDiagnostico(); // guardar textareas antes de re-renderizar
   ordenActual.repuestos = ordenActual.repuestos || [];
   ordenActual.repuestos.push({ desc: '', cant: 1 });
   saveData(); renderTab();
 }
-function removeRepuesto(i) { ordenActual.repuestos.splice(i, 1); saveData(); renderTab(); }
+function removeRepuesto(i) {
+  saveTabDiagnostico(); // guardar textareas antes de re-renderizar
+  ordenActual.repuestos.splice(i, 1); saveData(); renderTab();
+}
 function updateRepuesto(i, field, val) { ordenActual.repuestos[i][field] = val; saveData(); }
 function toggleCondicion(c, checked) {
   ordenActual.condicion = ordenActual.condicion || [];
@@ -3534,7 +3538,7 @@ function renderTabComprobante() {
                 <td style="width:50%;text-align:center;padding:0 0 0 32px;vertical-align:bottom;border-left:1px solid #eee;">
                   ${o.firmaCliente ? `<img src="${o.firmaCliente}" style="max-height:70px;max-width:180px;display:block;margin:0 auto;">` : `<div style="height:60px;"></div>`}
                   <div style="border-top:1px solid #ccc;padding-top:8px;margin-top:6px;">
-                    <div style="font-size:12px;font-weight:600;">${esc(o.contacto||'Cliente')}</div>
+                    <div style="font-size:12px;font-weight:600;">${esc(o.firmaClienteNombre||o.contacto||'Cliente')}</div>
                     <div style="font-size:11px;color:var(--text-muted);">${esc(o.empresa||'')}</div>
                   </div>
                 </td>
