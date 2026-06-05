@@ -1974,32 +1974,28 @@ const CLOUD_ENABLED = false; // se evalúa dinámicamente via isScriptConfigured
 // DEMO DATA — se carga una sola vez en instalaciones nuevas
 // ══════════════════════════════════════════════════════════════════
 (function() {
-  if (localStorage.getItem('branca_demo_v2')) return;
-  // No pisar datos reales si ya hay órdenes guardadas
+  // DATOS DE DEMO DESACTIVADOS — sistema en producción
+  localStorage.setItem('branca_demo_v2', '1');
+  // Limpiar órdenes de prueba si existen
   var _existentes = JSON.parse(localStorage.getItem('branca_ordenes') || '[]');
-  if (_existentes.length > 0) { localStorage.setItem('branca_demo_v2', '1'); return; }
+  var tienePrueba = _existentes.some(o => o.id < 10000);
+  if (tienePrueba) {
+    localStorage.removeItem('branca_ordenes');
+    localStorage.removeItem('branca_clientes');
+    localStorage.removeItem('branca_tecnicos');
+  }
+  if (false) { // bloque desactivado
 
   // ── Usuarios ──────────────────────────────────────────────────
-  localStorage.setItem('branca_users', JSON.stringify([
-    { id:1001, username:'admin',       password:'branca2026', role:'admin',       nombre:'Administrador',      firma:null, foto:null },
-    { id:1002, username:'javier',      password:'tec123',     role:'tecnico',     nombre:'Juan Javier García', firma:null, foto:null },
-    { id:1003, username:'martin',      password:'tec123',     role:'tecnico',     nombre:'Martín López',       firma:null, foto:null },
-    { id:1004, username:'facturacion', password:'fact2026',   role:'facturacion', nombre:'María González',     firma:null, foto:null },
-  ]));
-  localStorage.setItem('branca_admin_pass', 'branca2026');
-
-  // ── Técnicos (espejo de usuarios técnicos) ────────────────────
-  localStorage.setItem('branca_tecnicos', JSON.stringify([
-    { id:1002, nombre:'Juan Javier García', firma:null },
-    { id:1003, nombre:'Martín López',       firma:null },
-  ]));
-
-  // ── Clientes ──────────────────────────────────────────────────
-  localStorage.setItem('branca_clientes', JSON.stringify([
-    { id:2001, empresa:'Metalúrgica Del Río SRL',    contacto:'Roberto Fontana',  tel:'+54 341-4521890',  cuit:'30-71234567-8', ubicacion:'Rosario, Santa Fe',     email:'rfontana@metalurgicadelrio.com' },
-    { id:2002, empresa:'Frigorífico San Marcos SA',  contacto:'Carlos Benítez',   tel:'+54 3462-456789',  cuit:'30-68901234-5', ubicacion:'Rufino, Santa Fe',       email:'cbenitez@frigosanmarcos.com' },
-    { id:2003, empresa:'Constructora Patagónica SRL',contacto:'Ana Morales',      tel:'+54 299-4123456',  cuit:'30-70123456-7', ubicacion:'Neuquén, Neuquén',       email:'amorales@constructorapatagonica.com' },
-  ]));
+  // usuarios base — solo se cargan si no hay usuarios guardados
+  if (!localStorage.getItem('branca_users')) {
+    localStorage.setItem('branca_users', JSON.stringify([
+      { id:1001, username:'admin', password:'admin2024', role:'admin', nombre:'Administrador', firma:null, foto:null },
+    ]));
+  }
+  if (!localStorage.getItem('branca_admin_pass')) {
+    localStorage.setItem('branca_admin_pass', 'admin2024');
+  }
 
   // ── Órdenes de servicio ───────────────────────────────────────
   var O = [
@@ -2126,7 +2122,7 @@ const CLOUD_ENABLED = false; // se evalúa dinámicamente via isScriptConfigured
     },
   ];
   localStorage.setItem('branca_ordenes', JSON.stringify(O));
-  localStorage.setItem('branca_demo_v2', '1');
+  } // fin if(false)
 })();
 
 // ==================== DATA ====================
