@@ -4293,7 +4293,7 @@ showSection = function(sec){
 //  DATOS DE PRUEBA (solo si la DB está vacía)
 // ════════════════════════════════════════════════
 function loadSeedData(){
-  if(db.pedidos.length>0) return; // ya tiene datos
+  return; // DATOS DE PRUEBA DESACTIVADOS — sistema en producción
 
   db.clientes = [
     {id:1001,nombre:'Yesica Ramírez',dni:'29441832',tel:'2291554320',email:'yesica.ramirez@gmail.com',transporte:'Crucero cargo — Mar del Plata, Bs As',ciudad:'Mar del Plata',lista:'1',notas:'Cliente frecuente'},
