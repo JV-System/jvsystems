@@ -2257,9 +2257,8 @@ async function loadFromCloud() {
         }
       });
       localStorage.setItem('branca_ignore_ids', JSON.stringify(ignoreIds));
-      // Filtrar: drafts, vacías, y las de la lista de ignorados
+      // Filtrar: solo órdenes sin ningún dato
       ordenes = ordenes.filter(function(o) {
-        if (o.draft) return false;
         if (!o.empresa && !o.marca) return false;
         if (ignoreIds.includes(String(o.id))) return false;
         return true;
@@ -2453,10 +2452,9 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Filtrar: excluir drafts y órdenes vacías abandonadas (sin empresa ni marca)
+  // Filtrar: excluir solo drafts SIN datos (empresa y marca vacíos)
   let visible = ordenes.filter(function(o) {
-    if (o.draft) return false;
-    if (o.estado === 'open' && !o.empresa && !o.marca) return false;
+    if (!o.empresa && !o.marca) return false; // vacía sin datos
     return true;
   });
   if (cu && cu.role === 'tecnico') {
@@ -4904,9 +4902,8 @@ function esc(str) {
 }
 
 // ==================== INIT ====================
-// Filtrar drafts y órdenes vacías sin tocar usuarios ni contraseñas
+// Filtrar solo órdenes sin ningún dato (nunca completadas)
 ordenes = ordenes.filter(function(o) {
-  if (o.draft) return false;
   if (!o.empresa && !o.marca) return false;
   return true;
 });
