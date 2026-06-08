@@ -2141,7 +2141,7 @@ const DEFAULT_USERS = [
 function getUsers() {
   return JSON.parse(localStorage.getItem('branca_users') || JSON.stringify(DEFAULT_USERS));
 }
-function saveUsers(u) { localStorage.setItem('branca_users', JSON.stringify(u)); }
+// saveUsers definida abajo junto con syncUsuarios
 
 function getCurrentUser() {
   const r = sessionStorage.getItem('branca_session_user') || localStorage.getItem('branca_session_user');
@@ -2248,15 +2248,14 @@ async function loadFromCloud() {
   if (!isScriptConfigured()) { setSyncStatus('nocfg', ''); return; }
   setSyncStatus('syncing', '⏳ Conectando...');
   try {
-    const [ro, rc, rt, rcfg] = await Promise.all([
+    const [ro, rc, rt, rcfg, ru] = await Promise.all([
       apiGet('getOrdenes'), apiGet('getClientes'),
-      apiGet('getTecnicos'), apiGet('getConfig')
+      apiGet('getTecnicos'), apiGet('getConfig'), apiGet('getUsuarios')
     ]);
 
-    // Merge: nube suma a local, nunca borra
+    // ÓRDENES — la nube es fuente de verdad, merge por timestamp
     if (ro.ordenes !== undefined) {
       ordenes = mergeById(ordenes, ro.ordenes);
-      // Detectar órdenes vacías y agregar sus IDs a la lista de ignorados permanente
       const ignoreIds = JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]');
       ordenes.forEach(function(o) {
         if (!o.empresa && !o.marca && !ignoreIds.includes(String(o.id))) {
@@ -2264,7 +2263,6 @@ async function loadFromCloud() {
         }
       });
       localStorage.setItem('branca_ignore_ids', JSON.stringify(ignoreIds));
-      // Filtrar: solo órdenes sin ningún dato
       ordenes = ordenes.filter(function(o) {
         if (!o.empresa && !o.marca) return false;
         if (ignoreIds.includes(String(o.id))) return false;
@@ -2272,22 +2270,34 @@ async function loadFromCloud() {
       });
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
     }
-    if (rc.clientes !== undefined) {
-      clientesDB = mergeById(clientesDB, rc.clientes);
+
+    // CLIENTES — la nube gana siempre
+    if (rc.clientes && rc.clientes.length) {
+      clientesDB = rc.clientes;
       localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
     }
-    if (rt.tecnicos !== undefined) {
-      tecnicosDB = mergeById(tecnicosDB, rt.tecnicos);
+
+    // TÉCNICOS — la nube gana siempre
+    if (rt.tecnicos && rt.tecnicos.length) {
+      tecnicosDB = rt.tecnicos;
       localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
     }
+
+    // USUARIOS — la nube gana siempre
+    if (ru.usuarios && ru.usuarios.length) {
+      localStorage.setItem('branca_users', JSON.stringify(ru.usuarios));
+    }
+
+    // CONFIG
     if (rcfg.config && rcfg.config.adminPass) {
       localStorage.setItem('branca_admin_pass', rcfg.config.adminPass);
     }
 
-    // Subir a la nube lo que hay local (primera conexión: poblar la hoja vacía)
-    ordenes.forEach(function(o)  { syncOrden(o); });
-    clientesDB.forEach(function(c){ syncCliente(c); });
-    tecnicosDB.forEach(function(t){ syncTecnico(t); });
+    // Primera conexión: si la nube está vacía, subir datos locales
+    if (!rc.clientes || !rc.clientes.length) clientesDB.forEach(c => syncCliente(c));
+    if (!rt.tecnicos || !rt.tecnicos.length) tecnicosDB.forEach(t => syncTecnico(t));
+    if (!ru.usuarios || !ru.usuarios.length) syncUsuarios(getUsers());
+    if (!ro.ordenes  || !ro.ordenes.length)  ordenes.forEach(o => syncOrden(o));
 
     setSyncStatus('ok');
     renderOrderList();
@@ -2310,9 +2320,15 @@ function saveData() {
 }
 function saveTecnicos() {
   localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
+  if (isScriptConfigured()) tecnicosDB.forEach(t => syncTecnico(t));
 }
 function saveClientes() {
   localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
+  if (isScriptConfigured()) clientesDB.forEach(c => syncCliente(c));
+}
+function saveUsers(u) {
+  localStorage.setItem('branca_users', JSON.stringify(u));
+  if (isScriptConfigured()) syncUsuarios(u);
 }
 function getAdminPass() { return localStorage.getItem('branca_admin_pass') || DEFAULT_ADMIN_PASS; }
 
@@ -2351,6 +2367,11 @@ async function syncDeleteTecnico(id) {
 async function syncConfig(data) {
   if (!isScriptConfigured()) return;
   try { await apiPost({ action: 'saveConfig', data }); } catch(e) {}
+}
+
+async function syncUsuarios(users) {
+  if (!isScriptConfigured()) return;
+  try { await apiPost({ action: 'saveUsuarios', data: users }); } catch(e) {}
 }
 
 function getNextNum() {
