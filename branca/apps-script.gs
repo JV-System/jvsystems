@@ -2,6 +2,10 @@
 //  BRANCA — Apps Script completo
 //  Una sola hoja de cálculo con 5 pestañas:
 //  Ordenes | Clientes | Tecnicos | Usuarios | Config
+//
+//  Compatible con el formato viejo (ID en col A, JSON en col B)
+//  y con el formato nuevo (JSON completo en col A).
+//  Al guardar, migra automáticamente al formato nuevo.
 // ============================================================
 
 var SS = SpreadsheetApp.getActiveSpreadsheet();
@@ -13,57 +17,87 @@ function getSheet(name) {
   return sh;
 }
 
-// Lee todos los datos de una hoja (cada fila = JSON en columna A)
+// Parsea una fila compatible con formato viejo y nuevo.
+// Formato viejo: col A = número/id, col B = JSON
+// Formato nuevo: col A = JSON completo
+function parseRow(row) {
+  try {
+    // Formato nuevo: col A es JSON
+    var valA = String(row[0] || '').trim();
+    if (valA.startsWith('{')) return JSON.parse(valA);
+    // Formato viejo: col B es JSON
+    var valB = String(row[1] || '').trim();
+    if (valB.startsWith('{')) return JSON.parse(valB);
+  } catch(e) {}
+  return null;
+}
+
+// Lee todos los datos válidos de una hoja (ignora filas vacías/corruptas)
 function readAll(sheetName) {
   var sh = getSheet(sheetName);
-  var data = sh.getDataRange().getValues();
+  var lastRow = sh.getLastRow();
+  if (lastRow === 0) return [];
+  var data = sh.getRange(1, 1, lastRow, Math.max(sh.getLastColumn(), 2)).getValues();
+  var seen = {};
   var result = [];
   for (var i = 0; i < data.length; i++) {
-    if (data[i][0]) {
-      try { result.push(JSON.parse(data[i][0])); } catch(e) {}
+    var item = parseRow(data[i]);
+    if (!item || !item.id) continue;
+    var key = String(item.id);
+    // Si hay duplicados, quedarse con el más reciente (mayor updatedAt)
+    if (seen[key] !== undefined) {
+      var existing = result[seen[key]];
+      if ((item.updatedAt || 0) > (existing.updatedAt || 0)) {
+        result[seen[key]] = item;
+      }
+      continue;
     }
+    seen[key] = result.length;
+    result.push(item);
   }
   return result;
 }
 
-// Guarda un item (busca por id, reemplaza o agrega al final)
+// Limpia una hoja y la rescribe en formato nuevo (una columna, JSON)
+function migrateSheet(sheetName) {
+  var items = readAll(sheetName);
+  replaceAll(sheetName, items);
+}
+
+// Guarda un item: busca por id, reemplaza o agrega. Siempre formato nuevo.
 function saveItem(sheetName, item) {
   var sh = getSheet(sheetName);
-  var data = sh.getDataRange().getValues();
-  var json = JSON.stringify(item);
-  for (var i = 0; i < data.length; i++) {
-    if (data[i][0]) {
-      try {
-        var row = JSON.parse(data[i][0]);
-        if (String(row.id) === String(item.id)) {
-          sh.getRange(i + 1, 1).setValue(json);
-          return;
-        }
-      } catch(e) {}
+  var lastRow = sh.getLastRow();
+  if (lastRow > 0) {
+    var data = sh.getRange(1, 1, lastRow, Math.max(sh.getLastColumn(), 2)).getValues();
+    for (var i = 0; i < data.length; i++) {
+      var row = parseRow(data[i]);
+      if (row && String(row.id) === String(item.id)) {
+        // Limpiar toda la fila y escribir solo en col A
+        sh.getRange(i + 1, 1, 1, data[i].length).clearContent();
+        sh.getRange(i + 1, 1).setValue(JSON.stringify(item));
+        return;
+      }
     }
   }
-  // No encontrado → agregar nueva fila
-  sh.appendRow([json]);
+  sh.appendRow([JSON.stringify(item)]);
 }
 
 // Elimina un item por id
 function deleteItem(sheetName, id) {
   var sh = getSheet(sheetName);
-  var data = sh.getDataRange().getValues();
+  var lastRow = sh.getLastRow();
+  if (lastRow === 0) return;
+  var data = sh.getRange(1, 1, lastRow, Math.max(sh.getLastColumn(), 2)).getValues();
   for (var i = data.length - 1; i >= 0; i--) {
-    if (data[i][0]) {
-      try {
-        var row = JSON.parse(data[i][0]);
-        if (String(row.id) === String(id)) {
-          sh.deleteRow(i + 1);
-          return;
-        }
-      } catch(e) {}
+    var row = parseRow(data[i]);
+    if (row && String(row.id) === String(id)) {
+      sh.deleteRow(i + 1);
     }
   }
 }
 
-// Reemplaza toda la hoja con un array de items
+// Reemplaza toda la hoja con un array (formato nuevo limpio)
 function replaceAll(sheetName, items) {
   var sh = getSheet(sheetName);
   sh.clearContents();
@@ -73,7 +107,7 @@ function replaceAll(sheetName, items) {
   }
 }
 
-// ── CORS headers ────────────────────────────────────────────
+// ── Respuesta JSON ───────────────────────────────────────────
 function corsOutput(data) {
   var output = ContentService.createTextOutput(JSON.stringify(data));
   output.setMimeType(ContentService.MimeType.JSON);
@@ -93,6 +127,13 @@ function doGet(e) {
       var cfg  = rows.length ? rows[0] : {};
       return corsOutput({ config: cfg });
     }
+    // Migración manual: limpia todas las hojas al formato nuevo
+    if (action === 'migrar') {
+      migrateSheet('Ordenes');
+      migrateSheet('Clientes');
+      migrateSheet('Tecnicos');
+      return corsOutput({ ok: true, mensaje: 'Migración completada' });
+    }
     return corsOutput({ error: 'Acción no reconocida: ' + action });
   } catch(err) {
     return corsOutput({ error: err.message });
@@ -105,43 +146,18 @@ function doPost(e) {
     var body   = JSON.parse(e.postData.contents);
     var action = body.action;
 
-    // ÓRDENES
-    if (action === 'saveOrden') {
-      saveItem('Ordenes', body.data);
-      return corsOutput({ ok: true });
-    }
-    if (action === 'deleteOrden') {
-      deleteItem('Ordenes', body.id);
-      return corsOutput({ ok: true });
-    }
+    if (action === 'saveOrden')      { saveItem('Ordenes',   body.data); return corsOutput({ ok: true }); }
+    if (action === 'deleteOrden')    { deleteItem('Ordenes', body.id);   return corsOutput({ ok: true }); }
 
-    // CLIENTES
-    if (action === 'saveCliente') {
-      saveItem('Clientes', body.data);
-      return corsOutput({ ok: true });
-    }
-    if (action === 'deleteCliente') {
-      deleteItem('Clientes', body.id);
-      return corsOutput({ ok: true });
-    }
+    if (action === 'saveCliente')    { saveItem('Clientes',   body.data); return corsOutput({ ok: true }); }
+    if (action === 'deleteCliente')  { deleteItem('Clientes', body.id);   return corsOutput({ ok: true }); }
 
-    // TÉCNICOS
-    if (action === 'saveTecnico') {
-      saveItem('Tecnicos', body.data);
-      return corsOutput({ ok: true });
-    }
-    if (action === 'deleteTecnico') {
-      deleteItem('Tecnicos', body.id);
-      return corsOutput({ ok: true });
-    }
+    if (action === 'saveTecnico')    { saveItem('Tecnicos',   body.data); return corsOutput({ ok: true }); }
+    if (action === 'deleteTecnico')  { deleteItem('Tecnicos', body.id);   return corsOutput({ ok: true }); }
 
-    // USUARIOS — se guarda la lista completa de una vez
-    if (action === 'saveUsuarios') {
-      replaceAll('Usuarios', body.data);
-      return corsOutput({ ok: true });
-    }
+    // Usuarios: se guarda la lista completa de una vez
+    if (action === 'saveUsuarios')   { replaceAll('Usuarios', body.data); return corsOutput({ ok: true }); }
 
-    // CONFIG
     if (action === 'saveConfig') {
       var sh = getSheet('Config');
       sh.clearContents();
