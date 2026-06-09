@@ -4951,13 +4951,67 @@ ordenes = ordenes.filter(function(o) {
 });
 localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
-// No auto-seleccionar: el usuario elige desde el sidebar o crea nueva
-// Cargar desde la nube al iniciar
 loadFromCloud();
-// Poll automático cada 30 segundos para mantener sincronizados todos los dispositivos
 setInterval(function() {
   if (isScriptConfigured() && document.visibilityState !== 'hidden') loadFromCloud();
 }, 30000);
+
+// ══════════════════════════════════════════════════════
+// AUTO-GUARDAR BORRADOR
+// ══════════════════════════════════════════════════════
+
+// Guarda el estado actual del formulario en ordenActual + localStorage
+function autoGuardarBorrador() {
+  if (!ordenActual) return;
+  saveTabCliente();
+  saveTabDiagnostico();
+}
+
+// Cuando el usuario sale de la app (cambia de pestaña, minimiza, cierra)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') autoGuardarBorrador();
+});
+window.addEventListener('pagehide', autoGuardarBorrador);
+window.addEventListener('beforeunload', autoGuardarBorrador);
+
+// Auto-guardar mientras escribe (debounce 2 segundos)
+var _draftTimer = null;
+document.addEventListener('input', function(e) {
+  if (!ordenActual) return;
+  if (e.target && e.target.id && e.target.id.startsWith('f-')) {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(autoGuardarBorrador, 2000);
+  }
+});
+document.addEventListener('change', function(e) {
+  if (!ordenActual) return;
+  if (e.target && e.target.id && e.target.id.startsWith('f-')) {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(autoGuardarBorrador, 500);
+  }
+});
+
+// Restaurar borrador al iniciar sesión
+function restaurarBorradorSiExiste() {
+  const draft = ordenes.find(function(o) { return o.draft === true; });
+  if (!draft) return;
+  ordenActual = draft;
+  switchView('form');
+  renderForm();
+  showToast('📝 Tenés un borrador sin terminar — continuá donde lo dejaste.');
+}
+
+// Hook: al hacer login, verificar si hay borrador pendiente
+var _origHideLogin = hideLoginScreen;
+hideLoginScreen = function() {
+  _origHideLogin();
+  setTimeout(restaurarBorradorSiExiste, 800);
+};
+
+// También al iniciar si ya está logueado
+(function() {
+  if (isLoggedIn()) setTimeout(restaurarBorradorSiExiste, 1000);
+})();
 </script>
 <!-- FOOTER -->
 <div class="app-footer">
