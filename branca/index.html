@@ -5408,41 +5408,17 @@ window.addEventListener('appinstalled', () => {
 // ══════════════════════════════════════════
 // SERVICE WORKER — registro para PWA offline
 // ══════════════════════════════════════════
+// Limpiar Service Workers y caches viejos automáticamente
 if ('serviceWorker' in navigator) {
-  var _swRefreshing = false;
-
-  // Cuando el controller cambia (nuevo SW tomó el control) → recargar
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); }
-  });
-
-  // Mensaje del SW → recargar
-  navigator.serviceWorker.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'SW_UPDATED' && !_swRefreshing) {
-      _swRefreshing = true; window.location.reload();
-    }
-  });
-
-  navigator.serviceWorker.register('./sw.js').then(function(reg) {
-    // Si ya hay un SW nuevo esperando → activarlo y recargar
-    if (reg.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-      return;
-    }
-    // Cuando se instala un SW nuevo
-    reg.addEventListener('updatefound', function() {
-      var sw = reg.installing;
-      sw.addEventListener('statechange', function() {
-        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-          sw.postMessage({ type: 'SKIP_WAITING' });
-        }
-      });
+  navigator.serviceWorker.register('./sw.js').then(function() {
+    // Desregistrar todos los SW viejos y limpiar caches
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) { reg.unregister(); });
     });
-    // Verificar actualizaciones al volver al primer plano
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') reg.update();
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
     });
-  }).catch(function(err) { console.log('SW error:', err); });
+  }).catch(function(){});
 }
 
 // ══════════════════════════════════════════
