@@ -1428,6 +1428,33 @@ tr:hover td{background:#fafbfd}
           <tbody id="usersTbody"></tbody>
         </table>
       </div>
+
+      <!-- Card Mantenimiento -->
+      <div class="config-card" style="border-color:#f5c6c6">
+        <div class="config-card-head" style="background:#fff8f8">
+          <div class="config-card-title" style="color:var(--red)">🗑️ Mantenimiento de datos</div>
+        </div>
+        <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+          <div style="background:#fff8f8;border:1px solid #f5c6c6;border-radius:8px;padding:12px 14px;font-size:12px;color:#888;line-height:1.6">
+            <b style="color:var(--red);display:block;margin-bottom:4px">⚠️ Zona de precaución</b>
+            Estas acciones eliminan datos permanentemente. Se descarga un backup automático antes de borrar.
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Limpiar datos de meses anteriores</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina pedidos, compras, despachos y gastos que <b>no son de este mes</b>. Clientes y configuración se mantienen.</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="limpiarMesesAnteriores()">🗑 Limpiar</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Descargar backup completo</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Exporta toda la base de datos como archivo JSON.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="descargarBackup()">⬇ Exportar JSON</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -4857,6 +4884,86 @@ function agregarCodigo(){
   saveDB();renderCodigosDescuento();toast(`Código "${cod.toUpperCase()}" — ${pct}% guardado ✓`,'success');
 }
 function eliminarCodigo(cod){if(!confirm('¿Eliminar código '+cod+'?'))return;delete db.config.codigosDescuento[cod];saveDB();renderCodigosDescuento();}
+
+function descargarBackup(){
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const hoy  = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `jvs_sabores_backup_${hoy}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Backup descargado ✓','success');
+}
+
+function limpiarMesesAnteriores(){
+  const ahora    = new Date();
+  const mesActual= ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
+
+  // Función para determinar si un registro pertenece a este mes
+  function esEsteMes(item){
+    // Intentar derivar la fecha del registro
+    // Usar creadoTs, id (si es timestamp), o el campo fecha (string dd/mm/yyyy o yyyy-mm-dd)
+    let ts = item.creadoTs || (typeof item.id==='number' && item.id>1e12 ? item.id : null);
+    if(!ts && item.fecha){
+      // Parsear fecha string: formatos 'yyyy-mm-dd' o 'dd/mm/yyyy'
+      const f = item.fecha.includes('-')
+        ? new Date(item.fecha)
+        : new Date(item.fecha.split('/').reverse().join('-'));
+      if(!isNaN(f)) ts = f.getTime();
+    }
+    if(!ts) return true; // si no hay fecha, conservar para no borrar por error
+    const d = new Date(ts);
+    const mes = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    return mes === mesActual;
+  }
+
+  const antes = {
+    pedidos:   db.pedidos.length,
+    compras:   db.compras.length,
+    despachos: db.despachos.length,
+    gastos:    (db.gastos||[]).length,
+    dario:     (db.dario||[]).length,
+  };
+
+  const pedidosAEliminar = db.pedidos.filter(p=>!esEsteMes(p)).map(p=>p.id);
+  const conteo = {
+    pedidos:   db.pedidos.filter(p=>!esEsteMes(p)).length,
+    compras:   db.compras.filter(c=>!esEsteMes(c)).length,
+    despachos: db.despachos.filter(d=>!esEsteMes(d)).length,
+    gastos:    (db.gastos||[]).filter(g=>!esEsteMes(g)).length,
+    dario:     (db.dario||[]).filter(t=>!esEsteMes(t)).length,
+  };
+  const total = Object.values(conteo).reduce((s,n)=>s+n,0);
+  if(total===0){ toast('No hay datos de meses anteriores para limpiar ✓','success'); return; }
+
+  const resumen = [
+    conteo.pedidos   ? `• ${conteo.pedidos} pedido(s)` : '',
+    conteo.compras   ? `• ${conteo.compras} compra(s)` : '',
+    conteo.despachos ? `• ${conteo.despachos} despacho(s)` : '',
+    conteo.gastos    ? `• ${conteo.gastos} gasto(s)` : '',
+    conteo.dario     ? `• ${conteo.dario} movimiento(s) de Darío` : '',
+  ].filter(Boolean).join('\n');
+
+  if(!confirm(`Se van a eliminar ${total} registros de meses anteriores:\n\n${resumen}\n\nSe descargará un backup antes de borrar.\n¿Continuar?`)) return;
+
+  // Backup automático antes de borrar
+  descargarBackup();
+
+  // Limpiar
+  db.pedidos   = db.pedidos.filter(p=>esEsteMes(p));
+  db.compras   = db.compras.filter(c=>esEsteMes(c));
+  db.despachos = db.despachos.filter(d=>esEsteMes(d));
+  db.gastos    = (db.gastos||[]).filter(g=>esEsteMes(g));
+  db.dario     = (db.dario||[]).filter(t=>esEsteMes(t));
+  // Limpiar mensajes de pedidos eliminados
+  if(db.mensajes) db.mensajes = db.mensajes.filter(m=>!pedidosAEliminar.includes(m.pedidoId));
+
+  saveDB();
+  toast(`✓ Limpieza completada — ${total} registros eliminados`,'success');
+  renderPedidosList();
+  renderDashboard();
+}
 
 function renderConfigSection(){
   renderEstadosConfig();
