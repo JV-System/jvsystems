@@ -82,7 +82,7 @@
 .bnav-btn span{font-size:9.5px;line-height:1;width:100%;text-align:center;display:block}
 .bnav-btn.active{color:#F59420;border-top-color:#E8770A}
 .bnav-btn:active{opacity:0.7}
-.bnav-badge{position:absolute;top:6px;left:50%;margin-left:4px;background:#E53935;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid #040F04}
+.bnav-badge{position:absolute;top:4px;right:calc(50% - 22px);background:#E53935;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid #040F04;line-height:1}
 
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width:768px){
@@ -4312,7 +4312,7 @@ function countUnreadMsgs(){
 function updateChatBadge(){
   _chatUnread = countUnreadMsgs();
   renderBottomNav();
-  // También badge en el tab de escritorio
+  // Badge en el tab de escritorio
   const chatTab = document.querySelector('.nav-tab[data-sec="comunicacion"]');
   if(chatTab){
     const existing = chatTab.querySelector('.tab-badge');
@@ -4320,6 +4320,11 @@ function updateChatBadge(){
       if(!existing){ const b=document.createElement('span'); b.className='tab-badge'; chatTab.appendChild(b); }
       chatTab.querySelector('.tab-badge').textContent = _chatUnread>9?'9+':_chatUnread;
     } else if(existing){ existing.remove(); }
+  }
+  // Badge en el ícono de la app (Android/Chrome)
+  if('setAppBadge' in navigator){
+    if(_chatUnread > 0) navigator.setAppBadge(_chatUnread).catch(()=>{});
+    else navigator.clearAppBadge().catch(()=>{});
   }
 }
 function markAllMsgsRead(){
