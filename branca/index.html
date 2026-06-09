@@ -5281,11 +5281,8 @@ document.addEventListener('visibilitychange', function() {
   if (document.visibilityState === 'hidden') {
     _lastHiddenAt = Date.now();
   } else {
-    // Resetear siempre al volver al frente
-    if (ordenActual && ordenActual.estado !== 'locked') {
-      ordenActual = null;
-      switchView('nueva');
-    }
+    // Al volver al frente: sincronizar con la nube para ver cambios de otros dispositivos
+    loadFromCloud();
   }
 });
 </script>
