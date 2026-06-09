@@ -5182,14 +5182,7 @@ function restaurarBorradorSiExiste() {
   renderOrderList();
 }
 
-// Hook: al hacer login, verificar si hay borrador pendiente
-var _origHideLogin = hideLoginScreen;
-hideLoginScreen = function() {
-  _origHideLogin();
-  setTimeout(restaurarBorradorSiExiste, 800);
-};
-
-// También al iniciar si ya está logueado
+// Al iniciar si ya está logueado, restaurar borrador
 (function() {
   if (isLoggedIn()) setTimeout(restaurarBorradorSiExiste, 1000);
 })();
@@ -5446,6 +5439,7 @@ function hideLoginScreen() {
   const s = document.getElementById('login-screen');
   if (s) s.classList.add('hidden');
   initRoleUI();
+  setTimeout(restaurarBorradorSiExiste, 800);
 }
 
 function doLogin() {
