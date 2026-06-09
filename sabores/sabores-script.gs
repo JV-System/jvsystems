@@ -38,13 +38,14 @@ function doGet(e) {
 }
 
 // ── Router POST ───────────────────────────────────────────────────────────────
-// El frontend envía URLSearchParams con mode:'no-cors', así que los datos
-// llegan en e.parameter (igual que un GET).
+// El frontend envía mode:'no-cors' + Content-Type:text/plain.
+// La acción llega como ?action= en la URL (e.parameter).
+// El JSON de datos llega en e.postData.contents.
 
 function doPost(e) {
   try {
     const action = (e.parameter.action || '').trim();
-    const data   = e.parameter.data || '';
+    const data   = e.postData ? e.postData.contents : '';
     switch (action) {
       case 'saveDB':       return jsonOut(setData(ROW_DB, data));
       case 'saveUsuarios': return jsonOut(setData(ROW_USR, data));

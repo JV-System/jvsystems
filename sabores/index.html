@@ -1959,7 +1959,18 @@ function saveDB(){
 // ── SINCRONIZACIÓN CON GOOGLE SHEETS ─────────────────────────────────────────
 
 let _syncTimer = null;
-let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'ok' | 'error'
+let _syncStatus = 'idle';
+
+// Envía datos a GAS usando text/plain (no-cors, sin preflight).
+// La acción va en la URL (?action=...) y el JSON en el body.
+async function _gasPost(action, jsonStr){
+  await fetch(SABORES_SCRIPT_URL + '?action=' + action, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: jsonStr
+  });
+}
 
 function _syncPush(){
   if(!SABORES_SCRIPT_URL) return;
@@ -1967,15 +1978,13 @@ function _syncPush(){
   _syncTimer = setTimeout(async ()=>{
     _setSyncStatus('syncing');
     try{
-      // Usar URLSearchParams + no-cors para evitar preflight CORS en GAS
-      const body = new URLSearchParams({ action:'saveDB', data: JSON.stringify(db) });
-      await fetch(SABORES_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: body
-      });
+      await _gasPost('saveDB', JSON.stringify(db));
       _setSyncStatus('ok');
-    } catch(e){ _setSyncStatus('error'); }
+      toast('☁ Guardado en la nube ✓', 'success');
+    } catch(e){
+      _setSyncStatus('error');
+      toast('Sin conexión — guardado solo localmente', 'warning');
+    }
   }, 1200);
 }
 
@@ -1986,8 +1995,7 @@ async function _syncPull(){
     const j = await r.json();
     if(j.success && j.data){
       const remote = JSON.parse(j.data);
-      // Solo reemplazar si la versión remota tiene datos
-      if(remote && remote.config){
+      if(remote && (remote.pedidos || remote.clientes || remote.config)){
         db = remote;
         _initDbFields();
         if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
@@ -1995,7 +2003,7 @@ async function _syncPull(){
         return true;
       }
     }
-  } catch(e){}
+  } catch(e){ console.error('syncPull error:', e); }
   return false;
 }
 
@@ -2016,11 +2024,26 @@ async function _syncPullUsuarios(){
   return false;
 }
 
+// Botón manual de sync (accesible desde config para admin)
+async function syncAhora(){
+  if(!SABORES_SCRIPT_URL){ toast('URL del script no configurada','error'); return; }
+  toast('Sincronizando...', 'info');
+  _setSyncStatus('syncing');
+  const ok = await _syncPull();
+  if(ok){
+    _setSyncStatus('ok');
+    toast('✓ Datos actualizados desde la nube', 'success');
+    showSection(document.querySelector('.nav-tab.active')?.dataset?.sec || 'dashboard');
+  } else {
+    _setSyncStatus('error');
+    toast('No se pudo conectar con el servidor', 'error');
+  }
+}
+
 function saveUsuariosAndSync(){
   localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
   if(!SABORES_SCRIPT_URL) return;
-  const body = new URLSearchParams({ action:'saveUsuarios', data: JSON.stringify(USUARIOS) });
-  fetch(SABORES_SCRIPT_URL, { method:'POST', mode:'no-cors', body }).catch(()=>{});
+  _gasPost('saveUsuarios', JSON.stringify(USUARIOS)).catch(()=>{});
 }
 
 function _setSyncStatus(s){
