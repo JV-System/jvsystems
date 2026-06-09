@@ -1790,6 +1790,9 @@
     <span id="sync-status" onclick="abrirUrlModal()" title="Configurar URL de sincronización"
           style="font-size:11px;font-weight:600;transition:color 0.3s;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s;"
           onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"></span>
+    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos"
+            style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:15px;cursor:pointer;padding:5px 9px;border-radius:7px;transition:background 0.15s;line-height:1;"
+            onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">🔄</button>
     <div style="display:flex;align-items:center;gap:6px;margin-left:10px;">
       <div style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex-shrink:0;"></div>
       <span style="font-size:11px;color:rgba(255,255,255,0.92);font-weight:600;letter-spacing:0.3px;">Sistema activo</span>
@@ -2367,6 +2370,15 @@ async function syncDeleteTecnico(id) {
 async function syncConfig(data) {
   if (!isScriptConfigured()) return;
   try { await apiPost({ action: 'saveConfig', data }); } catch(e) {}
+}
+
+async function actualizarDatos() {
+  const btn = document.getElementById('btn-refresh');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  await loadFromCloud();
+  renderOrderList();
+  if (btn) { btn.textContent = '🔄'; btn.disabled = false; }
+  showToast('✅ Datos actualizados.');
 }
 
 async function syncUsuarios(users) {
