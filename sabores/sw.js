@@ -1,10 +1,22 @@
-const CACHE = 'sabores-v8';
+const CACHE = 'sabores-v9';
 const ASSETS = [
   '/manifest.json',
   '/jvs-logo.png',
   '/jvs-icon.png',
   '/LogoYerba.png'
 ];
+
+// Clic en notificación: abrir/enfocar la app y navegar a Comunicación
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      const app = clients.find(c => c.url.includes('index.html') || c.url.endsWith('/'));
+      if(app){ app.focus(); app.postMessage({ type: 'OPEN_CHAT' }); }
+      else { self.clients.openWindow('./'); }
+    })
+  );
+});
 
 // Instalar: cachear assets estáticos (imágenes, manifest)
 self.addEventListener('install', e => {

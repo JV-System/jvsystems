@@ -4027,6 +4027,7 @@ function initApp(){
   const first = ROLE_TABS[currentUser.rol][0];
   showSection(first);
   setTimeout(updateChatBadge, 300);
+  setTimeout(pedirPermisoNotif, 2000);
   // Sincronizar datos desde Sheets al iniciar sesión
   if(SABORES_SCRIPT_URL){
     _setSyncStatus('syncing');
@@ -4303,8 +4304,57 @@ function markAllMsgsRead(){
   });
   if(changed){ saveDB(); _chatUnread=0; renderBottomNav(); }
 }
-// Chequear mensajes nuevos cada 15 seg (simula push)
-setInterval(()=>{ if(currentUser) updateChatBadge(); }, 15000);
+// ── NOTIFICACIONES DEL SISTEMA ───────────────────────────────────────────────
+
+let _lastNotifCount = 0; // cantidad de no-leídos en el último chequeo
+
+async function pedirPermisoNotif(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default'){
+    await Notification.requestPermission();
+  }
+}
+
+function mostrarNotifMensajes(count){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  if(document.visibilityState === 'visible') return; // app en primer plano → no molestar
+  const texto = count === 1 ? '¡Tenés un mensaje nuevo!' : `¡Tenés ${count} mensajes nuevos!`;
+  const n = new Notification('Sabores de Misiones 🌿', {
+    body: texto,
+    icon: 'jvs-icon.png',
+    badge: 'jvs-icon.png',
+    tag: 'sabores-chat',
+    renotify: true
+  });
+  n.onclick = ()=>{ window.focus(); showSection('comunicacion'); n.close(); };
+}
+
+async function chequearMensajesNuevos(){
+  if(!currentUser) return;
+  // Sincronizar desde Sheets para ver mensajes de otros dispositivos
+  if(SABORES_SCRIPT_URL){
+    const pulled = await _syncPull();
+    if(pulled){
+      showSection._sec = showSection._sec; // no re-render, solo actualizar badge
+    }
+  }
+  const ahora = countUnreadMsgs();
+  if(ahora > _lastNotifCount){
+    mostrarNotifMensajes(ahora);
+  }
+  _lastNotifCount = ahora;
+  updateChatBadge();
+}
+
+// Chequear mensajes cada 30 seg (con sync + notif)
+setInterval(chequearMensajesNuevos, 30000);
+
+// Al volver a la app (desde background), chequear inmediatamente
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && currentUser){
+    chequearMensajesNuevos();
+  }
+});
 
 // Override showSection to handle comunicacion
 const _origShowSection = showSection;
@@ -5178,6 +5228,7 @@ if('serviceWorker' in navigator){
   // Auto-recargar cuando el SW nuevo activa (recibe aviso del SW)
   navigator.serviceWorker.addEventListener('message', e => {
     if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
+    if(e.data && e.data.type === 'OPEN_CHAT') showSection('comunicacion');
   });
 }
 
