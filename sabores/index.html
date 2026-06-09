@@ -1453,6 +1453,16 @@ tr:hover td{background:#fafbfd}
             </div>
             <button class="btn btn-ghost btn-sm" onclick="descargarBackup()">⬇ Exportar JSON</button>
           </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Restaurar desde backup</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Importa un archivo JSON de backup y reemplaza la base de datos actual.</div>
+            </div>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+              ⬆ Importar JSON
+              <input type="file" accept=".json" style="display:none" onchange="restaurarBackup(this)">
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -4896,26 +4906,63 @@ function descargarBackup(){
   toast('Backup descargado ✓','success');
 }
 
+function restaurarBackup(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data || !data.config){ toast('Archivo inválido — no es un backup de Sabores','error'); return; }
+      if(!confirm(`¿Restaurar la base de datos desde "${file.name}"?\nEsto reemplazará todos los datos actuales.`)) return;
+      db = data;
+      _initDbFields();
+      if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
+      saveDB();
+      toast('✓ Base de datos restaurada correctamente','success');
+      showSection('dashboard');
+    } catch(err){ toast('Error al leer el archivo: '+err.message,'error'); }
+  };
+  reader.readAsText(file);
+  input.value = ''; // reset para poder importar el mismo archivo de nuevo
+}
+
 function limpiarMesesAnteriores(){
   const ahora    = new Date();
   const mesActual= ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
 
-  // Función para determinar si un registro pertenece a este mes
+  // Función para determinar si un registro pertenece a este mes.
+  // NO usa new Date(string) para evitar el bug de UTC/timezone en Argentina.
   function esEsteMes(item){
-    // Intentar derivar la fecha del registro
-    // Usar creadoTs, id (si es timestamp), o el campo fecha (string dd/mm/yyyy o yyyy-mm-dd)
-    let ts = item.creadoTs || (typeof item.id==='number' && item.id>1e12 ? item.id : null);
-    if(!ts && item.fecha){
-      // Parsear fecha string: formatos 'yyyy-mm-dd' o 'dd/mm/yyyy'
-      const f = item.fecha.includes('-')
-        ? new Date(item.fecha)
-        : new Date(item.fecha.split('/').reverse().join('-'));
-      if(!isNaN(f)) ts = f.getTime();
+    // 1) Prioridad: creadoTs (timestamp numérico local)
+    if(item.creadoTs){
+      const d = new Date(item.creadoTs);
+      const mes = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      return mes === mesActual;
     }
-    if(!ts) return true; // si no hay fecha, conservar para no borrar por error
-    const d = new Date(ts);
-    const mes = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    return mes === mesActual;
+    // 2) id como timestamp (Date.now() al crear, > año 2001 = > 1e12)
+    if(typeof item.id==='number' && item.id > 1000000000000){
+      const d = new Date(item.id);
+      const mes = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      return mes === mesActual;
+    }
+    // 3) campo fecha como string — parsear los números directamente, sin new Date(string)
+    if(item.fecha){
+      let anio, mes;
+      if(item.fecha.includes('-')){
+        // formato yyyy-mm-dd
+        const p = item.fecha.split('-');
+        anio = parseInt(p[0]); mes = parseInt(p[1]);
+      } else if(item.fecha.includes('/')){
+        // formato dd/mm/yyyy
+        const p = item.fecha.split('/');
+        anio = parseInt(p[2]); mes = parseInt(p[1]);
+      }
+      if(anio && mes){
+        const mesStr = anio + '-' + String(mes).padStart(2,'0');
+        return mesStr === mesActual;
+      }
+    }
+    return true; // sin fecha → conservar por seguridad
   }
 
   const antes = {
