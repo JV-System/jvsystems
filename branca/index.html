@@ -4201,11 +4201,11 @@ function renderActions() {
   // Atrás: deshabilitado solo en tab 0
   btnAtras.disabled = (currentTab === 0);
 
-  // Cancelar / Eliminar borrador
+  // Eliminar — visible para cualquier orden no cerrada
   if (btnCancelar) {
     btnCancelar.style.display = '';
-    if (ordenActual && ordenActual.draft) {
-      btnCancelar.innerHTML = '🗑 Eliminar borrador';
+    if (ordenActual && !locked) {
+      btnCancelar.innerHTML = '🗑 Eliminar';
       btnCancelar.className = 'btn btn-mob-cancel';
       btnCancelar.style.background = '#fff0f0';
       btnCancelar.style.color = '#c0392b';
