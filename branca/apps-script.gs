@@ -107,6 +107,28 @@ function replaceAll(sheetName, items) {
   }
 }
 
+// Lee el objeto de configuración (singleton sin id)
+function readConfig() {
+  var sh = getSheet('Config');
+  var lastRow = sh.getLastRow();
+  if (lastRow === 0) return {};
+  var data = sh.getRange(1, 1, lastRow, 1).getValues();
+  for (var i = 0; i < data.length; i++) {
+    try {
+      var val = String(data[i][0] || '').trim();
+      if (val.startsWith('{')) return JSON.parse(val);
+    } catch(e) {}
+  }
+  return {};
+}
+
+// Guarda el objeto de configuración (singleton)
+function writeConfig(obj) {
+  var sh = getSheet('Config');
+  sh.clearContents();
+  sh.getRange(1, 1).setValue(JSON.stringify(obj));
+}
+
 // ── Respuesta JSON ───────────────────────────────────────────
 function corsOutput(data) {
   var output = ContentService.createTextOutput(JSON.stringify(data));
@@ -123,8 +145,7 @@ function doGet(e) {
     if (action === 'getTecnicos')  return corsOutput({ tecnicos:  readAll('Tecnicos') });
     if (action === 'getUsuarios')  return corsOutput({ usuarios:  readAll('Usuarios') });
     if (action === 'getConfig') {
-      var rows = readAll('Config');
-      var cfg  = rows.length ? rows[0] : {};
+      var cfg = readConfig();
       return corsOutput({ config: cfg });
     }
     // Migración manual: limpia todas las hojas al formato nuevo
@@ -176,9 +197,7 @@ function doPost(e) {
         { id: 1, username: 'admin', password: 'branca2026', role: 'admin', nombre: 'Administrador', firma: null, foto: null }
       ]);
       // Guardar timestamp del reset para que todos los dispositivos limpien su cache
-      var shConfig = getSheet('Config');
-      shConfig.clearContents();
-      shConfig.getRange(1,1).setValue(JSON.stringify({ resetAt: Date.now() }));
+      writeConfig({ resetAt: Date.now() });
       return corsOutput({ ok: true, mensaje: 'Reset completado' });
     }
 
@@ -186,9 +205,12 @@ function doPost(e) {
     if (action === 'saveUsuarios')   { replaceAll('Usuarios', body.data); return corsOutput({ ok: true }); }
 
     if (action === 'saveConfig') {
-      var sh = getSheet('Config');
-      sh.clearContents();
-      sh.getRange(1, 1).setValue(JSON.stringify(body.data));
+      // Merge con config existente para no perder resetAt
+      var existing = readConfig();
+      var merged = {};
+      for (var k in existing) merged[k] = existing[k];
+      for (var k in body.data) merged[k] = body.data[k];
+      writeConfig(merged);
       return corsOutput({ ok: true });
     }
 
