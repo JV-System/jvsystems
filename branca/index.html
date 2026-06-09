@@ -2614,31 +2614,114 @@ function switchView(v) {
 // ==================== HISTORIAL VIEW ====================
 function renderHistorial() {
   const mc = document.getElementById('mainContent');
+
+  // Clientes únicos para el filtro
+  const todasOrdenes = ordenes.filter(function(o){ return !o.draft && o.empresa; });
+  const clientesUnicos = [...new Set(todasOrdenes.map(function(o){ return o.empresa; }))].sort();
+
   mc.innerHTML = `
     <div class="historial-content">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">Historial de órdenes</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+        <h2 style="font-size:18px;font-weight:700;margin:0;">Historial de órdenes</h2>
+        <span id="hist-count" style="font-size:12px;color:var(--text-muted);"></span>
+      </div>
+
+      <!-- FILTROS -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:#f8f9fb;border-radius:10px;border:1px solid var(--border);">
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Cliente</label>
+          <select id="hf-cliente" onchange="filtrarHistorial()"
+            style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:white;">
+            <option value="">Todos</option>
+            ${clientesUnicos.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('')}
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Estado</label>
+          <select id="hf-estado" onchange="filtrarHistorial()"
+            style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:white;">
+            <option value="">Todos</option>
+            <option value="open">Abierta</option>
+            <option value="pending">Pendiente</option>
+            <option value="locked">Cerrada</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Desde</label>
+          <input type="date" id="hf-desde" onchange="filtrarHistorial()"
+            style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:white;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Hasta</label>
+          <input type="date" id="hf-hasta" onchange="filtrarHistorial()"
+            style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:white;">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button onclick="limpiarFiltrosHistorial()" style="padding:7px 14px;border:1px solid var(--border);border-radius:7px;font-size:12px;background:white;cursor:pointer;color:var(--text-muted);font-weight:600;">✕ Limpiar</button>
+        </div>
+      </div>
+
       <div class="historial-grid" id="histGrid"></div>
     </div>`;
-  const grid = document.getElementById('histGrid');
-  // Mostrar todas las órdenes reales (sin drafts) sin importar el creador
-  const ordenesHist = ordenes.filter(function(o){ return !o.draft && o.empresa; });
-  if (!ordenesHist.length) {
-    grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No hay órdenes guardadas.</p>';
+
+  filtrarHistorial();
+}
+
+function filtrarHistorial() {
+  const grid     = document.getElementById('histGrid');
+  const countEl  = document.getElementById('hist-count');
+  if (!grid) return;
+
+  const fCliente = (document.getElementById('hf-cliente')?.value || '').toLowerCase();
+  const fEstado  = document.getElementById('hf-estado')?.value || '';
+  const fDesde   = document.getElementById('hf-desde')?.value || '';
+  const fHasta   = document.getElementById('hf-hasta')?.value || '';
+
+  let lista = ordenes.filter(function(o){ return !o.draft && o.empresa; });
+
+  if (fCliente) lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(fCliente); });
+  if (fEstado)  lista = lista.filter(function(o){ return o.estado === fEstado; });
+  if (fDesde)   lista = lista.filter(function(o){ return (o.fecha||'') >= fDesde; });
+  if (fHasta)   lista = lista.filter(function(o){ return (o.fecha||'') <= fHasta; });
+
+  // Ordenar por fecha descendente
+  lista.sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+
+  if (countEl) countEl.textContent = lista.length + ' orden' + (lista.length !== 1 ? 'es' : '');
+
+  if (!lista.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;padding:20px 0;">No hay órdenes con esos filtros.</p>';
     return;
   }
-  grid.innerHTML = ordenesHist.map(o => `
+
+  const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada' };
+  const estadoStyle = {
+    open:    'background:#f0f0f0;color:#555;',
+    pending: 'background:#fef3c7;color:#92400e;',
+    locked:  'background:#d1fae5;color:#065f46;'
+  };
+
+  grid.innerHTML = lista.map(function(o) { return `
     <div class="hist-card ${o.estado}" onclick="abrirDesdeHist(${o.id})">
       <div class="hist-top">
         <span class="hist-num">${o.numero}</span>
-        <span class="badge ${o.estado==='pending'?'badge-amber':o.estado==='locked'?'badge-teal':'badge-teal'}" style="${o.estado==='open'?'background:#f0f0f0;color:#555':''}">
-          ${o.estado==='pending'?'⏸ Pendiente':o.estado==='locked'?'🔒 Cerrada':'● Abierta'}
+        <span class="badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;${estadoStyle[o.estado]||''}">
+          ${estadoLabel[o.estado]||o.estado}
         </span>
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${o.empresa||'(Sin empresa)'}</div>
       <div style="font-size:12px;color:var(--text-muted);">${o.fecha} · ${o.responsable||'—'}</div>
-      ${o.marca ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 ${o.marca} ${o.modelo}</div>` : ''}
+      ${o.marca ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
-  `).join('');
+  `; }).join('');
+}
+
+function limpiarFiltrosHistorial() {
+  ['hf-cliente','hf-estado','hf-desde','hf-hasta'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  filtrarHistorial();
 }
 
 function abrirDesdeHist(id) {
