@@ -557,6 +557,11 @@ tr:hover td{background:#fafbfd}
 .msg-row.other .msg-bubble{background:#fff;border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
 .msg-meta{font-size:9px;margin-top:3px;opacity:0.6;text-align:right}
 .msg-author{font-size:10px;font-weight:700;color:var(--blue);margin-bottom:2px}
+.msg-creacion{text-align:center;margin:12px 0 18px;padding:10px 16px;background:linear-gradient(135deg,#EBF5E8,#f5faf2);border:1px solid #c8e6c9;border-radius:10px;font-size:11.5px;color:var(--navy-light);line-height:1.6}
+.msg-creacion b{font-size:12.5px;display:block;margin-bottom:2px}
+.msg-creacion span{font-size:11px;color:var(--text-muted)}
+[data-theme="dark"] .msg-creacion{background:#0D2215;border-color:#1B4030;color:#A0C8A8}
+[data-theme="dark"] .msg-creacion span{color:#7A9488}
 .msg-sistema{align-self:center;background:#f0f4f9;border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--text-muted);text-align:center;max-width:80%}
 
 .chat-input-area{padding:12px 16px;background:var(--white);border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:10px;align-items:flex-end}
@@ -2721,6 +2726,8 @@ function savePedido(){
     const p=db.pedidos.find(x=>x.id===editingPedidoId); Object.assign(p,data);
   } else {
     data.id=Date.now();
+    data.creadoTs=Date.now();
+    data.creadoPor=currentUser?.id||'admin';
     // Numeración mensual: reinicia cada mes
     const _nd=new Date(); const _mk=_nd.getFullYear()+'-'+(_nd.getMonth()+1);
     if(!db.config.mesActual||db.config.mesActual!==_mk){db.config.mesActual=_mk;db.config.nextPedido=1;}
@@ -4230,6 +4237,7 @@ function renderChatMain(p){
       </select>`:''}
     </div>
     <div class="chat-messages" id="chatMessages">
+      ${renderMsgCreacion(p)}
       ${msgs.length ? msgs.map(renderMsg).join('') : '<div class="chat-empty"><p style="font-size:13px">Aún no hay mensajes en este pedido</p></div>'}
     </div>
     <div class="chat-input-area">
@@ -4239,6 +4247,20 @@ function renderChatMain(p){
       </button>
     </div>`;
   scrollChatBottom();
+}
+
+function renderMsgCreacion(p){
+  // Timestamp: usar creadoTs si existe, sino derivar de p.id (que era Date.now() al crear)
+  const ts = p.creadoTs || (typeof p.id === 'number' && p.id > 1e12 ? p.id : null);
+  const d  = ts ? new Date(ts) : null;
+  const fechaStr = d ? d.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}) + ' a las ' + d.getHours()+':'+String(d.getMinutes()).padStart(2,'0') : (p.fecha||'—');
+  const autor = p.creadoPor ? (USUARIOS.find(u=>u.id===p.creadoPor)?.nombre || p.creadoPor) : null;
+  const ROLE_LABELS_MAP = {admin:'Admin',dario:'Darío',lucia:'Lucía',cliente:'Cliente'};
+  const autorRol = p.creadoPor ? (ROLE_LABELS_MAP[USUARIOS.find(u=>u.id===p.creadoPor)?.rol] || '') : '';
+  return `<div class="msg-creacion">
+    <b>📦 Pedido #${p.numero} creado el ${fechaStr}</b>
+    <span>${autor ? `por ${autor}${autorRol?' · '+autorRol:''}` : 'Origen desconocido'}</span>
+  </div>`;
 }
 
 function renderMsg(m){
