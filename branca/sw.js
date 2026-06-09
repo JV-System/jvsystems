@@ -1,13 +1,12 @@
 // ================================================
 //  SERVICE WORKER — Ingeniería Branca SRL
-//  Versión: 1.0
-//  Estrategia: Cache-first para assets locales,
-//              Network-first para fuentes externas.
+//  Versión: 2.0
+//  Estrategia: Network-first para index.html
+//              Cache-first para assets estáticos (imágenes, iconos)
 // ================================================
 
-const CACHE_NAME = 'branca-v11';
+const CACHE_NAME = 'branca-v20';
 
-// Archivos que se cachean al instalar la app
 const CACHE_ASSETS = [
   '/branca/',
   '/branca/index.html',
@@ -17,7 +16,7 @@ const CACHE_ASSETS = [
   '/branca/branca-logo.png'
 ];
 
-// ── Instalación: pre-cache de assets locales ──
+// ── Instalación ──────────────────────────────────
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
@@ -27,7 +26,7 @@ self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
 
-// ── Activación: limpiar caches viejos ──
+// ── Activación: limpiar caches viejos ────────────
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
@@ -41,14 +40,21 @@ self.addEventListener('activate', function(event) {
   self.clients.claim();
 });
 
-// ── Fetch: Cache-first con fallback a red ──
+// ── Fetch ────────────────────────────────────────
 self.addEventListener('fetch', function(event) {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Para fuentes de Google / CDNs externos: network-first
+  // Requests a Google Apps Script / APIs externas: sin cache nunca
   if (url.origin !== self.location.origin) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // index.html y raíz: NETWORK-FIRST — siempre intenta traer la versión nueva
+  const isHTML = url.pathname === '/branca/' || url.pathname === '/branca/index.html';
+  if (isHTML) {
     event.respondWith(
       fetch(event.request)
         .then(function(response) {
@@ -61,13 +67,14 @@ self.addEventListener('fetch', function(event) {
           return response;
         })
         .catch(function() {
+          // Sin red → servir desde caché (modo offline)
           return caches.match(event.request);
         })
     );
     return;
   }
 
-  // Para archivos locales: cache-first
+  // Assets estáticos (iconos, imágenes): cache-first
   event.respondWith(
     caches.match(event.request).then(function(cached) {
       if (cached) return cached;
