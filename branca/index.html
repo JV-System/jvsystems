@@ -5352,14 +5352,34 @@ function doLogin() {
 }
 
 function logout() {
+  // Cerrar todos los modales abiertos
+  ['perfilModal','urlModal','configPassModal','confirmModal','numModal'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+
+  // Limpiar sesión
   sessionStorage.removeItem(AUTH_KEY);
   sessionStorage.removeItem('branca_session_user');
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem('branca_session_user');
+
+  // Resetear estado de la app
+  ordenActual = null;
+  configUnlocked = false;
+
+  // Limpiar campos del login
+  const u = document.getElementById('login-user');
   const p = document.getElementById('login-pass');
-  if (p) p.value = '';
   const e = document.getElementById('login-error');
+  if (u) u.value = '';
+  if (p) p.value = '';
   if (e) e.classList.remove('show');
+
+  // Limpiar contenido principal para que no se vea info del usuario anterior
+  const mc = document.getElementById('mainContent');
+  if (mc) mc.innerHTML = '';
+
   showLoginScreen();
 }
 
