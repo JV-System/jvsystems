@@ -2302,12 +2302,26 @@ async function loadFromCloud() {
       localStorage.setItem('branca_users', JSON.stringify(ru.usuarios));
     }
 
-    // CONFIG
-    if (rcfg.config && rcfg.config.adminPass) {
-      localStorage.setItem('branca_admin_pass', rcfg.config.adminPass);
-    }
+    // CONFIG — detectar reset remoto
+    if (rcfg.config) {
+      if (rcfg.config.adminPass) localStorage.setItem('branca_admin_pass', rcfg.config.adminPass);
 
-    // (auto-upload eliminado: la nube es siempre fuente de verdad)
+      const resetAt      = rcfg.config.resetAt || 0;
+      const ultimoReset  = parseInt(localStorage.getItem('branca_ultimo_reset') || '0');
+      if (resetAt > ultimoReset) {
+        // Hubo un reset desde otro dispositivo — limpiar todo local
+        ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
+        localStorage.setItem('branca_ultimo_reset', String(resetAt));
+        ordenes    = [];
+        clientesDB = [];
+        tecnicosDB = [];
+        if (ordenActual) { ordenActual = null; }
+        renderOrderList();
+        showToast('🔄 Datos reseteados por el administrador.');
+        setSyncStatus('ok');
+        return; // salir del loadFromCloud, los datos ya están limpios
+      }
+    }
 
     setSyncStatus('ok');
     renderOrderList();

@@ -168,13 +168,17 @@ function doPost(e) {
 
     // Reset total
     if (action === 'resetTodo') {
-      ['Ordenes','Clientes','Tecnicos','Config'].forEach(function(name) {
+      ['Ordenes','Clientes','Tecnicos'].forEach(function(name) {
         var sh = SS.getSheetByName(name);
         if (sh) sh.clearContents();
       });
       replaceAll('Usuarios', [
         { id: 1, username: 'admin', password: 'branca2026', role: 'admin', nombre: 'Administrador', firma: null, foto: null }
       ]);
+      // Guardar timestamp del reset para que todos los dispositivos limpien su cache
+      var shConfig = getSheet('Config');
+      shConfig.clearContents();
+      shConfig.getRange(1,1).setValue(JSON.stringify({ resetAt: Date.now() }));
       return corsOutput({ ok: true, mensaje: 'Reset completado' });
     }
 
