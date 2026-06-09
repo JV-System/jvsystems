@@ -5409,21 +5409,40 @@ window.addEventListener('appinstalled', () => {
 // SERVICE WORKER — registro para PWA offline
 // ══════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(function(err) {
-    console.log('SW error:', err);
+  var _swRefreshing = false;
+
+  // Cuando el controller cambia (nuevo SW tomó el control) → recargar
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (!_swRefreshing) { _swRefreshing = true; window.location.reload(); }
   });
 
-  // SW nuevo activado → recargar para tomar la versión nueva
-  navigator.serviceWorker.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'SW_UPDATED') {
-      window.location.reload();
+  // Mensaje del SW → recargar
+  navigator.serviceWorker.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'SW_UPDATED' && !_swRefreshing) {
+      _swRefreshing = true; window.location.reload();
     }
   });
 
-  // También recargar si cambia el controller (por si acaso)
-  navigator.serviceWorker.addEventListener('controllerchange', function() {
-    window.location.reload();
-  });
+  navigator.serviceWorker.register('./sw.js').then(function(reg) {
+    // Si ya hay un SW nuevo esperando → activarlo y recargar
+    if (reg.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      return;
+    }
+    // Cuando se instala un SW nuevo
+    reg.addEventListener('updatefound', function() {
+      var sw = reg.installing;
+      sw.addEventListener('statechange', function() {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+          sw.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+    // Verificar actualizaciones al volver al primer plano
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') reg.update();
+    });
+  }).catch(function(err) { console.log('SW error:', err); });
 }
 
 // ══════════════════════════════════════════

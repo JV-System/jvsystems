@@ -5,7 +5,7 @@
 //  Imágenes/iconos → cache-first (no cambian)
 // ================================================
 
-const CACHE_NAME = 'branca-v30';
+const CACHE_NAME = 'branca-v31';
 
 const STATIC_ASSETS = [
   '/branca/manifest.json',
@@ -13,6 +13,11 @@ const STATIC_ASSETS = [
   '/branca/icon-512.png',
   '/branca/branca-logo.png'
 ];
+
+// ── Mensaje desde la página ──────────────────────
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
 
 // ── Instalación ──────────────────────────────────
 self.addEventListener('install', function(event) {
