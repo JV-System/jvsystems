@@ -802,8 +802,15 @@ tr:hover td{background:#fafbfd}
       </div>
       <div class="login-input-wrap">
         <svg class="login-input-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-        <input class="login-input" type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <input class="login-input" type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:42px">
+        <button type="button" onclick="togglePassVis('loginPass',this)" tabindex="-1" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;padding:4px;line-height:1">
+          <svg id="eyeIcon_loginPass" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-top:2px;user-select:none">
+        <input type="checkbox" id="chkRecordar" style="width:15px;height:15px;accent-color:var(--blue);cursor:pointer">
+        Mantenerme conectado en este dispositivo
+      </label>
       <div class="login-error" id="loginError">Usuario o contraseña incorrectos</div>
       <button class="btn-login" onclick="doLogin()">Ingresar →</button>
     </div>
@@ -3980,6 +3987,26 @@ function doRegistroMain(){
   toast('¡Bienvenido/a '+nombre+'! Tu cuenta fue creada.','success');
 }
 
+function togglePassVis(inputId, btn){
+  const input = document.getElementById(inputId);
+  const icon  = document.getElementById('eyeIcon_' + inputId);
+  if(!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  if(icon) icon.innerHTML = show
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  btn.style.color = show ? 'var(--blue)' : '#aaa';
+}
+
+function _saveSession(user){
+  const recordar = document.getElementById('chkRecordar')?.checked;
+  sessionStorage.setItem('jvs_user', JSON.stringify(user));
+  if(recordar){
+    localStorage.setItem('jvs_user_saved', JSON.stringify(user));
+  }
+}
+
 function doLogin(){
   const user = document.getElementById('loginUser').value.trim().toLowerCase();
   const pass = document.getElementById('loginPass').value;
@@ -3991,13 +4018,14 @@ function doLogin(){
     return;
   }
   currentUser = found;
-  sessionStorage.setItem('jvs_user', JSON.stringify(found));
+  _saveSession(found);
   document.getElementById('loginScreen').style.display='none';
   initApp();
 }
 
 function doLogout(){
   sessionStorage.removeItem('jvs_user');
+  localStorage.removeItem('jvs_user_saved');
   currentUser = null;
   document.getElementById('loginUser').value='';
   document.getElementById('loginPass').value='';
@@ -4504,7 +4532,7 @@ document.getElementById('mainArea').style.display='none';
 document.querySelector('.app-header .nav-tabs').style.display='none';
 
 // Check for existing session
-const savedUser = sessionStorage.getItem('jvs_user');
+const savedUser = sessionStorage.getItem('jvs_user') || localStorage.getItem('jvs_user_saved');
 if(savedUser){
   try{ currentUser=JSON.parse(savedUser); } catch(e){ currentUser=null; }
 }
