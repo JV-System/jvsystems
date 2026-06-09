@@ -2438,16 +2438,14 @@ function crearNuevaOrden() {
 }
 
 async function eliminarOrden(id) {
-
   const confirmar = await showConfirm('Eliminar orden', '¿Querés eliminar esta orden? No se puede deshacer.');
-
   if (!confirmar) return;
-
   ordenes = ordenes.filter(o => o.id !== id);
-
-  saveData();
+  if (ordenActual && ordenActual.id === id) ordenActual = null;
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  if (isScriptConfigured()) apiPost({ action: 'deleteOrden', id: id }).catch(function(){});
   renderOrderList();
-
+  showToast('🗑 Orden eliminada.');
 }
 
 async function cancelarOrden() {
@@ -2540,7 +2538,7 @@ function renderOrderList() {
 
       </div>
 
-      ${(!o.empresa || !o.marca || !o.probDetectado) ? `
+      ${o.estado !== 'locked' ? `
         <button class="btn-delete"
                 onclick="event.stopPropagation(); eliminarOrden(${o.id})">
           🗑 Eliminar
