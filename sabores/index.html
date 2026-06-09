@@ -13,10 +13,10 @@
 <title>Sabores de Misiones</title>
 <!-- Open Graph / WhatsApp / redes sociales -->
 <meta property="og:type"        content="website">
-<meta property="og:url"         content="https://jv-system.github.io/Sabores-de-misiones/">
+<meta property="og:url"         content="https://jvsystems.com.ar/sabores/">
 <meta property="og:title"       content="Sabores de Misiones">
 <meta property="og:description" content="Sistema de gestión y comunicación para Sabores de Misiones 🌿">
-<meta property="og:image"       content="https://jv-system.github.io/Sabores-de-misiones/LogoYerba.png">
+<meta property="og:image"       content="https://jvsystems.com.ar/sabores/LogoYerba.png">
 <meta property="og:image:width" content="1080">
 <meta property="og:image:height" content="1080">
 <meta name="description"        content="Sistema de gestión y comunicación para Sabores de Misiones 🌿">
@@ -653,10 +653,9 @@ tr:hover td{background:#fafbfd}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       <span>Dashboard</span>
     </button>
-    <button class="nav-tab" onclick="showSection('pedidos')" data-sec="pedidos" style="position:relative">
+    <button class="nav-tab" onclick="showSection('pedidos')" data-sec="pedidos">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       <span>Pedidos</span>
-      <span id="badge-pedidos-nuevos" class="bnav-badge" style="display:none">0</span>
     </button>
     <button class="nav-tab" onclick="showSection('clientes')" data-sec="clientes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
@@ -718,6 +717,7 @@ tr:hover td{background:#fafbfd}
     <button class="btn-icon" onclick="compartirCatalogo()" id="btnCatalogo" title="Compartir catálogo de productos" style="display:none">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
     </button>
+    <span id="syncDot" title="" style="font-size:14px;line-height:1;cursor:default;transition:opacity 0.3s"></span>
     <button class="btn-logout" id="btnLogout" onclick="doLogout()" style="display:none">Salir</button>
   </div>
 </header>
@@ -1928,15 +1928,20 @@ if(typeof window !== 'undefined' && window.location && window.location.search.in
 }
 
 const DB_KEY = 'jvs_yerba_v1';
+// ─── SYNC CONFIG ─────────────────────────────────────────────────────────────
+// Pegá aquí la URL del Apps Script después de desplegarlo:
+const SABORES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIelj-nG3CdorBHhNluESucHWuZSRGOQ4LpagRRg3vp55JbV6nR9aVIQA6_LKXJKI5/exec';
+// ─────────────────────────────────────────────────────────────────────────────
 let db = {
   pedidos: [], clientes: [], dario: [], compras: [], despachos: [],
   gastos: [], presupuestosGuardados: [],
   config: { nextPedido: 1, nextCompra: 1, stockEstampillas: 0, codigosDescuento: {} }
 };
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIelj-nG3CdorBHhNluESucHWuZSRGOQ4LpagRRg3vp55JbV6nR9aVIQA6_LKXJKI5/exec';
-
-function initDB(data) {
-  if (data) db = data;
+function loadDB(){
+  try{ const s=localStorage.getItem(DB_KEY); if(s) db=JSON.parse(s); } catch(e){}
+  _initDbFields();
+}
+function _initDbFields(){
   if(!db.gastos) db.gastos=[];
   if(!db.presupuestosGuardados) db.presupuestosGuardados=[];
   if(!db.config.codigosDescuento) db.config.codigosDescuento={};
@@ -1946,41 +1951,87 @@ function initDB(data) {
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
 }
-
-function loadDB() {
-  // Cargar desde localStorage como caché inmediata
-  try { const s = localStorage.getItem(DB_KEY); if(s) db = JSON.parse(s); } catch(e) {}
-  initDB();
-  // Luego sincronizar con Google Sheets en segundo plano
-  fetch(SCRIPT_URL)
-    .then(r => r.json())
-    .then(res => {
-      if (res.success && res.db) {
-        db = res.db;
-        initDB();
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-        if (typeof renderAll === 'function') renderAll();
-        else if (typeof render === 'function') render();
-        actualizarBadgePedidos();
-      }
-    })
-    .catch(() => {}); // si falla usa localStorage
-}
-
-let _saveTimer = null;
-function saveDB() {
-  // Guardar en localStorage inmediatamente
+function saveDB(){
   localStorage.setItem(DB_KEY, JSON.stringify(db));
-  // Enviar a Google Sheets con debounce (espera 1.5s para no spamear)
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => {
-    fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({ db }),
-    }).catch(() => {});
-  }, 1500);
+  _syncPush();
 }
 
+// ── SINCRONIZACIÓN CON GOOGLE SHEETS ─────────────────────────────────────────
+
+let _syncTimer = null;
+let _syncStatus = 'idle'; // 'idle' | 'syncing' | 'ok' | 'error'
+
+function _syncPush(){
+  if(!SABORES_SCRIPT_URL) return;
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(async ()=>{
+    _setSyncStatus('syncing');
+    try{
+      // Usar URLSearchParams + no-cors para evitar preflight CORS en GAS
+      const body = new URLSearchParams({ action:'saveDB', data: JSON.stringify(db) });
+      await fetch(SABORES_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: body
+      });
+      _setSyncStatus('ok');
+    } catch(e){ _setSyncStatus('error'); }
+  }, 1200);
+}
+
+async function _syncPull(){
+  if(!SABORES_SCRIPT_URL) return false;
+  try{
+    const r = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
+    const j = await r.json();
+    if(j.success && j.data){
+      const remote = JSON.parse(j.data);
+      // Solo reemplazar si la versión remota tiene datos
+      if(remote && remote.config){
+        db = remote;
+        _initDbFields();
+        if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        return true;
+      }
+    }
+  } catch(e){}
+  return false;
+}
+
+async function _syncPullUsuarios(){
+  if(!SABORES_SCRIPT_URL) return false;
+  try{
+    const r = await fetch(SABORES_SCRIPT_URL + '?action=getUsuarios', { redirect:'follow' });
+    const j = await r.json();
+    if(j.success && j.data){
+      const remote = JSON.parse(j.data);
+      if(Array.isArray(remote) && remote.length > 0){
+        USUARIOS = remote;
+        localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+        return true;
+      }
+    }
+  } catch(e){}
+  return false;
+}
+
+function saveUsuariosAndSync(){
+  localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+  if(!SABORES_SCRIPT_URL) return;
+  const body = new URLSearchParams({ action:'saveUsuarios', data: JSON.stringify(USUARIOS) });
+  fetch(SABORES_SCRIPT_URL, { method:'POST', mode:'no-cors', body }).catch(()=>{});
+}
+
+function _setSyncStatus(s){
+  _syncStatus = s;
+  const el = document.getElementById('syncDot');
+  if(!el) return;
+  const map = { idle:'', syncing:'🔄', ok:'🟢', error:'🔴' };
+  const tip = { idle:'', syncing:'Sincronizando...', ok:'Sincronizado', error:'Sin conexión — datos guardados localmente' };
+  el.textContent = map[s] || '';
+  el.title = tip[s] || '';
+}
 loadDB();
 
 // ════════════════════════════════════════════════
@@ -2024,7 +2075,6 @@ function showSection(sec){
   if(sec==='dashboard') renderDashboard();
   if(sec==='pedidos'){
     renderPedidoFiltros(); renderPedidosList(); populateClienteSelects();
-    marcarPedidosVistos();
     const rol=currentUser?.rol;
     const btnN=document.getElementById('btnNuevoPedido');
     const btnS=document.getElementById('btnSolicitarPedido');
@@ -2092,7 +2142,6 @@ function moveDashMes(dir){
   if(_dashMes>11){_dashMes=0;_dashAnio++;}
   if(_dashMes<0){_dashMes=11;_dashAnio--;}
   renderDashboard();
-  actualizarBadgePedidos();
 }
 function calcSaldoLucia(){
   if(!db.despachos) return 0;
@@ -3450,10 +3499,7 @@ function catDoLogin(){
   document.getElementById('catLoginScreen').style.display='none';
   currentUser = found;
   initApp();
-  setTimeout(()=>{
-    showSection(found.rol==='cliente'?'catalogo':'dashboard');
-    actualizarBadgePedidos();
-  },100);
+  setTimeout(()=>showSection(found.rol==='cliente'?'catalogo':'dashboard'),100);
 }
 
 function catSugerirUsuario(){
@@ -3558,37 +3604,6 @@ function actualizarCarritoApp(){
   if(rEl)rEl.textContent='🧉 '+resumen;
 }
 
-// ── NOTIFICACIONES DE PEDIDOS NUEVOS ──
-function actualizarBadgePedidos() {
-  // Solo mostrar a admin/dario/lucia (no al cliente)
-  if (!currentUser || currentUser.rol === 'cliente') return;
-  // Pedidos del cliente no vistos: solicitadoPorCliente=true y estado='pendiente' y !vistoPorAdmin
-  const nuevos = db.pedidos.filter(p => p.solicitadoPorCliente && p.estado === 'pendiente' && !p.vistoPorAdmin);
-  const badge = document.getElementById('badge-pedidos-nuevos');
-  if (!badge) return;
-  if (nuevos.length > 0) {
-    badge.textContent = nuevos.length > 9 ? '9+' : nuevos.length;
-    badge.style.display = 'flex';
-    // Notificación toast si hay nuevos pedidos recién llegados
-    if (!window._lastBadgeCount || window._lastBadgeCount < nuevos.length) {
-      toast('🛒 Nuevo pedido de cliente recibido', 'success');
-    }
-    window._lastBadgeCount = nuevos.length;
-  } else {
-    badge.style.display = 'none';
-    window._lastBadgeCount = 0;
-  }
-}
-
-function marcarPedidosVistos() {
-  // Al entrar a Pedidos, marcar como vistos
-  db.pedidos.forEach(p => {
-    if (p.solicitadoPorCliente && !p.vistoPorAdmin) p.vistoPorAdmin = true;
-  });
-  saveDB();
-  actualizarBadgePedidos();
-}
-
 function catSolicitarPedidoApp(){
   const items=Object.entries(_appCarrito).filter(([,v])=>v.kg>0);
   if(!items.length){toast('Agregá al menos un producto','error');return;}
@@ -3610,7 +3625,6 @@ function catSolicitarPedidoApp(){
   _appCarrito={};renderCatalogoApp();
   toast('¡Pedido enviado! Te confirmamos precio y fecha.','success');
   setTimeout(()=>showSection('pedidos'),1200);
-  actualizarBadgePedidos();
 }
 
 function enviarPedidoCatalogo(){
@@ -3888,7 +3902,7 @@ const USUARIOS_DEFAULT = [
 
 // USUARIOS cargados desde localStorage (persistentes)
 let USUARIOS = (()=>{ try{ const s=localStorage.getItem('jvs_usuarios'); return s?JSON.parse(s):USUARIOS_DEFAULT; }catch(e){ return USUARIOS_DEFAULT; } })();
-function saveUsuarios(){ localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS)); }
+function saveUsuarios(){ saveUsuariosAndSync(); }
 
 const ROLE_LABELS = {admin:'Administrador', dario:'Preparación', lucia:'Despacho', cliente:'Cliente'};
 const ROLE_TABS = {
@@ -3978,7 +3992,6 @@ function initApp(){
   // Show user chip
   document.getElementById('userChip').style.display='flex';
   document.getElementById('btnLogout').style.display='block';
-  // Mostrar botón catálogo solo para admin
   const btnCat = document.getElementById('btnCatalogo');
   if(btnCat) btnCat.style.display = currentUser.rol==='admin' ? 'flex' : 'none';
   document.getElementById('userAvatar').textContent = currentUser.avatar;
@@ -3987,13 +4000,22 @@ function initApp(){
   document.getElementById('mainArea').style.display='flex';
   document.getElementById('appFooter').style.display='flex';
   document.querySelector('.app-header .nav-tabs').style.display='flex';
-  // Apply role: show/hide tabs
   applyRoleTabs();
-  // Go to first allowed section
   const first = ROLE_TABS[currentUser.rol][0];
   showSection(first);
-  // Badge de mensajes al iniciar
   setTimeout(updateChatBadge, 300);
+  // Sincronizar datos desde Sheets al iniciar sesión
+  if(SABORES_SCRIPT_URL){
+    _setSyncStatus('syncing');
+    _syncPull().then(pulled => {
+      _setSyncStatus(pulled ? 'ok' : 'error');
+      if(pulled){
+        // Refrescar la sección activa con datos actualizados
+        showSection(first);
+        setTimeout(updateChatBadge, 100);
+      }
+    });
+  }
 }
 
 function applyRoleTabs(){
@@ -4261,25 +4283,6 @@ function markAllMsgsRead(){
 // Chequear mensajes nuevos cada 15 seg (simula push)
 setInterval(()=>{ if(currentUser) updateChatBadge(); }, 15000);
 
-// Polling: consultar Google Sheets cada 30s para detectar pedidos nuevos de clientes
-setInterval(()=>{
-  if(!currentUser || currentUser.rol === 'cliente') return;
-  fetch(SCRIPT_URL)
-    .then(r=>r.json())
-    .then(res=>{
-      if(res.success && res.db){
-        const pedidosNuevos = res.db.pedidos?.filter(p=>p.solicitadoPorCliente && !p.vistoPorAdmin) || [];
-        const locales = db.pedidos.filter(p=>p.solicitadoPorCliente && !p.vistoPorAdmin);
-        if(pedidosNuevos.length > locales.length){
-          db = res.db;
-          initDB();
-          localStorage.setItem(DB_KEY, JSON.stringify(db));
-          actualizarBadgePedidos();
-        }
-      }
-    }).catch(()=>{});
-}, 30000);
-
 // Override showSection to handle comunicacion
 const _origShowSection = showSection;
 showSection = function(sec){
@@ -4297,7 +4300,7 @@ showSection = function(sec){
 //  DATOS DE PRUEBA (solo si la DB está vacía)
 // ════════════════════════════════════════════════
 function loadSeedData(){
-  return; // DATOS DE PRUEBA DESACTIVADOS — sistema en producción
+  if(db.pedidos.length>0) return; // ya tiene datos
 
   db.clientes = [
     {id:1001,nombre:'Yesica Ramírez',dni:'29441832',tel:'2291554320',email:'yesica.ramirez@gmail.com',transporte:'Crucero cargo — Mar del Plata, Bs As',ciudad:'Mar del Plata',lista:'1',notas:'Cliente frecuente'},
@@ -5114,13 +5117,16 @@ function renderBottomNav(){
   const yaVisto = sessionStorage.getItem('splashDone');
   const isInstalled = window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
   const delay = isInstalled ? 800 : (yaVisto ? 200 : 1800);
+  function showLogin(){
+    document.getElementById('loginScreen').style.display='flex';
+    setTimeout(()=>document.getElementById('loginUser').focus(),100);
+  }
   function hideSplash(){
     const s = document.getElementById('splash');
     if(!s) return;
     s.classList.add('splash-out');
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       s.style.display='none';
-      // Si es modo catálogo público → mostrar catálogo sin login
       if(window.location.search.includes('catalogo')){
         abrirCatalogoPublico();
         return;
@@ -5128,8 +5134,12 @@ function renderBottomNav(){
       if(currentUser){
         initApp();
       } else {
-        document.getElementById('loginScreen').style.display='flex';
-        setTimeout(()=>document.getElementById('loginUser').focus(),100);
+        // Intentar actualizar usuarios desde Sheets antes de mostrar login
+        if(SABORES_SCRIPT_URL){
+          _syncPullUsuarios().finally(showLogin);
+        } else {
+          showLogin();
+        }
       }
     }, 400);
   }
