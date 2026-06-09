@@ -2265,18 +2265,22 @@ async function loadFromCloud() {
 
     // ÓRDENES — la nube es fuente de verdad, merge por timestamp
     if (ro.ordenes !== undefined) {
+      // Preservar drafts locales antes del merge (no vienen de la nube)
+      const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
       ordenes = mergeById(ordenes, ro.ordenes);
       const ignoreIds = JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]');
-      ordenes.forEach(function(o) {
-        if (!o.empresa && !o.marca && !ignoreIds.includes(String(o.id))) {
-          ignoreIds.push(String(o.id));
-        }
-      });
-      localStorage.setItem('branca_ignore_ids', JSON.stringify(ignoreIds));
+      // Filtrar basura (vacías sin draft)
       ordenes = ordenes.filter(function(o) {
+        if (o.draft) return true; // siempre preservar drafts
         if (!o.empresa && !o.marca) return false;
         if (ignoreIds.includes(String(o.id))) return false;
         return true;
+      });
+      // Reinsertar drafts locales que no hayan quedado en la lista
+      draftsLocales.forEach(function(d) {
+        if (!ordenes.find(function(o) { return o.id === d.id; })) {
+          ordenes.unshift(d);
+        }
       });
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
     }
@@ -2344,7 +2348,7 @@ function getAdminPass() { return localStorage.getItem('branca_admin_pass') || DE
 
 async function syncOrden(orden) {
   if (!isScriptConfigured()) return;
-  if (!orden.empresa) return; // no sincronizar órdenes vacías sin empresa
+  if (!orden.empresa && !orden.draft) return; // no sincronizar vacías sin empresa (salvo drafts)
   setSyncStatus('syncing', '⏳ Guardando...');
   try {
     await apiPost({ action: 'saveOrden', data: orden });
@@ -2450,7 +2454,10 @@ function crearNuevaOrden() {
     facturacion: null,
   };
   ordenes.unshift(nueva);
-  // No guardar en localStorage hasta que el usuario presione "Guardar"
+  ordenActual = nueva;
+  // Guardar inmediatamente para que aparezca en todos los dispositivos
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  if (isScriptConfigured()) syncOrden(nueva);
   renderOrderList();
   seleccionarOrden(nueva.id);
   switchView('nueva');
