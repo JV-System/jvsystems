@@ -1,15 +1,13 @@
 // ================================================
 //  SERVICE WORKER — Ingeniería Branca SRL
-//  Versión: 2.0
-//  Estrategia: Network-first para index.html
-//              Cache-first para assets estáticos (imágenes, iconos)
+//  Versión: 3.0
+//  index.html → NUNCA se cachea, siempre red
+//  Imágenes/iconos → cache-first (no cambian)
 // ================================================
 
-const CACHE_NAME = 'branca-v20';
+const CACHE_NAME = 'branca-v30';
 
-const CACHE_ASSETS = [
-  '/branca/',
-  '/branca/index.html',
+const STATIC_ASSETS = [
   '/branca/manifest.json',
   '/branca/icon-192.png',
   '/branca/icon-512.png',
@@ -20,7 +18,7 @@ const CACHE_ASSETS = [
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(CACHE_ASSETS);
+      return cache.addAll(STATIC_ASSETS);
     })
   );
   self.skipWaiting();
@@ -29,12 +27,18 @@ self.addEventListener('install', function(event) {
 // ── Activación: limpiar caches viejos ────────────
 self.addEventListener('activate', function(event) {
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
+    caches.keys().then(function(keys) {
       return Promise.all(
-        cacheNames
-          .filter(function(name) { return name !== CACHE_NAME; })
-          .map(function(name) { return caches.delete(name); })
+        keys.filter(function(k) { return k !== CACHE_NAME; })
+            .map(function(k) { return caches.delete(k); })
       );
+    }).then(function() {
+      // Notificar a todas las pestañas abiertas que recarguen
+      return self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+    }).then(function(clients) {
+      clients.forEach(function(client) {
+        client.postMessage({ type: 'SW_UPDATED' });
+      });
     })
   );
   self.clients.claim();
@@ -46,35 +50,28 @@ self.addEventListener('fetch', function(event) {
 
   const url = new URL(event.request.url);
 
-  // Requests a Google Apps Script / APIs externas: sin cache nunca
+  // APIs externas (Apps Script, etc.) → siempre red, sin cache
   if (url.origin !== self.location.origin) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // index.html y raíz: NETWORK-FIRST — siempre intenta traer la versión nueva
-  const isHTML = url.pathname === '/branca/' || url.pathname === '/branca/index.html';
+  // index.html y raíz → NUNCA cache, siempre red fresca
+  const isHTML = url.pathname === '/branca/'
+              || url.pathname === '/branca/index.html'
+              || url.pathname === '/branca';
   if (isHTML) {
     event.respondWith(
-      fetch(event.request)
-        .then(function(response) {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(function(cache) {
-              cache.put(event.request, clone);
-            });
-          }
-          return response;
-        })
+      fetch(event.request, { cache: 'no-store' })
         .catch(function() {
-          // Sin red → servir desde caché (modo offline)
-          return caches.match(event.request);
+          // Sin red → fallback al cache si existe
+          return caches.match('/branca/index.html');
         })
     );
     return;
   }
 
-  // Assets estáticos (iconos, imágenes): cache-first
+  // Assets estáticos → cache-first
   event.respondWith(
     caches.match(event.request).then(function(cached) {
       if (cached) return cached;

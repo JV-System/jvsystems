@@ -5263,23 +5263,20 @@ window.addEventListener('appinstalled', () => {
 // SERVICE WORKER — registro para PWA offline
 // ══════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js')
-      .then(function(reg) {
-        console.log('SW registrado:', reg.scope);
-        // Verificar actualizaciones cada vez que la app vuelve al primer plano
-        document.addEventListener('visibilitychange', function() {
-          if (document.visibilityState === 'visible') reg.update();
-        });
-      })
-      .catch(function(err) {
-        console.log('SW error:', err);
-      });
+  navigator.serviceWorker.register('./sw.js').catch(function(err) {
+    console.log('SW error:', err);
+  });
 
-    // Cuando el SW nuevo toma el control → recargar automáticamente
-    navigator.serviceWorker.addEventListener('controllerchange', function() {
+  // SW nuevo activado → recargar para tomar la versión nueva
+  navigator.serviceWorker.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SW_UPDATED') {
       window.location.reload();
-    });
+    }
+  });
+
+  // También recargar si cambia el controller (por si acaso)
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    window.location.reload();
   });
 }
 
