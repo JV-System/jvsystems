@@ -4576,7 +4576,7 @@ function cambiarPassword() {
   users[idx].password = nueva;
   saveUsers(users);
   // Actualizar también la clave legacy para compatibilidad con getAdminPass()
-  if (cu.role === 'admin') localStorage.setItem('branca_admin_pass', nueva);
+  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); syncConfig({ adminPass: nueva }); }
   document.getElementById('pass-actual').value = '';
   document.getElementById('pass-nueva').value  = '';
   document.getElementById('pass-confirm').value = '';
@@ -4847,7 +4847,7 @@ function cambiarPasswordPerfil() {
   }
   users[idx].password = nueva;
   saveUsers(users);
-  if (cu.role === 'admin') localStorage.setItem('branca_admin_pass', nueva);
+  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); syncConfig({ adminPass: nueva }); }
   ['perfil-pass-actual','perfil-pass-nueva','perfil-pass-confirm'].forEach(function(id){
     const el = document.getElementById(id); if(el) el.value = '';
   });
