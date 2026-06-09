@@ -4201,11 +4201,24 @@ function renderActions() {
   // Atrás: deshabilitado solo en tab 0
   btnAtras.disabled = (currentTab === 0);
 
-  // Cancelar: siempre visible
+  // Cancelar / Eliminar borrador
   if (btnCancelar) {
     btnCancelar.style.display = '';
-    btnCancelar.innerHTML = '✕ Cancelar';
-    btnCancelar.className = 'btn btn-mob-cancel';
+    if (ordenActual && ordenActual.draft) {
+      btnCancelar.innerHTML = '🗑 Eliminar borrador';
+      btnCancelar.className = 'btn btn-mob-cancel';
+      btnCancelar.style.background = '#fff0f0';
+      btnCancelar.style.color = '#c0392b';
+      btnCancelar.style.borderColor = '#fca5a5';
+      btnCancelar.onclick = function() { eliminarOrden(ordenActual.id); };
+    } else {
+      btnCancelar.innerHTML = '✕ Cancelar';
+      btnCancelar.className = 'btn btn-mob-cancel';
+      btnCancelar.style.background = '';
+      btnCancelar.style.color = '';
+      btnCancelar.style.borderColor = '';
+      btnCancelar.onclick = cancelarOrden;
+    }
   }
 
   // ─────────────────────────────────
