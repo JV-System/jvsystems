@@ -2307,11 +2307,7 @@ async function loadFromCloud() {
       localStorage.setItem('branca_admin_pass', rcfg.config.adminPass);
     }
 
-    // Primera conexión: si la nube está vacía, subir datos locales
-    if (!rc.clientes || !rc.clientes.length) clientesDB.forEach(c => syncCliente(c));
-    if (!rt.tecnicos || !rt.tecnicos.length) tecnicosDB.forEach(t => syncTecnico(t));
-    if (!ru.usuarios || !ru.usuarios.length) syncUsuarios(getUsers());
-    if (!ro.ordenes  || !ro.ordenes.length)  ordenes.forEach(o => syncOrden(o));
+    // (auto-upload eliminado: la nube es siempre fuente de verdad)
 
     setSyncStatus('ok');
     renderOrderList();
@@ -2408,9 +2404,8 @@ async function resetearTodoElSistema() {
   clientesDB  = [];
   tecnicosDB  = [];
   ordenActual = null;
-  setSyncStatus('ok');
-  renderOrderList();
-  showToast('✅ Sistema reseteado. Podés empezar de cero.');
+  showToast('✅ Sistema reseteado. Recargando...');
+  setTimeout(function() { window.location.reload(); }, 1500);
 }
 
 async function syncUsuarios(users) {

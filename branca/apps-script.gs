@@ -166,6 +166,18 @@ function doPost(e) {
     if (action === 'saveTecnico')    { saveItem('Tecnicos',   body.data); return corsOutput({ ok: true }); }
     if (action === 'deleteTecnico')  { deleteItem('Tecnicos', body.id);   return corsOutput({ ok: true }); }
 
+    // Reset total
+    if (action === 'resetTodo') {
+      ['Ordenes','Clientes','Tecnicos','Config'].forEach(function(name) {
+        var sh = SS.getSheetByName(name);
+        if (sh) sh.clearContents();
+      });
+      replaceAll('Usuarios', [
+        { id: 1, username: 'admin', password: 'branca2026', role: 'admin', nombre: 'Administrador', firma: null, foto: null }
+      ]);
+      return corsOutput({ ok: true, mensaje: 'Reset completado' });
+    }
+
     // Usuarios: se guarda la lista completa de una vez
     if (action === 'saveUsuarios')   { replaceAll('Usuarios', body.data); return corsOutput({ ok: true }); }
 
