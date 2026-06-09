@@ -2480,7 +2480,21 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Mostrar órdenes reales (con empresa), sin drafts vacíos
+  // Borrador al tope del sidebar
+  const draft = ordenes.find(function(o) { return o.draft === true; });
+  const draftHtml = draft ? `
+    <div class="order-item" onclick="continuarBorrador()"
+         style="border-left:3px solid #f59e0b;background:#fffbeb;">
+      <div class="order-num" style="color:#b45309;">✏ Borrador</div>
+      <div class="order-empresa">${draft.empresa || '(Sin empresa aún)'}</div>
+      <div class="order-meta">${draft.fecha || ''} · ${draft.responsable || '—'}</div>
+      <div class="order-status" style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block;margin-top:4px;">
+        ✏ Seguir editando
+      </div>
+    </div>
+  ` : '';
+
+  // Mostrar órdenes reales (con empresa), sin drafts
   let visible = ordenes.filter(function(o) {
     if (!o.empresa && !o.marca) return false;
     if (o.draft) return false;
@@ -2497,7 +2511,7 @@ function renderOrderList() {
     return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q);
   });
 
-  list.innerHTML = filtered.map(o => `
+  list.innerHTML = draftHtml + filtered.map(o => `
 
     <div class="order-item ${o.estado === 'pending' ? 'pending' : ''} ${o.estado === 'locked' ? 'locked' : ''} ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
          onclick="seleccionarOrden(${o.id})">
@@ -4991,14 +5005,18 @@ document.addEventListener('change', function(e) {
   }
 });
 
-// Restaurar borrador al iniciar sesión
-function restaurarBorradorSiExiste() {
+// Continuar editando el borrador (desde el sidebar)
+function continuarBorrador() {
   const draft = ordenes.find(function(o) { return o.draft === true; });
   if (!draft) return;
   ordenActual = draft;
   switchView('form');
   renderForm();
-  showToast('📝 Tenés un borrador sin terminar — continuá donde lo dejaste.');
+}
+
+// Al iniciar: solo actualizar la lista (el borrador aparece arriba como card)
+function restaurarBorradorSiExiste() {
+  renderOrderList();
 }
 
 // Hook: al hacer login, verificar si hay borrador pendiente
