@@ -134,6 +134,17 @@ function doGet(e) {
       migrateSheet('Tecnicos');
       return corsOutput({ ok: true, mensaje: 'Migración completada' });
     }
+    // Reset total: borra todo y deja solo el admin
+    if (action === 'resetTodo') {
+      ['Ordenes','Clientes','Tecnicos','Config'].forEach(function(name) {
+        var sh = SS.getSheetByName(name);
+        if (sh) sh.clearContents();
+      });
+      replaceAll('Usuarios', [
+        { id: 1, username: 'admin', password: 'branca2026', role: 'admin', nombre: 'Administrador', firma: null, foto: null }
+      ]);
+      return corsOutput({ ok: true, mensaje: 'Reset completado' });
+    }
     return corsOutput({ error: 'Acción no reconocida: ' + action });
   } catch(err) {
     return corsOutput({ error: err.message });

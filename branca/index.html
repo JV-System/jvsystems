@@ -2392,6 +2392,27 @@ async function actualizarDatos() {
   showToast('✅ Datos actualizados.');
 }
 
+async function resetearTodoElSistema() {
+  const ok = await showConfirm('⚠ Borrar todos los datos', '¿Seguro? Se borran TODAS las órdenes, clientes y técnicos. Esta acción no se puede deshacer.');
+  if (!ok) return;
+  setSyncStatus('syncing', '⏳ Borrando...');
+  try {
+    await apiPost({ action: 'resetTodo' });
+  } catch(e) {}
+  // Limpiar localStorage
+  ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
+  const defaultAdmin = [{ id:1, username:'admin', password:'branca2026', role:'admin', nombre:'Administrador', firma:null, foto:null }];
+  localStorage.setItem('branca_users', JSON.stringify(defaultAdmin));
+  // Resetear variables en memoria
+  ordenes     = [];
+  clientesDB  = [];
+  tecnicosDB  = [];
+  ordenActual = null;
+  setSyncStatus('ok');
+  renderOrderList();
+  showToast('✅ Sistema reseteado. Podés empezar de cero.');
+}
+
 async function syncUsuarios(users) {
   if (!isScriptConfigured()) return;
   try { await apiPost({ action: 'saveUsuarios', data: users }); } catch(e) {}
@@ -4521,7 +4542,20 @@ function renderConfig() {
 
         </div>
       </div>
-    </div>`;
+
+      <!-- ZONA PELIGROSA -->
+      <div class="config-section" style="margin-top:20px;border:1px solid #fca5a5;border-radius:10px;overflow:hidden;">
+        <div style="padding:14px 18px;background:#fff5f5;border-bottom:1px solid #fca5a5;">
+          <h3 style="color:#c0392b;margin:0;font-size:14px;">⚠ Zona peligrosa</h3>
+        </div>
+        <div style="padding:14px 18px;">
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Borra <strong>todas las órdenes, clientes y técnicos</strong> de la nube y del dispositivo. Los usuarios quedan solo con el admin. No se puede deshacer.</p>
+          <button onclick="resetearTodoElSistema()" style="background:#c0392b;color:white;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">🗑 Borrar todos los datos</button>
+        </div>
+      </div>
+
+    </div>
+  </div>`;
 }
 
 function renderTecnicosList() {
