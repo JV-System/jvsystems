@@ -4512,9 +4512,21 @@ function doRegistroMain(){
     errEl.textContent='Completá nombre, usuario y contraseña';errEl.classList.add('show');
     setTimeout(()=>errEl.classList.remove('show'),3000);return;
   }
-  if(USUARIOS.find(u=>u.id===usuario)){
-    errEl.textContent='Ese usuario ya existe, elegí otro';errEl.classList.add('show');
-    setTimeout(()=>errEl.classList.remove('show'),3000);return;
+  const existente = USUARIOS.find(u=>u.id===usuario);
+  if(existente){
+    // Si es usuario del sistema (admin/dario/lucia) no se puede usar ese nombre
+    if(['admin','dario','lucia'].includes(usuario)){
+      errEl.textContent='Ese usuario está reservado, elegí otro';errEl.classList.add('show');
+      setTimeout(()=>errEl.classList.remove('show'),3000);return;
+    }
+    // Si la DB no tiene pedidos ni clientes reales, es un usuario fantasma de datos viejos → lo borramos
+    const dbVacia = db.pedidos.length===0 && db.clientes.length===0;
+    if(dbVacia){
+      USUARIOS = USUARIOS.filter(u=>u.id!==usuario);
+    } else {
+      errEl.textContent='Ese usuario ya existe, elegí otro';errEl.classList.add('show');
+      setTimeout(()=>errEl.classList.remove('show'),3000);return;
+    }
   }
   const newCliId=Date.now();
   db.clientes.push({id:newCliId,nombre,tel,email:'',ciudad:'',lista:1,notas:''});

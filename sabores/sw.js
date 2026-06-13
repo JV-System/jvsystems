@@ -1,4 +1,4 @@
-const CACHE = 'sabores-v12';
+const CACHE = 'sabores-v13';
 // Rutas relativas al scope del SW (/sabores/)
 const ASSETS = [
   './manifest.json',
