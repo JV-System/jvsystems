@@ -668,7 +668,7 @@ tr:hover td{background:#fafbfd}
     </button>
     <button class="nav-tab" onclick="showSection('dario')" data-sec="dario">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      <span>Cuenta Darío</span>
+      <span>Proceso</span>
     </button>
     <button class="nav-tab" onclick="showSection('compras')" data-sec="compras">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -845,12 +845,7 @@ tr:hover td{background:#fafbfd}
     <div style="text-align:center;margin-top:10px">
       <button onclick="quickLogin('admin')" style="background:none;border:none;color:#aaa;font-size:11px;cursor:pointer;font-family:'Exo 2',sans-serif;letter-spacing:0.5px;padding:4px 8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='#f0f4f0';this.style.color='#2E7D32'" onmouseout="this.style.background='none';this.style.color='#aaa'">⚡ Acceso rápido admin</button>
     </div>
-    <div class="login-hint" id="loginHintBox">
-      <b>Usuarios de prueba:</b>
-      admin / admin &nbsp;·&nbsp; dario / dario2026<br>
-      lucia / lucia2026 &nbsp;·&nbsp; yesica / yesica2026<br>
-      gisela / gisela2026 &nbsp;·&nbsp; facundo / facundo2026
-    </div>
+    <div class="login-hint" id="loginHintBox" style="display:none"></div>
     <div class="login-footer">Desarrollado por Juan Villanueva</div>
   </div>
 </div>
@@ -981,7 +976,6 @@ tr:hover td{background:#fafbfd}
   <section id="sec-dashboard" class="content" style="overflow-y:auto">
     <div class="content-body">
       <div class="kpi-grid" id="kpiGrid"></div>
-      <div id="dashCuota"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="dashGrids">
         <div class="card">
           <div class="card-title">
@@ -1054,7 +1048,7 @@ tr:hover td{background:#fafbfd}
   <!-- ══════════════════════════ CUENTA DARÍO ══════════════════════════ -->
   <section id="sec-dario" class="content" style="display:none">
     <div class="content-toolbar">
-      <span class="toolbar-title">Cuenta Corriente — Darío</span>
+      <span class="toolbar-title">Cuenta Corriente — Proceso</span>
       <button class="btn btn-primary btn-sm" onclick="openDarioModal()">+ Registrar Movimiento</button>
     </div>
     <div class="content-body">
@@ -1078,6 +1072,11 @@ tr:hover td{background:#fafbfd}
     </div>
     <div class="content-body">
       <div class="kpi-grid" id="kpiCompras"></div>
+      <!-- Cuenta corriente por proveedor -->
+      <div class="card" id="ctaCteProv" style="display:none">
+        <div class="card-title">🏦 Cuenta Corriente por Proveedor</div>
+        <div id="ctaCteProvBody"></div>
+      </div>
       <div id="listaOC"></div>
     </div>
   </section>
@@ -1085,7 +1084,7 @@ tr:hover td{background:#fafbfd}
   <!-- ══════════════════════════ DESPACHOS ══════════════════════════ -->
   <section id="sec-despachos" class="content" style="display:none">
     <div class="content-toolbar">
-      <span class="toolbar-title">Despachos — Lucía</span>
+      <span class="toolbar-title">Despachos</span>
       <button class="btn btn-primary btn-sm" onclick="openDespachoModal()">+ Registrar Despacho</button>
     </div>
     <div class="content-body">
@@ -1227,7 +1226,7 @@ tr:hover td{background:#fafbfd}
       </div>
       <!-- Compras a Darío -->
       <div class="card">
-        <div class="card-title">🌿 Compras a Darío</div>
+        <div class="card-title">🌿 Compras a Proceso</div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Molienda</th><th class="td-right">Kg procesados</th><th class="td-right">Costo</th></tr></thead>
@@ -1237,7 +1236,7 @@ tr:hover td{background:#fafbfd}
       </div>
       <!-- Despachos Lucía -->
       <div class="card">
-        <div class="card-title">🚚 Despachos — Lucía</div>
+        <div class="card-title">🚚 Despachos</div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Pedido</th><th>Cliente</th><th class="td-right">Kg</th><th class="td-right">Costo</th></tr></thead>
@@ -1252,6 +1251,16 @@ tr:hover td{background:#fafbfd}
           <table>
             <thead><tr><th>Rubro</th><th class="td-right">Total</th></tr></thead>
             <tbody id="infTablaGastos"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Compras por proveedor -->
+      <div class="card">
+        <div class="card-title">🛒 Kg comprado por proveedor</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Proveedor</th><th>Concepto</th><th class="td-right">Kg / u</th><th class="td-right">Total</th></tr></thead>
+            <tbody id="infTablaComprasProv"></tbody>
           </table>
         </div>
       </div>
@@ -1351,7 +1360,7 @@ tr:hover td{background:#fafbfd}
       <!-- Card Precios de costo (lo que cobra Darío por molienda) -->
       <div class="config-card">
         <div class="config-card-head">
-          <div class="config-card-title">🌿 Precios de costo — Darío ($/kg por molienda)</div>
+          <div class="config-card-title">🌿 Precios de costo — Proceso ($/kg por molienda)</div>
         </div>
         <div style="padding:16px 20px" id="preciosCostoBody"></div>
       </div>
@@ -1361,7 +1370,7 @@ tr:hover td{background:#fafbfd}
         <div class="config-card-head">
           <div class="config-card-title">🏷️ Stock de Estampillas</div>
         </div>
-        <div style="padding:16px 20px;display:flex;align-items:center;gap:16px">
+        <div style="padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <button class="btn btn-danger" onclick="ajustarEstampillas(-1)">− 1</button>
           <button class="btn btn-ghost" onclick="ajustarEstampillas(-10)">− 10</button>
           <span style="font-size:28px;font-weight:800;min-width:80px;text-align:center" id="stockEstDisplay">${db.config.stockEstampillas||0}</span>
@@ -1371,6 +1380,26 @@ tr:hover td{background:#fafbfd}
           <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
             <input type="number" id="estAddQty" class="form-control" style="width:80px" placeholder="Cant.">
             <button class="btn btn-success" onclick="ajustarEstampillas(Number(document.getElementById('estAddQty').value)||0)">Agregar</button>
+          </div>
+        </div>
+        <div style="padding:0 20px 16px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border);padding-top:12px">
+          <label class="form-label" style="margin:0;white-space:nowrap">Descuento s/estampilla ($/kg):</label>
+          <input type="number" id="deltaEstampillaInput" class="form-control" style="width:100px" placeholder="220">
+          <button class="btn btn-primary btn-sm" onclick="guardarDeltaEstampilla()">Guardar</button>
+          <span style="font-size:12px;color:var(--text-muted)">Diferencia de precio para precio sin estampilla</span>
+        </div>
+      </div>
+
+      <!-- Card Rubros de gastos -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div class="config-card-title">💸 Rubros de Gastos</div>
+        </div>
+        <div style="padding:16px 20px">
+          <div id="rubrosGastosBody"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <input type="text" id="nuevoRubroInput" class="form-control" placeholder="Nuevo rubro…">
+            <button class="btn btn-primary btn-sm" onclick="agregarRubroGasto()">+ Agregar</button>
           </div>
         </div>
       </div>
@@ -1440,6 +1469,27 @@ tr:hover td{background:#fafbfd}
             Estas acciones eliminan datos permanentemente. Se descarga un backup automático antes de borrar.
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">☁️ Traer datos desde la nube</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Reemplaza los datos de este dispositivo con los de Google Sheets. Útil si este celular quedó desactualizado.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="syncForzarDesdeNube()">⬇ Traer de nube</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:#fff0f0;border:2px solid var(--red);border-radius:8px;padding:12px 14px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--red)">🗑️ BORRAR TODOS LOS DATOS</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina pedidos, clientes, compras, gastos y movimientos <b>en todos los dispositivos</b>. Conserva configuración y usuarios.</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="resetTodosDatos()">🗑 Borrar todo</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">Imprimir resumen del mes anterior</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Genera un resumen imprimible (backup visual) de pedidos, compras y gastos del mes anterior.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="imprimirMesAnterior()">🖨 Imprimir</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text)">Limpiar datos de meses anteriores</div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina pedidos, compras, despachos y gastos que <b>no son de este mes</b>. Clientes y configuración se mantienen.</div>
@@ -1929,16 +1979,7 @@ tr:hover td{background:#fafbfd}
         </div>
         <div class="form-group">
           <label class="form-label">Rubro</label>
-          <select class="form-control" id="gastoRubro">
-            <option value="Embalaje">📦 Embalaje</option>
-            <option value="Estampillas">🏷️ Estampillas</option>
-            <option value="Transporte">🚚 Transporte</option>
-            <option value="Despacho">📮 Despacho</option>
-            <option value="Impuestos">🏛️ Impuestos / AFIP</option>
-            <option value="Retiros">💰 Retiros personales</option>
-            <option value="Servicios">💡 Servicios</option>
-            <option value="Varios">🔧 Varios</option>
-          </select>
+          <select class="form-control" id="gastoRubro"></select>
         </div>
         <div class="form-group form-full">
           <label class="form-label">Descripción</label>
@@ -1946,7 +1987,7 @@ tr:hover td{background:#fafbfd}
         </div>
         <div class="form-group">
           <label class="form-label">Monto ($)</label>
-          <input class="form-control" id="gastoMonto" type="number" min="0" placeholder="0">
+          <input class="form-control" id="gastoMonto" type="number" min="0" step="0.01" placeholder="0.00">
         </div>
       </div>
     </div>
@@ -1964,6 +2005,26 @@ tr:hover td{background:#fafbfd}
 // ════════════════════════════════════════════════
 //  DATA LAYER
 // ════════════════════════════════════════════════
+// FORCE UPDATE: ?update en la URL borra cache y SW y recarga limpio
+if(window.location.search.includes('update')){
+  (async()=>{
+    // Limpiar Service Worker
+    if('serviceWorker' in navigator){
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    // Limpiar caches del SW
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    // Limpiar localStorage completo (datos + usuarios viejos)
+    localStorage.clear();
+    sessionStorage.clear();
+    // Recargar sin el parámetro
+    window.location.href = window.location.href.replace(/[?&]update[^&]*/,'').replace(/[?&]$/,'');
+  })();
+}
+
+// ════════════════════════════════════════════════
 // Verificar si es acceso al catálogo público (?catalogo en URL)
 if(typeof window !== 'undefined' && window.location && window.location.search.includes('catalogo')){
   document.addEventListener('DOMContentLoaded', ()=>{
@@ -1979,7 +2040,7 @@ if(typeof window !== 'undefined' && window.location && window.location.search.in
 const DB_KEY = 'jvs_yerba_v1';
 // ─── SYNC CONFIG ─────────────────────────────────────────────────────────────
 // Pegá aquí la URL del Apps Script después de desplegarlo:
-const SABORES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIelj-nG3CdorBHhNluESucHWuZSRGOQ4LpagRRg3vp55JbV6nR9aVIQA6_LKXJKI5/exec';
+const SABORES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxWCIp57dvowpp4mW5jiJeCM6ldwHLzHuc7QHK61Dyh0VAINpV5OsNUGZdnntn-SIUP/exec';
 // ─────────────────────────────────────────────────────────────────────────────
 let db = {
   pedidos: [], clientes: [], dario: [], compras: [], despachos: [],
@@ -1999,66 +2060,164 @@ function _initDbFields(){
   if(!db.config.precioDespachoDefault) db.config.precioDespachoDefault=180;
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
+  if(!db.config.cuentas) db.config.cuentas=[{id:1,nombre:'Cuenta 1',saldo:0},{id:2,nombre:'Cuenta 2',saldo:0}];
+  if(!db.config.precioEmbalaje) db.config.precioEmbalaje=130;
+  if(!db.config.precioFlete) db.config.precioFlete=50;
+  if(!db.config.rubrosGastos) db.config.rubrosGastos=['Embalaje','Estampillas','Transporte','Despacho','Impuestos','Retiros','Servicios','Varios'];
+  if(db.config.deltaEstampilla===undefined) db.config.deltaEstampilla=220;
+  if(!db.config.cuentasMovimientos) db.config.cuentasMovimientos=[];
+  if(!db.config.preciosComposicion) db.config.preciosComposicion={};
 }
 function saveDB(){
+  db._lastModified = Date.now();
   localStorage.setItem(DB_KEY, JSON.stringify(db));
   _syncPush();
 }
 
-// ── SINCRONIZACIÓN CON GOOGLE SHEETS ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  SYNC — Google Sheets como base de datos central
+//  Principio: Sheets es siempre la fuente de verdad.
+//  • Push: al guardar → subir a Sheets (con verificación)
+//  • Pull: al abrir, al volver a la app, cada 2 min → bajar de Sheets
+// ══════════════════════════════════════════════════════
 
-let _syncTimer = null;
-let _syncStatus = 'idle';
+let _syncTimer    = null;
+let _syncRetryTimer = null;
+let _syncStatus   = 'idle';
+let _pushPending  = false; // hay datos locales que aún no confirmamos en Sheets
 
-// Envía datos a GAS usando text/plain (no-cors, sin preflight).
-// La acción va en la URL (?action=...) y el JSON en el body.
-async function _gasPost(action, jsonStr){
-  await fetch(SABORES_SCRIPT_URL + '?action=' + action, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: jsonStr
-  });
+function saveDB_noSync(){
+  // Igual que saveDB pero sin push (para uso interno del sync)
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
 }
 
+// ── PUSH ─────────────────────────────────────────────
+// Estrategia:
+//   1. POST con mode:'cors' → si funciona, confirmado.
+//   2. Si CORS bloqueado → POST no-cors (fire & forget) + verificar vía GET.
+//   3. Si falla → reintentar en 30s.
 function _syncPush(){
   if(!SABORES_SCRIPT_URL) return;
+  _pushPending = true;
   clearTimeout(_syncTimer);
-  _syncTimer = setTimeout(async ()=>{
-    _setSyncStatus('syncing');
-    try{
-      await _gasPost('saveDB', JSON.stringify(db));
-      _setSyncStatus('ok');
-      toast('☁ Guardado en la nube ✓', 'success');
-    } catch(e){
-      _setSyncStatus('error');
-      toast('Sin conexión — guardado solo localmente', 'warning');
-    }
-  }, 1200);
+  clearTimeout(_syncRetryTimer);
+  _syncTimer = setTimeout(_doPush, 1200); // debounce 1.2s para batching
 }
 
-async function _syncPull(){
-  if(!SABORES_SCRIPT_URL) return false;
+async function _doPush(){
+  if(!SABORES_SCRIPT_URL) return;
+  _setSyncStatus('syncing');
+  const payload = JSON.stringify(db);
+  const ts      = db._lastModified;
+
+  // Intento 1: CORS (podemos leer la respuesta)
   try{
-    const r = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
+    const r = await fetch(SABORES_SCRIPT_URL + '?action=saveDB', {
+      method:'POST', mode:'cors',
+      headers:{'Content-Type':'text/plain'},
+      body: payload
+    });
+    const j = await r.json().catch(()=>({}));
+    if(j.success){ _pushPending=false; _setSyncStatus('ok'); return; }
+  } catch(_){}
+
+  // Intento 2: no-cors (no leemos respuesta) + verificación GET
+  try{
+    await fetch(SABORES_SCRIPT_URL + '?action=saveDB', {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
+      body: payload
+    });
+    // Esperar 2s y verificar que Sheets tiene el timestamp correcto
+    await new Promise(r=>setTimeout(r,2000));
+    const vr = await fetch(SABORES_SCRIPT_URL + '?action=getDB', {redirect:'follow'});
+    const vj = await vr.json().catch(()=>({}));
+    if(vj.success && vj.data){
+      const saved = JSON.parse(vj.data);
+      if(saved._lastModified === ts){ _pushPending=false; _setSyncStatus('ok'); return; }
+    }
+    throw new Error('verificación fallida');
+  } catch(e){
+    console.warn('[Sync] Push falló, reintentando en 30s', e);
+    _setSyncStatus('error');
+    _syncRetryTimer = setTimeout(_doPush, 30000);
+  }
+}
+
+// ── PULL ─────────────────────────────────────────────
+// Sheets es la fuente de verdad. Siempre aplicar remoto,
+// EXCEPTO si hay un push pendiente (datos locales aún no confirmados).
+async function _syncPull(forzar=false){
+  if(!SABORES_SCRIPT_URL) return false;
+  if(_pushPending && !forzar) await _doPush();
+  try{
+    const r = await fetch(SABORES_SCRIPT_URL + '?action=getDB', {redirect:'follow'});
     const j = await r.json();
-    if(j.success && j.data){
-      const remote = JSON.parse(j.data);
-      if(remote && (remote.pedidos || remote.clientes || remote.config)){
-        db = remote;
+    if(j.success !== undefined){ // el script respondió OK
+      let remote = null;
+      try{ remote = j.data ? JSON.parse(j.data) : null; } catch(_){}
+
+      if(!remote || typeof remote !== 'object' || ((!remote.pedidos || remote.pedidos.length === 0) && (!remote.clientes || remote.clientes.length === 0))){
+        // Sheets está vacío → arrancar de cero, limpiar todo local
+        db = {
+          pedidos:[], clientes:[], dario:[], compras:[], despachos:[],
+          gastos:[], presupuestosGuardados:[],
+          config:{ nextPedido:1, nextCompra:1, stockEstampillas:0, codigosDescuento:{} },
+          _lastModified: Date.now()
+        };
         _initDbFields();
-        if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
         localStorage.setItem(DB_KEY, JSON.stringify(db));
+        // Resetear usuarios a solo admin (limpiar usuarios viejos)
+        if(typeof USUARIOS_DEFAULT !== 'undefined'){
+          USUARIOS = JSON.parse(JSON.stringify(USUARIOS_DEFAULT));
+          localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+        }
+        // Subir estado vacío al sheet
+        await fetch(SABORES_SCRIPT_URL + '?action=saveDB', {
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'text/plain'},
+          body: JSON.stringify(db)
+        });
+        _setSyncStatus('ok');
         return true;
       }
+
+      // Hay datos en Sheets → aplicar
+      db = remote;
+      _initDbFields();
+      if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      _setSyncStatus('ok');
+      return true;
     }
-  } catch(e){ console.error('syncPull error:', e); }
+  } catch(e){ console.error('[Sync] Pull error:', e); _setSyncStatus('error'); }
   return false;
 }
 
 async function _syncPullUsuarios(){
   if(!SABORES_SCRIPT_URL) return false;
   try{
+    // Verificar primero si la DB principal está vacía
+    const dbR = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
+    const dbJ = await dbR.json();
+    let dbData = null;
+    try{ dbData = dbJ.success && dbJ.data ? JSON.parse(dbJ.data) : null; } catch(_){}
+    const dbVacia = !dbData || ((!dbData.pedidos || dbData.pedidos.length === 0) && (!dbData.clientes || dbData.clientes.length === 0));
+
+    if(dbVacia){
+      // DB vacía = fresh start: resetear usuarios a solo admin en memoria y en Sheets
+      USUARIOS = JSON.parse(JSON.stringify(USUARIOS_DEFAULT));
+      localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+      // Limpiar también fila 2 en Sheets
+      fetch(SABORES_SCRIPT_URL + '?action=saveUsuarios', {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify(USUARIOS)
+      });
+      return true;
+    }
+
+    // DB tiene datos → traer usuarios normalmente
     const r = await fetch(SABORES_SCRIPT_URL + '?action=getUsuarios', { redirect:'follow' });
     const j = await r.json();
     if(j.success && j.data){
@@ -2073,21 +2232,58 @@ async function _syncPullUsuarios(){
   return false;
 }
 
-// Botón manual de sync (accesible desde config para admin)
+// Pull manual forzado (botón "Traer de nube")
+async function syncForzarDesdeNube(){
+  if(!SABORES_SCRIPT_URL){ toast('URL del script no configurada','error'); return; }
+  if(!confirm('¿Reemplazar los datos locales con los de la nube?')) return;
+  toast('Descargando desde la nube...', 'info');
+  const ok = await _syncPull(true);
+  if(ok){
+    toast('✅ Datos traídos desde la nube', 'success');
+    _reRenderTodo();
+  } else {
+    toast('Error al conectar con la nube', 'error');
+  }
+}
+
+// Pull + Push manual (botón en header / config)
 async function syncAhora(){
   if(!SABORES_SCRIPT_URL){ toast('URL del script no configurada','error'); return; }
   toast('Sincronizando...', 'info');
-  _setSyncStatus('syncing');
-  const ok = await _syncPull();
+  const ok = await _syncPull(false);
   if(ok){
-    _setSyncStatus('ok');
-    toast('✓ Datos actualizados desde la nube', 'success');
-    showSection(document.querySelector('.nav-tab.active')?.dataset?.sec || 'dashboard');
+    toast('✓ Sincronizado', 'success');
+    _reRenderTodo();
   } else {
-    _setSyncStatus('error');
     toast('No se pudo conectar con el servidor', 'error');
   }
 }
+
+// Re-renderiza la sección activa después de un pull
+function _reRenderTodo(){
+  renderDashboard();
+  const sec = document.querySelector('.content.active')?.id?.replace('sec-','');
+  if(sec) showSection(sec);
+}
+
+// ── AUTO-PULL: al volver a la app y cada 2 minutos ───
+let _autoPullTimer = null;
+function _startAutoPull(){
+  clearInterval(_autoPullTimer);
+  _autoPullTimer = setInterval(async ()=>{
+    if(!currentUser) return;
+    const ok = await _syncPull(false);
+    if(ok) _reRenderTodo();
+  }, 2 * 60 * 1000); // cada 2 minutos
+}
+document.addEventListener('visibilitychange', async ()=>{
+  if(document.visibilityState === 'visible' && currentUser){
+    const ok = await _syncPull(false);
+    if(ok) _reRenderTodo();
+    // También chequear actualizaciones de la app
+    if(_swReg) _swReg.update().catch(()=>{});
+  }
+});
 
 function saveUsuariosAndSync(){
   localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
@@ -2236,8 +2432,8 @@ function renderDashboard(){
   const stockEst = db.config.stockEstampillas||0;
 
   document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card kpi-${saldoDario>=0?'blue':'red'}"><div class="kpi-label">Saldo c/ Darío</div><div class="kpi-value" style="color:${saldoDario>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div><div class="kpi-sub">${saldoDario>=0?'Darío te debe':'Vos le debés a Darío'}</div></div>
-    <div class="kpi-card kpi-${saldoLucia>=0?'blue':'red'}"><div class="kpi-label">Saldo c/ Lucía</div><div class="kpi-value" style="color:${saldoLucia>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div><div class="kpi-sub">${saldoLucia>=0?'Lucía te debe':'Debés a Lucía'}</div></div>
+    <div class="kpi-card kpi-${saldoDario>=0?'blue':'red'}"><div class="kpi-label">Saldo Proceso</div><div class="kpi-value" style="color:${saldoDario>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div><div class="kpi-sub">${saldoDario>=0?'Proceso te debe':'Debés a Proceso'}</div></div>
+    <div class="kpi-card kpi-${saldoLucia>=0?'blue':'red'}"><div class="kpi-label">Saldo Despacho</div><div class="kpi-value" style="color:${saldoLucia>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div><div class="kpi-sub">${saldoLucia>=0?'Despacho te debe':'Debés a Despacho'}</div></div>
     <div class="kpi-card kpi-accent" style="position:relative">
       <div class="kpi-label">Kg Vendidos</div>
       <div class="kpi-value">${fmtNum(kgMes)} kg</div>
@@ -2252,34 +2448,143 @@ function renderDashboard(){
   `;
 
   // Pedidos pendientes de despacho
-  renderCuotaKg(kgMes, _dashMes, _dashAnio);
   renderRankingMoliendas(_dashMes, _dashAnio);
-  const pending5 = pedSinDespachar.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,5);
-  document.getElementById('dashPedidos').innerHTML = pending5.length ? pending5.map(p=>`
+  const pending8 = pedSinDespachar.sort((a,b)=>{
+    const ta=(a.transporte||'').toLowerCase();
+    const tb=(b.transporte||'').toLowerCase();
+    if(ta<tb)return -1; if(ta>tb)return 1;
+    return new Date(b.fecha)-new Date(a.fecha);
+  }).slice(0,8);
+  document.getElementById('dashPedidos').innerHTML = pending8.length ? pending8.map(p=>`
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.15);cursor:pointer;gap:8px" onclick="showSection('pedidos');setTimeout(()=>openPedidoDetail(${p.id}),100)">
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Pedido #${p.numero} — ${p.nombre}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${p.fecha||''} · ${(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0)} kg</div>
+        <div style="font-size:11px;color:var(--text-muted)">${p.fecha||''} · ${(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0)} kg${p.transporte?' · 🚚 '+p.transporte:''}</div>
       </div>
       <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0" class="badge-${badgeClass(p.estado)}">${p.estado}</span>
     </div>`).join('') : '<div style="color:var(--teal);font-size:13px;padding:12px 0;text-align:center">✅ Todos los pedidos despachados</div>';
 
   const saldo = saldoDario;
+  const c1=db.config.cuentas?.[0]?.saldo||0;
+  const c2=db.config.cuentas?.[1]?.saldo||0;
+  const deudaDario=saldoDario<0?Math.abs(saldoDario):0;
+  const deudaLucia=saldoLucia<0?Math.abs(saldoLucia):0;
+  const disponible=c1+c2-deudaDario-deudaLucia;
   document.getElementById('dashDario').innerHTML = `
-    <div style="text-align:center;padding:12px 0">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON DARÍO</div>
-      <div style="font-size:28px;font-weight:800;color:${saldo>=0?'var(--teal)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldo>=0?'Darío te debe':'Vos le debés a Darío'}</div>
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON PROCESO</div>
+      <div style="font-size:24px;font-weight:800;color:${saldo>=0?'var(--teal)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${saldo>=0?'Proceso te debe':'Debés a Proceso'}</div>
     </div>
     <div style="text-align:center;padding:8px 0;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON LUCÍA</div>
-      <div style="font-size:24px;font-weight:800;color:${saldoLucia>=0?'var(--teal)':'var(--red)'}">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoLucia>=0?'Lucía te debe':'Debés a Lucía'}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON DESPACHO</div>
+      <div style="font-size:22px;font-weight:800;color:${saldoLucia>=0?'var(--teal)':'var(--red)'}">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${saldoLucia>=0?'Despacho te debe':'Debés a Despacho'}</div>
     </div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-      <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Darío</button>
-      <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Lucía</button>
+    <div style="border-top:2px solid var(--border);margin-top:10px;padding-top:10px">
+      <div style="text-align:center;margin-bottom:8px">
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">DISPONIBLE</div>
+        <div style="font-size:28px;font-weight:900;color:${disponible>=0?'var(--teal)':'var(--red)'}">${disponible>=0?'+':''}${fmt(disponible)}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">Cuentas − Deudas</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+        <div style="text-align:center;background:var(--bg);border-radius:var(--radius);padding:6px">
+          <div style="font-size:10px;color:var(--text-muted)">${db.config.cuentas?.[0]?.nombre||'Cuenta 1'}</div>
+          <div style="font-size:14px;font-weight:700">${fmt(c1)}</div>
+        </div>
+        <div style="text-align:center;background:var(--bg);border-radius:var(--radius);padding:6px">
+          <div style="font-size:10px;color:var(--text-muted)">${db.config.cuentas?.[1]?.nombre||'Cuenta 2'}</div>
+          <div style="font-size:14px;font-weight:700">${fmt(c2)}</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-ghost btn-sm" onclick="openCuentasModal()">💳 Actualizar saldos</button>
+      <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Proceso</button>
+      <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Despacho</button>
     </div>`;
+}
+
+function calcSaldoCuenta(cuentaId){
+  return (db.config.cuentasMovimientos||[]).filter(m=>m.cuentaId===cuentaId).reduce((s,m)=>m.tipo==='entrada'?s+(Number(m.monto)||0):s-(Number(m.monto)||0),0);
+}
+function openCuentasModal(){
+  if(!db.config.cuentas) db.config.cuentas=[{id:1,nombre:'Cuenta 1',saldo:0},{id:2,nombre:'Cuenta 2',saldo:0}];
+  if(!db.config.cuentasMovimientos) db.config.cuentasMovimientos=[];
+  const c1=db.config.cuentas[0]; const c2=db.config.cuentas[1];
+  const s1=calcSaldoCuenta(1); const s2=calcSaldoCuenta(2);
+  const movs=[...db.config.cuentasMovimientos].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,30);
+  const movsHtml=movs.length?movs.map(m=>{
+    const cNombre=db.config.cuentas.find(c=>c.id===m.cuentaId)?.nombre||'Cuenta';
+    return `<tr><td style="font-size:11px">${m.fecha||''}</td><td style="font-size:11px">${cNombre}</td><td style="font-size:11px">${m.concepto||''}</td><td style="font-size:11px;text-align:right;color:${m.tipo==='entrada'?'var(--teal)':'var(--red)'}">${m.tipo==='entrada'?'+':'-'}${fmt(m.monto)}</td><td><button onclick="eliminarMovCuenta(${m.id})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">✕</button></td></tr>`;
+  }).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:12px">Sin movimientos</td></tr>';
+  const html=`<div class="modal-overlay open" id="modalCuentas" onclick="if(event.target===this)closeCuentasModal()">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header"><span class="modal-title">💳 Cuentas virtuales</span><button class="modal-close" onclick="closeCuentasModal()">×</button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div style="background:var(--bg);border-radius:var(--radius);padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted)">${c1.nombre}</div>
+            <div style="font-size:20px;font-weight:800;color:${s1>=0?'var(--teal)':'var(--red)'}">${s1>=0?'+':''}${fmt(s1)}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:var(--radius);padding:12px;text-align:center">
+            <div style="font-size:11px;color:var(--text-muted)">${c2.nombre}</div>
+            <div style="font-size:20px;font-weight:800;color:${s2>=0?'var(--teal)':'var(--red)'}">${s2>=0?'+':''}${fmt(s2)}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto auto;gap:6px;align-items:end;margin-bottom:12px">
+          <select class="form-control" id="cMovCuenta" style="font-size:12px">
+            <option value="1">${c1.nombre}</option>
+            <option value="2">${c2.nombre}</option>
+          </select>
+          <input class="form-control" type="date" id="cMovFecha" value="${today()}" style="font-size:12px">
+          <input class="form-control" placeholder="Concepto" id="cMovConcepto" style="font-size:12px">
+          <input class="form-control" type="number" placeholder="Monto" id="cMovMonto" style="font-size:12px;width:90px">
+          <select class="form-control" id="cMovTipo" style="font-size:12px;width:90px">
+            <option value="entrada">+ Entrada</option>
+            <option value="salida">− Salida</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button class="btn btn-primary btn-sm" onclick="agregarMovCuenta()">+ Registrar</button>
+          <button class="btn btn-ghost btn-sm" onclick="renombrarCuentas()">✏️ Renombrar cuentas</button>
+        </div>
+        <div style="max-height:220px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="font-size:10px;color:var(--text-muted)"><th>Fecha</th><th>Cuenta</th><th>Concepto</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+            <tbody id="cuentasMovsList">${movsHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function closeCuentasModal(){const m=document.getElementById('modalCuentas');if(m)m.remove();}
+function agregarMovCuenta(){
+  const cuentaId=Number(document.getElementById('cMovCuenta').value);
+  const fecha=document.getElementById('cMovFecha').value;
+  const concepto=document.getElementById('cMovConcepto').value.trim();
+  const monto=Number(document.getElementById('cMovMonto').value)||0;
+  const tipo=document.getElementById('cMovTipo').value;
+  if(!monto){toast('Ingresá un monto','error');return;}
+  db.config.cuentasMovimientos.push({id:Date.now(),cuentaId,fecha,concepto,monto,tipo});
+  // Actualizar saldo en cuentas para compatibilidad
+  db.config.cuentas[cuentaId-1].saldo=calcSaldoCuenta(cuentaId);
+  saveDB(); closeCuentasModal(); openCuentasModal(); renderDashboard(); toast('Movimiento registrado ✓','success');
+}
+function eliminarMovCuenta(id){
+  db.config.cuentasMovimientos=db.config.cuentasMovimientos.filter(m=>m.id!==id);
+  db.config.cuentas[0].saldo=calcSaldoCuenta(1);
+  db.config.cuentas[1].saldo=calcSaldoCuenta(2);
+  saveDB(); closeCuentasModal(); openCuentasModal(); renderDashboard();
+}
+function renombrarCuentas(){
+  const c1=db.config.cuentas[0]; const c2=db.config.cuentas[1];
+  const n1=prompt('Nombre de la cuenta 1:',c1.nombre); if(n1===null) return;
+  const n2=prompt('Nombre de la cuenta 2:',c2.nombre); if(n2===null) return;
+  c1.nombre=n1||c1.nombre; c2.nombre=n2||c2.nombre;
+  saveDB(); closeCuentasModal(); openCuentasModal(); renderDashboard(); toast('Cuentas renombradas ✓','success');
 }
 
 function calcSaldoDario(){
@@ -2297,15 +2602,18 @@ function autoCrearDespacho(pedido){
   if(pedido.tipoEnvio==='retira') return; // retira en persona: sin despacho
   const totalKg=(pedido.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
   if(!totalKg) return;
-  const precio=db.config.precioDespachoDefault||180;
+  const embalPrecio=db.config.precioEmbalaje||130;
+  const fletePrecio=db.config.precioFlete||50;
+  const flete=totalKg*fletePrecio;
+  const subtotal=totalKg*embalPrecio+flete;
   db.despachos.push({
     id:Date.now(), tipo:'despacho',
     fecha:pedido.fecha||today(),
     pedidoId:String(pedido.id), pedidoNum:String(pedido.numero||''),
     cliente:pedido.nombre||'',
     kg:totalKg, tipoDespacho:'embalaje_flete',
-    embalKg:totalKg, embalPrecio:precio, flete:0, embalExtra:0,
-    subtotal:totalKg*precio, obs:'Auto-generado', _borrador:true
+    embalKg:totalKg, embalPrecio, flete, embalExtra:0,
+    subtotal, obs:'Auto-generado', _borrador:true
   });
 }
 
@@ -2378,7 +2686,54 @@ function openPedidoDetail(id){
   closeSidebar(); // mobile: cierra la lista y muestra el detalle
   const totalKg = (p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
 
-  // ── Vista de DARÍO: solo cantidades y estampillas, sin precios ──
+  // ── Vista de LUCÍA (Despacho): datos cliente + cantidades, sin precios ──
+  if(currentUser && currentUser.rol==='lucia'){
+    document.getElementById('contentPedidos').innerHTML=`
+      <div style="flex:1;overflow-y:auto;padding:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <h2 style="font-size:17px;font-weight:800;flex:1">Pedido #${p.numero}</h2>
+          <span class="item-badge badge-${badgeClass(p.estado)}">${p.estado}</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Datos del cliente</div>
+          <div class="detail-grid">
+            <div><div class="detail-label">Cliente</div><div class="detail-value">${p.nombre||'—'}</div></div>
+            <div><div class="detail-label">Fecha</div><div class="detail-value">${p.fecha||'—'}</div></div>
+            <div><div class="detail-label">DNI</div><div class="detail-value">${p.dni||'—'}</div></div>
+            <div><div class="detail-label">Teléfono</div><div class="detail-value">${p.tel||'—'}</div></div>
+            <div><div class="detail-label">Email</div><div class="detail-value">${p.email||'—'}</div></div>
+            <div style="grid-column:1/-1"><div class="detail-label">Envío</div><div class="detail-value">
+              ${p.tipoEnvio==='domicilio'?'🏠 A domicilio':p.tipoEnvio==='retira'?'🚶 Retira en persona':'🏪 Sucursal'}
+              ${p.transporte?'— '+p.transporte:''}
+            </div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📦 Productos a despachar</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Molienda</th><th>Kg</th><th>Estampilla</th></tr></thead>
+              <tbody>${(p.productos||[]).filter(r=>r.tipo&&r.kg>0).map(r=>`
+                <tr>
+                  <td style="font-weight:600">${prodLabel(r.tipo)}</td>
+                  <td class="td-num" style="font-weight:800;font-size:15px">${r.kg} kg</td>
+                  <td>${r.estampilla?'<span style="color:var(--teal);font-weight:700">✅ Con estampilla</span>':'—'}</td>
+                </tr>`).join('')}
+              </tbody>
+              <tfoot><tr style="background:var(--bg)">
+                <td style="font-weight:800">TOTAL</td>
+                <td class="td-num" style="font-weight:800;font-size:16px">${totalKg} kg</td>
+                <td></td>
+              </tr></tfoot>
+            </table>
+          </div>
+        </div>
+        ${p.obs?`<div class="card"><div class="card-title">Observaciones</div><div style="font-size:13px">${p.obs}</div></div>`:''}
+      </div>`;
+    return;
+  }
+
+  // ── Vista de DARÍO (Proceso): cantidades + precios de costo, sin precio de venta ──
   if(currentUser && currentUser.rol==='dario'){
     document.getElementById('contentPedidos').innerHTML=`
       <div style="flex:1;overflow-y:auto;padding:20px">
@@ -2401,18 +2756,24 @@ function openPedidoDetail(id){
           <div class="card-title">🧉 Moliendas a preparar</div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Molienda</th><th>Kg</th><th>Estampilla</th></tr></thead>
-              <tbody>${(p.productos||[]).filter(r=>r.tipo&&r.kg>0).map(r=>`
-                <tr>
+              <thead><tr><th>Molienda</th><th>Kg</th><th>P. Costo</th><th>Subtotal</th><th>Estampilla</th></tr></thead>
+              <tbody>${(p.productos||[]).filter(r=>r.tipo&&r.kg>0).map(r=>{
+                const pc=db.config.preciosCosto?.[r.tipo]||0;
+                const subC=pc*Number(r.kg);
+                return `<tr>
                   <td style="font-weight:600">${prodLabel(r.tipo)}</td>
                   <td class="td-num" style="font-weight:800;font-size:15px">${r.kg} kg</td>
-                  <td>${r.estampilla?'<span style="color:var(--teal);font-weight:700">✅ Con estampilla</span>':'—'}</td>
-                </tr>`).join('')}
+                  <td class="td-num">${pc?fmt(pc)+'/kg':'—'}</td>
+                  <td class="td-num" style="font-weight:700;color:var(--amber)">${subC?fmt(subC):'—'}</td>
+                  <td>${r.estampilla?'<span style="color:var(--teal);font-weight:700">✅</span>':'—'}</td>
+                </tr>`;}).join('')}
               </tbody>
               <tfoot>
                 <tr style="background:var(--bg)">
                   <td style="font-weight:800">TOTAL</td>
                   <td class="td-num" style="font-weight:800;font-size:16px">${totalKg} kg</td>
+                  <td></td>
+                  <td class="td-num" style="font-weight:800;color:var(--amber)">${fmt((p.productos||[]).filter(r=>r.tipo&&r.kg>0).reduce((s,r)=>s+(db.config.preciosCosto?.[r.tipo]||0)*Number(r.kg),0))}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -2483,7 +2844,7 @@ function openPedidoDetail(id){
             <button class="inner-tab" id="wspTabCliente" onclick="switchWspTab('cliente',${id})">Para el cliente</button>
           </div>
           <div id="wspPanelDario">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Mensaje operativo — grupo de Darío</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Mensaje operativo — grupo de Proceso</div>
             <div class="wsp-box" id="wspMsgBox">${wspMsg}</div>
             <div style="display:flex;gap:10px;margin-top:12px">
               <button class="btn btn-wsp" onclick="copyWsp('wspMsgBox')">
@@ -2815,6 +3176,9 @@ function openClienteProfile(id){
   const totalPeds=peds.length;
   const ultimaFecha=totalPeds?peds[0].fecha:'—';
   const totalGastado=peds.reduce((s,p)=>s+(Number(p.ingreso)||Number(p.presupuesto)||0),0);
+  const now2=new Date();
+  const kgMesActual=peds.filter(p=>{const d=new Date(p.fecha+'T00:00:00');return d.getMonth()===now2.getMonth()&&d.getFullYear()===now2.getFullYear();}).reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
+  const esLucia=currentUser?.rol==='lucia';
   // Frecuencia promedio
   let frecuenciaStr='—';
   if(totalPeds>=2){
@@ -2869,9 +3233,13 @@ function openClienteProfile(id){
           <div class="cli-stat-lbl">Frecuencia</div>
         </div>
         <div class="cli-stat destacado">
+          <div class="cli-stat-val" style="color:var(--teal)">${fmtNum(kgMesActual)} kg</div>
+          <div class="cli-stat-lbl">Kg este mes</div>
+        </div>
+        ${!esLucia?`<div class="cli-stat destacado" style="grid-column:1/-1">
           <div class="cli-stat-val" style="font-size:${totalGastado>999999?'13px':totalGastado>0?'15px':'20px'}">${totalGastado>0?fmt(totalGastado):'—'}</div>
           <div class="cli-stat-lbl">Total comprado</div>
-        </div>
+        </div>`:''}
       </div>
       ${topProds.length?`<div class="card" style="padding:14px 16px;margin-bottom:14px">
         <div class="card-title" style="margin-bottom:10px">🧉 Productos habituales</div>
@@ -2962,11 +3330,11 @@ function renderDario(){
   const esDeuda = saldo < 0; // saldo negativo = debemos a Darío
   document.getElementById('balanceDario').innerHTML=`
     <div>
-      <div class="lbl">Saldo cuenta Darío</div>
+      <div class="lbl">Saldo cuenta Proceso</div>
       <div class="val">${saldo>=0?'+':''}${fmt(saldo)}</div>
     </div>
     <div style="text-align:right">
-      <div class="lbl" style="color:${esDeuda?'#ffb3b3':'#b3ffda'}">${esDeuda?'⚠️ Saldo a pagar a Darío':'✅ Saldo a favor nuestro'}</div>
+      <div class="lbl" style="color:${esDeuda?'#ffb3b3':'#b3ffda'}">${esDeuda?'⚠️ Saldo a pagar a Proceso':'✅ Saldo a favor nuestro'}</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px">${db.dario.length} movimiento${db.dario.length!==1?'s':''} registrado${db.dario.length!==1?'s':''}</div>
     </div>`;
   let runSaldo=0;
@@ -3029,6 +3397,33 @@ function renderCompras(){
     <div class="kpi-card kpi-accent"><div class="kpi-label">Total kg Comprados</div><div class="kpi-value">${fmtNum(totalKg)} kg</div></div>
     <div class="kpi-card kpi-red"><div class="kpi-label">Total Invertido</div><div class="kpi-value">${fmt(totalPesos)}</div></div>
     <div class="kpi-card kpi-blue"><div class="kpi-label">Órdenes de Compra</div><div class="kpi-value">${db.compras.length}</div></div>`;
+
+  // Cuenta corriente por proveedor
+  const ctaEl=document.getElementById('ctaCteProv');
+  const ctaBody=document.getElementById('ctaCteProvBody');
+  if(ctaEl&&ctaBody&&db.compras.length){
+    const provSaldo={};
+    db.compras.forEach(c=>{
+      const prov=c.proveedor||'Sin proveedor';
+      if(!provSaldo[prov]) provSaldo[prov]={debe:0,pagado:0};
+      const subtotal=c.items.reduce((s,i)=>(s+(Number(i.cantidad)||0)*(Number(i.precio)||0)),0);
+      provSaldo[prov].debe+=subtotal;
+      provSaldo[prov].pagado+=Number(c.pagado)||0;
+    });
+    ctaBody.innerHTML=Object.entries(provSaldo).map(([prov,v])=>{
+      const saldo=v.debe-v.pagado;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap">
+        <div style="font-weight:700;font-size:13px">${prov}</div>
+        <div style="display:flex;gap:16px;font-size:12px">
+          <span>Comprado: <b>${fmt(v.debe)}</b></span>
+          <span>Pagado: <b style="color:var(--teal)">${fmt(v.pagado)}</b></span>
+          <span>Saldo: <b style="color:${saldo>0?'var(--red)':'var(--teal)'}">${saldo>0?'Debés '+fmt(saldo):'Al día'}</b></span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="registrarPagoProveedor('${prov.replace(/'/g,"\\'")}')">💳 Registrar pago</button>
+      </div>`;
+    }).join('');
+    ctaEl.style.display='block';
+  } else if(ctaEl) ctaEl.style.display='none';
 
   const sorted=[...db.compras].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
   if(!sorted.length){
@@ -3122,6 +3517,26 @@ function saveCompra(){
   saveDB(); closeModal('modalCompra'); renderCompras(); toast(`Compra ${numero} registrada ✓`,'success');
 }
 function deleteCompra(id){ if(!confirm('¿Eliminar?')) return; db.compras=db.compras.filter(c=>c.id!==id); saveDB(); renderCompras(); }
+function registrarPagoProveedor(prov){
+  const monto=prompt(`Monto pagado a ${prov} ($):`);
+  if(monto===null) return;
+  const v=Number(monto)||0;
+  if(!v){toast('Ingresá un monto válido','error');return;}
+  // Distribuir el pago a las compras más antiguas primero
+  const ocsProv=[...db.compras].filter(c=>(c.proveedor||'Sin proveedor')===prov).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+  let resto=v;
+  ocsProv.forEach(oc=>{
+    if(resto<=0) return;
+    const subtotal=oc.items.reduce((s,i)=>s+(Number(i.cantidad)||0)*(Number(i.precio)||0),0);
+    const pagadoAntes=Number(oc.pagado)||0;
+    const deuda=subtotal-pagadoAntes;
+    if(deuda<=0) return;
+    const aplicar=Math.min(deuda,resto);
+    oc.pagado=(pagadoAntes+aplicar);
+    resto-=aplicar;
+  });
+  saveDB(); renderCompras(); toast(`Pago de ${fmt(v)} registrado a ${prov} ✓`,'success');
+}
 
 // ════════════════════════════════════════════════
 //  DESPACHOS
@@ -3147,7 +3562,7 @@ function renderDespachos(){
     <div class="kpi-card kpi-blue"><div class="kpi-label">Kg Despachados</div><div class="kpi-value">${fmtNum(totalKg)} kg</div><div class="kpi-sub">${despachos.length} envíos</div></div>
     <div class="kpi-card kpi-red"><div class="kpi-label">Debe (despachos)</div><div class="kpi-value">${fmt(totalDebe)}</div></div>
     <div class="kpi-card kpi-teal"><div class="kpi-label">Haber (transferencias)</div><div class="kpi-value">${fmt(totalHaber)}</div></div>
-    <div class="kpi-card kpi-${saldo>=0?'blue':'red'}"><div class="kpi-label">Saldo c/ Lucía</div><div class="kpi-value" style="color:${saldo>=0?'var(--teal)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</div><div class="kpi-sub">${saldo>=0?'Lucía te debe':'Debés a Lucía'}</div></div>`;
+    <div class="kpi-card kpi-${saldo>=0?'blue':'red'}"><div class="kpi-label">Saldo Despacho</div><div class="kpi-value" style="color:${saldo>=0?'var(--teal)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</div><div class="kpi-sub">${saldo>=0?'Despacho te debe':'Debés a Despacho'}</div></div>`;
 
   // Tabla con running saldo
   const rows=[...db.despachos].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
@@ -3167,7 +3582,8 @@ function renderDespachos(){
       <td class="td-num" style="color:var(--red)">${debe?fmt(debe):'—'}</td>
       <td class="td-num" style="color:var(--teal)">${haber?fmt(haber):'—'}</td>
       <td class="td-num" style="font-weight:700;color:${runSaldo>=0?'var(--teal)':'var(--red)'}">${runSaldo>=0?'+':''}${fmt(runSaldo)}</td>
-      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDespacho(${d.id})">✕</button></td>
+      <td style="display:flex;gap:4px">${!esTransf?`<button class="btn btn-ghost btn-sm" onclick="editDespacho(${d.id})" title="Editar">✏️</button>`:''}
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDespacho(${d.id})">✕</button></td>
     </tr>`;}).join('')
     :'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Sin registros</td></tr>';
 
@@ -3234,6 +3650,50 @@ function saveDespacho(){
   saveDB();closeModal('modalDespacho');renderDespachos();renderDashboard();toast('Despacho registrado ✓','success');
 }
 function deleteDespacho(id){if(!confirm('¿Eliminar?'))return;db.despachos=db.despachos.filter(d=>d.id!==id);saveDB();renderDespachos();renderDashboard();}
+function editDespacho(id){
+  const d=db.despachos.find(x=>x.id===id); if(!d) return;
+  const html=`<div class="modal-overlay open" id="modalEditDespacho" onclick="if(event.target===this)closeEditDespacho()">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header"><span class="modal-title">✏️ Editar Despacho #${d.pedidoNum||d.id}</span><button class="modal-close" onclick="closeEditDespacho()">×</button></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Kg embalados</label><input class="form-control" type="number" id="edEmbalKg" value="${d.embalKg||d.kg||0}"></div>
+          <div class="form-group"><label class="form-label">Precio embalaje ($/kg)</label><input class="form-control" type="number" id="edEmbalPrecio" value="${d.embalPrecio||130}" oninput="calcEditDespacho()"></div>
+          <div class="form-group"><label class="form-label">Flete ($)</label><input class="form-control" type="number" id="edFlete" value="${d.flete||0}" oninput="calcEditDespacho()"></div>
+          <div class="form-group"><label class="form-label">Extra ($)</label><input class="form-control" type="number" id="edExtra" value="${d.embalExtra||0}" oninput="calcEditDespacho()"></div>
+          <div class="form-group form-full"><label class="form-label">Observaciones</label><input class="form-control" id="edObs" value="${d.obs||''}"></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;text-align:right">Subtotal: <span id="edSubtotal" style="color:var(--navy-light)">${fmt(d.subtotal||0)}</span></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditDespacho()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveEditDespacho(${id})">💾 Guardar</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+  calcEditDespacho();
+}
+function calcEditDespacho(){
+  const kg=Number(document.getElementById('edEmbalKg')?.value)||0;
+  const prec=Number(document.getElementById('edEmbalPrecio')?.value)||0;
+  const flete=Number(document.getElementById('edFlete')?.value)||0;
+  const extra=Number(document.getElementById('edExtra')?.value)||0;
+  const sub=kg*prec+flete+extra;
+  const el=document.getElementById('edSubtotal'); if(el) el.textContent=fmt(sub);
+}
+function closeEditDespacho(){const m=document.getElementById('modalEditDespacho');if(m)m.remove();}
+function saveEditDespacho(id){
+  const d=db.despachos.find(x=>x.id===id); if(!d) return;
+  d.embalKg=Number(document.getElementById('edEmbalKg').value)||0;
+  d.embalPrecio=Number(document.getElementById('edEmbalPrecio').value)||0;
+  d.flete=Number(document.getElementById('edFlete').value)||0;
+  d.embalExtra=Number(document.getElementById('edExtra').value)||0;
+  d.obs=document.getElementById('edObs').value;
+  d.subtotal=d.embalKg*d.embalPrecio+d.flete+d.embalExtra;
+  d.kg=d.embalKg;
+  saveDB(); closeEditDespacho(); renderDespachos(); renderDashboard(); toast('Despacho actualizado ✓','success');
+}
 
 // ════════════════════════════════════════════════
 //  PRESUPUESTOS
@@ -3306,7 +3766,9 @@ function renderPresProductos(){
     if(presEditMode&&canEdit){
       precioCell=`<input type="number" class="pres-price-input" id="presc_${p.id}" value="${precio}" min="1" step="1" onchange="presUpdateCustomPrice('${p.id}',this.value)" title="Precio por kg">`;
     } else {
-      precioCell=`<div style="font-size:12px;white-space:nowrap" class="${isCustom?'pres-precio-custom':''}">${fmt(precio)}/kg${isCustom?'&thinsp;✎':''}</div>`;
+      const delta=db.config.deltaEstampilla||0;
+      const priceSinEst=delta>0?`<div style="font-size:10px;color:var(--text-muted)">${fmt(precio-delta)} s/est.</div>`:'';
+      precioCell=`<div style="font-size:12px;white-space:nowrap" class="${isCustom?'pres-precio-custom':''}">${fmt(precio)}/kg${isCustom?'&thinsp;✎':''}</div>${priceSinEst}`;
     }
     return `<div class="prod-row">
       <div style="font-size:13px;font-weight:500">${p.label}</div>
@@ -3413,19 +3875,19 @@ function renderInformes(){
   document.getElementById('infKpis').innerHTML=`
     <div class="inf-card"><div class="inf-val" style="color:var(--teal)">${fmt(ingresos)}</div><div class="inf-lbl">Ingresos cobrados</div></div>
     <div class="inf-card"><div class="inf-val">${fmtNum(kgVendidos)} kg</div><div class="inf-lbl">Kg vendidos</div></div>
-    <div class="inf-card"><div class="inf-val" style="color:var(--amber)">${fmt(costoDario)}</div><div class="inf-lbl">Costo Darío</div></div>
-    <div class="inf-card"><div class="inf-val" style="color:var(--purple)">${fmt(costoLucia)}</div><div class="inf-lbl">Costo Lucía</div></div>
+    <div class="inf-card"><div class="inf-val" style="color:var(--amber)">${fmt(costoDario)}</div><div class="inf-lbl">Costo Proceso</div></div>
+    <div class="inf-card"><div class="inf-val" style="color:var(--purple)">${fmt(costoLucia)}</div><div class="inf-lbl">Costo Despacho</div></div>
     <div class="inf-card"><div class="inf-val" style="color:var(--red)">${fmt(totalGastos)}</div><div class="inf-lbl">Gastos</div></div>
     <div class="inf-card"><div class="inf-val ${ganancia>=0?'ganancia-pos':'ganancia-neg'}">${ganancia>=0?'+':''}${fmt(ganancia)}</div><div class="inf-lbl">Ganancia estimada</div></div>`;
 
   // Resultado mes
   document.getElementById('infGanancia').innerHTML=`
     <div class="fin-row"><span class="fin-lbl">Ingresos cobrados</span><span class="fin-val" style="color:var(--teal)">${fmt(ingresos)}</span></div>
-    <div class="fin-row"><span class="fin-lbl">− Costo molienda Darío</span><span class="fin-val" style="color:var(--red)">−${fmt(costoDario)}</span></div>
-    <div class="fin-row"><span class="fin-lbl">− Costo despacho Lucía</span><span class="fin-val" style="color:var(--red)">−${fmt(costoLucia)}</span></div>
+    <div class="fin-row"><span class="fin-lbl">− Costo Proceso</span><span class="fin-val" style="color:var(--red)">−${fmt(costoDario)}</span></div>
+    <div class="fin-row"><span class="fin-lbl">− Costo Despacho</span><span class="fin-val" style="color:var(--red)">−${fmt(costoLucia)}</span></div>
     <div class="fin-row"><span class="fin-lbl">− Gastos del mes</span><span class="fin-val" style="color:var(--red)">−${fmt(totalGastos)}</span></div>
     <div class="fin-total"><span>Ganancia neta estimada</span><span class="${ganancia>=0?'ganancia-pos':'ganancia-neg'}">${ganancia>=0?'+':''}${fmt(ganancia)}</span></div>
-    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Estimada: no incluye pedidos con pago pendiente. Los costos de Darío se calculan sobre moliendas registradas en el mes.</div>`;
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Estimada: no incluye pedidos con pago pendiente. Los costos de Proceso se calculan sobre moliendas registradas en el mes.</div>`;
 
   // Ventas por molienda
   const ventasMol={};
@@ -3441,7 +3903,7 @@ function renderInformes(){
   darioMes.forEach(t=>{const m=t.molienda||'—';if(!darMol[m])darMol[m]={kg:0,costo:0};darMol[m].kg+=Number(t.kg)||0;darMol[m].costo+=Number(t.subtotal)||0;});
   document.getElementById('infTablaDario').innerHTML=Object.entries(darMol).length?Object.entries(darMol).map(([m,v])=>`
     <tr><td>${prodLabel(m)}</td><td class="td-right">${fmtNum(v.kg)} kg</td><td class="td-right">${fmt(v.costo)}</td></tr>`).join('')
-    :'<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Sin movimientos Darío en este período</td></tr>';
+    :'<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Sin movimientos Proceso en este período</td></tr>';
 
   // Despachos
   document.getElementById('infTablaDesp').innerHTML=despMes.length?despMes.map(d=>`
@@ -3454,6 +3916,32 @@ function renderInformes(){
   document.getElementById('infTablaGastos').innerHTML=Object.entries(gasRub).length?Object.entries(gasRub).sort((a,b)=>b[1]-a[1]).map(([r,v])=>`
     <tr><td>${r}</td><td class="td-right" style="font-weight:700">${fmt(v)}</td></tr>`).join('')
     :'<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:20px">Sin gastos en este período</td></tr>';
+
+  // Compras por proveedor (acumulado, no filtrado por mes para mostrar total histórico; o del mes?)
+  // Mostramos acumulado histórico de compras agrupado por proveedor+concepto
+  const comprasProv={};
+  (db.compras||[]).forEach(c=>{
+    const prov=c.proveedor||'Sin proveedor';
+    if(!comprasProv[prov]) comprasProv[prov]=[];
+    (c.items||[]).forEach(i=>{
+      const exist=comprasProv[prov].find(x=>x.concepto===i.concepto);
+      if(exist){exist.cantidad+=Number(i.cantidad)||0;exist.total+=(Number(i.cantidad)||0)*(Number(i.precio)||0);}
+      else comprasProv[prov].push({concepto:i.concepto,cantidad:Number(i.cantidad)||0,total:(Number(i.cantidad)||0)*(Number(i.precio)||0)});
+    });
+  });
+  const compravRows=Object.entries(comprasProv).flatMap(([prov,items])=>
+    items.map((it,idx)=>`<tr><td>${idx===0?`<b>${prov}</b>`:''}</td><td>${it.concepto}</td><td class="td-right">${fmtNum(it.cantidad)} ${it.concepto==='Estampillas'?'u':'kg'}</td><td class="td-right">${fmt(it.total)}</td></tr>`)
+  );
+  const elCP=document.getElementById('infTablaComprasProv');
+  if(elCP) elCP.innerHTML=compravRows.length?compravRows.join(''):'<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Sin compras registradas</td></tr>';
+
+  // Precio promedio por kg (ingresos mes / kg vendidos mes)
+  const ppkg=kgVendidos>0?Math.round(ingresos/kgVendidos):0;
+  // Agregar al infKpis si existe
+  const infKpisEl=document.getElementById('infKpis');
+  if(infKpisEl&&ppkg>0){
+    infKpisEl.insertAdjacentHTML('beforeend',`<div class="inf-card"><div class="inf-val" style="color:var(--navy-light)">${fmt(ppkg)}/kg</div><div class="inf-lbl">Precio promedio/kg</div></div>`);
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -3526,15 +4014,15 @@ function renderGananciaPedido(pid){
       <div class="card-title">💰 Análisis financiero — Pedido #${p.numero}</div>
       ${p.cuentaCobro?`<div style="margin-bottom:12px"><span class="item-badge badge-open">🏦 Cobrado en: ${p.cuentaCobro}</span></div>`:''}
       <div class="fin-row"><span class="fin-lbl">Ingreso cobrado</span><span class="fin-val" style="color:var(--teal)">${p.ingreso?fmt(p.ingreso):'Pendiente'}</span></div>
-      <div class="fin-row"><span class="fin-lbl">− Costo molienda Darío</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
-      <div class="fin-row"><span class="fin-lbl">− Costo despacho Lucía</span><span class="fin-val" style="color:${g.costoDesp?'var(--red)':'var(--text-muted)'}">${g.costoDesp?'−'+fmt(g.costoDesp):'No registrado'}</span></div>
+      <div class="fin-row"><span class="fin-lbl">− Costo Proceso</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
+      <div class="fin-row"><span class="fin-lbl">− Costo Despacho</span><span class="fin-val" style="color:${g.costoDesp?'var(--red)':'var(--text-muted)'}">${g.costoDesp?'−'+fmt(g.costoDesp):'No registrado'}</span></div>
       <div class="fin-total"><span>Ganancia estimada</span><span class="${g.ganancia>=0?'ganancia-pos':'ganancia-neg'}">${g.ingreso?((g.ganancia>=0?'+':'')+fmt(g.ganancia)):'—'}</span></div>
       ${p.ingreso?`<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
         <div class="inf-card" style="flex:1"><div class="inf-val">${fmt(g.ppk)}</div><div class="inf-lbl">Promedio $/kg</div></div>
         <div class="inf-card" style="flex:1"><div class="inf-val">${fmtNum(g.totalKg)} kg</div><div class="inf-lbl">Kg totales</div></div>
         <div class="inf-card" style="flex:1"><div class="inf-val ${g.ganancia>=0?'ganancia-pos':'ganancia-neg'}">${g.ingreso?Math.round(g.ganancia/g.ingreso*100)+'%':'—'}</div><div class="inf-lbl">Margen</div></div>
       </div>`:''}
-      <div style="font-size:11px;color:var(--text-muted);margin-top:10px">* Vinculá movimientos de Darío a este pedido para mayor precisión.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:10px">* Vinculá movimientos de Proceso a este pedido para mayor precisión.</div>
     </div>`;
 }
 
@@ -3636,7 +4124,8 @@ function renderCatalogoApp(){
       </div>
       <div class="cat-card-body">
         <div class="cat-precio">${fmt(p.precio)}</div>
-        <span class="cat-unit">por kg</span>
+        <span class="cat-unit">por kg c/estampilla</span>
+        ${(db.config.deltaEstampilla||0)>0?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${fmt(p.precio-(db.config.deltaEstampilla||0))} s/estampilla</div>`:''}
         <div class="cat-qty">
           <button class="cat-qty-btn" onclick="appCatQty('${p.id}',-1)">−</button>
           <span class="cat-qty-num" id="apqty-${p.id}">0 kg</span>
@@ -3792,6 +4281,11 @@ function guardarPrecioDespacho(){
   db.config.precioDespachoDefault=v;
   saveDB();toast('Precio de despacho guardado ✓','success');
 }
+function guardarDeltaEstampilla(){
+  const v=Number(document.getElementById('deltaEstampillaInput').value)||0;
+  db.config.deltaEstampilla=v;
+  saveDB();toast('Descuento estampilla guardado ✓','success');
+}
 
 function renderCuentasCobro(){
   const el=document.getElementById('cuentasCobroBody'); if(!el) return;
@@ -3827,7 +4321,7 @@ function renderCuentasSelect(){
 function renderPreciosCosto(){
   const el=document.getElementById('preciosCostoBody'); if(!el) return;
   const prods=getProductos().filter(p=>p.activo!==false);
-  el.innerHTML=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Ingresá el precio que cobra Darío por kg de cada molienda. Se usa para calcular ganancia estimada por pedido.</div>`+
+  el.innerHTML=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">Ingresá el precio que cobra Proceso por kg de cada molienda. Se usa para calcular ganancia estimada por pedido.</div>`+
   prods.map(p=>`
     <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)">
       <span style="flex:1;font-weight:600;font-size:13px">${p.label}</span>
@@ -3855,7 +4349,7 @@ function renderGastos(){
       <td>${g.fecha||'—'}</td>
       <td><span class="item-badge badge-pending">${g.rubro}</span></td>
       <td>${g.desc||'—'}</td>
-      <td class="td-num td-right" style="font-weight:700;color:var(--red)">${fmt(g.monto||0)}</td>
+      <td class="td-num td-right" style="font-weight:700;color:var(--red)">$${(g.monto||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteGasto(${g.id})">✕</button></td>
     </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Sin gastos registrados</td></tr>';
 }
@@ -3863,10 +4357,12 @@ function openGastoModal(){
   document.getElementById('gastoFecha').value=today();
   document.getElementById('gastoMonto').value='';
   document.getElementById('gastoDesc').value='';
+  const rubros=db.config.rubrosGastos||['Embalaje','Estampillas','Transporte','Despacho','Impuestos','Retiros','Servicios','Varios'];
+  document.getElementById('gastoRubro').innerHTML=rubros.map(r=>`<option value="${r}">${r}</option>`).join('');
   openModal('modalGasto');
 }
 function saveGasto(){
-  const monto=Number(document.getElementById('gastoMonto').value)||0;
+  const monto=parseFloat(document.getElementById('gastoMonto').value)||0;
   if(!monto){toast('Ingresá el monto','error');return;}
   db.gastos.push({id:Date.now(),fecha:document.getElementById('gastoFecha').value,rubro:document.getElementById('gastoRubro').value,desc:document.getElementById('gastoDesc').value,monto});
   saveDB();closeModal('modalGasto');renderGastos();toast('Gasto registrado ✓','success');
@@ -3978,12 +4474,12 @@ const USUARIOS_DEFAULT = [
 let USUARIOS = (()=>{ try{ const s=localStorage.getItem('jvs_usuarios'); return s?JSON.parse(s):USUARIOS_DEFAULT; }catch(e){ return USUARIOS_DEFAULT; } })();
 function saveUsuarios(){ saveUsuariosAndSync(); }
 
-const ROLE_LABELS = {admin:'Administrador', dario:'Preparación', lucia:'Despacho', cliente:'Cliente'};
+const ROLE_LABELS = {admin:'Administrador', dario:'Proceso', lucia:'Despacho', cliente:'Cliente'};
 const ROLE_TABS = {
-  admin:   ['dashboard','pedidos','clientes','dario','compras','despachos','presupuestos','gastos','informes','comunicacion','config'],
-  dario:   ['comunicacion','dario','pedidos'],
-  lucia:   ['comunicacion','despachos','pedidos','clientes'],
-  cliente: ['catalogo','pedidos','comunicacion'],
+  admin:   ['dashboard','pedidos','clientes','dario','compras','despachos','presupuestos','gastos','informes','config'],
+  dario:   ['dario','pedidos'],
+  lucia:   ['despachos','pedidos','clientes'],
+  cliente: ['catalogo','pedidos'],
 };
 
 let currentUser = null;
@@ -4100,17 +4596,13 @@ function initApp(){
   showSection(first);
   setTimeout(updateChatBadge, 300);
   setTimeout(pedirPermisoNotif, 2000);
-  // Sincronizar datos desde Sheets al iniciar sesión
+  // Sincronizar desde Sheets al iniciar sesión y arrancar auto-pull
   if(SABORES_SCRIPT_URL){
     _setSyncStatus('syncing');
-    _syncPull().then(pulled => {
-      _setSyncStatus(pulled ? 'ok' : 'error');
-      if(pulled){
-        // Refrescar la sección activa con datos actualizados
-        showSection(first);
-        setTimeout(updateChatBadge, 100);
-      }
+    _syncPull(false).then(pulled => {
+      if(pulled){ showSection(first); setTimeout(updateChatBadge,100); }
     });
+    _startAutoPull();
   }
 }
 
@@ -4131,8 +4623,8 @@ function applyRoleTabs(){
   renderBottomNav();
   // Primera sección según rol
   const firstSec = currentUser.rol==='cliente' ? 'catalogo'
-                 : currentUser.rol==='dario'   ? 'pedidos'
-                 : currentUser.rol==='lucia'    ? 'pedidos'
+                 : currentUser.rol==='dario'   ? 'dario'
+                 : currentUser.rol==='lucia'    ? 'despachos'
                  : 'dashboard';
   showSection(firstSec);
 }
@@ -4780,13 +5272,57 @@ function renderProductosConfig(){
       </td>
       <td><code style="font-size:11px;background:var(--bg);padding:2px 7px;border-radius:5px">${p.id}</code></td>
       <td class="td-right" style="font-weight:700;color:var(--navy-light)">${fmt(p.precio)}/kg</td>
-      <td style="display:flex;gap:6px;align-items:center">
+      <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="openProductoModal('${p.id}')">✏️ Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="openComposicionModal('${p.id}')" title="Ver composición de precio">📊</button>
         ${i>0?`<button class="btn btn-ghost btn-sm" onclick="moverProducto('${p.id}',-1)" title="Subir">↑</button>`:''}
         ${i<prods.length-1?`<button class="btn btn-ghost btn-sm" onclick="moverProducto('${p.id}',1)" title="Bajar">↓</button>`:''}
         <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteProducto('${p.id}')">🗑️</button>
       </td>
     </tr>`).join('');
+}
+
+function openComposicionModal(pid){
+  const p=getProductos().find(x=>x.id===pid); if(!p) return;
+  if(!db.config.preciosComposicion) db.config.preciosComposicion={};
+  const comp=db.config.preciosComposicion[pid]||{costo:0,flete:0,despacho:0,ganancia:0,impuestos:0};
+  const total=(Number(comp.costo)||0)+(Number(comp.flete)||0)+(Number(comp.despacho)||0)+(Number(comp.ganancia)||0)+(Number(comp.impuestos)||0);
+  const html=`<div class="modal-overlay open" id="modalComposicion" onclick="if(event.target===this)closeComposicionModal()">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header"><span class="modal-title">📊 Composición precio — ${p.label}</span><button class="modal-close" onclick="closeComposicionModal()">×</button></div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--text-muted)">Precio de lista actual: <b style="color:var(--navy-light)">${fmt(p.precio)}/kg</b></div>
+        ${[['costo','🌿 Costo Proceso ($/kg)'],['flete','🚚 Flete ($/kg)'],['despacho','📦 Despacho / Embalaje ($/kg)'],['ganancia','💰 Ganancia ($/kg)'],['impuestos','🏛️ Impuestos ($/kg)']].map(([k,lbl])=>`
+        <div style="display:flex;align-items:center;gap:10px">
+          <label style="flex:1;font-size:12px">${lbl}</label>
+          <input class="form-control" type="number" min="0" step="1" id="comp_${k}" value="${comp[k]||0}" style="width:110px" oninput="calcComposicionTotal()">
+        </div>`).join('')}
+        <div style="border-top:2px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;font-weight:700">
+          <span>Total composición</span>
+          <span id="compTotal" style="color:var(--navy-light)">${fmt(total)}/kg</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeComposicionModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarComposicion('${pid}')">💾 Guardar</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function calcComposicionTotal(){
+  const keys=['costo','flete','despacho','ganancia','impuestos'];
+  const t=keys.reduce((s,k)=>s+(Number(document.getElementById('comp_'+k)?.value)||0),0);
+  const el=document.getElementById('compTotal'); if(el) el.textContent=fmt(t)+'/kg';
+}
+function closeComposicionModal(){const m=document.getElementById('modalComposicion');if(m)m.remove();}
+function guardarComposicion(pid){
+  if(!db.config.preciosComposicion) db.config.preciosComposicion={};
+  const keys=['costo','flete','despacho','ganancia','impuestos'];
+  const comp={};
+  keys.forEach(k=>comp[k]=Number(document.getElementById('comp_'+k)?.value)||0);
+  db.config.preciosComposicion[pid]=comp;
+  saveDB(); closeComposicionModal(); toast('Composición guardada ✓','success');
 }
 
 function openProductoModal(id){
@@ -4926,6 +5462,94 @@ function restaurarBackup(input){
   input.value = ''; // reset para poder importar el mismo archivo de nuevo
 }
 
+function imprimirMesAnterior(){
+  const ahora=new Date();
+  const prevDate=new Date(ahora.getFullYear(), ahora.getMonth()-1, 1);
+  const m=prevDate.getMonth(); const y=prevDate.getFullYear();
+  const label=MES_NOMBRES[m]+' '+y;
+  const pedMes=db.pedidos.filter(p=>{const d=new Date(p.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const compMes=(db.compras||[]).filter(c=>{const d=new Date(c.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const gasMes=(db.gastos||[]).filter(g=>{const d=new Date(g.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const ingresos=pedMes.reduce((s,p)=>s+(Number(p.ingreso)||0),0);
+  const totalGastos=gasMes.reduce((s,g)=>s+(Number(g.monto)||0),0);
+  const kgVend=pedMes.reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
+
+  const pedRows=pedMes.sort((a,b)=>a.numero-b.numero).map(p=>{
+    const kg=(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
+    return `<tr><td>#${p.numero}</td><td>${p.fecha||''}</td><td>${p.nombre||''}</td><td style="text-align:right">${kg} kg</td><td style="text-align:right">${p.ingreso?'$'+Number(p.ingreso).toLocaleString('es-AR'):'-'}</td><td>${p.estado||''}</td></tr>`;
+  }).join('');
+  const compRows=compMes.map(c=>{
+    const sub=c.items.reduce((s,i)=>s+(Number(i.cantidad)||0)*(Number(i.precio)||0),0);
+    return `<tr><td>${c.numero||''}</td><td>${c.fecha||''}</td><td>${c.proveedor||''}</td><td style="text-align:right">$${sub.toLocaleString('es-AR')}</td></tr>`;
+  }).join('');
+  const gasRows=gasMes.map(g=>`<tr><td>${g.fecha||''}</td><td>${g.rubro||''}</td><td>${g.desc||''}</td><td style="text-align:right">$${Number(g.monto).toLocaleString('es-AR')}</td></tr>`).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Resumen ${label}</title>
+  <style>body{font-family:Arial,sans-serif;font-size:12px;color:#333;padding:20px}h1{font-size:18px;margin-bottom:4px}h2{font-size:14px;margin:20px 0 8px;color:#2c5f2e}table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #ccc;padding:5px 8px;text-align:left}th{background:#f0f4ec}.totals{display:flex;gap:30px;margin:16px 0;font-size:13px}.totals span{font-weight:700}@media print{button{display:none}}</style>
+  </head><body>
+  <h1>Sabores de Misiones — Resumen ${label}</h1>
+  <div class="totals"><div>Ingresos: <span>$${ingresos.toLocaleString('es-AR')}</span></div><div>Kg vendidos: <span>${kgVend} kg</span></div><div>Gastos: <span>$${totalGastos.toLocaleString('es-AR')}</span></div></div>
+  <h2>Pedidos (${pedMes.length})</h2>
+  <table><thead><tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Kg</th><th>Ingreso</th><th>Estado</th></tr></thead><tbody>${pedRows||'<tr><td colspan="6">Sin pedidos</td></tr>'}</tbody></table>
+  <h2>Compras (${compMes.length})</h2>
+  <table><thead><tr><th>OC</th><th>Fecha</th><th>Proveedor</th><th>Total</th></tr></thead><tbody>${compRows||'<tr><td colspan="4">Sin compras</td></tr>'}</tbody></table>
+  <h2>Gastos (${gasMes.length})</h2>
+  <table><thead><tr><th>Fecha</th><th>Rubro</th><th>Detalle</th><th>Monto</th></tr></thead><tbody>${gasRows||'<tr><td colspan="4">Sin gastos</td></tr>'}</tbody></table>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();}
+}
+
+async function resetTodosDatos(){
+  if(!confirm('⚠️ ATENCIÓN: esto borra TODOS los datos (pedidos, clientes, compras, gastos, despachos, movimientos Proceso y Despacho).\n\nLa configuración (productos, usuarios, estados) se conserva.\n\n¿Confirmar limpieza total?')) return;
+  if(!confirm('Segunda confirmación: ¿Borrar todo? Esta acción no se puede deshacer.')) return;
+
+  // Guardar configuración antes de borrar
+  const configBackup = JSON.parse(JSON.stringify(db.config));
+
+  db.pedidos = [];
+  db.clientes = [];
+  db.dario = [];
+  db.compras = [];
+  db.despachos = [];
+  db.gastos = [];
+  db.presupuestosGuardados = [];
+  db.config = configBackup;
+  db.config.nextPedido = 1;
+  db.config.nextCompra = 1;
+  db.config.mesActual = null;
+  db._lastModified = Date.now();
+
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+
+  // Subir datos limpios a la nube inmediatamente (sin debounce)
+  toast('Limpiando datos en la nube…', 'info');
+  try{
+    const check = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
+    await check.json(); // confirmar que hay conexión
+    await _gasPost('saveDB', JSON.stringify(db));
+    // Verificar que llegó
+    await new Promise(r=>setTimeout(r,2000));
+    const ver = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
+    const vj  = await ver.json();
+    if(vj.success && vj.data){
+      const rem = JSON.parse(vj.data);
+      if((rem.pedidos||[]).length === 0){
+        toast('✅ Datos borrados en todos los dispositivos', 'success');
+      } else {
+        toast('⚠️ Local limpiado. La nube puede tardar unos segundos más.', 'warning');
+      }
+    }
+  } catch(e){
+    toast('Sin conexión — datos borrados localmente. Sincronizará al volver a conectar.', 'warning');
+  }
+
+  renderDashboard();
+  if(typeof renderPedidos==='function') renderPedidos();
+  if(typeof renderClientes==='function') renderClientes();
+}
+
 function limpiarMesesAnteriores(){
   const ahora    = new Date();
   const mesActual= ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0');
@@ -5012,18 +5636,47 @@ function limpiarMesesAnteriores(){
   renderDashboard();
 }
 
+function renderRubrosGastos(){
+  const rubros=db.config.rubrosGastos||[];
+  const el=document.getElementById('rubrosGastosBody'); if(!el) return;
+  el.innerHTML=rubros.length?rubros.map((r,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px">${r}</span>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);padding:2px 8px" onclick="eliminarRubroGasto(${i})">✕</button>
+    </div>`).join('')
+  :'<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Sin rubros configurados</div>';
+}
+function agregarRubroGasto(){
+  const inp=document.getElementById('nuevoRubroInput'); if(!inp) return;
+  const val=(inp.value||'').trim();
+  if(!val){toast('Ingresá un nombre','error');return;}
+  if(!db.config.rubrosGastos) db.config.rubrosGastos=[];
+  if(db.config.rubrosGastos.includes(val)){toast('Ya existe ese rubro','error');return;}
+  db.config.rubrosGastos.push(val);
+  inp.value='';
+  saveDB(); renderRubrosGastos(); toast('Rubro agregado ✓','success');
+}
+function eliminarRubroGasto(i){
+  if(!db.config.rubrosGastos) return;
+  db.config.rubrosGastos.splice(i,1);
+  saveDB(); renderRubrosGastos(); toast('Rubro eliminado','success');
+}
+
 function renderConfigSection(){
   renderEstadosConfig();
   renderProductosConfig();
   renderCodigosDescuento();
   renderCuentasCobro();
   renderPreciosCosto();
+  renderRubrosGastos();
   const stockEl=document.getElementById('stockEstDisplay');
   if(stockEl) stockEl.textContent=db.config.stockEstampillas||0;
   const cuotaEl=document.getElementById('cuotaKgInput');
   if(cuotaEl) cuotaEl.value=db.config.cuotaKgMensual||0;
   const despEl=document.getElementById('precioDespachoInput');
   if(despEl) despEl.value=db.config.precioDespachoDefault||180;
+  const deltaEl=document.getElementById('deltaEstampillaInput');
+  if(deltaEl) deltaEl.value=db.config.deltaEstampilla!==undefined?db.config.deltaEstampilla:220;
   const tbody = document.getElementById('usersTbody');
   if(!tbody) return;
   const rolColors = {admin:'role-admin',dario:'role-dario',lucia:'role-lucia',cliente:'role-cliente'};
@@ -5071,7 +5724,7 @@ function openModalUsuario(id){
             <label class="form-label">Rol / Permisos</label>
             <select class="form-input" id="cfgRol">${opts}</select>
             <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">
-              Administrador: acceso total · Preparación: solo cuenta Darío + comunicación · Despacho: despachos + comunicación · Cliente: solo comunicación
+              Administrador: acceso total · Proceso: cuenta Proceso + pedidos · Despacho: despachos + pedidos + clientes · Cliente: catálogo + pedidos
             </div>
           </div>
           <div id="cfgError" style="display:none;background:var(--red-light);color:var(--red);padding:8px 12px;border-radius:6px;font-size:12px"></div>
@@ -5429,16 +6082,58 @@ function renderBottomNav(){
   setTimeout(hideSplash, delay);
 })();
 
-// ── PWA: registrar service worker ──
+// ── PWA: registrar service worker + auto-update ──
+let _swReg = null;
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      _swReg = reg;
+
+      // Si ya hay un SW esperando al registrar (carga de página nueva), mostrar banner
+      if(reg.waiting) _mostrarBannerActualizacion(reg.waiting);
+
+      // SW nuevo encontrado: cuando pase a "waiting", mostrar banner
+      reg.addEventListener('updatefound', () => {
+        const nuevoSW = reg.installing;
+        if(!nuevoSW) return;
+        nuevoSW.addEventListener('statechange', () => {
+          if(nuevoSW.state === 'installed' && navigator.serviceWorker.controller){
+            _mostrarBannerActualizacion(nuevoSW);
+          }
+        });
+      });
+    }).catch(()=>{});
+
+    // Chequear actualizaciones cada 5 minutos y al volver a la pestaña
+    const _checkUpdate = () => { if(_swReg) _swReg.update().catch(()=>{}); };
+    setInterval(_checkUpdate, 5 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') _checkUpdate(); });
   });
-  // Auto-recargar cuando el SW nuevo activa (recibe aviso del SW)
+
+  // Mensaje del SW: recarga automática si el SW activó solo (fallback)
   navigator.serviceWorker.addEventListener('message', e => {
     if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
     if(e.data && e.data.type === 'OPEN_CHAT') showSection('comunicacion');
   });
+}
+
+function _mostrarBannerActualizacion(swEsperando){
+  if(document.getElementById('updateBanner')) return; // ya mostrado
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;background:#1a3a2a;color:#fff;border-radius:12px;padding:12px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.35);font-size:13px;max-width:340px;width:90%';
+  banner.innerHTML = `<span>🔄 Hay una actualización disponible</span><button onclick="_aplicarActualizacion()" style="background:var(--teal,#2ecc71);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Actualizar</button>`;
+  document.body.appendChild(banner);
+  banner._swEsperando = swEsperando;
+}
+
+function _aplicarActualizacion(){
+  const banner = document.getElementById('updateBanner');
+  const sw = banner?._swEsperando;
+  if(sw) sw.postMessage({ type: 'SKIP_WAITING' });
+  // Si el SW activa, el mensaje SW_UPDATED recargará la página.
+  // Como fallback, recargar a los 800ms.
+  setTimeout(() => window.location.reload(), 800);
 }
 
 // ════════════════════════════════════════════════

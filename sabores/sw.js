@@ -1,4 +1,4 @@
-const CACHE = 'sabores-v10';
+const CACHE = 'sabores-v12';
 // Rutas relativas al scope del SW (/sabores/)
 const ASSETS = [
   './manifest.json',
@@ -19,7 +19,7 @@ self.addEventListener('notificationclick', e => {
   );
 });
 
-// Instalar: cachear assets estáticos
+// Instalar: cachear assets estáticos + skipWaiting inmediato
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(cache =>
@@ -28,7 +28,7 @@ self.addEventListener('install', e => {
   );
 });
 
-// Activar: limpiar caches viejos y tomar control inmediato
+// Activar: limpiar caches viejos, tomar control, notificar clientes
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -42,19 +42,24 @@ self.addEventListener('activate', e => {
   );
 });
 
-// Fetch: network-first para HTML, cache-first para assets
+// Mensaje desde la app: forzar skipWaiting
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+// Fetch: network-first para HTML (siempre fresco), cache-first para assets
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
-  // Solo manejar rutas dentro de /sabores/
   if (!url.pathname.startsWith('/sabores/') && !url.pathname.includes('sabores')) return;
 
   const isHTML = url.pathname.endsWith('.html') || url.pathname.endsWith('/');
 
   if (isHTML) {
+    // Network-first: siempre busca la versión nueva, cae a caché si no hay red
     e.respondWith(
-      fetch(e.request).then(res => {
+      fetch(e.request, { cache: 'no-cache' }).then(res => {
         if (res && res.status === 200) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
