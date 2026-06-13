@@ -5416,6 +5416,15 @@ function renderBottomNav(){
   }
   sessionStorage.setItem('splashDone','1');
   setTimeout(hideSplash, delay);
+  // Fallback: si en 5s el login no apareció, forzarlo
+  setTimeout(()=>{
+    const login = document.getElementById('loginScreen');
+    const splash = document.getElementById('splash');
+    if(login && login.style.display==='none' || login && !login.style.display){
+      if(splash) splash.style.display='none';
+      if(!currentUser){ showLogin(); } else { initApp(); }
+    }
+  }, 5000);
 })();
 
 // ── PWA: registrar service worker ──
