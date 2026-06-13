@@ -4102,18 +4102,12 @@ function initApp(){
   showSection(first);
   setTimeout(updateChatBadge, 300);
   setTimeout(pedirPermisoNotif, 2000);
-  // Sincronizar datos desde Sheets al iniciar sesión
-  if(SABORES_SCRIPT_URL){
-    _setSyncStatus('syncing');
-    _syncPull().then(pulled => {
-      _setSyncStatus(pulled ? 'ok' : 'error');
-      if(pulled){
-        // Refrescar la sección activa con datos actualizados
-        showSection(first);
-        setTimeout(updateChatBadge, 100);
-      }
-    });
-  }
+  // Sincronizar datos desde Firebase al iniciar sesión
+  _setSyncStatus('syncing');
+  _syncPull().then(pulled => {
+    _setSyncStatus(pulled ? 'ok' : 'error');
+    if(pulled){ showSection(first); setTimeout(updateChatBadge, 100); }
+  });
 }
 
 function applyRoleTabs(){
@@ -4425,13 +4419,9 @@ function mostrarNotifMensajes(count){
 
 async function chequearMensajesNuevos(){
   if(!currentUser) return;
-  // Sincronizar desde Sheets para ver mensajes de otros dispositivos
-  if(SABORES_SCRIPT_URL){
-    const pulled = await _syncPull();
-    if(pulled){
-      showSection._sec = showSection._sec; // no re-render, solo actualizar badge
-    }
-  }
+  // Sincronizar desde Firebase para ver mensajes de otros dispositivos
+  const pulled = await _syncPull();
+  if(pulled){ showSection._sec = showSection._sec; }
   const ahora = countUnreadMsgs();
   if(ahora > _lastNotifCount){
     mostrarNotifMensajes(ahora);
@@ -5418,12 +5408,9 @@ function renderBottomNav(){
       if(currentUser){
         initApp();
       } else {
-        // Intentar actualizar usuarios desde Sheets antes de mostrar login
-        if(SABORES_SCRIPT_URL){
-          _syncPullUsuarios().finally(showLogin);
-        } else {
-          showLogin();
-        }
+        // Mostrar login de inmediato, sync en segundo plano
+        showLogin();
+        _syncPullUsuarios().catch(()=>{});
       }
     }, 400);
   }
