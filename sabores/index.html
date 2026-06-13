@@ -2061,11 +2061,22 @@ async function _syncPullUsuarios(){
   try{
     const r = await fetch(SABORES_SCRIPT_URL + '?action=getUsuarios', { redirect:'follow' });
     const j = await r.json();
-    if(j.success && j.data){
-      const remote = JSON.parse(j.data);
+    if(j.success){
+      const remote = j.data ? JSON.parse(j.data) : null;
       if(Array.isArray(remote) && remote.length > 0){
+        // Sheets tiene usuarios → usarlos
         USUARIOS = remote;
         localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+        return true;
+      } else {
+        // Sheets row 2 vacía → resetear a defaults y guardar en Sheets
+        USUARIOS = JSON.parse(JSON.stringify(USUARIOS_DEFAULT));
+        localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
+        fetch(SABORES_SCRIPT_URL + '?action=saveUsuarios', {
+          method:'POST', mode:'no-cors',
+          headers:{'Content-Type':'text/plain'},
+          body: JSON.stringify(USUARIOS)
+        }).catch(()=>{});
         return true;
       }
     }
