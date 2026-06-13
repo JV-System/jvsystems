@@ -2027,7 +2027,12 @@ function _syncPush(){
   _syncTimer = setTimeout(async ()=>{
     _setSyncStatus('syncing');
     try{
-      await _gasPost('saveDB', JSON.stringify(db));
+      // Guardar pedidos en su propia hoja y el resto en "DB"
+      const { pedidos, ...resto } = db;
+      await Promise.all([
+        _gasPost('savePedidos', JSON.stringify(pedidos || [])),
+        _gasPost('saveDB',      JSON.stringify(resto))
+      ]);
       _setSyncStatus('ok');
       toast('☁ Guardado en la nube ✓', 'success');
     } catch(e){
@@ -2040,17 +2045,19 @@ function _syncPush(){
 async function _syncPull(){
   if(!SABORES_SCRIPT_URL) return false;
   try{
-    const r = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
-    const j = await r.json();
-    if(j.success && j.data){
-      const remote = JSON.parse(j.data);
-      if(remote && (remote.pedidos || remote.clientes || remote.config)){
-        db = remote;
-        _initDbFields();
-        if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-        return true;
-      }
+    const [rDB, rPed] = await Promise.all([
+      fetch(SABORES_SCRIPT_URL + '?action=getDB',      { redirect:'follow' }),
+      fetch(SABORES_SCRIPT_URL + '?action=getPedidos', { redirect:'follow' })
+    ]);
+    const [jDB, jPed] = await Promise.all([ rDB.json(), rPed.json() ]);
+    const resto   = (jDB.success  && jDB.data)  ? JSON.parse(jDB.data)  : null;
+    const pedidos = (jPed.success && jPed.data) ? JSON.parse(jPed.data) : null;
+    if(resto && resto.config){
+      db = { ...resto, pedidos: Array.isArray(pedidos) ? pedidos : (db.pedidos||[]) };
+      _initDbFields();
+      if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      return true;
     }
   } catch(e){ console.error('syncPull error:', e); }
   return false;
@@ -2064,19 +2071,14 @@ async function _syncPullUsuarios(){
     if(j.success){
       const remote = j.data ? JSON.parse(j.data) : null;
       if(Array.isArray(remote) && remote.length > 0){
-        // Sheets tiene usuarios → usarlos
         USUARIOS = remote;
         localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
         return true;
       } else {
-        // Sheets row 2 vacía → resetear a defaults y guardar en Sheets
+        // Hoja Usuarios vacía → resetear a defaults y guardar
         USUARIOS = JSON.parse(JSON.stringify(USUARIOS_DEFAULT));
         localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
-        fetch(SABORES_SCRIPT_URL + '?action=saveUsuarios', {
-          method:'POST', mode:'no-cors',
-          headers:{'Content-Type':'text/plain'},
-          body: JSON.stringify(USUARIOS)
-        }).catch(()=>{});
+        _gasPost('saveUsuarios', JSON.stringify(USUARIOS)).catch(()=>{});
         return true;
       }
     }
