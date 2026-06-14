@@ -2286,6 +2286,18 @@ async function loadFromCloud() {
       _fbGet('/usuarios')
     ]);
 
+    // Si Firebase tiene un resetAt más nuevo que el local → limpiar este dispositivo
+    const localResetAt = parseInt(localStorage.getItem('branca_reset_at') || '0');
+    const remoteResetAt = remoteDb && remoteDb.resetAt ? remoteDb.resetAt : 0;
+    if (remoteResetAt > localResetAt) {
+      ordenes = []; clientesDB = []; tecnicosDB = [];
+      ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
+      localStorage.setItem('branca_reset_at', String(remoteResetAt));
+      setSyncStatus('ok');
+      renderOrderList();
+      return;
+    }
+
     if (remoteDb) {
       // CONFIG
       if (remoteDb.config && remoteDb.config.adminPass) {
@@ -2377,8 +2389,10 @@ async function resetearTodoElSistema() {
   if (!ok) return;
   setSyncStatus('syncing', '⏳ Borrando...');
   try {
-    await _fbPut('/db', { ordenes: [], clientes: [], tecnicos: [], config: {} });
-    await _fbPut('/usuarios', []);
+    const resetAt = Date.now();
+    await _fbPut('/db', { ordenes: null, clientes: null, tecnicos: null, config: {}, resetAt });
+    await _fbPut('/usuarios', null);
+    localStorage.setItem('branca_reset_at', String(resetAt));
   } catch(e) {}
   // Limpiar localStorage
   ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
