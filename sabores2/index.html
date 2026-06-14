@@ -2020,8 +2020,14 @@ function loadDB(){
   _initDbFields();
 }
 function _initDbFields(){
-  if(!db.gastos) db.gastos=[];
+  if(!db.pedidos)   db.pedidos=[];
+  if(!db.clientes)  db.clientes=[];
+  if(!db.dario)     db.dario=[];
+  if(!db.compras)   db.compras=[];
+  if(!db.despachos) db.despachos=[];
+  if(!db.gastos)    db.gastos=[];
   if(!db.presupuestosGuardados) db.presupuestosGuardados=[];
+  if(!db.config)    db.config={};
   if(!db.config.codigosDescuento) db.config.codigosDescuento={};
   if(db.config.stockEstampillas===undefined) db.config.stockEstampillas=0;
   if(!db.config.cuotaKgMensual) db.config.cuotaKgMensual=0;
