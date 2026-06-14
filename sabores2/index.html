@@ -5594,20 +5594,29 @@ function renderBottomNav(){
   }).join('');
 }
 
-window.onerror = function(msg, src, line, col, err){
+function _emergencySplashRescue(reason){
   const s = document.getElementById('splash');
-  if(s && s.style.display !== 'none'){
-    s.style.display='none';
+  if(!s || s.style.display === 'none') return;
+  s.style.display = 'none';
+  console.error('[Sabores] splash rescued:', reason);
+  if(!currentUser){
     const ls = document.getElementById('loginScreen');
-    if(ls) ls.style.display='flex';
-    console.error('JS Error (splash rescued):', msg, 'at', src, line+':'+col, err);
+    if(ls) ls.style.display = 'flex';
   }
+}
+window.onerror = function(msg, src, line, col, err){
+  _emergencySplashRescue('onerror: ' + msg + ' @' + line);
 };
+window.addEventListener('unhandledrejection', function(e){
+  _emergencySplashRescue('unhandledrejection: ' + (e.reason || e));
+});
 
 (function(){
   const yaVisto = sessionStorage.getItem('splashDone');
   const isInstalled = window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;
   const delay = isInstalled ? 800 : (yaVisto ? 200 : 1800);
+  // Timeout de emergencia: si en 5s el splash sigue visible, forzar login
+  setTimeout(function(){ _emergencySplashRescue('timeout 5s'); }, 5000);
   function showLogin(){
     document.getElementById('loginScreen').style.display='flex';
     setTimeout(()=>document.getElementById('loginUser').focus(),100);
