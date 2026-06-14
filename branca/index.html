@@ -2286,55 +2286,39 @@ async function loadFromCloud() {
       _fbGet('/usuarios')
     ]);
 
-    // Si Firebase tiene un resetAt más nuevo que el local → limpiar este dispositivo
-    const localResetAt = parseInt(localStorage.getItem('branca_reset_at') || '0');
-    const remoteResetAt = remoteDb && remoteDb.resetAt ? remoteDb.resetAt : 0;
-    if (remoteResetAt > localResetAt) {
-      ordenes = []; clientesDB = []; tecnicosDB = [];
-      ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
-      localStorage.setItem('branca_reset_at', String(remoteResetAt));
-      setSyncStatus('ok');
-      renderOrderList();
-      return;
-    }
-
     if (remoteDb) {
       // CONFIG
       if (remoteDb.config && remoteDb.config.adminPass) {
         localStorage.setItem('branca_admin_pass', remoteDb.config.adminPass);
       }
 
-      // ÓRDENES — merge por timestamp; array vacío explícito = reset
-      if (Array.isArray(remoteDb.ordenes)) {
-        if (remoteDb.ordenes.length === 0) {
-          ordenes = [];
-          localStorage.setItem('branca_ordenes', JSON.stringify([]));
-        } else {
-          const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
-          ordenes = mergeById(ordenes, remoteDb.ordenes);
-          ordenes = ordenes.filter(function(o) {
-            if (o.draft) return true;
-            if (!o.empresa && !o.marca) return false;
-            return true;
-          });
-          draftsLocales.forEach(function(d) {
-            if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
-          });
-          localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-        }
+      // ÓRDENES — Firebase manda la lista definitiva; si no tiene nada = vacío
+      const remotas = Array.isArray(remoteDb.ordenes) ? remoteDb.ordenes : [];
+      if (remotas.length > 0) {
+        // Conservar borradores locales que no llegaron a Firebase
+        const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
+        ordenes = mergeById(ordenes, remotas);
+        ordenes = ordenes.filter(function(o) {
+          if (o.draft) return true;
+          if (!o.empresa && !o.marca) return false;
+          return true;
+        });
+        draftsLocales.forEach(function(d) {
+          if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
+        });
+      } else {
+        // Firebase tiene la lista vacía → este dispositivo también queda vacío
+        ordenes = [];
       }
+      localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 
-      // CLIENTES — la nube gana siempre; vacío explícito = reset
-      if (Array.isArray(remoteDb.clientes)) {
-        clientesDB = remoteDb.clientes;
-        localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
-      }
+      // CLIENTES — la nube gana siempre
+      clientesDB = Array.isArray(remoteDb.clientes) ? remoteDb.clientes : [];
+      localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
 
-      // TÉCNICOS — la nube gana siempre; vacío explícito = reset
-      if (Array.isArray(remoteDb.tecnicos)) {
-        tecnicosDB = remoteDb.tecnicos;
-        localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
-      }
+      // TÉCNICOS — la nube gana siempre
+      tecnicosDB = Array.isArray(remoteDb.tecnicos) ? remoteDb.tecnicos : [];
+      localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
     }
 
     // USUARIOS — la nube gana siempre
