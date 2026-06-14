@@ -2605,7 +2605,8 @@ function guardarOrdenPlanificada() {
     id: Date.now(),
     estado: 'planificada',
     empresa,
-    fecha: fecha,               // fecha planificada (YYYY-MM-DD)
+    fecha: fecha,               // fecha de creación / inicio real
+    fechaPlanificada: fecha,    // fecha en el calendario — se puede reprogramar
     responsable: document.getElementById('plan-tecnico').value || '',
     tipoServicio: document.getElementById('plan-tipo').value,
     notas: document.getElementById('plan-notas').value.trim(),
@@ -2635,13 +2636,18 @@ function seleccionarPlanificada(id) {
   ordenActual = o;
   switchView('nueva');
   const mc = document.getElementById('mainContent');
-  const tecLabel = o.responsable || '— Sin asignar —';
+  const tecLabel  = o.responsable || '— Sin asignar —';
   const tipoLabel = { preventivo:'Preventivo', correctivo:'Correctivo', mparada:'Máquina parada', instalacion:'Instalación', garantia:'Garantía' }[o.tipoServicio] || o.tipoServicio;
+  const esPendiente = o.estado === 'pending';
+  const fechaMostrar = o.fechaPlanificada || o.fecha;
   mc.innerHTML = `
     <div style="padding:32px;max-width:600px;margin:0 auto;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <span style="background:#ede9fe;color:#5b21b6;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">📅 PLANIFICADA</span>
-        <span style="font-size:13px;color:var(--text-muted);">${o.fecha}</span>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+        ${esPendiente
+          ? `<span style="background:#fef3c7;color:#92400e;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">⏸ EN CURSO / PENDIENTE</span>`
+          : `<span style="background:#ede9fe;color:#5b21b6;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">📅 PLANIFICADA</span>`}
+        <span style="font-size:13px;color:var(--text-muted);">📅 ${fechaMostrar}</span>
+        ${esPendiente && o.numero ? `<span style="font-size:12px;color:var(--text-muted);font-weight:600;">${o.numero}</span>` : ''}
       </div>
       <h2 style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px;">${o.empresa}</h2>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;">
@@ -2659,10 +2665,10 @@ function seleccionarPlanificada(id) {
         <div style="font-size:14px;line-height:1.6;">${o.notas}</div>
       </div>` : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="iniciarOrdenDesde(${o.id})" style="background:var(--teal);">
-          ▶ Iniciar orden de servicio
-        </button>
-        ${isAdmin() ? `<button class="btn" onclick="editarPlanificada(${o.id})" style="border-color:#7c3aed;color:#7c3aed;">✏ Editar</button>` : ''}
+        ${!esPendiente ? `<button class="btn btn-primary" onclick="iniciarOrdenDesde(${o.id})" style="background:var(--teal);">▶ Iniciar orden</button>` : ''}
+        ${esPendiente  ? `<button class="btn btn-primary" onclick="seleccionarOrden(${o.id})" style="background:var(--jv-blue);">📋 Ver / editar orden</button>` : ''}
+        ${isAdmin() ? `<button class="btn" onclick="reprogramarOrden(${o.id})" style="border-color:#7c3aed;color:#7c3aed;">📅 Reprogramar</button>` : ''}
+        ${isAdmin() && !esPendiente ? `<button class="btn" onclick="editarPlanificada(${o.id})" style="border-color:#555;color:#555;">✏ Editar</button>` : ''}
         ${isAdmin() ? `<button class="btn" onclick="eliminarOrden(${o.id})" style="color:var(--red);border-color:var(--red);">🗑 Eliminar</button>` : ''}
       </div>
     </div>`;
@@ -2673,6 +2679,9 @@ function iniciarOrdenDesde(id) {
   if (!o) return;
   o.estado = 'open';
   o.numero = getNextNum();
+  // fechaPlanificada se mantiene para que siga apareciendo en el calendario si queda pendiente
+  if (!o.fechaPlanificada) o.fechaPlanificada = o.fecha;
+  o.fecha = new Date().toISOString().split('T')[0];
   o.updatedAt = Date.now();
   ordenActual = o;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
@@ -2680,6 +2689,46 @@ function iniciarOrdenDesde(id) {
   renderOrderList();
   renderFormContent();
   showToast('✅ Orden iniciada. Completá los datos.');
+}
+
+function reprogramarOrden(id) {
+  const o = ordenes.find(x => x.id === id);
+  if (!o) return;
+  // Reusar el modal de planificada con modo reprogramar
+  const dl = document.getElementById('plan-empresa-list');
+  if (dl) dl.innerHTML = clientesDB.map(c => `<option value="${c.empresa}">`).join('');
+  const sel = document.getElementById('plan-tecnico');
+  if (sel) sel.innerHTML = '<option value="">— Sin asignar —</option>' +
+    tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+  document.getElementById('plan-empresa').value = o.empresa;
+  document.getElementById('plan-fecha').value   = o.fechaPlanificada || o.fecha;
+  document.getElementById('plan-tipo').value    = o.tipoServicio || 'preventivo';
+  document.getElementById('plan-notas').value   = o.notas || '';
+  if (sel) sel.value = o.responsable || '';
+  const h3 = document.querySelector('#modalPlanificada h3');
+  if (h3) h3.textContent = '📅 Reprogramar orden';
+  const err = document.getElementById('plan-error');
+  if (err) err.classList.add('hidden');
+  document.getElementById('modalPlanificada').classList.remove('hidden');
+  document.querySelector('#modalPlanificada .btn-primary').onclick = function() {
+    const fecha = document.getElementById('plan-fecha').value;
+    if (!fecha) { err.textContent='✕ La fecha es obligatoria.'; err.classList.remove('hidden'); return; }
+    o.fechaPlanificada = fecha;
+    o.responsable  = document.getElementById('plan-tecnico').value || o.responsable;
+    o.notas        = document.getElementById('plan-notas').value.trim();
+    o.estado       = 'planificada';
+    delete o.numero;
+    o.updatedAt    = Date.now();
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+    _syncPush();
+    cerrarModalPlanificada();
+    // Restaurar título y botón para próxima vez
+    if (h3) h3.textContent = '📅 Nueva Orden Planificada';
+    document.querySelector('#modalPlanificada .btn-primary').onclick = guardarOrdenPlanificada;
+    renderOrderList();
+    renderPlanificacion();
+    showToast('📅 Orden reprogramada.');
+  };
 }
 
 function editarPlanificada(id) {
@@ -2722,7 +2771,7 @@ function editarPlanificada(id) {
 
 function renderPlanificacion() {
   const mc = document.getElementById('mainContent');
-  const planificadas = ordenes.filter(o => o.estado === 'planificada');
+  const planificadas = ordenes.filter(o => o.estado === 'planificada' || (o.estado === 'pending' && o.fechaPlanificada));
 
   const hoy   = new Date();
   const year  = _calYear  !== null ? _calYear  : hoy.getFullYear();
@@ -2740,7 +2789,7 @@ function renderPlanificacion() {
   // Agrupar planificadas por fecha
   const porFecha = {};
   planificadas.forEach(o => {
-    const k = o.fecha; // YYYY-MM-DD
+    const k = o.fechaPlanificada || o.fecha;
     if (!porFecha[k]) porFecha[k] = [];
     porFecha[k].push(o);
   });
@@ -2753,10 +2802,16 @@ function renderPlanificacion() {
   for (let d = 1; d <= diasMes; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const esHoy   = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
-    const items   = (porFecha[dateStr] || []).map(o =>
-      `<div class="cal-plan-item" onclick="seleccionarPlanificada(${o.id})" title="${o.empresa} · ${o.responsable||'Sin técnico'}">
-        ${o.empresa}${o.responsable ? ' · '+o.responsable : ''}
-      </div>`).join('');
+    const items   = (porFecha[dateStr] || []).map(o => {
+      const esPend = o.estado === 'pending';
+      const style  = esPend
+        ? 'background:#fef3c7;color:#92400e;'
+        : 'background:#ede9fe;color:#5b21b6;';
+      const prefix = esPend ? '⏸ ' : '📅 ';
+      return `<div class="cal-plan-item" style="${style}" onclick="seleccionarPlanificada(${o.id})" title="${o.empresa} · ${o.responsable||'Sin técnico'}">
+        ${prefix}${o.empresa}${o.responsable ? ' · '+o.responsable : ''}
+      </div>`;
+    }).join('');
     celdas += `<div class="cal-cell${esHoy?' today':''}">
       <div class="cal-day-num">${d}</div>
       ${items}
