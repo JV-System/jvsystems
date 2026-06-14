@@ -227,8 +227,10 @@
   .cal-cell.other-month { background:#f8f9fa; opacity:0.6; }
   .cal-day-num { font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px; }
   .cal-cell.today .cal-day-num { color:var(--jv-blue); }
-  .cal-plan-item { background:#ede9fe; color:#5b21b6; border-radius:5px; padding:3px 6px; font-size:11px; font-weight:600; margin-bottom:3px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-plan-item { background:#ede9fe; color:#5b21b6; border-radius:5px; padding:3px 6px; font-size:11px; font-weight:600; margin-bottom:3px; cursor:grab; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .cal-plan-item:hover { background:#ddd6fe; }
+  .cal-plan-item.dragging { opacity:0.4; }
+  .cal-cell.drag-over { background:#ede9fe; border-color:#7c3aed; border-style:dashed; }
 
   /* CONTENT AREA */
   /* CONTENT AREA - defined in MAIN LAYOUT above */
@@ -2804,15 +2806,21 @@ function renderPlanificacion() {
     const esHoy   = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
     const items   = (porFecha[dateStr] || []).map(o => {
       const esPend = o.estado === 'pending';
-      const style  = esPend
-        ? 'background:#fef3c7;color:#92400e;'
-        : 'background:#ede9fe;color:#5b21b6;';
+      const style  = esPend ? 'background:#fef3c7;color:#92400e;' : 'background:#ede9fe;color:#5b21b6;';
       const prefix = esPend ? '⏸ ' : '📅 ';
-      return `<div class="cal-plan-item" style="${style}" onclick="seleccionarPlanificada(${o.id})" title="${o.empresa} · ${o.responsable||'Sin técnico'}">
+      return `<div class="cal-plan-item" style="${style}"
+        draggable="true"
+        ondragstart="calDragStart(event,${o.id})"
+        ondragend="calDragEnd(event)"
+        onclick="seleccionarPlanificada(${o.id})"
+        title="${o.empresa} · ${o.responsable||'Sin técnico'}">
         ${prefix}${o.empresa}${o.responsable ? ' · '+o.responsable : ''}
       </div>`;
     }).join('');
-    celdas += `<div class="cal-cell${esHoy?' today':''}">
+    celdas += `<div class="cal-cell${esHoy?' today':''}"
+      ondragover="calDragOver(event)"
+      ondragleave="calDragLeave(event)"
+      ondrop="calDrop(event,'${dateStr}')">
       <div class="cal-day-num">${d}</div>
       ${items}
     </div>`;
@@ -2835,6 +2843,38 @@ function renderPlanificacion() {
       <div class="cal-grid">${celdas}</div>
       ${planificadas.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;margin-top:20px;text-align:center;">No hay órdenes planificadas todavía. Usá "+ Nueva planificación" para agregar una.</p>' : ''}
     </div>`;
+}
+
+function calDragStart(e, id) {
+  e.dataTransfer.setData('text/plain', String(id));
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.classList.add('dragging');
+}
+function calDragEnd(e) {
+  e.target.classList.remove('dragging');
+}
+function calDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const cell = e.currentTarget;
+  cell.classList.add('drag-over');
+}
+function calDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function calDrop(e, dateStr) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = parseInt(e.dataTransfer.getData('text/plain'));
+  const o  = ordenes.find(x => x.id === id);
+  if (!o || o.fechaPlanificada === dateStr) return;
+  o.fechaPlanificada = dateStr;
+  if (o.estado !== 'pending') o.estado = 'planificada';
+  o.updatedAt = Date.now();
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  _syncPush();
+  renderPlanificacion();
+  showToast('📅 Reprogramado al ' + dateStr.split('-').reverse().join('/'));
 }
 
 function navCalendario(mesVal) {
