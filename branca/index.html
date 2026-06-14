@@ -2624,6 +2624,7 @@ function guardarOrdenPlanificada() {
     tecnicoNombre:'', facturacion:null,
     updatedAt: Date.now()
   };
+  registrarEvento(nueva, `Planificada para el ${fmtFecha(fecha)}`);
   ordenes.unshift(nueva);
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   _syncPush();
@@ -2673,6 +2674,7 @@ function seleccionarPlanificada(id) {
         ${isAdmin() && !esPendiente ? `<button class="btn" onclick="editarPlanificada(${o.id})" style="border-color:#555;color:#555;">✏ Editar</button>` : ''}
         ${isAdmin() ? `<button class="btn" onclick="eliminarOrden(${o.id})" style="color:var(--red);border-color:var(--red);">🗑 Eliminar</button>` : ''}
       </div>
+      ${renderHistorialEstados(o)}
     </div>`;
 }
 
@@ -2681,10 +2683,10 @@ function iniciarOrdenDesde(id) {
   if (!o) return;
   o.estado = 'open';
   o.numero = getNextNum();
-  // fechaPlanificada se mantiene para que siga apareciendo en el calendario si queda pendiente
   if (!o.fechaPlanificada) o.fechaPlanificada = o.fecha;
   o.fecha = new Date().toISOString().split('T')[0];
   o.updatedAt = Date.now();
+  registrarEvento(o, `Orden iniciada (${o.numero})`);
   ordenActual = o;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   _syncPush();
@@ -2721,6 +2723,7 @@ function reprogramarOrden(id) {
     o.estado       = 'planificada';
     delete o.numero;
     o.updatedAt    = Date.now();
+    registrarEvento(o, `Reprogramada al ${fmtFecha(fecha)}`);
     localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
     _syncPush();
     cerrarModalPlanificada();
@@ -3866,6 +3869,11 @@ function renderTabComprobante() {
     📋 Historial
   </button>
 
+  <button class="btn" onclick="document.getElementById('panel-estados').classList.toggle('hidden')"
+          style="background:#f0f4f9;color:#555;border:1px solid #dbe4f0;font-size:13px;">
+    Cambios de estado
+  </button>
+
   <button class="btn" onclick="mostrarNotifWhatsApp(ordenActual)"
           style="background:#e8f5e9;color:#2d7a31;border:1px solid #c8e6c9;font-size:13px;">
     💬 WhatsApp
@@ -3876,6 +3884,9 @@ function renderTabComprobante() {
   </span>
 
 </div>
+      <div id="panel-estados" class="hidden" style="margin-bottom:16px;background:white;border:1px solid var(--border);border-radius:10px;padding:16px;">
+        ${renderHistorialEstados(o) || '<p style="font-size:13px;color:var(--text-muted);">Sin cambios registrados todavía.</p>'}
+      </div>
       <div class="comprobante" id="printArea">
         <div class="comp-header">
           <div class="comp-logo-area">
@@ -4582,6 +4593,7 @@ async function guardarParcial() {
 
   // Marcar como pendiente y guardar
   ordenActual.estado = 'pending';
+  registrarEvento(ordenActual, 'Guardada como pendiente');
   delete ordenActual.draft;
   const ordenPendiente = ordenActual;
   const idxP = ordenes.findIndex(o => o.id === ordenPendiente.id);
@@ -4657,6 +4669,7 @@ function finalizarOrden() {
 
   // CAMBIAR ESTADO A COMPLETADA Y BLOQUEADA
   ordenActual.estado = 'locked';
+  registrarEvento(ordenActual, 'Orden cerrada');
   delete ordenActual.draft;
   const ordenFinal = ordenActual;
   const idxF = ordenes.findIndex(o => o.id === ordenFinal.id);
@@ -5389,6 +5402,31 @@ function closeModal() {
 
 
 // Convierte YYYY-MM-DD a DD/MM/AAAA (acepta también DD/MM/AAAA y lo devuelve igual)
+function registrarEvento(orden, texto) {
+  if (!orden) return;
+  orden.historialEstados = orden.historialEstados || [];
+  const hoy = new Date().toISOString().split('T')[0];
+  orden.historialEstados.push({ fecha: hoy, texto });
+}
+
+function renderHistorialEstados(orden) {
+  const hist = orden.historialEstados || [];
+  if (!hist.length) return '';
+  const filas = hist.map(e =>
+    `<tr>
+      <td style="padding:5px 10px 5px 0;white-space:nowrap;font-size:13px;color:var(--text-muted);vertical-align:top;">${fmtFecha(e.fecha)}</td>
+      <td style="padding:5px 0;font-size:13px;color:var(--navy);vertical-align:top;">${esc(e.texto)}</td>
+    </tr>`
+  ).join('');
+  return `
+    <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Historial de estados</div>
+      <table style="border-collapse:collapse;width:100%;">
+        <tbody>${filas}</tbody>
+      </table>
+    </div>`;
+}
+
 function fmtFecha(f) {
   if (!f) return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(f)) {
