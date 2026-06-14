@@ -4453,9 +4453,9 @@ showSection = function(sec){
 };
 
 // ════════════════════════════════════════════════
-//  DATOS DE PRUEBA (solo si la DB está vacía)
+//  (seed data removed — app starts empty)
 // ════════════════════════════════════════════════
-function loadSeedData(){
+function loadSeedData_DISABLED(){
   if(db.pedidos.length>0) return; // ya tiene datos
 
   db.clientes = [
@@ -4563,20 +4563,7 @@ function loadSeedData(){
 
   saveDB();
 }
-loadSeedData();
-
-// ── Migración: agregar pedidos demo de mayo 2026 si no existen ──
-(function migrateMayo2026(){
-  if(!db.pedidos.length) return; // no hay datos aún
-  if(db.pedidos.find(p=>p.id===2019)) return; // ya migrado
-  db.pedidos.push(
-    {id:2019,numero:19,nombre:'Gisela Perez',dni:'31203941',tel:'1155023840',email:'gisela.p@hotmail.com',transporte:'Andremar — Capital Federal',presupuesto:83700,fecha:'2026-05-08',estado:'cobrado',ingreso:83700,obs:'',productos:[{tipo:'desp_fina',kg:20,estampilla:true},{tipo:'extra_fina',kg:10,estampilla:false}]},
-    {id:2020,numero:20,nombre:'Anahí Torres',dni:'36101020',tel:'3764201983',email:'anahi.torres@gmail.com',transporte:'Expreso Posadas',presupuesto:56700,fecha:'2026-05-15',estado:'despachado',ingreso:null,obs:'',productos:[{tipo:'trad_fina',kg:15,estampilla:false},{tipo:'extra_fina',kg:10,estampilla:false}]},
-    {id:2021,numero:21,nombre:'Yesica Ramírez',dni:'29441832',tel:'2291554320',email:'yesica.ramirez@gmail.com',transporte:'Crucero cargo — Mar del Plata',presupuesto:91800,fecha:'2026-05-22',estado:'confirmado',ingreso:null,obs:'Tercer pedido del año',productos:[{tipo:'desp_gruesa',kg:30,estampilla:true},{tipo:'barb_fina',kg:10,estampilla:false}]}
-  );
-  if((db.config.nextPedido||0)<22) db.config.nextPedido=22;
-  saveDB();
-})();
+// loadSeedData() — deshabilitado (app arranca vacía)
 
 // ════════════════════════════════════════════════
 //  INIT — Splash → Login → App
