@@ -2502,7 +2502,7 @@ function renderOrderList() {
          style="border-left:3px solid #f59e0b;background:#fffbeb;">
       <div class="order-num" style="color:#b45309;">✏ Borrador</div>
       <div class="order-empresa">${draft.empresa || '(Sin empresa aún)'}</div>
-      <div class="order-meta">${draft.fecha || ''} · ${draft.responsable || '—'}</div>
+      <div class="order-meta">${fmtFecha(draft.fecha)} · ${draft.responsable || '—'}</div>
       <div class="order-status" style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block;margin-top:4px;">
         ✏ Seguir editando
       </div>
@@ -2538,7 +2538,7 @@ function renderOrderList() {
     ${planificadas.map(o => `
     <div class="order-item planificada ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
          onclick="seleccionarPlanificada(${o.id})">
-      <div class="order-num" style="color:#7c3aed;">📅 ${o.fecha}</div>
+      <div class="order-num" style="color:#7c3aed;">📅 ${fmtFecha(o.fechaPlanificada || o.fecha)}</div>
       <div class="order-empresa">${o.empresa}</div>
       <div class="order-meta">${o.responsable || '— Sin técnico'}</div>
       <div class="order-status status-planificada">Planificada</div>
@@ -2551,7 +2551,7 @@ function renderOrderList() {
          onclick="seleccionarOrden(${o.id})">
       <div class="order-num">${o.numero || 'Nueva'}</div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
-      <div class="order-meta">${o.fecha} · ${o.responsable || '—'}</div>
+      <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
       <div class="order-status ${o.estado === 'pending' ? 'status-pending' : o.estado === 'locked' ? 'status-locked' : 'status-open'}">
         ${o.estado === 'pending' ? 'Pendiente' : o.estado === 'locked' ? 'Cerrada' : 'Abierta'}
       </div>
@@ -2648,7 +2648,7 @@ function seleccionarPlanificada(id) {
         ${esPendiente
           ? `<span style="background:#fef3c7;color:#92400e;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">⏸ EN CURSO / PENDIENTE</span>`
           : `<span style="background:#ede9fe;color:#5b21b6;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">📅 PLANIFICADA</span>`}
-        <span style="font-size:13px;color:var(--text-muted);">📅 ${fechaMostrar}</span>
+        <span style="font-size:13px;color:var(--text-muted);">📅 ${fmtFecha(fechaMostrar)}</span>
         ${esPendiente && o.numero ? `<span style="font-size:12px;color:var(--text-muted);font-weight:600;">${o.numero}</span>` : ''}
       </div>
       <h2 style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px;">${o.empresa}</h2>
@@ -3018,7 +3018,7 @@ function filtrarHistorial() {
         </span>
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${o.empresa||'(Sin empresa)'}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${o.fecha} · ${o.responsable||'—'}</div>
+      <div style="font-size:12px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
       ${o.marca ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
   `; }).join('');
@@ -5387,6 +5387,16 @@ function closeModal() {
   if (_confirmResolve) { _confirmResolve(false); _confirmResolve = null; }
 }
 
+
+// Convierte YYYY-MM-DD a DD/MM/AAAA (acepta también DD/MM/AAAA y lo devuelve igual)
+function fmtFecha(f) {
+  if (!f) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(f)) {
+    const [y,m,d] = f.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return f; // ya viene en otro formato, mostrar tal cual
+}
 
 function esc(str) {
   if (!str) return '';
