@@ -668,7 +668,7 @@ tr:hover td{background:#fafbfd}
     </button>
     <button class="nav-tab" onclick="showSection('dario')" data-sec="dario">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      <span>Cuenta Darío</span>
+      <span>Proceso</span>
     </button>
     <button class="nav-tab" onclick="showSection('compras')" data-sec="compras">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
@@ -694,9 +694,9 @@ tr:hover td{background:#fafbfd}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       <span>Gastos</span>
     </button>
-    <button class="nav-tab" onclick="showSection('comunicacion')" data-sec="comunicacion" id="tabComunicacion">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      <span>Comunicación</span>
+    <button class="nav-tab" onclick="showSection('cuentas')" data-sec="cuentas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <span>Cuentas</span>
     </button>
     <button class="nav-tab" onclick="showSection('config')" data-sec="config">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -845,12 +845,7 @@ tr:hover td{background:#fafbfd}
     <div style="text-align:center;margin-top:10px">
       <button onclick="quickLogin('admin')" style="background:none;border:none;color:#aaa;font-size:11px;cursor:pointer;font-family:'Exo 2',sans-serif;letter-spacing:0.5px;padding:4px 8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='#f0f4f0';this.style.color='#2E7D32'" onmouseout="this.style.background='none';this.style.color='#aaa'">⚡ Acceso rápido admin</button>
     </div>
-    <div class="login-hint" id="loginHintBox">
-      <b>Usuarios de prueba:</b>
-      admin / admin &nbsp;·&nbsp; dario / dario2026<br>
-      lucia / lucia2026 &nbsp;·&nbsp; yesica / yesica2026<br>
-      gisela / gisela2026 &nbsp;·&nbsp; facundo / facundo2026
-    </div>
+    <div class="login-hint" id="loginHintBox" style="display:none"></div>
     <div class="login-footer">Desarrollado por Juan Villanueva</div>
   </div>
 </div>
@@ -1051,10 +1046,10 @@ tr:hover td{background:#fafbfd}
     </div>
   </section>
 
-  <!-- ══════════════════════════ CUENTA DARÍO ══════════════════════════ -->
+  <!-- ══════════════════════════ CUENTA DARÍO (PROCESO) ══════════════════════════ -->
   <section id="sec-dario" class="content" style="display:none">
     <div class="content-toolbar">
-      <span class="toolbar-title">Cuenta Corriente — Darío</span>
+      <span class="toolbar-title">Proceso — Planilla Darío</span>
       <button class="btn btn-primary btn-sm" onclick="openDarioModal()">+ Registrar Movimiento</button>
     </div>
     <div class="content-body">
@@ -1085,7 +1080,7 @@ tr:hover td{background:#fafbfd}
   <!-- ══════════════════════════ DESPACHOS ══════════════════════════ -->
   <section id="sec-despachos" class="content" style="display:none">
     <div class="content-toolbar">
-      <span class="toolbar-title">Despachos — Lucía</span>
+      <span class="toolbar-title">Despachos</span>
       <button class="btn btn-primary btn-sm" onclick="openDespachoModal()">+ Registrar Despacho</button>
     </div>
     <div class="content-body">
@@ -1096,6 +1091,40 @@ tr:hover td{background:#fafbfd}
             <thead><tr><th>Fecha</th><th>Tipo</th><th>Pedido / Descripción</th><th>Kg</th><th>Desglose</th><th class="td-right" style="color:var(--red)">Debe</th><th class="td-right" style="color:var(--teal)">Haber</th><th class="td-right">Saldo</th><th></th></tr></thead>
             <tbody id="tablaDespachos"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════ CUENTAS ══════════════════════════ -->
+  <section id="sec-cuentas" class="content" style="display:none">
+    <div class="content-toolbar">
+      <span class="toolbar-title">💳 Cuentas y Disponible</span>
+      <button class="btn btn-primary btn-sm" onclick="openCuentaMovModal()">+ Movimiento</button>
+    </div>
+    <div class="content-body">
+      <div class="kpi-grid" id="kpiCuentas"></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">💰 DISPONIBLE (calculado)</div>
+        <div id="disponibleCalc" style="font-size:28px;font-weight:800;padding:8px 0"></div>
+        <div id="disponibleDetalle" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card" style="padding:0">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <div class="card-title" style="margin:0">Cuenta 1</div>
+            <button class="btn btn-ghost btn-sm" onclick="editNombreCuenta(1)">✏️</button>
+          </div>
+          <div id="saldoCuenta1" style="padding:12px 16px;font-size:22px;font-weight:800"></div>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Detalle</th><th class="td-right">Debe</th><th class="td-right">Haber</th><th></th></tr></thead><tbody id="tablaCuenta1"></tbody></table></div>
+        </div>
+        <div class="card" style="padding:0">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <div class="card-title" style="margin:0">Cuenta 2</div>
+            <button class="btn btn-ghost btn-sm" onclick="editNombreCuenta(2)">✏️</button>
+          </div>
+          <div id="saldoCuenta2" style="padding:12px 16px;font-size:22px;font-weight:800"></div>
+          <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Detalle</th><th class="td-right">Debe</th><th class="td-right">Haber</th><th></th></tr></thead><tbody id="tablaCuenta2"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -1225,9 +1254,9 @@ tr:hover td{background:#fafbfd}
           </table>
         </div>
       </div>
-      <!-- Compras a Darío -->
+      <!-- Proceso (Darío) -->
       <div class="card">
-        <div class="card-title">🌿 Compras a Darío</div>
+        <div class="card-title">🌿 Proceso — Darío</div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Molienda</th><th class="td-right">Kg procesados</th><th class="td-right">Costo</th></tr></thead>
@@ -1235,7 +1264,7 @@ tr:hover td{background:#fafbfd}
           </table>
         </div>
       </div>
-      <!-- Despachos Lucía -->
+      <!-- Despachos -->
       <div class="card">
         <div class="card-title">🚚 Despachos — Lucía</div>
         <div class="table-wrap">
@@ -1946,7 +1975,7 @@ tr:hover td{background:#fafbfd}
         </div>
         <div class="form-group">
           <label class="form-label">Monto ($)</label>
-          <input class="form-control" id="gastoMonto" type="number" min="0" placeholder="0">
+          <input class="form-control" id="gastoMonto" type="number" min="0" step="0.01" placeholder="0.00">
         </div>
       </div>
     </div>
@@ -1999,6 +2028,7 @@ function _initDbFields(){
   if(!db.config.precioDespachoDefault) db.config.precioDespachoDefault=180;
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
+  if(!db.cuentas) db.cuentas={nombre1:'Mercado Pago',nombre2:'Cuenta Bancaria',movCuenta1:[],movCuenta2:[]};
 }
 function saveDB(){
   localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -2155,6 +2185,7 @@ function showSection(sec){
   if(sec==='dario'){ renderDario(); populateDarioMolienda(); }
   if(sec==='compras') renderCompras();
   if(sec==='despachos') renderDespachos();
+  if(sec==='cuentas') renderCuentas();
   if(sec==='catalogo') renderCatalogoApp();
   if(sec==='gastos') renderGastos();
   if(sec==='informes') renderInformes();
@@ -2227,15 +2258,19 @@ function renderDashboard(){
   const saldoLucia = calcSaldoLucia();
   const kgMes = calcKgMes(_dashMes,_dashAnio);
   const esHoy = _dashMes===now.getMonth()&&_dashAnio===now.getFullYear();
-  // Pedidos pendientes de despacho = no tienen estado despachado ni pago completo
-  const pedSinDespachar = db.pedidos.filter(p=>p.estado!=='despachado'&&p.estado!=='pago completo');
+  // Pedidos pendientes de despacho = solo pago parcial o pago completo (tienen pago pero no despachado)
+  const pedSinDespachar = db.pedidos.filter(p=>p.estado==='pago parcial'||p.estado==='pago completo');
   const pedPend = pedSinDespachar.length;
   // Stock estampillas
   const stockEst = db.config.stockEstampillas||0;
+  // DISPONIBLE
+  const saldoCuenta1 = calcSaldoCuenta(1);
+  const saldoCuenta2 = calcSaldoCuenta(2);
+  const disponible = saldoCuenta1 + saldoCuenta2 - Math.abs(saldoDario) - Math.abs(saldoLucia);
 
   document.getElementById('kpiGrid').innerHTML = `
-    <div class="kpi-card kpi-${saldoDario>=0?'blue':'red'}"><div class="kpi-label">Saldo c/ Darío</div><div class="kpi-value" style="color:${saldoDario>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div><div class="kpi-sub">${saldoDario>=0?'Darío te debe':'Vos le debés a Darío'}</div></div>
-    <div class="kpi-card kpi-${saldoLucia>=0?'blue':'red'}"><div class="kpi-label">Saldo c/ Lucía</div><div class="kpi-value" style="color:${saldoLucia>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div><div class="kpi-sub">${saldoLucia>=0?'Lucía te debe':'Debés a Lucía'}</div></div>
+    <div class="kpi-card kpi-${saldoDario>=0?'blue':'red'}"><div class="kpi-label">Saldo Proceso</div><div class="kpi-value" style="color:${saldoDario>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div><div class="kpi-sub">${saldoDario>=0?'Darío te debe':'Le debés a Darío'}</div></div>
+    <div class="kpi-card kpi-${saldoLucia>=0?'blue':'red'}"><div class="kpi-label">Saldo Despacho</div><div class="kpi-value" style="color:${saldoLucia>=0?'var(--teal)':'var(--red)'};font-size:18px">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div><div class="kpi-sub">${saldoLucia>=0?'Lucía te debe':'Le debés a Lucía'}</div></div>
     <div class="kpi-card kpi-accent" style="position:relative">
       <div class="kpi-label">Kg Vendidos</div>
       <div class="kpi-value">${fmtNum(kgMes)} kg</div>
@@ -2245,38 +2280,42 @@ function renderDashboard(){
         <button onclick="moveDashMes(1)" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0 3px;font-size:16px;line-height:1;font-weight:700" title="Mes siguiente">›</button>
       </div>
     </div>
-    <div class="kpi-card kpi-purple" style="cursor:pointer" onclick="showSection('pedidos');setPedidoEstadoFiltro('')"><div class="kpi-label">Sin despachar</div><div class="kpi-value">${pedPend}</div><div class="kpi-sub">Pedidos pendientes de envío</div></div>
-    <div class="kpi-card kpi-teal"><div class="kpi-label">🏷️ Estampillas</div><div class="kpi-value">${fmtNum(stockEst)}</div><div class="kpi-sub">Stock actual</div></div>
+    <div class="kpi-card kpi-purple" style="cursor:pointer" onclick="showSection('pedidos');setPedidoEstadoFiltro('')"><div class="kpi-label">Sin despachar</div><div class="kpi-value">${pedPend}</div><div class="kpi-sub">Con pago recibido</div></div>
+    <div class="kpi-card kpi-${disponible>=0?'teal':'red'}" style="cursor:pointer" onclick="showSection('cuentas')"><div class="kpi-label">💰 DISPONIBLE</div><div class="kpi-value" style="color:${disponible>=0?'var(--teal)':'var(--red)'};font-size:18px">${disponible>=0?'+':''}${fmt(disponible)}</div><div class="kpi-sub">Ctas − saldos</div></div>
   `;
 
   // Pedidos pendientes de despacho
-  renderCuotaKg(kgMes, _dashMes, _dashAnio);
+  document.getElementById('dashCuota').innerHTML='';
   renderRankingMoliendas(_dashMes, _dashAnio);
-  const pending5 = pedSinDespachar.sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,5);
-  document.getElementById('dashPedidos').innerHTML = pending5.length ? pending5.map(p=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.15);cursor:pointer;gap:8px" onclick="showSection('pedidos');setTimeout(()=>openPedidoDetail(${p.id}),100)">
+  const pending5 = [...pedSinDespachar].sort((a,b)=>(a.transporte||'').localeCompare(b.transporte||'')).slice(0,10);
+  document.getElementById('dashPedidos').innerHTML = pending5.length ? pending5.map(p=>{
+    const totalKg=(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
+    const prodsTxt=(p.productos||[]).filter(r=>r.tipo&&r.kg>0).map(r=>`${r.kg}kg ${prodLabel(r.tipo)}`).join(' · ');
+    return `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(128,128,128,0.15);cursor:pointer;gap:8px" onclick="showSection('pedidos');setTimeout(()=>openPedidoDetail(${p.id}),100)">
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Pedido #${p.numero} — ${p.nombre}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${p.fecha||''} · ${(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0)} kg</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🚚 ${p.transporte||'—'}</div>
+        <div style="font-size:11px;color:var(--text-muted)">🧉 ${prodsTxt||'—'} · <b>${totalKg} kg</b></div>
       </div>
-      <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0" class="badge-${badgeClass(p.estado)}">${p.estado}</span>
-    </div>`).join('') : '<div style="color:var(--teal);font-size:13px;padding:12px 0;text-align:center">✅ Todos los pedidos despachados</div>';
+      <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0" class="item-badge badge-${badgeClass(p.estado)}">${p.estado}</span>
+    </div>`;
+  }).join('') : '<div style="color:var(--teal);font-size:13px;padding:12px 0;text-align:center">✅ Todos los pedidos despachados</div>';
 
-  const saldo = saldoDario;
   document.getElementById('dashDario').innerHTML = `
     <div style="text-align:center;padding:12px 0">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON DARÍO</div>
-      <div style="font-size:28px;font-weight:800;color:${saldo>=0?'var(--teal)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldo>=0?'Darío te debe':'Vos le debés a Darío'}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO PROCESO (DARÍO)</div>
+      <div style="font-size:28px;font-weight:800;color:${saldoDario>=0?'var(--teal)':'var(--red)'}">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoDario>=0?'Darío te debe':'Le debés a Darío'}</div>
     </div>
     <div style="text-align:center;padding:8px 0;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO CON LUCÍA</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO DESPACHO (LUCÍA)</div>
       <div style="font-size:24px;font-weight:800;color:${saldoLucia>=0?'var(--teal)':'var(--red)'}">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoLucia>=0?'Lucía te debe':'Debés a Lucía'}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoLucia>=0?'Lucía te debe':'Le debés a Lucía'}</div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-      <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Darío</button>
-      <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Lucía</button>
+      <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Proceso</button>
+      <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Despacho</button>
     </div>`;
 }
 
@@ -2291,6 +2330,107 @@ function calcKgMes(m,y){
   return db.pedidos.filter(p=>{ const d=new Date(p.fecha+'T00:00:00'); return d.getMonth()===m&&d.getFullYear()===y; })
     .reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
 }
+function calcKgMesCliente(nombre){
+  const now=new Date();
+  return db.pedidos.filter(p=>p.nombre===nombre&&(()=>{const d=new Date(p.fecha+'T00:00:00');return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();})())
+    .reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
+}
+
+function calcSaldoCuenta(num){
+  if(!db.cuentas) return 0;
+  const movs=(db.cuentas[num===1?'movCuenta1':'movCuenta2']||[]);
+  return movs.reduce((s,m)=>s+(m.tipo==='haber'?1:-1)*Math.abs(m.monto||0),0);
+}
+
+function renderCuentas(){
+  if(!db.cuentas) db.cuentas={nombre1:'Cuenta 1',nombre2:'Cuenta 2',movCuenta1:[],movCuenta2:[]};
+  const s1=calcSaldoCuenta(1), s2=calcSaldoCuenta(2);
+  const saldoDario=calcSaldoDario(), saldoLucia=calcSaldoLucia();
+  const disponible=s1+s2-Math.abs(saldoDario)-Math.abs(saldoLucia);
+  document.getElementById('kpiCuentas').innerHTML=`
+    <div class="kpi-card kpi-blue"><div class="kpi-label">${db.cuentas.nombre1||'Cuenta 1'}</div><div class="kpi-value" style="font-size:18px;color:${s1>=0?'var(--teal)':'var(--red)'}">${s1>=0?'+':''}${fmt(s1)}</div></div>
+    <div class="kpi-card kpi-blue"><div class="kpi-label">${db.cuentas.nombre2||'Cuenta 2'}</div><div class="kpi-value" style="font-size:18px;color:${s2>=0?'var(--teal)':'var(--red)'}">${s2>=0?'+':''}${fmt(s2)}</div></div>
+    <div class="kpi-card kpi-${disponible>=0?'teal':'red'}"><div class="kpi-label">💰 DISPONIBLE</div><div class="kpi-value" style="font-size:18px;color:${disponible>=0?'var(--teal)':'var(--red)'}">${disponible>=0?'+':''}${fmt(disponible)}</div></div>`;
+  document.getElementById('disponibleCalc').innerHTML=`<span style="color:${disponible>=0?'var(--teal)':'var(--red)'}">${disponible>=0?'+':''}${fmt(disponible)}</span>`;
+  document.getElementById('disponibleDetalle').textContent=`${db.cuentas.nombre1||'Cuenta 1'} (${fmt(s1)}) + ${db.cuentas.nombre2||'Cuenta 2'} (${fmt(s2)}) − Proceso (${fmt(Math.abs(saldoDario))}) − Despacho (${fmt(Math.abs(saldoLucia))})`;
+  const doc1=document.getElementById('saldoCuenta1');
+  const doc2=document.getElementById('saldoCuenta2');
+  if(doc1) doc1.innerHTML=`<span style="color:${s1>=0?'var(--teal)':'var(--red)'}">${s1>=0?'+':''}${fmt(s1)}</span>`;
+  if(doc2) doc2.innerHTML=`<span style="color:${s2>=0?'var(--teal)':'var(--red)'}">${s2>=0?'+':''}${fmt(s2)}</span>`;
+  renderTablaCuenta(1); renderTablaCuenta(2);
+}
+
+function renderTablaCuenta(num){
+  const key='movCuenta'+num;
+  const movs=[...(db.cuentas[key]||[])].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  let saldo=(db.cuentas[key]||[]).reduce((s,m)=>s+(m.tipo==='haber'?1:-1)*Math.abs(m.monto||0),0);
+  const tbody=document.getElementById('tablaCuenta'+num); if(!tbody) return;
+  tbody.innerHTML=movs.length?movs.map(m=>{
+    const esH=m.tipo==='haber';
+    return `<tr>
+      <td style="font-size:12px">${m.fecha||'—'}</td>
+      <td style="font-size:12px">${m.desc||'—'}</td>
+      <td class="td-right" style="color:var(--red);font-size:12px">${esH?'—':fmt(Math.abs(m.monto))}</td>
+      <td class="td-right" style="color:var(--teal);font-size:12px">${esH?fmt(Math.abs(m.monto)):'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" style="color:var(--red);font-size:11px" onclick="deleteCuentaMov(${num},${m.id})">✕</button></td>
+    </tr>`;}).join('')
+  :'<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-muted);font-size:12px">Sin movimientos</td></tr>';
+}
+
+function openCuentaMovModal(){
+  const html=`
+    <div class="modal-overlay open" id="modalCuentaMov" onclick="if(event.target===this)closeModal('modalCuentaMov')">
+      <div class="modal" style="max-width:400px">
+        <div class="modal-header"><h3 class="modal-title">Registrar Movimiento</h3><button class="btn-icon" onclick="closeModal('modalCuentaMov')">✕</button></div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-group"><label class="form-label">Cuenta</label>
+            <select class="form-control" id="cmCuenta">
+              <option value="1">${db.cuentas?.nombre1||'Cuenta 1'}</option>
+              <option value="2">${db.cuentas?.nombre2||'Cuenta 2'}</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Tipo</label>
+            <select class="form-control" id="cmTipo">
+              <option value="haber">💚 Entrada (Haber)</option>
+              <option value="debe">🔴 Salida (Debe)</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Monto</label><input class="form-control" id="cmMonto" type="number" min="0" step="0.01" placeholder="0"></div>
+          <div class="form-group"><label class="form-label">Fecha</label><input class="form-control" id="cmFecha" type="date" value="${today()}"></div>
+          <div class="form-group"><label class="form-label">Detalle</label><input class="form-control" id="cmDesc" placeholder="ej: Pago cliente, Transferencia..."></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeModal('modalCuentaMov')">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveCuentaMov()">Guardar</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function saveCuentaMov(){
+  const num=Number(document.getElementById('cmCuenta').value);
+  const monto=Number(document.getElementById('cmMonto').value)||0;
+  if(!monto){toast('Ingresá el monto','error');return;}
+  if(!db.cuentas) db.cuentas={nombre1:'Cuenta 1',nombre2:'Cuenta 2',movCuenta1:[],movCuenta2:[]};
+  const key='movCuenta'+num;
+  if(!db.cuentas[key]) db.cuentas[key]=[];
+  db.cuentas[key].push({id:Date.now(),tipo:document.getElementById('cmTipo').value,monto,fecha:document.getElementById('cmFecha').value,desc:document.getElementById('cmDesc').value});
+  saveDB(); closeModal('modalCuentaMov'); renderCuentas(); renderDashboard(); toast('Movimiento registrado ✓','success');
+}
+
+function deleteCuentaMov(num,id){
+  if(!confirm('¿Eliminar movimiento?')) return;
+  const key='movCuenta'+num;
+  db.cuentas[key]=(db.cuentas[key]||[]).filter(m=>m.id!==id);
+  saveDB(); renderCuentas(); renderDashboard();
+}
+
+function editNombreCuenta(num){
+  const actual=db.cuentas?.['nombre'+num]||'Cuenta '+num;
+  const nuevo=prompt('Nombre de la cuenta:',actual); if(!nuevo||!nuevo.trim()) return;
+  if(!db.cuentas) db.cuentas={nombre1:'Cuenta 1',nombre2:'Cuenta 2',movCuenta1:[],movCuenta2:[]};
+  db.cuentas['nombre'+num]=nuevo.trim();
+  saveDB(); renderCuentas();
+}
 function autoCrearDespacho(pedido){
   if(pedido.tipoEnvio==='retira') return; // retira en persona: sin despacho
   const totalKg=(pedido.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
@@ -2304,6 +2444,29 @@ function autoCrearDespacho(pedido){
     kg:totalKg, tipoDespacho:'embalaje_flete',
     embalKg:totalKg, embalPrecio:precio, flete:0, embalExtra:0,
     subtotal:totalKg*precio, obs:'Auto-generado', _borrador:true
+  });
+}
+
+function autoRegistrarEnDario(pedido){
+  // Registra cada molienda del pedido en la planilla de Darío con el precio de costo configurado
+  const preciosCosto = db.config.preciosCosto || {};
+  const prods = (pedido.productos||[]).filter(r=>r.tipo&&r.kg>0);
+  if(!prods.length) return;
+  prods.forEach(r=>{
+    const pc = preciosCosto[r.tipo] || 0;
+    const subtotal = pc * Number(r.kg);
+    db.dario.push({
+      id: Date.now() + Math.random(),
+      tipo: 'molienda',
+      fecha: pedido.fecha || today(),
+      pedidoId: String(pedido.id),
+      pedidoNum: String(pedido.numero||''),
+      cliente: pedido.nombre||'',
+      molienda: r.tipo,
+      kg: Number(r.kg),
+      subtotal,
+      obs: `Auto — Pedido #${pedido.numero}`
+    });
   });
 }
 
@@ -2375,6 +2538,54 @@ function openPedidoDetail(id){
   renderPedidosList();
   closeSidebar(); // mobile: cierra la lista y muestra el detalle
   const totalKg = (p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
+
+  // ── Vista de LUCÍA: datos del cliente + productos sin precios ──
+  if(currentUser && currentUser.rol==='lucia'){
+    document.getElementById('contentPedidos').innerHTML=`
+      <div style="flex:1;overflow-y:auto;padding:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <h2 style="font-size:17px;font-weight:800;flex:1">Pedido #${p.numero}</h2>
+          <span class="item-badge badge-${badgeClass(p.estado)}">${p.estado}</span>
+        </div>
+        <div class="card">
+          <div class="card-title">Datos del cliente</div>
+          <div class="detail-grid">
+            <div><div class="detail-label">Nombre</div><div class="detail-value">${p.nombre||'—'}</div></div>
+            <div><div class="detail-label">DNI</div><div class="detail-value">${p.dni||'—'}</div></div>
+            <div><div class="detail-label">Teléfono</div><div class="detail-value">${p.tel||'—'}</div></div>
+            <div><div class="detail-label">Email</div><div class="detail-value">${p.email||'—'}</div></div>
+            <div style="grid-column:1/-1"><div class="detail-label">Envío</div><div class="detail-value">
+              ${p.tipoEnvio==='domicilio'?'🏠 A domicilio':p.tipoEnvio==='retira'?'🚶 Retira en persona':'🏪 Sucursal'}
+              ${p.transporte?'— '+p.transporte:''}
+            </div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📦 Productos a despachar</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Molienda</th><th>Kg</th><th>Estampilla</th></tr></thead>
+              <tbody>${(p.productos||[]).filter(r=>r.tipo&&r.kg>0).map(r=>`
+                <tr>
+                  <td style="font-weight:600">${prodLabel(r.tipo)}</td>
+                  <td class="td-num" style="font-weight:800;font-size:15px">${r.kg} kg</td>
+                  <td>${r.estampilla?'<span style="color:var(--teal);font-weight:700">✅ Con estampilla</span>':'—'}</td>
+                </tr>`).join('')}
+              </tbody>
+              <tfoot>
+                <tr style="background:var(--bg)">
+                  <td style="font-weight:800">TOTAL</td>
+                  <td class="td-num" style="font-weight:800;font-size:16px">${totalKg} kg</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        ${p.obs?`<div class="card"><div class="card-title">Observaciones</div><div style="font-size:13px">${p.obs}</div></div>`:''}
+      </div>`;
+    return;
+  }
 
   // ── Vista de DARÍO: solo cantidades y estampillas, sin precios ──
   if(currentUser && currentUser.rol==='dario'){
@@ -2477,7 +2688,7 @@ function openPedidoDetail(id){
       <div id="det-wsp" style="display:none">
         <div class="card">
           <div style="display:flex;gap:8px;margin-bottom:12px">
-            <button class="inner-tab active" id="wspTabDario" onclick="switchWspTab('dario',${id})">Para Darío</button>
+            <button class="inner-tab active" id="wspTabDario" onclick="switchWspTab('dario',${id})">Para Proceso</button>
             <button class="inner-tab" id="wspTabCliente" onclick="switchWspTab('cliente',${id})">Para el cliente</button>
           </div>
           <div id="wspPanelDario">
@@ -2769,6 +2980,7 @@ function savePedido(){
     data.numero=db.config.nextPedido++;
     db.pedidos.push(data);
     autoCrearDespacho(data);
+    autoRegistrarEnDario(data);
   }
   saveDB(); closeModal('modalPedido'); renderPedidosList();
   const activeId=editingPedidoId||(db.pedidos[db.pedidos.length-1].id);
@@ -2866,9 +3078,13 @@ function openClienteProfile(id){
           <div class="cli-stat-val" style="font-size:14px;color:${totalPeds>=2?'var(--teal)':'var(--text-muted)'}">${frecuenciaStr}</div>
           <div class="cli-stat-lbl">Frecuencia</div>
         </div>
-        <div class="cli-stat destacado">
+        ${currentUser?.rol!=='lucia'?`<div class="cli-stat destacado">
           <div class="cli-stat-val" style="font-size:${totalGastado>999999?'13px':totalGastado>0?'15px':'20px'}">${totalGastado>0?fmt(totalGastado):'—'}</div>
           <div class="cli-stat-lbl">Total comprado</div>
+        </div>`:''}
+        <div class="cli-stat">
+          <div class="cli-stat-val" style="font-size:14px">${fmtNum(calcKgMesCliente(c.nombre))} kg</div>
+          <div class="cli-stat-lbl">Kg este mes</div>
         </div>
       </div>
       ${topProds.length?`<div class="card" style="padding:14px 16px;margin-bottom:14px">
@@ -3366,7 +3582,7 @@ function savePresAsOrder(){
   const prods=getProductos().filter(p=>Number(document.getElementById('pres_'+p.id)?.value)>0).map(p=>({tipo:p.id,kg:Number(document.getElementById('pres_'+p.id).value),estampilla:false}));
   if(!prods.length){ toast('Sin productos','error'); return; }
   const cli=presClienteData;
-  const data={id:Date.now(), numero:db.config.nextPedido++, nombre:cli?.nombre||'', dni:cli?.dni||'', tel:cli?.tel||'', email:cli?.email||'', transporte:cli?.transporte||'', fecha:today(), estado:'pendiente', productos:prods, presupuesto:null, ingreso:null, obs:''};
+  const data={id:Date.now(), numero:db.config.nextPedido++, nombre:cli?.nombre||'', dni:cli?.dni||'', tel:cli?.tel||'', email:cli?.email||'', transporte:cli?.transporte||'', fecha:today(), estado:'pago parcial', productos:prods, presupuesto:null, ingreso:null, obs:''};
   db.pedidos.push(data); saveDB(); showSection('pedidos'); setTimeout(()=>openPedidoDetail(data.id),100); toast('Pedido creado desde presupuesto ✓','success');
 }
 
@@ -3411,16 +3627,16 @@ function renderInformes(){
   document.getElementById('infKpis').innerHTML=`
     <div class="inf-card"><div class="inf-val" style="color:var(--teal)">${fmt(ingresos)}</div><div class="inf-lbl">Ingresos cobrados</div></div>
     <div class="inf-card"><div class="inf-val">${fmtNum(kgVendidos)} kg</div><div class="inf-lbl">Kg vendidos</div></div>
-    <div class="inf-card"><div class="inf-val" style="color:var(--amber)">${fmt(costoDario)}</div><div class="inf-lbl">Costo Darío</div></div>
-    <div class="inf-card"><div class="inf-val" style="color:var(--purple)">${fmt(costoLucia)}</div><div class="inf-lbl">Costo Lucía</div></div>
+    <div class="inf-card"><div class="inf-val" style="color:var(--amber)">${fmt(costoDario)}</div><div class="inf-lbl">Costo Proceso</div></div>
+    <div class="inf-card"><div class="inf-val" style="color:var(--purple)">${fmt(costoLucia)}</div><div class="inf-lbl">Costo Despacho</div></div>
     <div class="inf-card"><div class="inf-val" style="color:var(--red)">${fmt(totalGastos)}</div><div class="inf-lbl">Gastos</div></div>
     <div class="inf-card"><div class="inf-val ${ganancia>=0?'ganancia-pos':'ganancia-neg'}">${ganancia>=0?'+':''}${fmt(ganancia)}</div><div class="inf-lbl">Ganancia estimada</div></div>`;
 
   // Resultado mes
   document.getElementById('infGanancia').innerHTML=`
     <div class="fin-row"><span class="fin-lbl">Ingresos cobrados</span><span class="fin-val" style="color:var(--teal)">${fmt(ingresos)}</span></div>
-    <div class="fin-row"><span class="fin-lbl">− Costo molienda Darío</span><span class="fin-val" style="color:var(--red)">−${fmt(costoDario)}</span></div>
-    <div class="fin-row"><span class="fin-lbl">− Costo despacho Lucía</span><span class="fin-val" style="color:var(--red)">−${fmt(costoLucia)}</span></div>
+    <div class="fin-row"><span class="fin-lbl">− Costo Proceso (Darío)</span><span class="fin-val" style="color:var(--red)">−${fmt(costoDario)}</span></div>
+    <div class="fin-row"><span class="fin-lbl">− Costo Despacho (Lucía)</span><span class="fin-val" style="color:var(--red)">−${fmt(costoLucia)}</span></div>
     <div class="fin-row"><span class="fin-lbl">− Gastos del mes</span><span class="fin-val" style="color:var(--red)">−${fmt(totalGastos)}</span></div>
     <div class="fin-total"><span>Ganancia neta estimada</span><span class="${ganancia>=0?'ganancia-pos':'ganancia-neg'}">${ganancia>=0?'+':''}${fmt(ganancia)}</span></div>
     <div style="font-size:11px;color:var(--text-muted);margin-top:8px">* Estimada: no incluye pedidos con pago pendiente. Los costos de Darío se calculan sobre moliendas registradas en el mes.</div>`;
@@ -3524,8 +3740,8 @@ function renderGananciaPedido(pid){
       <div class="card-title">💰 Análisis financiero — Pedido #${p.numero}</div>
       ${p.cuentaCobro?`<div style="margin-bottom:12px"><span class="item-badge badge-open">🏦 Cobrado en: ${p.cuentaCobro}</span></div>`:''}
       <div class="fin-row"><span class="fin-lbl">Ingreso cobrado</span><span class="fin-val" style="color:var(--teal)">${p.ingreso?fmt(p.ingreso):'Pendiente'}</span></div>
-      <div class="fin-row"><span class="fin-lbl">− Costo molienda Darío</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
-      <div class="fin-row"><span class="fin-lbl">− Costo despacho Lucía</span><span class="fin-val" style="color:${g.costoDesp?'var(--red)':'var(--text-muted)'}">${g.costoDesp?'−'+fmt(g.costoDesp):'No registrado'}</span></div>
+      <div class="fin-row"><span class="fin-lbl">− Costo Proceso (Darío)</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
+      <div class="fin-row"><span class="fin-lbl">− Costo Despacho (Lucía)</span><span class="fin-val" style="color:${g.costoDesp?'var(--red)':'var(--text-muted)'}">${g.costoDesp?'−'+fmt(g.costoDesp):'No registrado'}</span></div>
       <div class="fin-total"><span>Ganancia estimada</span><span class="${g.ganancia>=0?'ganancia-pos':'ganancia-neg'}">${g.ingreso?((g.ganancia>=0?'+':'')+fmt(g.ganancia)):'—'}</span></div>
       ${p.ingreso?`<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
         <div class="inf-card" style="flex:1"><div class="inf-val">${fmt(g.ppk)}</div><div class="inf-lbl">Promedio $/kg</div></div>
@@ -3976,12 +4192,12 @@ const USUARIOS_DEFAULT = [
 let USUARIOS = (()=>{ try{ const s=localStorage.getItem('jvs_usuarios_v2'); return s?JSON.parse(s):USUARIOS_DEFAULT; }catch(e){ return USUARIOS_DEFAULT; } })();
 function saveUsuarios(){ saveUsuariosAndSync(); }
 
-const ROLE_LABELS = {admin:'Administrador', dario:'Preparación', lucia:'Despacho', cliente:'Cliente'};
+const ROLE_LABELS = {admin:'Administrador', dario:'Proceso', lucia:'Despacho', cliente:'Cliente'};
 const ROLE_TABS = {
-  admin:   ['dashboard','pedidos','clientes','dario','compras','despachos','presupuestos','gastos','informes','comunicacion','config'],
-  dario:   ['comunicacion','dario','pedidos'],
-  lucia:   ['comunicacion','despachos','pedidos','clientes'],
-  cliente: ['catalogo','pedidos','comunicacion'],
+  admin:   ['dashboard','pedidos','clientes','dario','compras','despachos','cuentas','presupuestos','gastos','informes','config'],
+  dario:   ['dario','pedidos'],
+  lucia:   ['despachos','pedidos','clientes'],
+  cliente: ['catalogo','pedidos'],
 };
 
 let currentUser = null;
@@ -4136,16 +4352,16 @@ function applyRoleTabs(){
 //  ESTADOS DE PEDIDOS (configurables)
 // ════════════════════════════════════════════════
 const DEFAULT_ESTADOS = [
-  {id:1, nombre:'pendiente',     emoji:'⏳', color:'pending'},
-  {id:2, nombre:'pago parcial',  emoji:'💵', color:'open'},
+  {id:1, nombre:'pago parcial',  emoji:'💵', color:'open'},
+  {id:2, nombre:'pago completo', emoji:'💰', color:'done'},
   {id:3, nombre:'despachado',    emoji:'🚚', color:'enviado'},
-  {id:4, nombre:'pago completo', emoji:'💰', color:'done'},
 ];
 if(!db.estados) db.estados = JSON.parse(JSON.stringify(DEFAULT_ESTADOS));
 // Migración: renombrar estados viejos
 db.pedidos.forEach(p=>{
   if(p.estado==='confirmado') p.estado='pago parcial';
   if(p.estado==='cobrado')    p.estado='pago completo';
+  if(p.estado==='pendiente')  p.estado='pago parcial';
 });
 
 function getEstados(){ return db.estados && db.estados.length ? db.estados : DEFAULT_ESTADOS; }
@@ -4413,7 +4629,7 @@ function mostrarNotifMensajes(count){
     tag: 'sabores-chat',
     renotify: true
   });
-  n.onclick = ()=>{ window.focus(); showSection('comunicacion'); n.close(); };
+  n.onclick = ()=>{ window.focus(); showSection('dashboard'); n.close(); };
 }
 
 async function chequearMensajesNuevos(){
@@ -4868,8 +5084,14 @@ function renderCodigosDescuento(){
 function agregarCodigo(){
   const cod=prompt('Código (ej: IÑAKI):'); if(!cod||!cod.trim()) return;
   const pct=Number(prompt('Descuento en %:')); if(!pct||isNaN(pct)||pct<=0||pct>100){toast('Porcentaje inválido','error');return;}
+  if(!db.config.codigosDescuento) db.config.codigosDescuento={};
   db.config.codigosDescuento[cod.trim().toUpperCase()]=pct;
-  saveDB();renderCodigosDescuento();toast(`Código "${cod.toUpperCase()}" — ${pct}% guardado ✓`,'success');
+  // Guardar inmediatamente sin debounce para evitar pérdida de datos
+  clearTimeout(_syncTimer);
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  _fbPut('/db', db).then(()=>{ _setSyncStatus('ok'); }).catch(()=>{ _setSyncStatus('error'); });
+  renderCodigosDescuento();
+  toast(`Código "${cod.trim().toUpperCase()}" — ${pct}% guardado ✓`,'success');
 }
 function eliminarCodigo(cod){if(!confirm('¿Eliminar código '+cod+'?'))return;delete db.config.codigosDescuento[cod];saveDB();renderCodigosDescuento();}
 
@@ -5341,20 +5563,19 @@ const BNAV_ICONS = {
   catalogo:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>`,
   informes:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
   gastos:        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-  comunicacion:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>`,
+  cuentas:       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
   config:        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
 };
 const BNAV_LABELS = {
-  dashboard:'Inicio', pedidos:'Pedidos', clientes:'Clientes', dario:'Darío',
-  compras:'Compras', despachos:'Envíos', presupuestos:'Presup.', gastos:'Gastos', catalogo:'Catálogo', informes:'Informes', comunicacion:'Chat', config:'Config',
+  dashboard:'Inicio', pedidos:'Pedidos', clientes:'Clientes', dario:'Proceso',
+  compras:'Compras', despachos:'Envíos', cuentas:'Cuentas', presupuestos:'Presup.', gastos:'Gastos', catalogo:'Catálogo', informes:'Informes', config:'Config',
 };
 let _bnavActive = '';
-// Prioridad de tabs en bottom nav (comunicacion siempre incluida)
 const BNAV_PRIORITY = {
-  admin:   ['dashboard','pedidos','clientes','comunicacion','dario'],
-  dario:   ['pedidos','comunicacion','dario'],
-  lucia:   ['pedidos','comunicacion','despachos'],
-  cliente: ['catalogo','pedidos','comunicacion'],
+  admin:   ['dashboard','pedidos','cuentas','clientes','dario'],
+  dario:   ['pedidos','dario'],
+  lucia:   ['pedidos','despachos','clientes'],
+  cliente: ['catalogo','pedidos'],
 };
 let _chatUnread = 0; // contador mensajes no leídos
 function renderBottomNav(){
@@ -5364,7 +5585,7 @@ function renderBottomNav(){
   const priority = BNAV_PRIORITY[currentUser.rol] || allowed;
   const show = priority.filter(s=>allowed.includes(s)).slice(0,5);
   inner.innerHTML = show.map(sec=>{
-    const unread = sec==='comunicacion' && _chatUnread > 0;
+    const unread = false; // comunicacion removida
     return `<button class="bnav-btn${_bnavActive===sec?' active':''}" onclick="showSection('${sec}')" style="position:relative">
       ${BNAV_ICONS[sec]||''}
       ${unread?`<span class="bnav-badge">${_chatUnread>9?'9+':_chatUnread}</span>`:''}
@@ -5411,7 +5632,7 @@ if('serviceWorker' in navigator){
   // Auto-recargar cuando el SW nuevo activa (recibe aviso del SW)
   navigator.serviceWorker.addEventListener('message', e => {
     if(e.data && e.data.type === 'SW_UPDATED') window.location.reload();
-    if(e.data && e.data.type === 'OPEN_CHAT') showSection('comunicacion');
+    if(e.data && e.data.type === 'OPEN_CHAT') showSection('dashboard');
   });
 }
 
