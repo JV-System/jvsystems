@@ -2907,8 +2907,7 @@ function navCalendario(mesVal) {
 function switchView(v) {
   const user = getCurrentUser();
   if (v === 'config') {
-    if (!isAdmin()) return;
-    if (!configUnlocked) { openConfigPass(); return; }
+    if (isAdmin() && !configUnlocked) { openConfigPass(); return; }
   }
   if (v === 'facturacion' && !canFacturar()) return;
   if ((v === 'nueva' || v === 'historial') && user && user.role === 'facturacion') return;
