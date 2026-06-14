@@ -2010,6 +2010,8 @@
 const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
 
 let _syncTimer = null;
+let _calYear  = null;
+let _calMonth = null;
 
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
@@ -2723,11 +2725,8 @@ function renderPlanificacion() {
   const planificadas = ordenes.filter(o => o.estado === 'planificada');
 
   const hoy   = new Date();
-  let   year  = hoy.getFullYear();
-  let   month = hoy.getMonth(); // 0-based
-  // Leer mes/año del selector si existe
-  const selMes = document.getElementById('cal-mes-sel');
-  if (selMes) { const [y,m] = selMes.value.split('-'); year = +y; month = +m; }
+  const year  = _calYear  !== null ? _calYear  : hoy.getFullYear();
+  const month = _calMonth !== null ? _calMonth : hoy.getMonth(); // 0-based
 
   const primerDia = new Date(year, month, 1);
   const ultDia    = new Date(year, month + 1, 0);
@@ -2735,9 +2734,8 @@ function renderPlanificacion() {
   const inicioSem = primerDia.getDay(); // 0=dom
 
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const mesAnterior = month === 0 ? `${year-1}-11` : `${year}-${String(month-1).padStart(2,'0')}`;
-  const mesSiguiente= month===11 ? `${year+1}-00` : `${year}-${String(month+1).padStart(2,'0')}`;
-  const mesActualVal= `${year}-${String(month).padStart(2,'0')}`;
+  const mesAnterior  = month === 0 ? `${year-1}-11` : `${year}-${String(month-1).padStart(2,'0')}`;
+  const mesSiguiente = month === 11 ? `${year+1}-0`  : `${year}-${String(month+1).padStart(2,'0')}`;
 
   // Agrupar planificadas por fecha
   const porFecha = {};
@@ -2776,29 +2774,19 @@ function renderPlanificacion() {
         </div>
         <button class="btn btn-primary" onclick="abrirModalPlanificada()" style="background:#7c3aed;">+ Nueva planificación</button>
       </div>
-      <input type="hidden" id="cal-mes-sel" value="${mesActualVal}">
       <div class="cal-grid" style="margin-bottom:8px;">
         ${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div class="cal-header-day">${d}</div>`).join('')}
       </div>
       <div class="cal-grid">${celdas}</div>
-      ${planificadas.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;margin-top:20px;text-align:center;">No hay órdenes planificadas todavía.</p>' : ''}
+      ${planificadas.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;margin-top:20px;text-align:center;">No hay órdenes planificadas todavía. Usá "+ Nueva planificación" para agregar una.</p>' : ''}
     </div>`;
 }
 
 function navCalendario(mesVal) {
   // mesVal formato "YYYY-MM" donde MM es 0-based
   const [y, m] = mesVal.split('-');
-  // Guardar temporalmente y re-renderizar
-  const sel = document.getElementById('cal-mes-sel');
-  if (sel) sel.value = mesVal;
-  // Construir nueva fecha y re-renderizar
-  const hid = document.createElement('input');
-  hid.id = 'cal-mes-sel'; hid.value = mesVal;
-  // Hack: reemplazar valor y re-renderizar
-  renderPlanificacion();
-  // Corregir el valor del input recién creado por renderPlanificacion
-  const newSel = document.getElementById('cal-mes-sel');
-  if (newSel) newSel.value = mesVal;
+  _calYear  = +y;
+  _calMonth = +m;
   renderPlanificacion();
 }
 
