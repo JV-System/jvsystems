@@ -1976,10 +1976,10 @@ if(typeof window !== 'undefined' && window.location && window.location.search.in
   });
 }
 
-const DB_KEY = 'jvs_yerba_v1';
-// ─── SYNC CONFIG ─────────────────────────────────────────────────────────────
-// Pegá aquí la URL del Apps Script después de desplegarlo:
-const SABORES_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIelj-nG3CdorBHhNluESucHWuZSRGOQ4LpagRRg3vp55JbV6nR9aVIQA6_LKXJKI5/exec';
+const DB_KEY = 'jvs_yerba_v2';
+// ─── FIREBASE CONFIG ──────────────────────────────────────────────────────────
+const FIREBASE_URL = 'https://sabores-misiones-default-rtdb.firebaseio.com';
+const SABORES_SCRIPT_URL = FIREBASE_URL; // compatibilidad
 // ─────────────────────────────────────────────────────────────────────────────
 let db = {
   pedidos: [], clientes: [], dario: [], compras: [], despachos: [],
@@ -2005,29 +2005,38 @@ function saveDB(){
   _syncPush();
 }
 
-// ── SINCRONIZACIÓN CON GOOGLE SHEETS ─────────────────────────────────────────
+// ── SINCRONIZACIÓN CON FIREBASE ───────────────────────────────────────────────
 
 let _syncTimer = null;
 let _syncStatus = 'idle';
 
-// Envía datos a GAS usando text/plain (no-cors, sin preflight).
-// La acción va en la URL (?action=...) y el JSON en el body.
-async function _gasPost(action, jsonStr){
-  await fetch(SABORES_SCRIPT_URL + '?action=' + action, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: jsonStr
+async function _fbPut(path, data){
+  const r = await fetch(FIREBASE_URL + path + '.json', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
   });
+  if(!r.ok) throw new Error('Firebase error: ' + r.status);
+  return r.json();
+}
+
+async function _fbGet(path){
+  const controller = new AbortController();
+  const t = setTimeout(()=>controller.abort(), 8000);
+  try{
+    const r = await fetch(FIREBASE_URL + path + '.json', { signal: controller.signal });
+    clearTimeout(t);
+    if(!r.ok) throw new Error('Firebase error: ' + r.status);
+    return r.json();
+  } catch(e){ clearTimeout(t); throw e; }
 }
 
 function _syncPush(){
-  if(!SABORES_SCRIPT_URL) return;
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async ()=>{
     _setSyncStatus('syncing');
     try{
-      await _gasPost('saveDB', JSON.stringify(db));
+      await _fbPut('/db', db);
       _setSyncStatus('ok');
       toast('☁ Guardado en la nube ✓', 'success');
     } catch(e){
@@ -2038,44 +2047,34 @@ function _syncPush(){
 }
 
 async function _syncPull(){
-  if(!SABORES_SCRIPT_URL) return false;
   try{
-    const r = await fetch(SABORES_SCRIPT_URL + '?action=getDB', { redirect:'follow' });
-    const j = await r.json();
-    if(j.success && j.data){
-      const remote = JSON.parse(j.data);
-      if(remote && (remote.pedidos || remote.clientes || remote.config)){
-        db = remote;
-        _initDbFields();
-        if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
-        localStorage.setItem(DB_KEY, JSON.stringify(db));
-        return true;
-      }
+    const remote = await _fbGet('/db');
+    if(remote && remote.config){
+      db = remote;
+      _initDbFields();
+      if(!db.config.productos) db.config.productos = JSON.parse(JSON.stringify(DEFAULT_PRODUCTOS));
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      return true;
     }
   } catch(e){ console.error('syncPull error:', e); }
   return false;
 }
 
 async function _syncPullUsuarios(){
-  if(!SABORES_SCRIPT_URL) return false;
   try{
-    const r = await fetch(SABORES_SCRIPT_URL + '?action=getUsuarios', { redirect:'follow' });
-    const j = await r.json();
-    if(j.success && j.data){
-      const remote = JSON.parse(j.data);
-      if(Array.isArray(remote) && remote.length > 0){
-        USUARIOS = remote;
-        localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
-        return true;
-      }
+    const remote = await _fbGet('/usuarios');
+    if(Array.isArray(remote) && remote.length > 0){
+      USUARIOS = remote;
+      localStorage.setItem('jvs_usuarios_v2', JSON.stringify(USUARIOS));
+    } else {
+      USUARIOS = JSON.parse(JSON.stringify(USUARIOS_DEFAULT));
+      localStorage.setItem('jvs_usuarios_v2', JSON.stringify(USUARIOS));
+      _fbPut('/usuarios', USUARIOS).catch(()=>{});
     }
   } catch(e){}
-  return false;
 }
 
-// Botón manual de sync (accesible desde config para admin)
 async function syncAhora(){
-  if(!SABORES_SCRIPT_URL){ toast('URL del script no configurada','error'); return; }
   toast('Sincronizando...', 'info');
   _setSyncStatus('syncing');
   const ok = await _syncPull();
@@ -2090,9 +2089,8 @@ async function syncAhora(){
 }
 
 function saveUsuariosAndSync(){
-  localStorage.setItem('jvs_usuarios', JSON.stringify(USUARIOS));
-  if(!SABORES_SCRIPT_URL) return;
-  _gasPost('saveUsuarios', JSON.stringify(USUARIOS)).catch(()=>{});
+  localStorage.setItem('jvs_usuarios_v2', JSON.stringify(USUARIOS));
+  _fbPut('/usuarios', USUARIOS).catch(()=>{});
 }
 
 function _setSyncStatus(s){
@@ -3975,7 +3973,7 @@ const USUARIOS_DEFAULT = [
 ];
 
 // USUARIOS cargados desde localStorage (persistentes)
-let USUARIOS = (()=>{ try{ const s=localStorage.getItem('jvs_usuarios'); return s?JSON.parse(s):USUARIOS_DEFAULT; }catch(e){ return USUARIOS_DEFAULT; } })();
+let USUARIOS = (()=>{ try{ const s=localStorage.getItem('jvs_usuarios_v2'); return s?JSON.parse(s):USUARIOS_DEFAULT; }catch(e){ return USUARIOS_DEFAULT; } })();
 function saveUsuarios(){ saveUsuariosAndSync(); }
 
 const ROLE_LABELS = {admin:'Administrador', dario:'Preparación', lucia:'Despacho', cliente:'Cliente'};
@@ -4100,18 +4098,15 @@ function initApp(){
   showSection(first);
   setTimeout(updateChatBadge, 300);
   setTimeout(pedirPermisoNotif, 2000);
-  // Sincronizar datos desde Sheets al iniciar sesión
-  if(SABORES_SCRIPT_URL){
-    _setSyncStatus('syncing');
-    _syncPull().then(pulled => {
-      _setSyncStatus(pulled ? 'ok' : 'error');
-      if(pulled){
-        // Refrescar la sección activa con datos actualizados
-        showSection(first);
-        setTimeout(updateChatBadge, 100);
-      }
-    });
-  }
+  // Sincronizar datos desde Firebase al iniciar sesión
+  _setSyncStatus('syncing');
+  _syncPull().then(pulled => {
+    _setSyncStatus(pulled ? 'ok' : 'error');
+    if(pulled){
+      showSection(first);
+      setTimeout(updateChatBadge, 100);
+    }
+  });
 }
 
 function applyRoleTabs(){
@@ -4423,13 +4418,9 @@ function mostrarNotifMensajes(count){
 
 async function chequearMensajesNuevos(){
   if(!currentUser) return;
-  // Sincronizar desde Sheets para ver mensajes de otros dispositivos
-  if(SABORES_SCRIPT_URL){
-    const pulled = await _syncPull();
-    if(pulled){
-      showSection._sec = showSection._sec; // no re-render, solo actualizar badge
-    }
-  }
+  // Sincronizar desde Firebase para ver mensajes de otros dispositivos
+  const pulled = await _syncPull();
+  if(pulled){ showSection._sec = showSection._sec; }
   const ahora = countUnreadMsgs();
   if(ahora > _lastNotifCount){
     mostrarNotifMensajes(ahora);
@@ -5416,12 +5407,8 @@ function renderBottomNav(){
       if(currentUser){
         initApp();
       } else {
-        // Intentar actualizar usuarios desde Sheets antes de mostrar login
-        if(SABORES_SCRIPT_URL){
-          _syncPullUsuarios().finally(showLogin);
-        } else {
-          showLogin();
-        }
+        showLogin();
+        _syncPullUsuarios().catch(()=>{});
       }
     }, 400);
   }
