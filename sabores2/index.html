@@ -5594,6 +5594,16 @@ function renderBottomNav(){
   }).join('');
 }
 
+window.onerror = function(msg, src, line, col, err){
+  const s = document.getElementById('splash');
+  if(s && s.style.display !== 'none'){
+    s.style.display='none';
+    const ls = document.getElementById('loginScreen');
+    if(ls) ls.style.display='flex';
+    console.error('JS Error (splash rescued):', msg, 'at', src, line+':'+col, err);
+  }
+};
+
 (function(){
   const yaVisto = sessionStorage.getItem('splashDone');
   const isInstalled = window.navigator.standalone || window.matchMedia('(display-mode:standalone)').matches;

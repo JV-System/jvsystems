@@ -1,4 +1,4 @@
-const CACHE = 'sabores-v20';
+const CACHE = 'sabores-v21';
 const ASSETS = [
   './manifest.json',
   './jvs-logo.png',
