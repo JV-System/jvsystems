@@ -1790,7 +1790,7 @@
     <button id="nav-config" class="nav-tab" onclick="switchView('config')">⚙ Configuración</button>
   </div>
   <div class="header-actions">
-    <span id="sync-status" onclick="abrirUrlModal()" title="Configurar URL de sincronización"
+    <span id="sync-status" title="Estado de sincronización Firebase"
           style="font-size:11px;font-weight:600;transition:color 0.3s;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s;"
           onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"></span>
     <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos"
@@ -1840,27 +1840,6 @@
   </div>
 </div>
 
-<!-- MODAL URL SYNC -->
-<div class="modal-bg hidden" id="urlModal">
-  <div class="modal" style="max-width:520px;">
-    <h3 style="margin-bottom:6px;">☁ Conectar con Google Sheets</h3>
-    <p style="font-size:13px;color:#666;margin-bottom:16px;">Pegá la URL del Apps Script desplegado para activar la sincronización en la nube.</p>
-    <div class="form-group" style="margin-bottom:8px;">
-      <label style="font-size:12px;font-weight:700;color:#555;">URL del Apps Script</label>
-      <input type="url" id="urlScriptInput"
-             placeholder="https://script.google.com/macros/s/.../exec"
-             style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Exo 2',sans-serif;margin-top:4px;"
-             onkeydown="if(event.key==='Enter')guardarScriptUrl()">
-    </div>
-    <div class="alert hidden" id="urlMsg" style="margin-bottom:8px;"></div>
-    <p style="font-size:11px;color:#aaa;margin-bottom:16px;">La URL tiene el formato: <code style="background:#f4f6fb;padding:2px 6px;border-radius:4px;">https://script.google.com/macros/s/AKfy.../exec</code></p>
-    <div class="modal-actions">
-      <button class="btn" onclick="document.getElementById('urlModal').classList.add('hidden')">Cancelar</button>
-      <button class="btn" onclick="borrarScriptUrl()" style="color:#c0392b;">Desconectar</button>
-      <button class="btn btn-primary" onclick="guardarScriptUrl()">Guardar y conectar</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL PERFIL -->
 <div id="perfilModal" class="hidden">
@@ -1966,19 +1945,50 @@
 </div>
 
 <script>
-// ==================== CONFIGURACIÓN CLOUD ====================
-// La URL se puede configurar desde la UI — se guarda en localStorage
-const APPS_SCRIPT_URL_DEFAULT = 'https://script.google.com/macros/s/AKfycbyNBi-YHYQQ7RoRoNuc60poNP7pHDcKErJ84rSVcVPJBnnuWR7jcR9ipqCgq2T9YoIH/exec';
-function getScriptUrl() {
-  return localStorage.getItem('branca_script_url') || APPS_SCRIPT_URL_DEFAULT;
+// ==================== FIREBASE CONFIG ====================
+const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
+
+let _syncTimer = null;
+
+async function _fbPut(path, data) {
+  const r = await fetch(FIREBASE_URL + path + '.json', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error('Firebase error: ' + r.status);
+  return r.json();
 }
-function isScriptConfigured() {
-  const u = getScriptUrl();
-  return u.includes('macros/s/') && !u.includes('TU_URL');
+
+async function _fbGet(path) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 8000);
+  try {
+    const r = await fetch(FIREBASE_URL + path + '.json', { signal: controller.signal });
+    clearTimeout(t);
+    if (!r.ok) throw new Error('Firebase error: ' + r.status);
+    return r.json();
+  } catch(e) { clearTimeout(t); throw e; }
 }
-// Alias para compatibilidad con el código existente
-const APPS_SCRIPT_URL = APPS_SCRIPT_URL_DEFAULT;
-const CLOUD_ENABLED = false; // se evalúa dinámicamente via isScriptConfigured()
+
+function _syncPush() {
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(async () => {
+    setSyncStatus('syncing', '⏳ Guardando...');
+    try {
+      await _fbPut('/db', {
+        ordenes:  ordenes,
+        clientes: clientesDB,
+        tecnicos: tecnicosDB,
+        config:   { adminPass: getAdminPass() }
+      });
+      await _fbPut('/usuarios', getUsers());
+      setSyncStatus('ok');
+    } catch(e) {
+      setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
+    }
+  }, 1200);
+}
 
 // ══════════════════════════════════════════════════════════════════
 // DEMO DATA — se carga una sola vez en instalaciones nuevas
@@ -2151,7 +2161,7 @@ const DEFAULT_USERS = [
 function getUsers() {
   return JSON.parse(localStorage.getItem('branca_users') || JSON.stringify(DEFAULT_USERS));
 }
-// saveUsers definida abajo junto con syncUsuarios
+// saveUsers definida abajo
 
 function getCurrentUser() {
   const r = sessionStorage.getItem('branca_session_user') || localStorage.getItem('branca_session_user');
@@ -2171,65 +2181,14 @@ function getNextFacturaNum() {
 }
 
 // ==================== CLOUD API ====================
-async function apiGet(action) {
-  const url = `${getScriptUrl()}?action=${action}&t=${Date.now()}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-async function apiPost(body) {
-  const res = await fetch(getScriptUrl(), {
-    method: 'POST',
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
 function setSyncStatus(st, msg) {
   syncStatus = st;
   const el = document.getElementById('sync-status');
   if (!el) return;
-  if (st === 'nocfg' || (!isScriptConfigured() && st !== 'syncing')) {
-    el.innerHTML = '<span style="opacity:0.7;">⚠</span> URL no configurada';
-    el.style.color = '#E8A020';
-    el.title = 'Clic para configurar la URL de sincronización';
-    return;
-  }
   const icons  = { idle:'', syncing:'⏳ Sincronizando...', ok:'☁ Sincronizado', error:'⚠ Sin conexión' };
   const colors = { idle:'transparent', syncing:'#aaa', ok:'#4ade80', error:'#ff8a80' };
   el.textContent = msg || icons[st] || '';
   el.style.color = colors[st] || '#aaa';
-}
-
-function abrirUrlModal() {
-  const input = document.getElementById('urlScriptInput');
-  const msgEl = document.getElementById('urlMsg');
-  if (input) input.value = isScriptConfigured() ? getScriptUrl() : '';
-  if (msgEl)  msgEl.classList.add('hidden');
-  document.getElementById('urlModal').classList.remove('hidden');
-  setTimeout(function(){ if(input) input.focus(); }, 100);
-}
-
-function guardarScriptUrl() {
-  const input  = document.getElementById('urlScriptInput');
-  const msgEl  = document.getElementById('urlMsg');
-  const url    = (input ? input.value : '').trim();
-  if (!url || !url.includes('script.google.com/macros/s/')) {
-    msgEl.className='alert alert-error'; msgEl.textContent='✕ URL inválida. Debe ser una URL de Apps Script desplegada.'; msgEl.classList.remove('hidden'); return;
-  }
-  localStorage.setItem('branca_script_url', url);
-  document.getElementById('urlModal').classList.add('hidden');
-  showToast('✅ URL guardada. Conectando...');
-  loadFromCloud();
-}
-
-function borrarScriptUrl() {
-  localStorage.removeItem('branca_script_url');
-  document.getElementById('urlModal').classList.add('hidden');
-  setSyncStatus('nocfg','');
-  showToast('✅ Desconectado del servidor.');
 }
 
 // ==================== CARGA INICIAL DESDE CLOUD ====================
@@ -2255,143 +2214,84 @@ function mergeById(local, cloud) {
 }
 
 async function loadFromCloud() {
-  if (!isScriptConfigured()) { setSyncStatus('nocfg', ''); return; }
   setSyncStatus('syncing', '⏳ Conectando...');
   try {
-    const [ro, rc, rt, rcfg, ru] = await Promise.all([
-      apiGet('getOrdenes'), apiGet('getClientes'),
-      apiGet('getTecnicos'), apiGet('getConfig'), apiGet('getUsuarios')
+    const [remoteDb, remoteUsuarios] = await Promise.all([
+      _fbGet('/db'),
+      _fbGet('/usuarios')
     ]);
 
-    // ── CONFIG PRIMERO: detectar reset ANTES de tocar cualquier dato ──
-    if (rcfg.config) {
-      if (rcfg.config.adminPass) localStorage.setItem('branca_admin_pass', rcfg.config.adminPass);
+    if (remoteDb) {
+      // CONFIG
+      if (remoteDb.config && remoteDb.config.adminPass) {
+        localStorage.setItem('branca_admin_pass', remoteDb.config.adminPass);
+      }
 
-      const resetAt     = rcfg.config.resetAt || 0;
-      const ultimoReset = parseInt(localStorage.getItem('branca_ultimo_reset') || '0');
-      if (resetAt > ultimoReset) {
-        // Hubo un reset — limpiar TODO local ANTES de procesar cualquier dato
-        ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
-        localStorage.setItem('branca_ultimo_reset', String(resetAt));
-        ordenes    = [];
-        clientesDB = [];
-        tecnicosDB = [];
-        ordenActual = null;
-        renderOrderList();
-        showToast('🔄 Datos reseteados por el administrador.');
-        setSyncStatus('ok');
-        return; // salir — la nube está vacía tras el reset, no hay nada más que cargar
+      // ÓRDENES — merge por timestamp
+      if (Array.isArray(remoteDb.ordenes) && remoteDb.ordenes.length) {
+        const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
+        ordenes = mergeById(ordenes, remoteDb.ordenes);
+        ordenes = ordenes.filter(function(o) {
+          if (o.draft) return true;
+          if (!o.empresa && !o.marca) return false;
+          return true;
+        });
+        draftsLocales.forEach(function(d) {
+          if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
+        });
+        localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+      }
+
+      // CLIENTES — la nube gana siempre
+      if (Array.isArray(remoteDb.clientes) && remoteDb.clientes.length) {
+        clientesDB = remoteDb.clientes;
+        localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
+      }
+
+      // TÉCNICOS — la nube gana siempre
+      if (Array.isArray(remoteDb.tecnicos) && remoteDb.tecnicos.length) {
+        tecnicosDB = remoteDb.tecnicos;
+        localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
       }
     }
 
-    // ÓRDENES — la nube es fuente de verdad, merge por timestamp
-    if (ro.ordenes !== undefined) {
-      // Preservar drafts locales antes del merge (no vienen de la nube)
-      const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
-      ordenes = mergeById(ordenes, ro.ordenes);
-      const ignoreIds = JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]');
-      // Filtrar basura (vacías sin draft)
-      ordenes = ordenes.filter(function(o) {
-        if (o.draft) return true; // siempre preservar drafts
-        if (!o.empresa && !o.marca) return false;
-        if (ignoreIds.includes(String(o.id))) return false;
-        return true;
-      });
-      // Reinsertar drafts locales que no hayan quedado en la lista
-      draftsLocales.forEach(function(d) {
-        if (!ordenes.find(function(o) { return o.id === d.id; })) {
-          ordenes.unshift(d);
-        }
-      });
-      localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-    }
-
-    // CLIENTES — la nube gana siempre
-    if (rc.clientes && rc.clientes.length) {
-      clientesDB = rc.clientes;
-      localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
-    }
-
-    // TÉCNICOS — la nube gana siempre
-    if (rt.tecnicos && rt.tecnicos.length) {
-      tecnicosDB = rt.tecnicos;
-      localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
-    }
-
     // USUARIOS — la nube gana siempre
-    if (ru.usuarios && ru.usuarios.length) {
-      localStorage.setItem('branca_users', JSON.stringify(ru.usuarios));
+    if (Array.isArray(remoteUsuarios) && remoteUsuarios.length) {
+      localStorage.setItem('branca_users', JSON.stringify(remoteUsuarios));
     }
 
     setSyncStatus('ok');
     renderOrderList();
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
-    console.warn('Cloud load failed:', e.message);
+    console.warn('Firebase load failed:', e.message);
   }
 }
 
 // ==================== SAVE CON SYNC ====================
 function saveData() {
   if (ordenActual) {
-    ordenActual.updatedAt = Date.now(); // timestamp para merge inteligente
+    ordenActual.updatedAt = Date.now();
     const idx = ordenes.findIndex(o => o.id === ordenActual.id);
     if (idx >= 0) ordenes[idx] = ordenActual;
     else ordenes.unshift(ordenActual);
   }
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  if (ordenActual && isScriptConfigured()) syncOrden(ordenActual);
+  _syncPush();
 }
 function saveTecnicos() {
   localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
-  if (isScriptConfigured()) tecnicosDB.forEach(t => syncTecnico(t));
+  _syncPush();
 }
 function saveClientes() {
   localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
-  if (isScriptConfigured()) clientesDB.forEach(c => syncCliente(c));
+  _syncPush();
 }
 function saveUsers(u) {
   localStorage.setItem('branca_users', JSON.stringify(u));
-  if (isScriptConfigured()) syncUsuarios(u);
+  _syncPush();
 }
 function getAdminPass() { return localStorage.getItem('branca_admin_pass') || DEFAULT_ADMIN_PASS; }
-
-async function syncOrden(orden) {
-  if (!isScriptConfigured()) return;
-  if (!orden.empresa && !orden.draft) return; // no sincronizar vacías sin empresa (salvo drafts)
-  setSyncStatus('syncing', '⏳ Guardando...');
-  try {
-    await apiPost({ action: 'saveOrden', data: orden });
-    setSyncStatus('ok');
-  } catch(e) {
-    setSyncStatus('error', '⚠ No se pudo guardar en nube');
-  }
-}
-
-async function syncCliente(cliente) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'saveCliente', data: cliente }); } catch(e) {}
-}
-
-async function syncDeleteCliente(id) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'deleteCliente', id }); } catch(e) {}
-}
-
-async function syncTecnico(tecnico) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'saveTecnico', data: tecnico }); } catch(e) {}
-}
-
-async function syncDeleteTecnico(id) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'deleteTecnico', id }); } catch(e) {}
-}
-
-async function syncConfig(data) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'saveConfig', data }); } catch(e) {}
-}
 
 async function actualizarDatos() {
   const btn = document.getElementById('btn-refresh');
@@ -2407,7 +2307,8 @@ async function resetearTodoElSistema() {
   if (!ok) return;
   setSyncStatus('syncing', '⏳ Borrando...');
   try {
-    await apiPost({ action: 'resetTodo' });
+    await _fbPut('/db', { ordenes: [], clientes: [], tecnicos: [], config: {} });
+    await _fbPut('/usuarios', []);
   } catch(e) {}
   // Limpiar localStorage
   ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids'].forEach(function(k){ localStorage.removeItem(k); });
@@ -2420,11 +2321,6 @@ async function resetearTodoElSistema() {
   ordenActual = null;
   showToast('✅ Sistema reseteado. Recargando...');
   setTimeout(function() { window.location.reload(); }, 1500);
-}
-
-async function syncUsuarios(users) {
-  if (!isScriptConfigured()) return;
-  try { await apiPost({ action: 'saveUsuarios', data: users }); } catch(e) {}
 }
 
 function getNextNum() {
@@ -2487,7 +2383,7 @@ function crearNuevaOrden() {
   ordenActual = nueva;
   // Guardar inmediatamente para que aparezca en todos los dispositivos
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  if (isScriptConfigured()) syncOrden(nueva);
+  _syncPush();
   renderOrderList();
   seleccionarOrden(nueva.id);
   switchView('nueva');
@@ -2499,7 +2395,7 @@ async function eliminarOrden(id) {
   ordenes = ordenes.filter(o => o.id !== id);
   if (ordenActual && ordenActual.id === id) ordenActual = null;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  if (isScriptConfigured()) apiPost({ action: 'deleteOrden', id: id }).catch(function(){});
+  _syncPush();
   renderOrderList();
   showToast('🗑 Orden eliminada.');
 }
@@ -3309,7 +3205,6 @@ function confirmarNuevoClienteInline() {
   };
   clientesDB.push(newC);
   saveClientes();
-  syncCliente(newC);
   // Load into order
   Object.assign(ordenActual, { empresa: newC.empresa, contacto: newC.contacto, tel: newC.tel, cuit: newC.cuit, ubicacion: newC.ubicacion, email: newC.email });
   saveData();
@@ -4311,7 +4206,7 @@ async function guardarParcial() {
   if (idxP >= 0) { ordenes[idxP] = ordenPendiente; }
   else           { ordenes.unshift(ordenPendiente); }
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  syncOrden(ordenPendiente); // sync explícito
+  _syncPush();
 
   // VOLVER A PANTALLA LIMPIA
   ordenActual = null;
@@ -4347,7 +4242,7 @@ function guardarOrden() {
   if (idx >= 0) { ordenes[idx] = ordenGuardada; }
   else          { ordenes.unshift(ordenGuardada); }
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  syncOrden(ordenGuardada); // sync explícito con copia segura
+  _syncPush();
   ordenActual = null;
   renderOrderList();
   switchView('nueva');
@@ -4386,7 +4281,7 @@ function finalizarOrden() {
   if (idxF >= 0) { ordenes[idxF] = ordenFinal; }
   else           { ordenes.unshift(ordenFinal); }
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  syncOrden(ordenFinal); // sync explícito
+  _syncPush();
 
   // VOLVER A PANTALLA LIMPIA
   ordenActual = null;
@@ -4656,7 +4551,6 @@ function agregarTecnico() {
   const id = Date.now();
   tecnicosDB.push({ id, nombre, firma: null });
   saveTecnicos();
-  syncTecnico({ id, nombre, firma: null });
   document.getElementById('new-tec-nombre').value = '';
   renderConfig();
   initFirmasPads();
@@ -4666,7 +4560,6 @@ async function eliminarTecnico(id) {
   if (!await showConfirm('Eliminar técnico', '¿Querés eliminar este técnico?')) return;
   tecnicosDB = tecnicosDB.filter(t => t.id !== id);
   saveTecnicos();
-  syncDeleteTecnico(id);
   renderConfig();
   initFirmasPads();
 }
@@ -4676,13 +4569,13 @@ function guardarFirmaTecnicoConfig(id) {
   if (canvasIsEmpty(cid)) { showToast('✏ Dibujá la firma primero.'); return; }
   const c = document.getElementById(cid);
   const tec = tecnicosDB.find(t => t.id === id);
-  if (tec) { tec.firma = c.toDataURL(); saveTecnicos(); syncTecnico(tec); renderConfig(); initFirmasPads(); }
+  if (tec) { tec.firma = c.toDataURL(); saveTecnicos(); renderConfig(); initFirmasPads(); }
 }
 
 async function borrarFirmaTecnicoConfig(id) {
   if (!await showConfirm('Eliminar firma', '¿Eliminar la firma de este técnico?')) return;
   const tec = tecnicosDB.find(t => t.id === id);
-  if (tec) { tec.firma = null; saveTecnicos(); syncTecnico(tec); renderConfig(); initFirmasPads(); }
+  if (tec) { tec.firma = null; saveTecnicos(); renderConfig(); initFirmasPads(); }
 }
 
 // CLIENTES CRUD
@@ -4709,7 +4602,6 @@ async function eliminarCliente(id) {
   if (!await showConfirm('Eliminar empresa', '¿Querés eliminar esta empresa del listado?')) return;
   clientesDB = clientesDB.filter(c => c.id !== id);
   saveClientes();
-  syncDeleteCliente(id);
   renderConfig();
   initFirmasPads();
 }
@@ -4725,7 +4617,6 @@ function editarCliente(id) {
   const email = prompt('Email:', c.email) || '';
   Object.assign(c, { empresa: empresa.trim() || c.empresa, contacto, tel, cuit, ubicacion, email });
   saveClientes();
-  syncCliente(c);
   renderConfig();
   initFirmasPads();
 }
@@ -4753,7 +4644,7 @@ function cambiarPassword() {
   users[idx].password = nueva;
   saveUsers(users);
   // Actualizar también la clave legacy para compatibilidad con getAdminPass()
-  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); syncConfig({ adminPass: nueva }); }
+  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); _syncPush(); }
   document.getElementById('pass-actual').value = '';
   document.getElementById('pass-nueva').value  = '';
   document.getElementById('pass-confirm').value = '';
@@ -5024,7 +4915,7 @@ function cambiarPasswordPerfil() {
   }
   users[idx].password = nueva;
   saveUsers(users);
-  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); syncConfig({ adminPass: nueva }); }
+  if (cu.role === 'admin') { localStorage.setItem('branca_admin_pass', nueva); _syncPush(); }
   ['perfil-pass-actual','perfil-pass-nueva','perfil-pass-confirm'].forEach(function(id){
     const el = document.getElementById(id); if(el) el.value = '';
   });
@@ -5130,7 +5021,7 @@ localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
 loadFromCloud();
 setInterval(function() {
-  if (isScriptConfigured() && document.visibilityState !== 'hidden') loadFromCloud();
+  if (document.visibilityState !== 'hidden') loadFromCloud();
 }, 30000);
 
 // ══════════════════════════════════════════════════════
@@ -5485,7 +5376,7 @@ function doLogin() {
 
 function logout() {
   // Cerrar todos los modales abiertos
-  ['perfilModal','urlModal','configPassModal','confirmModal','numModal'].forEach(function(id) {
+  ['perfilModal','configPassModal','confirmModal','numModal'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
