@@ -1050,14 +1050,18 @@ tr:hover td{background:#fafbfd}
   <section id="sec-dario" class="content" style="display:none">
     <div class="content-toolbar">
       <span class="toolbar-title">Proceso — Planilla Darío</span>
-      <button class="btn btn-primary btn-sm" onclick="openDarioModal()">+ Registrar Movimiento</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="openDarioEgresoModal()">↑ Registrar Egreso</button>
+        <button class="btn btn-primary btn-sm" onclick="openDarioModal()">+ Registrar Movimiento</button>
+      </div>
     </div>
     <div class="content-body">
       <div class="balance-bar" id="balanceDario"></div>
+      <div class="kpi-grid" id="kpiDario" style="margin-bottom:16px"></div>
       <div class="card" style="padding:0">
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Fecha</th><th>Concepto</th><th>Molienda / Detalle</th><th>Kg</th><th>Subtotal</th><th>Saldo</th><th></th></tr></thead>
+        <div class="table-wrap" style="overflow-x:auto">
+          <table id="tablaDarioWrap">
+            <thead id="tablaDarioHead"></thead>
             <tbody id="tablaDario"></tbody>
           </table>
         </div>
@@ -1811,6 +1815,36 @@ tr:hover td{background:#fafbfd}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalDario')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveDario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL EGRESO DARÍO ══════════════ -->
+<div class="modal-overlay" id="modalDarioEgreso">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Egreso a Darío</span>
+      <button class="modal-close" onclick="closeModal('modalDarioEgreso')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-control" type="date" id="darioEgresoFecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto ($)</label>
+          <input class="form-control" type="number" id="darioEgresoMonto" placeholder="0">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Descripción</label>
+          <input class="form-control" id="darioEgresoObs" placeholder="Ej: Transferencia bancaria, retiro efectivo...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalDarioEgreso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDarioEgreso()">Guardar Egreso</button>
     </div>
   </div>
 </div>
@@ -3362,35 +3396,266 @@ const DARIO_TIPO_LABEL = {
   molienda:'Molienda', transferencia:'Transferencia', extraccion:'Extracción', canchada:'Yerba Canchada'
 };
 function renderDario(){
-  const saldo=calcSaldoDario();
-  const esDeuda = saldo < 0; // saldo negativo = debemos a Darío
-  document.getElementById('balanceDario').innerHTML=`
+  const precioEst = db.config.precioEstampilla || 220;
+  const preciosCosto = db.config.preciosCosto || {};
+  const productos = getProductos().filter(p => p.activo !== false);
+
+  // ── 1. Agrupar moliendas por pedidoId ──────────────────────────────────────
+  const moliendas = db.dario.filter(t => t.tipo === 'molienda');
+  const egresos   = db.dario.filter(t => t.tipo !== 'molienda');
+
+  // Construir mapa pedidoId → [entradas dario]
+  const pedidoMap = {};
+  moliendas.forEach(t => {
+    const key = t.pedidoId ? String(t.pedidoId) : '__sin_pedido__' + t.id;
+    if (!pedidoMap[key]) pedidoMap[key] = [];
+    pedidoMap[key].push(t);
+  });
+
+  // ── 2. Construir filas de pedido ────────────────────────────────────────────
+  const filasPedido = Object.entries(pedidoMap).map(([key, entries]) => {
+    const first = entries[0];
+    const pedido = db.pedidos.find(p => String(p.id) === String(first.pedidoId)) || null;
+
+    // kg por molienda
+    const kgPorMolienda = {};
+    entries.forEach(e => {
+      if (e.molienda) kgPorMolienda[e.molienda] = (kgPorMolienda[e.molienda] || 0) + (Number(e.kg) || 0);
+    });
+
+    // subtotal pedido (lo que Darío cobra — negativo para nosotros)
+    const subtotalPedido = entries.reduce((s, e) => s + Math.abs(Number(e.subtotal) || 0), 0);
+
+    // total kg
+    const totalKg = Object.values(kgPorMolienda).reduce((a, b) => a + b, 0);
+
+    // estampillas
+    let kgEst = 0;
+    if (pedido && pedido.productos) {
+      pedido.productos.forEach(r => { if (r.estampilla) kgEst += Number(r.kg) || 0; });
+    }
+    const costoEst = kgEst * precioEst;
+
+    // ingreso del pedido
+    const ingreso = pedido ? (Number(pedido.ingreso) || 0) : 0;
+
+    // despacho asociado
+    let despacho = 0;
+    if (pedido) {
+      const desp = (db.despachos || []).find(d => String(d.pedidoId) === String(pedido.id));
+      if (desp) despacho = Math.abs(Number(desp.subtotal) || 0);
+    }
+
+    // ganancia
+    const ganancia = ingreso - subtotalPedido - despacho - costoEst;
+
+    // promedio x kg
+    const promedio = totalKg > 0 ? ingreso / totalKg : 0;
+
+    return {
+      tipo: 'pedido',
+      fecha: pedido ? (pedido.fecha || first.fecha) : first.fecha,
+      pedidoNum: pedido ? pedido.numero : (first.pedidoNum || '—'),
+      cliente: pedido ? pedido.nombre : (first.cliente || '—'),
+      kgPorMolienda,
+      subtotalPedido,
+      totalKg,
+      kgEst,
+      costoEst,
+      ingreso,
+      despacho,
+      ganancia,
+      promedio,
+      ids: entries.map(e => e.id),
+      pedidoId: first.pedidoId,
+    };
+  });
+
+  // ── 3. Filas de egresos ─────────────────────────────────────────────────────
+  const filasEgreso = egresos.map(t => ({
+    tipo: 'egreso',
+    fecha: t.fecha,
+    monto: Math.abs(Number(t.subtotal) || 0),
+    tipoLabel: DARIO_TIPO_LABEL[t.tipo] || t.tipo,
+    obs: t.obs || '',
+    id: t.id,
+  }));
+
+  // ── 4. Combinar y ordenar por fecha ─────────────────────────────────────────
+  const todasFilas = [...filasPedido, ...filasEgreso].sort((a, b) => {
+    const da = new Date(a.fecha + 'T00:00:00'), db2 = new Date(b.fecha + 'T00:00:00');
+    return da - db2;
+  });
+
+  // ── 5. Determinar qué moliendas aparecen en los datos ──────────────────────
+  const molsConDatos = productos.filter(p => moliendas.some(t => t.molienda === p.id));
+  const numCols = 14 + molsConDatos.length; // para colspan vacío
+
+  // ── 6. Balance bar ─────────────────────────────────────────────────────────
+  const saldoFinal = calcSaldoDario();
+  const esDeuda = saldoFinal < 0;
+  const now = new Date();
+  const kgMes = moliendas
+    .filter(t => { const d = new Date((t.fecha||'') + 'T00:00:00'); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); })
+    .reduce((s, t) => s + (Number(t.kg) || 0), 0);
+  const egresosMes = egresos
+    .filter(t => { const d = new Date((t.fecha||'') + 'T00:00:00'); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); })
+    .reduce((s, t) => s + Math.abs(Number(t.subtotal) || 0), 0);
+
+  document.getElementById('balanceDario').innerHTML = `
     <div>
       <div class="lbl">Saldo cuenta Darío</div>
-      <div class="val">${saldo>=0?'+':''}${fmt(saldo)}</div>
+      <div class="val">${saldoFinal >= 0 ? '+' : ''}${fmt(saldoFinal)}</div>
     </div>
     <div style="text-align:right">
-      <div class="lbl" style="color:${esDeuda?'#ffb3b3':'#b3ffda'}">${esDeuda?'⚠️ Saldo a pagar a Darío':'✅ Saldo a favor nuestro'}</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px">${db.dario.length} movimiento${db.dario.length!==1?'s':''} registrado${db.dario.length!==1?'s':''}</div>
+      <div class="lbl" style="color:${esDeuda ? '#ffb3b3' : '#b3ffda'}">${esDeuda ? '⚠️ Le debemos a Darío' : '✅ Saldo a favor nuestro'}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px">${db.dario.length} movimiento${db.dario.length !== 1 ? 's' : ''} registrado${db.dario.length !== 1 ? 's' : ''}</div>
     </div>`;
-  let runSaldo=0;
-  const rows=[...db.dario].sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
-  document.getElementById('tablaDario').innerHTML=rows.length?rows.map(t=>{
-    const sign=t.tipo==='molienda'?-1:1;
-    runSaldo+=sign*Math.abs(t.subtotal||0);
-    const cls=sign<0?'tx-row-neg':'tx-row-pos';
-    const tipoLabel = DARIO_TIPO_LABEL[t.tipo]||t.tipo;
-    const tipoColor = t.tipo==='molienda'?'badge-pending':'badge-open';
-    return `<tr class="${cls}">
-      <td>${t.fecha||'—'}</td>
-      <td><span class="item-badge ${tipoColor}">${tipoLabel}</span></td>
-      <td>${t.molienda?prodLabel(t.molienda):'—'}${t.pedidoNum?` <span style="font-size:9px;background:var(--navy);color:#fff;padding:1px 6px;border-radius:10px;margin-left:4px">#${t.pedidoNum}</span>`:''}${t.obs?' <small style="color:var(--text-muted)">'+t.obs+'</small>':''}</td>
-      <td class="td-num">${t.kg||'—'}</td>
-      <td class="td-num td-right">${sign<0?'−':'+'}${fmt(t.subtotal||0)}</td>
-      <td class="td-num td-right" style="font-weight:700;color:${runSaldo>=0?'var(--teal)':'var(--red)'}">${runSaldo>=0?'+':''}${fmt(runSaldo)}</td>
-      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDario(${t.id})">✕</button></td>
-    </tr>`}).join('')
-    :'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Sin movimientos registrados</td></tr>';
+
+  // KPI cards
+  document.getElementById('kpiDario').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Saldo actual</div>
+      <div class="kpi-value" style="color:${esDeuda ? 'var(--red)' : 'var(--teal)'}">${saldoFinal >= 0 ? '+' : ''}${fmt(saldoFinal)}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Kg procesados este mes</div>
+      <div class="kpi-value">${fmtNum(kgMes)} kg</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Egresos este mes</div>
+      <div class="kpi-value" style="color:var(--teal)">${fmt(egresosMes)}</div>
+    </div>`;
+
+  // ── 7. Header de la tabla ───────────────────────────────────────────────────
+  const thMols = molsConDatos.map(p => `<th class="td-right" style="white-space:nowrap">${p.label}<br><small style="font-weight:400;font-size:10px">kg</small></th>`).join('');
+  document.getElementById('tablaDarioHead').innerHTML = `<tr>
+    <th>Fecha</th>
+    <th>N° Ped.</th>
+    <th>Cliente</th>
+    ${thMols}
+    <th class="td-right" style="color:var(--red);white-space:nowrap">Subtotal</th>
+    <th class="td-right" style="font-weight:700;white-space:nowrap">Saldo</th>
+    <th class="td-right" style="white-space:nowrap">Est i<br><small style="font-weight:400;font-size:10px">kg</small></th>
+    <th class="td-right" style="white-space:nowrap">Est E<br><small style="font-weight:400;font-size:10px">$</small></th>
+    <th class="td-right" style="background:rgba(14,83,14,0.06);white-space:nowrap">Ingreso</th>
+    <th class="td-right" style="background:rgba(14,83,14,0.06);white-space:nowrap">Egreso</th>
+    <th class="td-right" style="background:rgba(14,83,14,0.06);white-space:nowrap">Despacho</th>
+    <th class="td-right" style="background:rgba(14,83,14,0.06);white-space:nowrap">Ganancia</th>
+    <th class="td-right" style="white-space:nowrap">Prom/kg</th>
+    <th class="td-right" style="white-space:nowrap">Total kg</th>
+    <th></th>
+  </tr>`;
+
+  // ── 8. Filas ────────────────────────────────────────────────────────────────
+  if (!todasFilas.length) {
+    document.getElementById('tablaDario').innerHTML =
+      `<tr><td colspan="${numCols}" style="text-align:center;padding:30px;color:var(--text-muted)">Sin movimientos registrados</td></tr>`;
+    return;
+  }
+
+  // Totales acumulados para la fila final
+  const totales = { subtotal: 0, ingreso: 0, egreso: 0, despacho: 0, ganancia: 0, costoEst: 0, kgEst: 0, totalKg: 0 };
+  molsConDatos.forEach(p => { totales['kg_' + p.id] = 0; });
+
+  let runSaldo = 0;
+  const htmlRows = todasFilas.map(fila => {
+    if (fila.tipo === 'egreso') {
+      runSaldo += fila.monto;
+      totales.egreso += fila.monto;
+      const saldoColor = runSaldo >= 0 ? 'var(--teal)' : 'var(--red)';
+      const molCells = molsConDatos.map(() => '<td></td>').join('');
+      return `<tr style="background:rgba(14,83,14,0.05)">
+        <td style="color:var(--text-muted);font-size:12px">${fila.fecha || '—'}</td>
+        <td colspan="2" style="color:var(--text-muted);font-size:12px"><em>${fila.tipoLabel}${fila.obs ? ' — ' + fila.obs : ''}</em></td>
+        ${molCells}
+        <td></td>
+        <td class="td-right td-num" style="font-weight:700;color:${saldoColor}">${runSaldo >= 0 ? '+' : ''}${fmt(runSaldo)}</td>
+        <td colspan="3"></td>
+        <td class="td-right td-num" style="background:rgba(14,83,14,0.06);color:var(--teal)">+${fmt(fila.monto)}</td>
+        <td colspan="4"></td>
+        <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDario(${fila.id})">✕</button></td>
+      </tr>`;
+    }
+
+    // fila de pedido
+    runSaldo -= fila.subtotalPedido;
+    totales.subtotal += fila.subtotalPedido;
+    totales.ingreso  += fila.ingreso;
+    totales.despacho += fila.despacho;
+    totales.ganancia += fila.ganancia;
+    totales.costoEst += fila.costoEst;
+    totales.kgEst    += fila.kgEst;
+    totales.totalKg  += fila.totalKg;
+    molsConDatos.forEach(p => { totales['kg_' + p.id] += fila.kgPorMolienda[p.id] || 0; });
+
+    const saldoColor = runSaldo >= 0 ? 'var(--teal)' : 'var(--red)';
+    const gananciaColor = fila.ganancia >= 0 ? 'var(--teal)' : 'var(--red)';
+    const molCells = molsConDatos.map(p => {
+      const kg = fila.kgPorMolienda[p.id];
+      return `<td class="td-right td-num">${kg ? fmtNum(kg) : '<span style="color:var(--text-muted)">—</span>'}</td>`;
+    }).join('');
+
+    const deleteButtons = fila.ids.map(id => `<button class="btn btn-ghost btn-sm" style="color:var(--red);padding:0 3px" onclick="deleteDario(${id})" title="Eliminar entrada">✕</button>`).join('');
+
+    return `<tr>
+      <td style="white-space:nowrap;font-size:12px">${fila.fecha || '—'}</td>
+      <td><span style="font-size:11px;background:var(--navy);color:#fff;padding:1px 7px;border-radius:10px">#${fila.pedidoNum || '?'}</span></td>
+      <td style="font-size:12px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${fila.cliente}">${fila.cliente}</td>
+      ${molCells}
+      <td class="td-right td-num" style="font-weight:700;color:var(--red)">−${fmt(fila.subtotalPedido)}</td>
+      <td class="td-right td-num" style="font-weight:700;color:${saldoColor}">${runSaldo >= 0 ? '+' : ''}${fmt(runSaldo)}</td>
+      <td class="td-right td-num">${fila.kgEst ? fmtNum(fila.kgEst) : '—'}</td>
+      <td class="td-right td-num">${fila.costoEst ? fmt(fila.costoEst) : '—'}</td>
+      <td class="td-right td-num" style="background:rgba(14,83,14,0.06);color:var(--teal)">${fila.ingreso ? '+' + fmt(fila.ingreso) : '—'}</td>
+      <td class="td-right td-num" style="background:rgba(14,83,14,0.06)">—</td>
+      <td class="td-right td-num" style="background:rgba(14,83,14,0.06)">${fila.despacho ? fmt(fila.despacho) : '—'}</td>
+      <td class="td-right td-num" style="background:rgba(14,83,14,0.06);font-weight:700;color:${gananciaColor}">${fila.ganancia >= 0 ? '+' : '−'}${fmt(Math.abs(fila.ganancia))}</td>
+      <td class="td-right td-num">${fila.promedio ? fmt(fila.promedio) : '—'}</td>
+      <td class="td-right td-num">${fila.totalKg ? fmtNum(fila.totalKg) : '—'}</td>
+      <td style="white-space:nowrap">${deleteButtons}</td>
+    </tr>`;
+  }).join('');
+
+  // Fila de totales
+  const totMolCells = molsConDatos.map(p => `<td class="td-right td-num" style="font-weight:700">${totales['kg_' + p.id] ? fmtNum(totales['kg_' + p.id]) : '—'}</td>`).join('');
+  const totGanColor = totales.ganancia >= 0 ? 'var(--teal)' : 'var(--red)';
+  const htmlTotales = `<tr style="border-top:2px solid var(--border);font-weight:700;background:rgba(0,0,0,0.03)">
+    <td colspan="3" style="font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">TOTALES</td>
+    ${totMolCells}
+    <td class="td-right td-num" style="color:var(--red)">−${fmt(totales.subtotal)}</td>
+    <td></td>
+    <td class="td-right td-num">${fmtNum(totales.kgEst)}</td>
+    <td class="td-right td-num">${fmt(totales.costoEst)}</td>
+    <td class="td-right td-num" style="background:rgba(14,83,14,0.06);color:var(--teal)">+${fmt(totales.ingreso)}</td>
+    <td class="td-right td-num" style="background:rgba(14,83,14,0.06);color:var(--teal)">+${fmt(totales.egreso)}</td>
+    <td class="td-right td-num" style="background:rgba(14,83,14,0.06)">${fmt(totales.despacho)}</td>
+    <td class="td-right td-num" style="background:rgba(14,83,14,0.06);color:${totGanColor}">${totales.ganancia >= 0 ? '+' : '−'}${fmt(Math.abs(totales.ganancia))}</td>
+    <td></td>
+    <td class="td-right td-num">${fmtNum(totales.totalKg)} kg</td>
+    <td></td>
+  </tr>`;
+
+  document.getElementById('tablaDario').innerHTML = htmlRows + htmlTotales;
+}
+function openDarioEgresoModal(){
+  document.getElementById('darioEgresoFecha').value = today();
+  document.getElementById('darioEgresoMonto').value = '';
+  document.getElementById('darioEgresoObs').value = '';
+  openModal('modalDarioEgreso');
+}
+function saveDarioEgreso(){
+  const monto = Number(document.getElementById('darioEgresoMonto').value);
+  if (!monto) { toast('Ingresá el monto', 'error'); return; }
+  const data = {
+    id: Date.now(),
+    fecha: document.getElementById('darioEgresoFecha').value,
+    tipo: 'extraccion',
+    subtotal: monto,
+    obs: document.getElementById('darioEgresoObs').value,
+    molienda: null, kg: null, pedidoId: null, pedidoNum: null,
+  };
+  db.dario.push(data); saveDB(); closeModal('modalDarioEgreso'); renderDario(); toast('Egreso registrado ✓', 'success');
 }
 function openDarioModal(){
   document.getElementById('darioFecha').value=today();
