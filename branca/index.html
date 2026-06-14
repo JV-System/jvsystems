@@ -4758,12 +4758,13 @@ function renderConfig() {
     <div style="overflow-y:auto;flex:1;height:100%;">
       <div class="config-content">
         <div class="config-header">
-          <h2>⚙ Configuración del sistema</h2>
-          <p>Administrá los técnicos, la base de clientes y la contraseña. Los cambios se guardan automáticamente.</p>
+          <h2>⚙ Configuración</h2>
+          <p>Los cambios se guardan automáticamente.</p>
         </div>
         <div class="config-grid">
 
           <!-- CLIENTES -->
+          ${isAdmin() ? `
           <div class="config-card">
             <div class="config-card-header">
               <h3>🏢 Empresas / Clientes</h3>
@@ -4842,6 +4843,8 @@ function renderConfig() {
               </div>
             </div>
           </div>
+
+          ` : ''}
 
           <!-- CAMBIAR MI CONTRASEÑA -->
           <div class="config-card config-full config-change-pass">
@@ -5897,7 +5900,7 @@ function initRoleUI() {
   });
   ['nav-config','mob-config'].forEach(function(id) {
     const el = document.getElementById(id);
-    if (el) el.style.display = isAdmin() ? '' : 'none';
+    if (el) el.style.display = ''; // visible para todos los roles
   });
   ['nav-planificacion','btn-nueva-plan','mob-planificacion'].forEach(function(id) {
     const el = document.getElementById(id);
