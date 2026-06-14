@@ -2368,6 +2368,17 @@ async function actualizarDatos() {
   showToast('✅ Datos actualizados.');
 }
 
+async function limpiarEsteDispositivo() {
+  const ok = await showConfirm('Limpiar este dispositivo', 'Se borra el almacenamiento local y se descarga todo desde la nube. ¿Continuar?');
+  if (!ok) return;
+  ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids','branca_reset_at'].forEach(function(k){ localStorage.removeItem(k); });
+  ordenes = []; clientesDB = []; tecnicosDB = []; ordenActual = null;
+  renderOrderList();
+  showToast('⏳ Limpiando... descargando datos');
+  await loadFromCloud();
+  showToast('✅ Dispositivo sincronizado.');
+}
+
 async function resetearTodoElSistema() {
   const ok = await showConfirm('⚠ Borrar todos los datos', '¿Seguro? Se borran TODAS las órdenes, clientes y técnicos. Esta acción no se puede deshacer.');
   if (!ok) return;
@@ -4866,6 +4877,10 @@ function renderConfig() {
         <div style="padding:14px 18px;">
           <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Borra <strong>todas las órdenes, clientes y técnicos</strong> de la nube y del dispositivo. Los usuarios quedan solo con el admin. No se puede deshacer.</p>
           <button onclick="resetearTodoElSistema()" style="background:#c0392b;color:white;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">🗑 Borrar todos los datos</button>
+        </div>
+        <div style="padding:14px 18px;border-top:1px solid #fca5a5;">
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px;">Borra solo los datos de <strong>este dispositivo</strong> y descarga lo que haya en la nube. Útil si este dispositivo quedó desincronizado.</p>
+          <button onclick="limpiarEsteDispositivo()" style="background:#e67e22;color:white;border:none;border-radius:7px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;">↻ Limpiar este dispositivo</button>
         </div>
       </div>
 
