@@ -5395,6 +5395,10 @@ function restaurarBorradorSiExiste() {
     <span class="mob-icon">🕐</span>
     <span>Historial</span>
   </button>
+  <button class="mob-nav-btn" id="mob-planificacion" onclick="mobSetView('planificacion')" style="display:none">
+    <span class="mob-icon">📅</span>
+    <span>Plan.</span>
+  </button>
   <button class="mob-nav-btn" id="mob-config" onclick="mobSetView('config')">
     <span class="mob-icon">⚙️</span>
     <span>Config</span>
@@ -5418,7 +5422,7 @@ function mobSetView(v) {
 }
 
 function mobActivate(v) {
-  ['ordenes','historial','config'].forEach(k => {
+  ['ordenes','historial','planificacion','config'].forEach(k => {
     const b = document.getElementById('mob-' + k);
     if (b) b.classList.toggle('active', k === v);
   });
@@ -5428,6 +5432,15 @@ function mobActivate(v) {
 const _origSel = seleccionarOrden;
 seleccionarOrden = function(id) {
   _origSel(id);
+  if (isMob()) {
+    const s = document.getElementById('sidebar');
+    if (s) s.classList.remove('mob-open');
+    mobActivate('');
+  }
+};
+const _origSelPlan = seleccionarPlanificada;
+seleccionarPlanificada = function(id) {
+  _origSelPlan(id);
   if (isMob()) {
     const s = document.getElementById('sidebar');
     if (s) s.classList.remove('mob-open');
@@ -5727,7 +5740,7 @@ function initRoleUI() {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin() ? '' : 'none';
   });
-  ['nav-planificacion','btn-nueva-plan'].forEach(function(id) {
+  ['nav-planificacion','btn-nueva-plan','mob-planificacion'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin() ? '' : 'none';
   });
