@@ -216,6 +216,19 @@
   .status-open { background: var(--teal-light); color: var(--teal); }
   .status-pending { background: var(--pending-light); color: var(--pending); }
   .status-locked { background: #f0f0f0; color: #777; }
+  .status-planificada { background: #ede9fe; color: #5b21b6; }
+  .order-item.planificada { border-left: 3px solid #7c3aed; }
+
+  /* CALENDARIO PLANIFICACIÓN */
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
+  .cal-header-day { text-align:center; font-size:11px; font-weight:700; color:var(--text-muted); padding:4px 0; text-transform:uppercase; }
+  .cal-cell { min-height:90px; background:white; border:1px solid var(--border); border-radius:8px; padding:6px; }
+  .cal-cell.today { border-color:var(--jv-blue); background:#f0f5ff; }
+  .cal-cell.other-month { background:#f8f9fa; opacity:0.6; }
+  .cal-day-num { font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:4px; }
+  .cal-cell.today .cal-day-num { color:var(--jv-blue); }
+  .cal-plan-item { background:#ede9fe; color:#5b21b6; border-radius:5px; padding:3px 6px; font-size:11px; font-weight:600; margin-bottom:3px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cal-plan-item:hover { background:#ddd6fe; }
 
   /* CONTENT AREA */
   /* CONTENT AREA - defined in MAIN LAYOUT above */
@@ -1786,6 +1799,7 @@
   <div class="nav-tabs">
     <button id="nav-nueva" class="nav-tab active" onclick="switchView('nueva')">+ Nueva Orden</button>
     <button id="nav-historial" class="nav-tab" onclick="switchView('historial')">📋 Historial</button>
+    <button id="nav-planificacion" class="nav-tab" onclick="switchView('planificacion')" style="display:none">📅 Planificación</button>
     <button id="nav-facturacion" class="nav-tab" onclick="switchView('facturacion')" style="display:none">💰 Facturación</button>
     <button id="nav-config" class="nav-tab" onclick="switchView('config')">⚙ Configuración</button>
   </div>
@@ -1821,7 +1835,10 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title">Órdenes</span>
-      <button class="btn-new" onclick="crearNuevaOrden()">+ Nueva</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-new" id="btn-nueva-plan" onclick="abrirModalPlanificada()" title="Nueva orden planificada" style="display:none;background:#7c3aed;">📅</button>
+        <button class="btn-new" onclick="crearNuevaOrden()">+ Nueva</button>
+      </div>
     </div>
     <div class="sidebar-search">
       <input type="text" placeholder="Buscar empresa..." id="searchInput" oninput="filtrarOrdenes(this.value)">
@@ -1840,6 +1857,50 @@
   </div>
 </div>
 
+
+<!-- MODAL NUEVA PLANIFICADA -->
+<div class="modal-bg hidden" id="modalPlanificada">
+  <div class="modal" style="max-width:480px;">
+    <h3 style="margin-bottom:16px;">📅 Nueva Orden Planificada</h3>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Empresa / Cliente *</label>
+      <input type="text" id="plan-empresa" list="plan-empresa-list" placeholder="Nombre de la empresa"
+             style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      <datalist id="plan-empresa-list"></datalist>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Fecha planificada *</label>
+      <input type="date" id="plan-fecha"
+             style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Técnico asignado</label>
+      <select id="plan-tecnico" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+        <option value="">— Sin asignar —</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Tipo de servicio</label>
+      <select id="plan-tipo" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+        <option value="preventivo">Preventivo</option>
+        <option value="correctivo">Correctivo</option>
+        <option value="mparada">Máquina parada</option>
+        <option value="instalacion">Instalación</option>
+        <option value="garantia">Garantía</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Notas / descripción</label>
+      <textarea id="plan-notas" rows="3" placeholder="Descripción del trabajo a realizar..."
+                style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;resize:vertical;"></textarea>
+    </div>
+    <div class="alert alert-error hidden" id="plan-error"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModalPlanificada()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarOrdenPlanificada()">📅 Guardar planificación</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL PERFIL -->
 <div id="perfilModal" class="hidden">
@@ -2450,9 +2511,10 @@ function renderOrderList() {
     if (o.draft) return false;
     return true;
   });
-  // Técnico: ve sus propias órdenes + las pendientes asignadas a él
+  // Técnico: ve sus propias órdenes + las planificadas asignadas a él
   if (cu && cu.role === 'tecnico') {
     visible = visible.filter(function(o) {
+      if (o.estado === 'planificada') return o.responsable === cu.nombre;
       return o.creadorId === cu.id || o.responsable === cu.nombre;
     });
   }
@@ -2461,48 +2523,284 @@ function renderOrderList() {
     return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q);
   });
 
-  list.innerHTML = draftHtml + filtered.map(o => `
+  // Separar planificadas del resto para mostrarlas arriba con su sección
+  const planificadas = filtered.filter(o => o.estado === 'planificada');
+  const normales     = filtered.filter(o => o.estado !== 'planificada');
 
+  const planHtml = planificadas.length ? `
+    <div style="padding:6px 16px 2px;font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:0.5px;background:#f5f3ff;">
+      📅 Planificadas
+    </div>
+    ${planificadas.map(o => `
+    <div class="order-item planificada ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
+         onclick="seleccionarPlanificada(${o.id})">
+      <div class="order-num" style="color:#7c3aed;">📅 ${o.fecha}</div>
+      <div class="order-empresa">${o.empresa}</div>
+      <div class="order-meta">${o.responsable || '— Sin técnico'}</div>
+      <div class="order-status status-planificada">Planificada</div>
+    </div>`).join('')}
+    <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+  ` : '';
+
+  list.innerHTML = draftHtml + planHtml + normales.map(o => `
     <div class="order-item ${o.estado === 'pending' ? 'pending' : ''} ${o.estado === 'locked' ? 'locked' : ''} ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
          onclick="seleccionarOrden(${o.id})">
-
       <div class="order-num">${o.numero || 'Nueva'}</div>
-
-      <div class="order-empresa">
-        ${o.empresa || '(Sin empresa)'}
+      <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
+      <div class="order-meta">${o.fecha} · ${o.responsable || '—'}</div>
+      <div class="order-status ${o.estado === 'pending' ? 'status-pending' : o.estado === 'locked' ? 'status-locked' : 'status-open'}">
+        ${o.estado === 'pending' ? 'Pendiente' : o.estado === 'locked' ? 'Cerrada' : 'Abierta'}
       </div>
-
-      <div class="order-meta">
-        ${o.fecha} · ${o.responsable || '—'}
-      </div>
-
-      <div class="order-status ${o.estado === 'pending'
-        ? 'status-pending'
-        : o.estado === 'locked'
-        ? 'status-locked'
-        : 'status-open'}">
-
-        ${o.estado === 'pending'
-          ? 'Pendiente'
-          : o.estado === 'locked'
-          ? 'Cerrada'
-          : 'Abierta'}
-
-      </div>
-
       ${o.estado !== 'locked' ? `
-        <button class="btn-delete"
-                onclick="event.stopPropagation(); eliminarOrden(${o.id})">
-          🗑 Eliminar
-        </button>
+        <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">🗑 Eliminar</button>
       ` : ''}
-
     </div>
-
   `).join('');
 }
 
 function filtrarOrdenes(q) { renderOrderList(); }
+
+// ==================== PLANIFICACIÓN ====================
+
+function abrirModalPlanificada() {
+  // Llenar datalist de empresas
+  const dl = document.getElementById('plan-empresa-list');
+  if (dl) dl.innerHTML = clientesDB.map(c => `<option value="${c.empresa}">`).join('');
+  // Llenar técnicos
+  const sel = document.getElementById('plan-tecnico');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Sin asignar —</option>' +
+      tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+  }
+  // Fecha por defecto: mañana
+  const man = new Date(); man.setDate(man.getDate() + 1);
+  const fi = document.getElementById('plan-fecha');
+  if (fi) fi.value = man.toISOString().split('T')[0];
+  document.getElementById('plan-empresa').value = '';
+  document.getElementById('plan-notas').value = '';
+  const err = document.getElementById('plan-error');
+  if (err) err.classList.add('hidden');
+  document.getElementById('modalPlanificada').classList.remove('hidden');
+  setTimeout(() => document.getElementById('plan-empresa').focus(), 100);
+}
+
+function cerrarModalPlanificada() {
+  document.getElementById('modalPlanificada').classList.add('hidden');
+}
+
+function guardarOrdenPlanificada() {
+  const empresa = document.getElementById('plan-empresa').value.trim();
+  const fecha   = document.getElementById('plan-fecha').value;
+  const err     = document.getElementById('plan-error');
+  if (!empresa || !fecha) {
+    err.textContent = '✕ Empresa y fecha son obligatorios.';
+    err.classList.remove('hidden');
+    return;
+  }
+  err.classList.add('hidden');
+  const cu = getCurrentUser();
+  const nueva = {
+    id: Date.now(),
+    estado: 'planificada',
+    empresa,
+    fecha: fecha,               // fecha planificada (YYYY-MM-DD)
+    responsable: document.getElementById('plan-tecnico').value || '',
+    tipoServicio: document.getElementById('plan-tipo').value,
+    notas: document.getElementById('plan-notas').value.trim(),
+    creadorId: cu ? cu.id : 0,
+    creadorNombre: cu ? cu.nombre : '',
+    // campos vacíos para compatibilidad con el formulario completo
+    contacto:'', tel:'', cuit:'', ubicacion:'', email:'',
+    marca:'', modelo:'', serie:'',
+    probDetectado:'', causaRaiz:'', accionRealizada:'',
+    repuestos:[], comentarios:[], condicion:[],
+    visitas:[], servicioPlanta:false, trasladoSn:'',
+    fechaCierre:'', fechaCobro:'', firmaCliente:null, firmaTecnico:null,
+    tecnicoNombre:'', facturacion:null,
+    updatedAt: Date.now()
+  };
+  ordenes.unshift(nueva);
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  _syncPush();
+  cerrarModalPlanificada();
+  renderOrderList();
+  showToast('📅 Orden planificada guardada.');
+}
+
+function seleccionarPlanificada(id) {
+  const o = ordenes.find(x => x.id === id);
+  if (!o) return;
+  ordenActual = o;
+  switchView('nueva');
+  const mc = document.getElementById('mainContent');
+  const tecLabel = o.responsable || '— Sin asignar —';
+  const tipoLabel = { preventivo:'Preventivo', correctivo:'Correctivo', mparada:'Máquina parada', instalacion:'Instalación', garantia:'Garantía' }[o.tipoServicio] || o.tipoServicio;
+  mc.innerHTML = `
+    <div style="padding:32px;max-width:600px;margin:0 auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <span style="background:#ede9fe;color:#5b21b6;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;">📅 PLANIFICADA</span>
+        <span style="font-size:13px;color:var(--text-muted);">${o.fecha}</span>
+      </div>
+      <h2 style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:6px;">${o.empresa}</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;">
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Técnico</div>
+          <div style="font-size:14px;font-weight:600;">${tecLabel}</div>
+        </div>
+        <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Tipo</div>
+          <div style="font-size:14px;font-weight:600;">${tipoLabel}</div>
+        </div>
+      </div>
+      ${o.notas ? `<div style="background:white;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Notas</div>
+        <div style="font-size:14px;line-height:1.6;">${o.notas}</div>
+      </div>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="iniciarOrdenDesde(${o.id})" style="background:var(--teal);">
+          ▶ Iniciar orden de servicio
+        </button>
+        ${isAdmin() ? `<button class="btn" onclick="editarPlanificada(${o.id})" style="border-color:#7c3aed;color:#7c3aed;">✏ Editar</button>` : ''}
+        ${isAdmin() ? `<button class="btn" onclick="eliminarOrden(${o.id})" style="color:var(--red);border-color:var(--red);">🗑 Eliminar</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function iniciarOrdenDesde(id) {
+  const o = ordenes.find(x => x.id === id);
+  if (!o) return;
+  o.estado = 'open';
+  o.numero = getNextNum();
+  o.updatedAt = Date.now();
+  ordenActual = o;
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  _syncPush();
+  renderOrderList();
+  renderFormContent();
+  showToast('✅ Orden iniciada. Completá los datos.');
+}
+
+function editarPlanificada(id) {
+  const o = ordenes.find(x => x.id === id);
+  if (!o) return;
+  const dl = document.getElementById('plan-empresa-list');
+  if (dl) dl.innerHTML = clientesDB.map(c => `<option value="${c.empresa}">`).join('');
+  const sel = document.getElementById('plan-tecnico');
+  if (sel) sel.innerHTML = '<option value="">— Sin asignar —</option>' +
+    tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+  document.getElementById('plan-empresa').value = o.empresa;
+  document.getElementById('plan-fecha').value   = o.fecha;
+  document.getElementById('plan-tipo').value    = o.tipoServicio || 'preventivo';
+  document.getElementById('plan-notas').value   = o.notas || '';
+  if (sel) sel.value = o.responsable || '';
+  const err = document.getElementById('plan-error');
+  if (err) err.classList.add('hidden');
+  // Reemplazar el botón guardar para que actualice en lugar de crear
+  document.getElementById('modalPlanificada').classList.remove('hidden');
+  document.querySelector('#modalPlanificada .btn-primary').onclick = function() {
+    const empresa = document.getElementById('plan-empresa').value.trim();
+    const fecha   = document.getElementById('plan-fecha').value;
+    if (!empresa || !fecha) { err.textContent='✕ Empresa y fecha son obligatorios.'; err.classList.remove('hidden'); return; }
+    o.empresa     = empresa;
+    o.fecha       = fecha;
+    o.responsable = document.getElementById('plan-tecnico').value || '';
+    o.tipoServicio= document.getElementById('plan-tipo').value;
+    o.notas       = document.getElementById('plan-notas').value.trim();
+    o.updatedAt   = Date.now();
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+    _syncPush();
+    cerrarModalPlanificada();
+    renderOrderList();
+    seleccionarPlanificada(id);
+    showToast('✅ Planificación actualizada.');
+    // Restaurar botón
+    document.querySelector('#modalPlanificada .btn-primary').onclick = guardarOrdenPlanificada;
+  };
+}
+
+function renderPlanificacion() {
+  const mc = document.getElementById('mainContent');
+  const planificadas = ordenes.filter(o => o.estado === 'planificada');
+
+  const hoy   = new Date();
+  let   year  = hoy.getFullYear();
+  let   month = hoy.getMonth(); // 0-based
+  // Leer mes/año del selector si existe
+  const selMes = document.getElementById('cal-mes-sel');
+  if (selMes) { const [y,m] = selMes.value.split('-'); year = +y; month = +m; }
+
+  const primerDia = new Date(year, month, 1);
+  const ultDia    = new Date(year, month + 1, 0);
+  const diasMes   = ultDia.getDate();
+  const inicioSem = primerDia.getDay(); // 0=dom
+
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesAnterior = month === 0 ? `${year-1}-11` : `${year}-${String(month-1).padStart(2,'0')}`;
+  const mesSiguiente= month===11 ? `${year+1}-00` : `${year}-${String(month+1).padStart(2,'0')}`;
+  const mesActualVal= `${year}-${String(month).padStart(2,'0')}`;
+
+  // Agrupar planificadas por fecha
+  const porFecha = {};
+  planificadas.forEach(o => {
+    const k = o.fecha; // YYYY-MM-DD
+    if (!porFecha[k]) porFecha[k] = [];
+    porFecha[k].push(o);
+  });
+
+  // Celdas vacías antes del primer día (semana empieza en lunes)
+  const offset = (inicioSem + 6) % 7; // convertir dom=0 a lun=0
+  let celdas = '';
+  for (let i = 0; i < offset; i++) celdas += `<div class="cal-cell other-month"></div>`;
+
+  for (let d = 1; d <= diasMes; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const esHoy   = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
+    const items   = (porFecha[dateStr] || []).map(o =>
+      `<div class="cal-plan-item" onclick="seleccionarPlanificada(${o.id})" title="${o.empresa} · ${o.responsable||'Sin técnico'}">
+        ${o.empresa}${o.responsable ? ' · '+o.responsable : ''}
+      </div>`).join('');
+    celdas += `<div class="cal-cell${esHoy?' today':''}">
+      <div class="cal-day-num">${d}</div>
+      ${items}
+    </div>`;
+  }
+
+  mc.innerHTML = `
+    <div style="padding:24px;overflow-y:auto;height:100%;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <h2 style="font-size:18px;font-weight:700;margin:0;">📅 Planificación</h2>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="navCalendario('${mesAnterior}')" style="background:white;border:1px solid var(--border);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:16px;">‹</button>
+          <span style="font-size:15px;font-weight:700;min-width:140px;text-align:center;">${meses[month]} ${year}</span>
+          <button onclick="navCalendario('${mesSiguiente}')" style="background:white;border:1px solid var(--border);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:16px;">›</button>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalPlanificada()" style="background:#7c3aed;">+ Nueva planificación</button>
+      </div>
+      <input type="hidden" id="cal-mes-sel" value="${mesActualVal}">
+      <div class="cal-grid" style="margin-bottom:8px;">
+        ${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div class="cal-header-day">${d}</div>`).join('')}
+      </div>
+      <div class="cal-grid">${celdas}</div>
+      ${planificadas.length === 0 ? '<p style="color:var(--text-muted);font-size:14px;margin-top:20px;text-align:center;">No hay órdenes planificadas todavía.</p>' : ''}
+    </div>`;
+}
+
+function navCalendario(mesVal) {
+  // mesVal formato "YYYY-MM" donde MM es 0-based
+  const [y, m] = mesVal.split('-');
+  // Guardar temporalmente y re-renderizar
+  const sel = document.getElementById('cal-mes-sel');
+  if (sel) sel.value = mesVal;
+  // Construir nueva fecha y re-renderizar
+  const hid = document.createElement('input');
+  hid.id = 'cal-mes-sel'; hid.value = mesVal;
+  // Hack: reemplazar valor y re-renderizar
+  renderPlanificacion();
+  // Corregir el valor del input recién creado por renderPlanificacion
+  const newSel = document.getElementById('cal-mes-sel');
+  if (newSel) newSel.value = mesVal;
+  renderPlanificacion();
+}
 
 function switchView(v) {
   const user = getCurrentUser();
@@ -2515,17 +2813,18 @@ function switchView(v) {
 
   viewMode = v;
   // Nav tabs
-  ['nav-nueva','nav-historial','nav-facturacion','nav-config'].forEach(function(id) {
+  ['nav-nueva','nav-historial','nav-planificacion','nav-facturacion','nav-config'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
-  const activeId = { nueva:'nav-nueva', historial:'nav-historial', facturacion:'nav-facturacion', config:'nav-config' }[v];
+  const activeId = { nueva:'nav-nueva', historial:'nav-historial', planificacion:'nav-planificacion', facturacion:'nav-facturacion', config:'nav-config' }[v];
   if (activeId) { const el = document.getElementById(activeId); if (el) el.classList.add('active'); }
 
-  if (v === 'historial')    renderHistorial();
-  else if (v === 'config')  { renderConfig(); initFirmasPads(); }
+  if (v === 'historial')       renderHistorial();
+  else if (v === 'planificacion') renderPlanificacion();
+  else if (v === 'config')     { renderConfig(); initFirmasPads(); }
   else if (v === 'facturacion') renderFacturacion();
-  else if (ordenActual)     renderFormContent();
+  else if (ordenActual)        renderFormContent();
   else {
     document.getElementById('mainContent').innerHTML = `
       <div class="empty-state">
@@ -2603,7 +2902,7 @@ function filtrarHistorial() {
   const fDesde   = document.getElementById('hf-desde')?.value || '';
   const fHasta   = document.getElementById('hf-hasta')?.value || '';
 
-  let lista = ordenes.filter(function(o){ return !o.draft && o.empresa; });
+  let lista = ordenes.filter(function(o){ return !o.draft && o.empresa && o.estado !== 'planificada'; });
 
   if (fCliente) lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(fCliente); });
   if (fEstado)  lista = lista.filter(function(o){ return o.estado === fEstado; });
@@ -5376,7 +5675,7 @@ function doLogin() {
 
 function logout() {
   // Cerrar todos los modales abiertos
-  ['perfilModal','configPassModal','confirmModal','numModal'].forEach(function(id) {
+  ['perfilModal','configPassModal','confirmModal','numModal','modalPlanificada'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
@@ -5437,6 +5736,10 @@ function initRoleUI() {
     if (el) el.style.display = canFacturar() ? '' : 'none';
   });
   ['nav-config','mob-config'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isAdmin() ? '' : 'none';
+  });
+  ['nav-planificacion','btn-nueva-plan'].forEach(function(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = isAdmin() ? '' : 'none';
   });
