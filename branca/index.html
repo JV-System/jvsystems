@@ -2292,29 +2292,34 @@ async function loadFromCloud() {
         localStorage.setItem('branca_admin_pass', remoteDb.config.adminPass);
       }
 
-      // ÓRDENES — merge por timestamp
-      if (Array.isArray(remoteDb.ordenes) && remoteDb.ordenes.length) {
-        const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
-        ordenes = mergeById(ordenes, remoteDb.ordenes);
-        ordenes = ordenes.filter(function(o) {
-          if (o.draft) return true;
-          if (!o.empresa && !o.marca) return false;
-          return true;
-        });
-        draftsLocales.forEach(function(d) {
-          if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
-        });
-        localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+      // ÓRDENES — merge por timestamp; array vacío explícito = reset
+      if (Array.isArray(remoteDb.ordenes)) {
+        if (remoteDb.ordenes.length === 0) {
+          ordenes = [];
+          localStorage.setItem('branca_ordenes', JSON.stringify([]));
+        } else {
+          const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
+          ordenes = mergeById(ordenes, remoteDb.ordenes);
+          ordenes = ordenes.filter(function(o) {
+            if (o.draft) return true;
+            if (!o.empresa && !o.marca) return false;
+            return true;
+          });
+          draftsLocales.forEach(function(d) {
+            if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
+          });
+          localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+        }
       }
 
-      // CLIENTES — la nube gana siempre
-      if (Array.isArray(remoteDb.clientes) && remoteDb.clientes.length) {
+      // CLIENTES — la nube gana siempre; vacío explícito = reset
+      if (Array.isArray(remoteDb.clientes)) {
         clientesDB = remoteDb.clientes;
         localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
       }
 
-      // TÉCNICOS — la nube gana siempre
-      if (Array.isArray(remoteDb.tecnicos) && remoteDb.tecnicos.length) {
+      // TÉCNICOS — la nube gana siempre; vacío explícito = reset
+      if (Array.isArray(remoteDb.tecnicos)) {
         tecnicosDB = remoteDb.tecnicos;
         localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
       }
