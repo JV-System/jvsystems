@@ -1069,11 +1069,26 @@ tr:hover td{background:#fafbfd}
   <section id="sec-compras" class="content" style="display:none">
     <div class="content-toolbar">
       <span class="toolbar-title">Compras al Secadero</span>
-      <button class="btn btn-primary btn-sm" onclick="openCompraModal()">+ Nueva Compra</button>
+      <div style="display:flex;gap:8px">
+        <button class="inner-tab active" id="tabComprasOC" onclick="switchComprasTab('oc')">📋 Órdenes de Compra</button>
+        <button class="inner-tab" id="tabComprasCCC" onclick="switchComprasTab('ccc')">🏦 Cuenta Corriente</button>
+        <button class="btn btn-primary btn-sm" onclick="openCompraModal()">+ Nueva Compra</button>
+      </div>
     </div>
     <div class="content-body">
       <div class="kpi-grid" id="kpiCompras"></div>
-      <div id="listaOC"></div>
+      <div id="tabPanelOC">
+        <div id="listaOC"></div>
+      </div>
+      <div id="tabPanelCCC" style="display:none">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="card-title" style="margin:0">🏦 Cuenta Corriente Proveedores</div>
+            <button class="btn btn-primary btn-sm" onclick="openPagoProveedorModal('')">+ Registrar pago</button>
+          </div>
+          <div id="cuentaCorrienteProvBody"></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1234,6 +1249,7 @@ tr:hover td{background:#fafbfd}
         <button onclick="moveInfMes(-1)" class="btn btn-ghost btn-sm">‹</button>
         <span id="infMesLabel" style="font-size:13px;font-weight:700;min-width:120px;text-align:center"></span>
         <button onclick="moveInfMes(1)" class="btn btn-ghost btn-sm">›</button>
+        <button class="btn btn-ghost btn-sm" onclick="imprimirResumenMes()">📄 Resumen del mes</button>
       </div>
     </div>
     <div class="content-body">
@@ -1284,6 +1300,18 @@ tr:hover td{background:#fafbfd}
           </table>
         </div>
       </div>
+      <!-- Kg comprados por proveedor -->
+      <div class="card">
+        <div class="card-title">🏭 Kg comprados por proveedor</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Proveedor</th><th>Producto/Concepto</th><th class="td-right">Kg</th><th class="td-right">Precio prom./kg</th></tr></thead>
+            <tbody id="infTablaProveedores"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Precio promedio por kg -->
+      <div class="inf-grid" id="infKpisExtra"></div>
     </div>
   </section>
 
@@ -1291,7 +1319,10 @@ tr:hover td{background:#fafbfd}
   <section id="sec-gastos" class="content" style="display:none">
     <div class="content-toolbar">
       <span class="toolbar-title">💸 Gastos</span>
-      <button class="btn btn-primary btn-sm" onclick="openGastoModal()">+ Registrar Gasto</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="openRubrosGastoModal()">🏷️ Gestionar rubros</button>
+        <button class="btn btn-primary btn-sm" onclick="openGastoModal()">+ Registrar Gasto</button>
+      </div>
     </div>
     <div class="content-body">
       <div class="kpi-grid" id="kpiGastos"></div>
@@ -1415,6 +1446,63 @@ tr:hover td{background:#fafbfd}
             <thead><tr><th>Nombre</th><th>ID</th><th class="td-right">Precio Lista 1</th><th>Acciones</th></tr></thead>
             <tbody id="productosTbody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Card Precio despacho flete default -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div class="config-card-title">🚛 Flete por defecto ($/kg)</div>
+        </div>
+        <div style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+          <label class="form-label" style="margin:0">Precio flete:</label>
+          <input type="number" id="precioFleteInput" class="form-control" style="width:120px" placeholder="50">
+          <button class="btn btn-primary btn-sm" onclick="guardarPrecioFlete()">Guardar</button>
+          <span style="font-size:12px;color:var(--text-muted)">Precio por kg de flete al registrar despachos</span>
+        </div>
+      </div>
+
+      <!-- Card Precio estampilla -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div class="config-card-title">🏷️ Precio adicional por estampilla ($/kg)</div>
+        </div>
+        <div style="padding:16px 20px;display:flex;align-items:center;gap:12px">
+          <label class="form-label" style="margin:0">Costo adicional por kg con estampilla:</label>
+          <input type="number" id="precioEstampillaInput" class="form-control" style="width:120px" placeholder="220">
+          <button class="btn btn-primary btn-sm" onclick="guardarPrecioEstampilla()">Guardar</button>
+        </div>
+      </div>
+
+      <!-- Card Composición de Precio (Ítem 18) -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div class="config-card-title">📐 Composición de Precio (referencial)</div>
+        </div>
+        <div style="padding:16px 20px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Calculador referencial para entender la estructura del precio de venta. No modifica precios automáticamente.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Flete ($/kg)</label>
+              <input type="number" class="form-control" id="compPrecioFleteInput" min="0" placeholder="0" oninput="calcComposicionPrecio()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Despacho ($/kg)</label>
+              <input type="number" class="form-control" id="compPrecioDespachoInput" min="0" placeholder="0" oninput="calcComposicionPrecio()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ganancia (%)</label>
+              <input type="number" class="form-control" id="compPrecioGananciaInput" min="0" placeholder="0" oninput="calcComposicionPrecio()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Impuestos (%)</label>
+              <input type="number" class="form-control" id="compPrecioImpuestosInput" min="0" placeholder="0" oninput="calcComposicionPrecio()">
+            </div>
+          </div>
+          <div id="compPrecioResultado" style="margin-top:12px;background:var(--bg);border-radius:8px;padding:12px 16px"></div>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end">
+            <button class="btn btn-primary btn-sm" onclick="guardarComposicionPrecio()">💾 Guardar valores</button>
+          </div>
         </div>
       </div>
 
@@ -1958,16 +2046,7 @@ tr:hover td{background:#fafbfd}
         </div>
         <div class="form-group">
           <label class="form-label">Rubro</label>
-          <select class="form-control" id="gastoRubro">
-            <option value="Embalaje">📦 Embalaje</option>
-            <option value="Estampillas">🏷️ Estampillas</option>
-            <option value="Transporte">🚚 Transporte</option>
-            <option value="Despacho">📮 Despacho</option>
-            <option value="Impuestos">🏛️ Impuestos / AFIP</option>
-            <option value="Retiros">💰 Retiros personales</option>
-            <option value="Servicios">💡 Servicios</option>
-            <option value="Varios">🔧 Varios</option>
-          </select>
+          <select class="form-control" id="gastoRubro"></select>
         </div>
         <div class="form-group form-full">
           <label class="form-label">Descripción</label>
@@ -1982,6 +2061,103 @@ tr:hover td{background:#fafbfd}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modalGasto')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveGasto()">Guardar Gasto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR DESPACHO -->
+<div class="modal-overlay" id="modalEditDespacho">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✏️ Editar Despacho</span>
+      <button class="modal-close" onclick="closeModal('modalEditDespacho')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editDespId">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Embalaje (kg)</label>
+          <input class="form-control" type="number" id="editDespEmbalKg" min="0" oninput="calcEditDespachoTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio embalaje ($/kg)</label>
+          <input class="form-control" type="number" id="editDespEmbalPrecio" min="0" oninput="calcEditDespachoTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flete ($/kg)</label>
+          <input class="form-control" type="number" id="editDespFlete" min="0" oninput="calcEditDespachoTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Extra embalaje ($)</label>
+          <input class="form-control" type="number" id="editDespEmbalExtra" min="0" oninput="calcEditDespachoTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Subtotal calculado ($)</label>
+          <input class="form-control" type="number" id="editDespSubtotal" readonly style="background:var(--bg);font-weight:700">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Observaciones</label>
+          <input class="form-control" id="editDespObs" placeholder="Obs...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalEditDespacho')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditDespacho()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGO PROVEEDOR -->
+<div class="modal-overlay" id="modalPagoProveedor">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">💸 Registrar Pago a Proveedor</span>
+      <button class="modal-close" onclick="closeModal('modalPagoProveedor')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-control" type="date" id="pagoProvFecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Proveedor</label>
+          <input class="form-control" id="pagoProvProveedor" placeholder="Nombre del proveedor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto ($)</label>
+          <input class="form-control" type="number" id="pagoProvMonto" min="0" placeholder="0">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Descripción</label>
+          <input class="form-control" id="pagoProvDesc" placeholder="Detalle del pago">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalPagoProveedor')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePagoProveedor()">💾 Guardar Pago</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GESTIONAR RUBROS GASTO -->
+<div class="modal-overlay" id="modalRubrosGasto">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🏷️ Gestionar Rubros de Gasto</span>
+      <button class="modal-close" onclick="closeModal('modalRubrosGasto')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="rubrosGastoList" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-control" id="nuevoRubroInput" placeholder="Nuevo rubro..." style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="agregarRubroGasto()">+ Agregar</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modalRubrosGasto')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -2031,7 +2207,15 @@ function _initDbFields(){
   if(!db.config.codigosDescuento) db.config.codigosDescuento={};
   if(db.config.stockEstampillas===undefined) db.config.stockEstampillas=0;
   if(!db.config.cuotaKgMensual) db.config.cuotaKgMensual=0;
-  if(!db.config.precioDespachoDefault) db.config.precioDespachoDefault=180;
+  if(!db.config.precioDespachoDefault) db.config.precioDespachoDefault=130;
+  if(!db.config.precioFleteDefault) db.config.precioFleteDefault=50;
+  if(!db.pagosProveedores) db.pagosProveedores=[];
+  if(!db.config.rubrosGasto) db.config.rubrosGasto=['Flete','Embalaje','Estampillas','Impuestos','Publicidad','Servicios','Retiros','Varios'];
+  if(db.config.precioEstampilla===undefined) db.config.precioEstampilla=220;
+  if(db.config.compPrecioFlete===undefined) db.config.compPrecioFlete=0;
+  if(db.config.compPrecioDespacho===undefined) db.config.compPrecioDespacho=0;
+  if(db.config.compPrecioGanancia===undefined) db.config.compPrecioGanancia=0;
+  if(db.config.compPrecioImpuestos===undefined) db.config.compPrecioImpuestos=0;
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
   if(!db.cuentas) db.cuentas={nombre1:'Mercado Pago',nombre2:'Cuenta Bancaria',movCuenta1:[],movCuenta2:[]};
@@ -3235,6 +3419,13 @@ function deleteDario(id){ if(!confirm('¿Eliminar movimiento?')) return; db.dari
 //  COMPRAS
 // ════════════════════════════════════════════════
 const CONCEPTOS_COMPRA=['Canchada','Fina','Extra Fina','Palito Molido','Estampillas','Azúcar Mascabo','Otro'];
+function switchComprasTab(tab){
+  document.getElementById('tabPanelOC').style.display=tab==='oc'?'block':'none';
+  document.getElementById('tabPanelCCC').style.display=tab==='ccc'?'block':'none';
+  document.getElementById('tabComprasOC').classList.toggle('active',tab==='oc');
+  document.getElementById('tabComprasCCC').classList.toggle('active',tab==='ccc');
+  if(tab==='ccc') renderCuentaCorrienteProveedores();
+}
 function renderCompras(){
   // Migrar compras existentes sin numero
   if(!db.config) db.config={nextPedido:1,nextCompra:1};
@@ -3344,6 +3535,68 @@ function saveCompra(){
 function deleteCompra(id){ if(!confirm('¿Eliminar?')) return; db.compras=db.compras.filter(c=>c.id!==id); saveDB(); renderCompras(); }
 
 // ════════════════════════════════════════════════
+//  CUENTA CORRIENTE PROVEEDORES (Ítem 7)
+// ════════════════════════════════════════════════
+function renderCuentaCorrienteProveedores(){
+  if(!db.pagosProveedores) db.pagosProveedores=[];
+  // Calcular totales por proveedor
+  const provData={};
+  db.compras.forEach(c=>{
+    const prov=c.proveedor||'Sin proveedor';
+    if(!provData[prov]) provData[prov]={comprado:0,pagado:0};
+    const sub=c.items.reduce((s,i)=>(Number(i.cantidad)||0)*(Number(i.precio)||0)+s,0);
+    provData[prov].comprado+=sub;
+  });
+  db.pagosProveedores.forEach(p=>{
+    const prov=p.proveedor||'Sin proveedor';
+    if(!provData[prov]) provData[prov]={comprado:0,pagado:0};
+    provData[prov].pagado+=Number(p.monto)||0;
+  });
+  const el=document.getElementById('cuentaCorrienteProvBody'); if(!el) return;
+  const rows=Object.entries(provData).sort((a,b)=>b[1].comprado-a[1].comprado);
+  el.innerHTML=rows.length?`
+    <table class="users-table">
+      <thead><tr><th>Proveedor</th><th class="td-right">Total comprado</th><th class="td-right">Total pagado</th><th class="td-right">Saldo deudor</th></tr></thead>
+      <tbody>${rows.map(([prov,v])=>{
+        const saldo=v.comprado-v.pagado;
+        return `<tr>
+          <td><b>${prov}</b></td>
+          <td class="td-right">${fmt(v.comprado)}</td>
+          <td class="td-right" style="color:var(--teal)">${fmt(v.pagado)}</td>
+          <td class="td-right" style="font-weight:700;color:${saldo>0?'var(--red)':'var(--teal)'}">${saldo>0?'−':'+'}${fmt(Math.abs(saldo))}</td>
+        </tr>`;}).join('')}</tbody>
+    </table>
+    <div style="margin-top:14px">
+      <div class="card-title" style="font-size:12px;margin-bottom:8px">Pagos registrados</div>
+      ${db.pagosProveedores.length?`<table class="users-table">
+        <thead><tr><th>Fecha</th><th>Proveedor</th><th>Descripción</th><th class="td-right">Monto</th><th></th></tr></thead>
+        <tbody>${[...db.pagosProveedores].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).map(p=>`
+          <tr><td>${p.fecha||'—'}</td><td>${p.proveedor}</td><td>${p.desc||'—'}</td>
+          <td class="td-right" style="color:var(--teal);font-weight:700">${fmt(p.monto)}</td>
+          <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deletePagoProveedor(${p.id})">✕</button></td>
+          </tr>`).join('')}</tbody>
+      </table>`:'<div style="font-size:13px;color:var(--text-muted)">Sin pagos registrados.</div>'}
+    </div>`
+  :'<div style="font-size:13px;color:var(--text-muted);padding:20px 0">Sin compras registradas.</div>';
+}
+function openPagoProveedorModal(proveedor){
+  document.getElementById('pagoProvFecha').value=today();
+  document.getElementById('pagoProvProveedor').value=proveedor||'';
+  document.getElementById('pagoProvMonto').value='';
+  document.getElementById('pagoProvDesc').value='';
+  openModal('modalPagoProveedor');
+}
+function savePagoProveedor(){
+  const monto=Number(document.getElementById('pagoProvMonto').value)||0;
+  const prov=document.getElementById('pagoProvProveedor').value.trim();
+  if(!monto||!prov){toast('Completá proveedor y monto','error');return;}
+  if(!db.pagosProveedores) db.pagosProveedores=[];
+  db.pagosProveedores.push({id:Date.now(),fecha:document.getElementById('pagoProvFecha').value,proveedor:prov,monto,desc:document.getElementById('pagoProvDesc').value});
+  saveDB();closeModal('modalPagoProveedor');renderCuentaCorrienteProveedores();toast('Pago registrado ✓','success');
+}
+function deletePagoProveedor(id){if(!confirm('¿Eliminar pago?'))return;db.pagosProveedores=db.pagosProveedores.filter(p=>p.id!==id);saveDB();renderCuentaCorrienteProveedores();}
+
+// ════════════════════════════════════════════════
 //  DESPACHOS
 // ════════════════════════════════════════════════
 let _despModalTipo = 'despacho';
@@ -3387,7 +3640,8 @@ function renderDespachos(){
       <td class="td-num" style="color:var(--red)">${debe?fmt(debe):'—'}</td>
       <td class="td-num" style="color:var(--teal)">${haber?fmt(haber):'—'}</td>
       <td class="td-num" style="font-weight:700;color:${runSaldo>=0?'var(--teal)':'var(--red)'}">${runSaldo>=0?'+':''}${fmt(runSaldo)}</td>
-      <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDespacho(${d.id})">✕</button></td>
+      <td style="display:flex;gap:4px">${!esTransf?`<button class="btn btn-ghost btn-sm" onclick="openEditDespachoModal(${d.id})" title="Editar">✏️</button>`:''}
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteDespacho(${d.id})">✕</button></td>
     </tr>`;}).join('')
     :'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted)">Sin registros</td></tr>';
 
@@ -3401,8 +3655,8 @@ function openDespachoModal(){
   document.getElementById('despCliente').value='';
   document.getElementById('despKg').value='';
   document.getElementById('despEmbalKg').value='';
-  document.getElementById('despEmbalPrecio').value='130';
-  document.getElementById('despFlete').value='50';
+  document.getElementById('despEmbalPrecio').value=db.config.precioDespachoDefault||130;
+  document.getElementById('despFlete').value=db.config.precioFleteDefault||50;
   document.getElementById('despEmbalExtra').value='0';
   document.getElementById('despSubtotal').value='';
   document.getElementById('despObs').value='';
@@ -3454,6 +3708,35 @@ function saveDespacho(){
   saveDB();closeModal('modalDespacho');renderDespachos();renderDashboard();toast('Despacho registrado ✓','success');
 }
 function deleteDespacho(id){if(!confirm('¿Eliminar?'))return;db.despachos=db.despachos.filter(d=>d.id!==id);saveDB();renderDespachos();renderDashboard();}
+function openEditDespachoModal(id){
+  const d=db.despachos.find(x=>x.id===id); if(!d) return;
+  document.getElementById('editDespId').value=d.id;
+  document.getElementById('editDespEmbalKg').value=d.embalKg||'';
+  document.getElementById('editDespEmbalPrecio').value=d.embalPrecio||'';
+  document.getElementById('editDespFlete').value=d.flete||'';
+  document.getElementById('editDespEmbalExtra').value=d.embalExtra||0;
+  document.getElementById('editDespObs').value=d.obs||'';
+  calcEditDespachoTotal();
+  openModal('modalEditDespacho');
+}
+function calcEditDespachoTotal(){
+  const embKg=Number(document.getElementById('editDespEmbalKg').value)||0;
+  const embPr=Number(document.getElementById('editDespEmbalPrecio').value)||0;
+  const flete=Number(document.getElementById('editDespFlete').value)||0;
+  const extra=Number(document.getElementById('editDespEmbalExtra').value)||0;
+  document.getElementById('editDespSubtotal').value=embKg*embPr+flete*embKg+extra;
+}
+function saveEditDespacho(){
+  const id=Number(document.getElementById('editDespId').value);
+  const d=db.despachos.find(x=>x.id===id); if(!d) return;
+  d.embalKg=Number(document.getElementById('editDespEmbalKg').value)||0;
+  d.embalPrecio=Number(document.getElementById('editDespEmbalPrecio').value)||0;
+  d.flete=Number(document.getElementById('editDespFlete').value)||0;
+  d.embalExtra=Number(document.getElementById('editDespEmbalExtra').value)||0;
+  d.subtotal=Number(document.getElementById('editDespSubtotal').value)||0;
+  d.obs=document.getElementById('editDespObs').value;
+  saveDB();closeModal('modalEditDespacho');renderDespachos();renderDashboard();toast('Despacho actualizado ✓','success');
+}
 
 // ════════════════════════════════════════════════
 //  PRESUPUESTOS
@@ -3532,6 +3815,7 @@ function renderPresProductos(){
       <div style="font-size:13px;font-weight:500">${p.label}</div>
       <input type="number" class="form-control" min="0" placeholder="Kg" style="width:90px" id="pres_${p.id}" oninput="calcPresTotal()" value="">
       ${precioCell}
+      <label style="font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;cursor:pointer"><input type="checkbox" id="pres_est_${p.id}" onchange="calcPresTotal()"> estampilla</label>
       <div style="font-size:13px;font-weight:700;color:var(--navy);min-width:80px;text-align:right" id="presst_${p.id}">—</div>
     </div>`;
   }).join('');
@@ -3559,9 +3843,11 @@ function renderPresProductos(){
 }
 function calcPresTotal(){
   let total=0;
+  const precioEst=db.config.precioEstampilla||220;
   getProductos().forEach(p=>{
     const kg=Number(document.getElementById('pres_'+p.id)?.value)||0;
-    const sub=kg*getPresPrice(p.id);
+    const conEst=document.getElementById('pres_est_'+p.id)?.checked||false;
+    const sub=kg*(getPresPrice(p.id)+(conEst?precioEst:0));
     const el=document.getElementById('presst_'+p.id);
     if(el) el.textContent=kg>0?fmt(sub):'—';
     total+=sub;
@@ -3572,8 +3858,14 @@ function calcPresTotal(){
   if(hasItems) buildPresPreview(total);
 }
 function buildPresPreview(total){
+  const precioEst=db.config.precioEstampilla||220;
   const items=getProductos().filter(p=>Number(document.getElementById('pres_'+p.id)?.value)>0)
-    .map(p=>{const kg=Number(document.getElementById('pres_'+p.id).value); return `🧉 ${kg} kg ${p.label} — ${fmt(kg*getPresPrice(p.id))}`;}).join('\n');
+    .map(p=>{
+      const kg=Number(document.getElementById('pres_'+p.id).value);
+      const conEst=document.getElementById('pres_est_'+p.id)?.checked||false;
+      const sub=kg*(getPresPrice(p.id)+(conEst?precioEst:0));
+      return `🧉 ${kg} kg ${p.label}${conEst?' (c/estampilla)':''} — ${fmt(sub)}`;
+    }).join('\n');
   let msg=`*Presupuesto — Sabores de Misiones*\n\n`;
   msg+=items;
   msg+=`\n\n*TOTAL: ${fmt(total)}*`;
@@ -3585,7 +3877,7 @@ function copyPresupuesto(){
 }
 function printPresupuesto(){ window.print(); }
 function savePresAsOrder(){
-  const prods=getProductos().filter(p=>Number(document.getElementById('pres_'+p.id)?.value)>0).map(p=>({tipo:p.id,kg:Number(document.getElementById('pres_'+p.id).value),estampilla:false}));
+  const prods=getProductos().filter(p=>Number(document.getElementById('pres_'+p.id)?.value)>0).map(p=>({tipo:p.id,kg:Number(document.getElementById('pres_'+p.id).value),estampilla:document.getElementById('pres_est_'+p.id)?.checked||false}));
   if(!prods.length){ toast('Sin productos','error'); return; }
   const cli=presClienteData;
   const data={id:Date.now(), numero:db.config.nextPedido++, nombre:cli?.nombre||'', dni:cli?.dni||'', tel:cli?.tel||'', email:cli?.email||'', transporte:cli?.transporte||'', fecha:today(), estado:'pago parcial', productos:prods, presupuesto:null, ingreso:null, obs:''};
@@ -3674,6 +3966,97 @@ function renderInformes(){
   document.getElementById('infTablaGastos').innerHTML=Object.entries(gasRub).length?Object.entries(gasRub).sort((a,b)=>b[1]-a[1]).map(([r,v])=>`
     <tr><td>${r}</td><td class="td-right" style="font-weight:700">${fmt(v)}</td></tr>`).join('')
     :'<tr><td colspan="2" style="text-align:center;color:var(--text-muted);padding:20px">Sin gastos en este período</td></tr>';
+
+  // Kg comprados por proveedor del mes (Ítem 9)
+  const compMes=(db.compras||[]).filter(c=>{const d=new Date(c.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const provKg={};
+  compMes.forEach(c=>{
+    const prov=c.proveedor||'Sin proveedor';
+    c.items.forEach(i=>{
+      if(i.concepto==='Estampillas') return;
+      const key=prov+'||'+i.concepto;
+      if(!provKg[key]) provKg[key]={prov,concepto:i.concepto,kg:0,total:0};
+      provKg[key].kg+=Number(i.cantidad)||0;
+      provKg[key].total+=(Number(i.cantidad)||0)*(Number(i.precio)||0);
+    });
+  });
+  const provArr=Object.values(provKg).sort((a,b)=>b.kg-a.kg);
+  const infTablaProvEl=document.getElementById('infTablaProveedores');
+  if(infTablaProvEl) infTablaProvEl.innerHTML=provArr.length?provArr.map(v=>`
+    <tr><td>${v.prov}</td><td>${v.concepto}</td><td class="td-right">${fmtNum(v.kg)} kg</td><td class="td-right">${v.kg>0?fmt(Math.round(v.total/v.kg)):'-'}/kg</td></tr>`).join('')
+    :'<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Sin compras en este período</td></tr>';
+
+  // Precio promedio por kg (Ítem 19)
+  const pedConIngreso=pedMes.filter(p=>p.ingreso>0);
+  const totalIngr=pedConIngreso.reduce((s,p)=>s+(Number(p.ingreso)||0),0);
+  const totalKgIngr=pedConIngreso.reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
+  const precioPromedio=totalKgIngr>0?Math.round(totalIngr/totalKgIngr):0;
+  const infKpisExtraEl=document.getElementById('infKpisExtra');
+  if(infKpisExtraEl) infKpisExtraEl.innerHTML=`
+    <div class="inf-card"><div class="inf-val" style="color:var(--blue)">${precioPromedio?fmt(precioPromedio)+'/kg':'—'}</div><div class="inf-lbl">Precio promedio/kg (cobrado)</div></div>
+    <div class="inf-card"><div class="inf-val">${fmtNum(totalKgIngr)} kg</div><div class="inf-lbl">Kg con ingreso registrado</div></div>`;
+}
+
+function imprimirResumenMes(){
+  const m=_infMes, y=_infAnio;
+  const mesLabel=MES_NOMBRES[m]+' '+y;
+  const pedMes=db.pedidos.filter(p=>{const d=new Date(p.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const ingresos=pedMes.reduce((s,p)=>s+(Number(p.ingreso)||0),0);
+  const kgVendidos=pedMes.reduce((s,p)=>s+(p.productos||[]).reduce((a,r)=>a+(Number(r.kg)||0),0),0);
+  const darioMes=(db.dario||[]).filter(t=>{const d=new Date(t.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y&&t.tipo==='molienda';});
+  const costoDario=darioMes.reduce((s,t)=>s+(Number(t.subtotal)||0),0);
+  const despMes=(db.despachos||[]).filter(d=>{if(d.tipo==='transferencia')return false;const fd=new Date(d.fecha+'T00:00:00');return fd.getMonth()===m&&fd.getFullYear()===y;});
+  const costoLucia=despMes.reduce((s,d)=>s+(Number(d.subtotal)||0),0);
+  const gastosMes=(db.gastos||[]).filter(g=>{const d=new Date(g.fecha+'T00:00:00');return d.getMonth()===m&&d.getFullYear()===y;});
+  const totalGastos=gastosMes.reduce((s,g)=>s+(Number(g.monto)||0),0);
+  const ganancia=ingresos-costoDario-costoLucia-totalGastos;
+  const ventasMol={};
+  pedMes.forEach(p=>(p.productos||[]).forEach(r=>{if(r.tipo&&r.kg>0){if(!ventasMol[r.tipo])ventasMol[r.tipo]=0;ventasMol[r.tipo]+=Number(r.kg)||0;}}));
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Resumen ${mesLabel} — Sabores de Misiones</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:30px;color:#111;max-width:900px;margin:0 auto}
+    h1{font-size:22px;margin-bottom:4px}h2{font-size:15px;color:#555;margin-top:24px;margin-bottom:8px;border-bottom:2px solid #ccc;padding-bottom:4px}
+    table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}
+    th{background:#e8f5e9;text-align:left;padding:7px 10px;font-size:12px}
+    td{padding:6px 10px;border-bottom:1px solid #eee}
+    .td-r{text-align:right}.kpi-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+    .kpi{background:#f5f5f5;border-radius:8px;padding:12px 18px;min-width:140px}
+    .kpi-val{font-size:20px;font-weight:800}.kpi-lbl{font-size:11px;color:#777;margin-top:2px}
+    .ganancia{font-size:24px;font-weight:900;color:${ganancia>=0?'#2E7D32':'#C0392B'}}
+    .fin-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:14px}
+    .fin-total{display:flex;justify-content:space-between;padding:10px 0;font-size:16px;font-weight:800;border-top:2px solid #111;margin-top:4px}
+    @media print{body{padding:10px}}
+  </style></head><body>
+  <h1>Resumen ${mesLabel} — Sabores de Misiones</h1>
+  <div style="font-size:12px;color:#777;margin-bottom:20px">Generado el ${new Date().toLocaleDateString('es-AR')}</div>
+  <h2>KPIs del mes</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-val" style="color:#2E7D32">${fmt(ingresos)}</div><div class="kpi-lbl">Ingresos cobrados</div></div>
+    <div class="kpi"><div class="kpi-val">${fmtNum(kgVendidos)} kg</div><div class="kpi-lbl">Kg vendidos</div></div>
+    <div class="kpi"><div class="kpi-val">${pedMes.length}</div><div class="kpi-lbl">Pedidos del mes</div></div>
+    <div class="kpi"><div class="kpi-val ganancia">${ganancia>=0?'+':''}${fmt(ganancia)}</div><div class="kpi-lbl">Ganancia estimada</div></div>
+  </div>
+  <h2>Resultado financiero</h2>
+  <div class="fin-row"><span>Ingresos cobrados</span><span style="color:#2E7D32">${fmt(ingresos)}</span></div>
+  <div class="fin-row"><span>− Costo Proceso (Darío)</span><span style="color:#C0392B">−${fmt(costoDario)}</span></div>
+  <div class="fin-row"><span>− Costo Despacho (Lucía)</span><span style="color:#C0392B">−${fmt(costoLucia)}</span></div>
+  <div class="fin-row"><span>− Gastos del mes</span><span style="color:#C0392B">−${fmt(totalGastos)}</span></div>
+  <div class="fin-total"><span>Ganancia neta estimada</span><span class="ganancia">${ganancia>=0?'+':''}${fmt(ganancia)}</span></div>
+  <h2>Pedidos del mes</h2>
+  <table><thead><tr><th>#</th><th>Cliente</th><th>Kg</th><th class="td-r">Presupuesto</th><th class="td-r">Ingreso</th><th>Estado</th></tr></thead><tbody>
+  ${pedMes.sort((a,b)=>a.numero-b.numero).map(p=>{
+    const kg=(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
+    return `<tr><td>#${p.numero}</td><td>${p.nombre}</td><td>${fmtNum(kg)} kg</td><td class="td-r">${fmt(p.presupuesto||0)}</td><td class="td-r">${p.ingreso?fmt(p.ingreso):'—'}</td><td>${p.estado}</td></tr>`;
+  }).join('')}
+  </tbody></table>
+  <h2>Kg por molienda</h2>
+  <table><thead><tr><th>Molienda</th><th class="td-r">Kg</th></tr></thead><tbody>
+  ${Object.entries(ventasMol).sort((a,b)=>b[1]-a[1]).map(([tid,kg])=>`<tr><td>${prodLabel(tid)}</td><td class="td-r">${fmtNum(kg)} kg</td></tr>`).join('')}
+  </tbody></table>
+  <script>window.print();<\/script></body></html>`);
+  win.document.close();
 }
 
 // ════════════════════════════════════════════════
@@ -4008,9 +4391,45 @@ function guardarCuotaKg(){
   renderDashboard();
 }
 function guardarPrecioDespacho(){
-  const v=Number(document.getElementById('precioDespachoInput').value)||180;
+  const v=Number(document.getElementById('precioDespachoInput').value)||130;
   db.config.precioDespachoDefault=v;
   saveDB();toast('Precio de despacho guardado ✓','success');
+}
+function guardarPrecioFlete(){
+  const v=Number(document.getElementById('precioFleteInput').value)||50;
+  db.config.precioFleteDefault=v;
+  saveDB();toast('Precio de flete guardado ✓','success');
+}
+function guardarPrecioEstampilla(){
+  const v=Number(document.getElementById('precioEstampillaInput').value)||220;
+  db.config.precioEstampilla=v;
+  saveDB();toast('Precio estampilla guardado ✓','success');
+}
+function calcComposicionPrecio(){
+  const productos=getProductos();
+  const flete=Number(document.getElementById('compPrecioFleteInput')?.value)||0;
+  const despacho=Number(document.getElementById('compPrecioDespachoInput')?.value)||0;
+  const ganPct=Number(document.getElementById('compPrecioGananciaInput')?.value)||0;
+  const impPct=Number(document.getElementById('compPrecioImpuestosInput')?.value)||0;
+  const el=document.getElementById('compPrecioResultado'); if(!el) return;
+  if(!productos.length){el.innerHTML='<span style="color:var(--text-muted);font-size:12px">Sin productos configurados.</span>';return;}
+  el.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Precio resultante por producto</div>`+
+    productos.map(p=>{
+      const costo=Number((db.config.preciosCosto||{})[p.id])||0;
+      const precio=costo+flete+despacho+costo*(ganPct/100)+costo*(impPct/100);
+      return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span>${p.label}</span>
+        <span style="font-weight:700">${costo?fmt(Math.round(precio))+'/kg':'<span style="color:var(--text-muted)">Sin costo base</span>'}</span>
+      </div>`;
+    }).join('')+
+    `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Fórmula: Costo + Flete + Despacho + Costo×Ganancia% + Costo×Impuestos%</div>`;
+}
+function guardarComposicionPrecio(){
+  db.config.compPrecioFlete=Number(document.getElementById('compPrecioFleteInput')?.value)||0;
+  db.config.compPrecioDespacho=Number(document.getElementById('compPrecioDespachoInput')?.value)||0;
+  db.config.compPrecioGanancia=Number(document.getElementById('compPrecioGananciaInput')?.value)||0;
+  db.config.compPrecioImpuestos=Number(document.getElementById('compPrecioImpuestosInput')?.value)||0;
+  saveDB();toast('Composición de precio guardada ✓','success');
 }
 
 function renderCuentasCobro(){
@@ -4079,11 +4498,46 @@ function renderGastos(){
       <td><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteGasto(${g.id})">✕</button></td>
     </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Sin gastos registrados</td></tr>';
 }
+function _populateGastoRubro(){
+  const sel=document.getElementById('gastoRubro'); if(!sel) return;
+  const rubros=db.config.rubrosGasto||['Flete','Embalaje','Estampillas','Impuestos','Publicidad','Servicios','Retiros','Varios'];
+  sel.innerHTML=rubros.map(r=>`<option value="${r}">${r}</option>`).join('');
+}
 function openGastoModal(){
   document.getElementById('gastoFecha').value=today();
   document.getElementById('gastoMonto').value='';
   document.getElementById('gastoDesc').value='';
+  _populateGastoRubro();
   openModal('modalGasto');
+}
+function openRubrosGastoModal(){
+  renderRubrosGasto();
+  openModal('modalRubrosGasto');
+}
+function renderRubrosGasto(){
+  const el=document.getElementById('rubrosGastoList'); if(!el) return;
+  const rubros=db.config.rubrosGasto||[];
+  el.innerHTML=rubros.length?rubros.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;font-weight:500">${r}</span>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="eliminarRubroGasto('${r.replace(/'/g,"\\'")}')">✕</button>
+    </div>`).join('')
+  :'<div style="font-size:13px;color:var(--text-muted)">Sin rubros definidos.</div>';
+}
+function agregarRubroGasto(){
+  const inp=document.getElementById('nuevoRubroInput');
+  const val=(inp?.value||'').trim();
+  if(!val){toast('Escribí un nombre de rubro','error');return;}
+  if(!db.config.rubrosGasto) db.config.rubrosGasto=[];
+  if(db.config.rubrosGasto.includes(val)){toast('Ya existe ese rubro','error');return;}
+  db.config.rubrosGasto.push(val);
+  inp.value='';
+  saveDB();renderRubrosGasto();toast('Rubro agregado ✓','success');
+}
+function eliminarRubroGasto(r){
+  if(!confirm('¿Eliminar rubro "'+r+'"?')) return;
+  db.config.rubrosGasto=(db.config.rubrosGasto||[]).filter(x=>x!==r);
+  saveDB();renderRubrosGasto();toast('Rubro eliminado','success');
 }
 function saveGasto(){
   const monto=Number(document.getElementById('gastoMonto').value)||0;
@@ -5229,7 +5683,20 @@ function renderConfigSection(){
   const cuotaEl=document.getElementById('cuotaKgInput');
   if(cuotaEl) cuotaEl.value=db.config.cuotaKgMensual||0;
   const despEl=document.getElementById('precioDespachoInput');
-  if(despEl) despEl.value=db.config.precioDespachoDefault||180;
+  if(despEl) despEl.value=db.config.precioDespachoDefault||130;
+  const fleteEl=document.getElementById('precioFleteInput');
+  if(fleteEl) fleteEl.value=db.config.precioFleteDefault||50;
+  const estEl=document.getElementById('precioEstampillaInput');
+  if(estEl) estEl.value=db.config.precioEstampilla||220;
+  const cpf=document.getElementById('compPrecioFleteInput');
+  if(cpf) cpf.value=db.config.compPrecioFlete||0;
+  const cpd=document.getElementById('compPrecioDespachoInput');
+  if(cpd) cpd.value=db.config.compPrecioDespacho||0;
+  const cpg=document.getElementById('compPrecioGananciaInput');
+  if(cpg) cpg.value=db.config.compPrecioGanancia||0;
+  const cpi=document.getElementById('compPrecioImpuestosInput');
+  if(cpi) cpi.value=db.config.compPrecioImpuestos||0;
+  calcComposicionPrecio();
   const tbody = document.getElementById('usersTbody');
   if(!tbody) return;
   const rolColors = {admin:'role-admin',dario:'role-dario',lucia:'role-lucia',cliente:'role-cliente'};
