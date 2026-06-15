@@ -5064,6 +5064,7 @@ function initApp(){
   showSection(first);
   setTimeout(updateChatBadge, 300);
   setTimeout(pedirPermisoNotif, 2000);
+  setTimeout(_checkBackupReminder, 3000);
   // Sincronizar datos desde Firebase al iniciar sesión
   _setSyncStatus('syncing');
   _syncPull().then(pulled => {
@@ -5853,7 +5854,38 @@ function descargarBackup(){
   const hoy  = new Date().toISOString().slice(0,10);
   a.href = url; a.download = `jvs_sabores_backup_${hoy}.json`;
   a.click(); URL.revokeObjectURL(url);
-  toast('Backup descargado ✓','success');
+  localStorage.setItem('jvs_ultimo_backup', Date.now());
+  const el = document.getElementById('backupReminderBanner');
+  if(el) el.style.display='none';
+  toast('Backup descargado ✓ — guardado en tu dispositivo','success');
+}
+
+function _checkBackupReminder(){
+  if(!currentUser || currentUser.rol !== 'admin') return;
+  const ultimo = Number(localStorage.getItem('jvs_ultimo_backup') || 0);
+  const hace = Date.now() - ultimo;
+  const UN_DIA = 24 * 60 * 60 * 1000;
+  if(hace < UN_DIA) return; // ya hizo backup hoy
+  // mostrar banner
+  let banner = document.getElementById('backupReminderBanner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'backupReminderBanner';
+    banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:8000;background:#1a1a2e;border:1.5px solid #F5A623;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 24px rgba(0,0,0,0.4);max-width:340px;width:90%';
+    banner.innerHTML = `
+      <span style="font-size:22px">💾</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#F5A623">Recordatorio de backup</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px">Hace más de 24hs que no descargás una copia de seguridad.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="descargarBackup()" style="background:#F5A623;color:#000;border:none;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer">Descargar</button>
+        <button onclick="document.getElementById('backupReminderBanner').style.display='none'" style="background:transparent;color:rgba(255,255,255,0.5);border:none;font-size:10px;cursor:pointer">Ahora no</button>
+      </div>`;
+    document.body.appendChild(banner);
+  } else {
+    banner.style.display = 'flex';
+  }
 }
 
 function restaurarBackup(input){
