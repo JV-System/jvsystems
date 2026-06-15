@@ -723,6 +723,9 @@ tr:hover td{background:#fafbfd}
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
     </button>
     <span id="syncDot" title="" style="font-size:14px;line-height:1;cursor:default;transition:opacity 0.3s"></span>
+    <button class="btn-icon" id="btnRefresh" onclick="manualSyncPull()" title="Actualizar datos desde la nube" style="display:none">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
+    </button>
     <button class="btn-logout" id="btnLogout" onclick="doLogout()" style="display:none">Salir</button>
   </div>
 </header>
@@ -1560,13 +1563,6 @@ tr:hover td{background:#fafbfd}
             <b style="color:var(--red);display:block;margin-bottom:4px">⚠️ Zona de precaución</b>
             Estas acciones eliminan datos permanentemente. Se descarga un backup automático antes de borrar.
           </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--text)">Limpiar datos de meses anteriores</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina pedidos, compras, despachos y gastos que <b>no son de este mes</b>. Clientes y configuración se mantienen.</div>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="limpiarMesesAnteriores()">🗑 Limpiar</button>
-          </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--text)">Descargar backup completo</div>
@@ -2312,6 +2308,31 @@ async function _syncPull(){
     }
   } catch(e){ console.error('syncPull error:', e); }
   return false;
+}
+
+async function manualSyncPull(){
+  const btn = document.getElementById('btnRefresh');
+  if(btn) btn.style.opacity='0.4';
+  _setSyncStatus('syncing');
+  try{
+    const pulled = await _syncPull();
+    if(pulled){
+      _setSyncStatus('ok');
+      toast('✓ Datos actualizados desde la nube','success');
+      if(currentUser){
+        const sec = document.querySelector('.nav-tab.active')?.dataset?.sec || ROLE_TABS[currentUser.rol][0];
+        showSection(sec);
+        renderDashboard();
+      }
+    } else {
+      _setSyncStatus('error');
+      toast('Sin conexión — mostrando datos locales','warning');
+    }
+  } catch(e){
+    _setSyncStatus('error');
+    toast('Error al sincronizar','error');
+  }
+  if(btn) btn.style.opacity='1';
 }
 
 async function _syncPullUsuarios(){
@@ -5016,6 +5037,8 @@ function doLogout(){
   document.getElementById('userChip').style.display='none';
   document.getElementById('btnLogout').style.display='none';
   document.getElementById('btnCatalogo').style.display='none';
+  const btnRef = document.getElementById('btnRefresh');
+  if(btnRef) btnRef.style.display='none';
   // hide app
   document.getElementById('mainArea').style.display='none';
   document.getElementById('appFooter').style.display='none';
@@ -5026,6 +5049,8 @@ function initApp(){
   // Show user chip
   document.getElementById('userChip').style.display='flex';
   document.getElementById('btnLogout').style.display='block';
+  const btnRef = document.getElementById('btnRefresh');
+  if(btnRef) btnRef.style.display='flex';
   const btnCat = document.getElementById('btnCatalogo');
   if(btnCat) btnCat.style.display = currentUser.rol==='admin' ? 'flex' : 'none';
   document.getElementById('userAvatar').textContent = currentUser.avatar;
