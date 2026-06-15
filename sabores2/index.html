@@ -979,6 +979,7 @@ tr:hover td{background:#fafbfd}
   <section id="sec-dashboard" class="content" style="overflow-y:auto">
     <div class="content-body">
       <div class="kpi-grid" id="kpiGrid"></div>
+      <div id="dashContadores"></div>
       <div id="dashCuota"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="dashGrids">
         <div class="card">
@@ -1569,6 +1570,16 @@ tr:hover td{background:#fafbfd}
               <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Exporta toda la base de datos como archivo JSON.</div>
             </div>
             <button class="btn btn-ghost btn-sm" onclick="descargarBackup()">⬇ Exportar JSON</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
+            <div>
+              <div style="font-size:13px;font-weight:600">Exportar pedidos a Excel</div>
+              <div style="font-size:11px;color:var(--text-muted)">Descarga los pedidos como archivo .csv que se abre en Excel.</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="exportarCSV('mes')">📊 Este mes</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportarCSV('todo')">📊 Todo</button>
+            </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:10px;border-top:1px solid #f5c6c6">
             <div>
@@ -2372,11 +2383,35 @@ function _setSyncStatus(s){
   _syncStatus = s;
   const el = document.getElementById('syncDot');
   if(!el) return;
-  const map = { idle:'', syncing:'🔄', ok:'🟢', error:'🔴' };
-  const tip = { idle:'', syncing:'Sincronizando...', ok:'Sincronizado', error:'Sin conexión — datos guardados localmente' };
-  el.textContent = map[s] || '';
-  el.title = tip[s] || '';
+  el.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap';
+  if(s === 'ok'){
+    const hora = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+    localStorage.setItem('jvs_ultimo_sync', hora);
+    el.textContent = '🟢 ' + hora;
+    el.title = 'Sincronizado a las ' + hora;
+  } else if(s === 'syncing'){
+    el.textContent = '🔄 sincronizando...';
+    el.title = 'Sincronizando...';
+  } else if(s === 'error'){
+    el.textContent = '🔴 sin conexión';
+    el.title = 'Sin conexión — datos guardados localmente';
+  } else {
+    const savedHora = localStorage.getItem('jvs_ultimo_sync');
+    el.textContent = savedHora ? '🟢 ' + savedHora : '';
+    el.title = savedHora ? 'Último sync: ' + savedHora : '';
+  }
 }
+// Al cargar, mostrar la hora del último sync guardada
+(function _initSyncDisplay(){
+  const el = document.getElementById('syncDot');
+  if(!el) return;
+  const savedHora = localStorage.getItem('jvs_ultimo_sync');
+  if(savedHora){
+    el.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap';
+    el.textContent = '🟢 ' + savedHora;
+    el.title = 'Último sync: ' + savedHora;
+  }
+})();
 loadDB();
 
 // ════════════════════════════════════════════════
@@ -2562,6 +2597,22 @@ function renderDashboard(){
       <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Proceso</button>
       <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Despacho</button>
     </div>`;
+
+  // Contador de registros (solo admin)
+  const contEl = document.getElementById('dashContadores');
+  if(contEl){
+    if(currentUser && currentUser.rol === 'admin'){
+      const movTotal = (db.dario||[]).length + (db.despachos||[]).length + (db.gastos||[]).length;
+      contEl.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">
+        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">📦 ${(db.pedidos||[]).length} pedidos</span>
+        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">👥 ${(db.clientes||[]).length} clientes</span>
+        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">🛒 ${(db.compras||[]).length} compras</span>
+        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">💳 ${movTotal} movimientos</span>
+      </div>`;
+    } else {
+      contEl.innerHTML = '';
+    }
+  }
 }
 
 function calcSaldoDario(){
@@ -4917,6 +4968,31 @@ function exportData(){
   const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='jvs_yerba_backup_'+today()+'.json'; a.click();
   toast('Datos exportados ✓','success');
+}
+function exportarCSV(modo){
+  let pedidos = db.pedidos || [];
+  if(modo === 'mes'){
+    const now = new Date();
+    pedidos = pedidos.filter(p => {
+      const d = new Date(p.fecha + 'T00:00:00');
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+  }
+  const headers = ['N° Pedido','Fecha','Cliente','DNI','Teléfono','Email','Transporte','Estado','Total Kg','Presupuesto','Ingreso','Observaciones','Productos'];
+  const rows = pedidos.map(p => {
+    const totalKg = (p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0);
+    const prods = (p.productos||[]).map(r=>r.kg+'kg '+r.tipo+(r.estampilla?' c/est':'')).join(' | ');
+    return [p.numero, p.fecha, p.nombre, p.dni, p.tel, p.email, p.transporte, p.estado, totalKg, p.presupuesto||0, p.ingreso||0, p.obs||'', prods];
+  });
+  const csv = [headers, ...rows].map(r => r.map(v => '"'+(String(v||'').replace(/"/g,'""'))+'"').join(',')).join('\n');
+  const bom = '﻿';
+  const blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const hoy = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `sabores_pedidos_${modo}_${hoy}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast(`CSV exportado — ${pedidos.length} pedidos ✓`, 'success');
 }
 
 // Close modal on overlay click
