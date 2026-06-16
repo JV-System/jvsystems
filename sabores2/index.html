@@ -3001,9 +3001,9 @@ function openPedidoDetail(id){
           <div class="card-title">Productos</div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Molienda</th><th>Kg</th><th>Estampilla</th></tr></thead>
-              <tbody>${(p.productos||[]).map(r=>`<tr><td>${prodLabel(r.tipo)}</td><td class="td-num">${r.kg} kg</td><td>${r.estampilla?'✓ Sí':'—'}</td></tr>`).join('')}</tbody>
-              <tfoot><tr><td style="font-weight:700">Total</td><td class="td-num" style="font-weight:700">${totalKg} kg</td><td></td></tr></tfoot>
+              <thead><tr><th>Molienda</th><th>Kg</th><th>Estampilla</th>${currentUser?.rol==='cliente'?'<th style="text-align:right">Subtotal</th>':''}</tr></thead>
+              <tbody>${(p.productos||[]).map(r=>{const sub=getPrice(r.tipo,p.lista||1)*(Number(r.kg)||0);return`<tr><td>${prodLabel(r.tipo)}</td><td class="td-num">${r.kg} kg</td><td>${r.estampilla?'✓ Sí':'—'}</td>${currentUser?.rol==='cliente'?`<td class="td-num">${fmt(sub)}</td>`:''}</tr>`;}).join('')}</tbody>
+              <tfoot><tr><td style="font-weight:700">Total</td><td class="td-num" style="font-weight:700">${totalKg} kg</td><td></td>${currentUser?.rol==='cliente'?`<td class="td-num" style="font-weight:800;color:var(--teal)">${p.presupuesto?fmt(p.presupuesto):fmt((p.productos||[]).reduce((s,r)=>s+(getPrice(r.tipo,p.lista||1)*(Number(r.kg)||0)),0))}</td>`:''}</tr></tfoot>
             </table>
           </div>
         </div>
