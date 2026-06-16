@@ -126,26 +126,26 @@ html,body{height:100%;overflow:hidden}
 body{font-family:'Exo 2','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;height:100dvh}
 
 /* ── HEADER ── */
-.app-header{background:linear-gradient(135deg,#040F04 0%,#071F07 45%,#0D3B0D 100%);display:flex;align-items:stretch;border-bottom:2px solid #2E7D32;position:relative;flex-shrink:0;z-index:100}
-.app-header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:linear-gradient(90deg,#2E7D32,#E8770A,#4CAF50,#E8770A,#2E7D32)}
-.header-brand{display:flex;align-items:center;padding-left:4px;gap:4px}
-.brand-logo-box{background:#fff;margin:7px 10px 7px 0;border-radius:14px;padding:4px 10px;display:flex;align-items:center;justify-content:center;min-width:68px;box-shadow:0 3px 18px rgba(0,0,0,0.55),0 0 0 1.5px rgba(78,160,78,0.4),inset 0 1px 0 rgba(255,255,255,0.9)}
-.brand-logo{height:44px;max-width:130px;object-fit:contain;display:block}
-.brand-text{display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 20px}
-.brand-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#fff;letter-spacing:0.3px;line-height:1.2}
-.brand-name span{color:var(--accent-light);font-size:9px;font-family:'Exo 2',sans-serif;font-weight:500;letter-spacing:2px;text-transform:uppercase;display:block}
-.brand-misiones{font-family:'Exo 2',sans-serif;font-size:16px;font-weight:800;color:var(--accent-light);letter-spacing:2.5px;text-transform:uppercase;text-shadow:0 0 14px rgba(232,119,10,0.6)}
+.app-header{background:#fff;display:flex;align-items:center;border-bottom:none;box-shadow:0 2px 12px rgba(0,0,0,0.10);position:relative;flex-shrink:0;z-index:100;padding:0 12px;height:60px}
+.app-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2E7D32,#E8770A,#4CAF50,#E8770A,#2E7D32)}
+.header-brand{display:flex;align-items:center;gap:8px;margin-right:8px}
+.brand-logo-box{display:flex;align-items:center;justify-content:center}
+.brand-logo{height:40px;max-width:120px;object-fit:contain;display:block}
+.brand-text{display:flex;flex-direction:column;justify-content:center;gap:0;padding:0 8px 0 0}
+.brand-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:#1a3a1a;letter-spacing:0.3px;line-height:1.2}
+.brand-name span{color:var(--accent);font-size:9px;font-family:'Exo 2',sans-serif;font-weight:500;letter-spacing:2px;text-transform:uppercase;display:block}
+.brand-misiones{font-family:'Exo 2',sans-serif;font-size:15px;font-weight:800;color:#2E7D32;letter-spacing:2px;text-transform:uppercase}
 .nav-tabs{display:flex;align-items:stretch;flex:1;padding:0 8px;overflow-x:auto}
-.nav-tab{display:flex;align-items:center;gap:6px;padding:0 16px;color:rgba(255,255,255,0.5);font-size:12px;font-weight:600;cursor:pointer;border:none;border-bottom:3px solid transparent;background:none;transition:all 0.2s;white-space:nowrap;letter-spacing:0.3px;font-family:'Exo 2',sans-serif}
-.nav-tab:hover{color:#fff}
-.nav-tab.active{color:var(--accent-light);border-bottom-color:var(--accent)}
+.nav-tab{display:flex;align-items:center;gap:6px;padding:0 14px;color:rgba(0,0,0,0.4);font-size:12px;font-weight:600;cursor:pointer;border:none;border-bottom:3px solid transparent;background:none;transition:all 0.2s;white-space:nowrap;letter-spacing:0.3px;font-family:'Exo 2',sans-serif;height:60px}
+.nav-tab:hover{color:#2E7D32}
+.nav-tab.active{color:#2E7D32;border-bottom-color:#2E7D32}
 .nav-tab svg{width:15px;height:15px;opacity:0.8}
 .tab-badge{background:#E53935;color:#fff;font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 3px;margin-left:4px}
-.header-right{display:flex;align-items:center;gap:8px;padding:0 16px;margin-left:auto;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:8px;padding:0 4px;margin-left:auto;flex-shrink:0}
 .header-jvs-logo{width:32px;height:32px;opacity:0.85;filter:drop-shadow(0 0 6px rgba(30,144,255,0.5));flex-shrink:0;transition:opacity 0.2s}
 .header-jvs-logo:hover{opacity:1}
-.btn-icon{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);width:34px;height:34px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
-.btn-icon:hover{background:rgba(255,255,255,0.15);color:#fff}
+.btn-icon{background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.08);color:rgba(0,0,0,0.5);width:34px;height:34px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.btn-icon:hover{background:rgba(46,125,50,0.08);color:#2E7D32;border-color:rgba(46,125,50,0.2)}
 
 /* ── WATERMARK ── */
 .watermark{pointer-events:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;height:480px;object-fit:contain;opacity:0.03;filter:blur(2px) grayscale(10%);z-index:0;user-select:none}
@@ -409,7 +409,7 @@ tr:hover td{background:#fafbfd}
 .pres-custom-note{font-size:11px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px}
 
 /* ── SIDEBAR TOGGLE ── */
-.sidebar-toggle{display:none;background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:8px}
+.sidebar-toggle{display:none;background:none;border:none;color:rgba(0,0,0,0.5);cursor:pointer;padding:8px}
 @media(max-width:768px){.sidebar-toggle{display:flex;align-items:center;justify-content:center}}
 
 /* ══════════════════════════════════════
@@ -505,11 +505,11 @@ tr:hover td{background:#fafbfd}
 /* ══════════════════════════════════════
    TOPBAR USER INFO
 ══════════════════════════════════════ */
-.user-chip{display:flex;align-items:center;gap:8px;padding:0 14px;border-left:1px solid rgba(78,160,78,0.3);cursor:pointer;border-radius:8px;transition:background 0.15s}
-.user-chip:hover{background:rgba(255,255,255,0.08)}
-.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
-.user-name{font-size:11px;font-weight:600;color:rgba(255,255,255,0.85)}
-.user-role{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.8px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:0 10px;border-left:none;cursor:pointer;border-radius:8px;transition:background 0.15s}
+.user-chip:hover{background:rgba(46,125,50,0.08)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+.user-name{font-size:11px;font-weight:600;color:rgba(0,0,0,0.75)}
+.user-role{font-size:9px;color:rgba(0,0,0,0.4);text-transform:uppercase;letter-spacing:0.8px}
 .btn-logout{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);padding:5px 10px;border-radius:var(--radius);font-size:11px;cursor:pointer;font-family:'Exo 2',sans-serif;transition:all 0.2s}
 .mob-menu-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,0.75);font-size:13px;font-family:'Exo 2',sans-serif;cursor:pointer;width:100%;text-align:left;transition:background 0.15s}
 .mob-menu-item:hover,.mob-menu-item.active{background:rgba(255,255,255,0.1);color:#fff}
@@ -646,9 +646,14 @@ tr:hover td{background:#fafbfd}
 
 <!-- HEADER -->
 <header class="app-header">
-  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Menú">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-  </button>
+  <!-- Avatar usuario a la izquierda -->
+  <div class="user-chip" id="userChip" style="display:none;margin-right:8px;cursor:pointer" onclick="openMiPerfil()" title="Mi perfil">
+    <div class="user-avatar" id="userAvatar" style="background:#2E7D32;color:#fff;font-size:13px;font-weight:700;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">?</div>
+    <div id="userNameWrap" style="display:none">
+      <div class="user-name" id="userName">—</div>
+      <div class="user-role" id="userRoleLabel">—</div>
+    </div>
+  </div>
   <div class="header-brand">
     <div class="brand-logo-box">
       <img src="LogoYerba.png" class="brand-logo" alt="Sabores de Misiones">
@@ -711,13 +716,6 @@ tr:hover td{background:#fafbfd}
   <div class="header-right">
     <!-- JVS brand logo top-right -->
     <img src="jvs-icon.png" class="header-jvs-logo" alt="Juan Villanueva Software" title="Juan Villanueva Software" onerror="this.style.display='none'">
-    <div class="user-chip" id="userChip" style="display:none" onclick="openMiPerfil()" title="Mi perfil" role="button">
-      <div class="user-avatar" id="userAvatar">?</div>
-      <div>
-        <div class="user-name" id="userName">—</div>
-        <div class="user-role" id="userRoleLabel">—</div>
-      </div>
-    </div>
     <button class="btn-icon" onclick="clickInstall()" id="btnInstall" title="Instalar app" style="display:none">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
@@ -731,7 +729,6 @@ tr:hover td{background:#fafbfd}
     <button class="btn-icon" id="btnMenuMobile" onclick="toggleMenuMobile()" title="Menú" style="display:none">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="19" r="1" fill="currentColor"/><circle cx="19" cy="5" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="19" r="1" fill="currentColor"/></svg>
     </button>
-    <button class="btn-logout" id="btnLogout" onclick="doLogout()" style="display:none">Salir</button>
     <!-- Dropdown menú mobile -->
     <div id="menuMobileDropdown" style="display:none;position:fixed;top:56px;right:8px;background:var(--navy);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:9000;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:80vh;overflow-y:auto" id="menuMobileDropdown">
     </div>
@@ -2379,7 +2376,7 @@ function _setSyncStatus(s){
   _syncStatus = s;
   const el = document.getElementById('syncDot');
   if(!el) return;
-  el.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap';
+  el.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.45);white-space:nowrap';
   if(s === 'ok'){
     const hora = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
     localStorage.setItem('jvs_ultimo_sync', hora);
@@ -2403,7 +2400,7 @@ function _setSyncStatus(s){
   if(!el) return;
   const savedHora = localStorage.getItem('jvs_ultimo_sync');
   if(savedHora){
-    el.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.7);white-space:nowrap';
+    el.style.cssText = 'font-size:11px;color:rgba(0,0,0,0.45);white-space:nowrap';
     el.textContent = '🟢 ' + savedHora;
     el.title = 'Último sync: ' + savedHora;
   }
@@ -5091,7 +5088,6 @@ function doLogout(){
   document.getElementById('loginPass').value='';
   document.getElementById('loginScreen').style.display='flex';
   document.getElementById('userChip').style.display='none';
-  document.getElementById('btnLogout').style.display='none';
   document.getElementById('btnCatalogo').style.display='none';
   const btnRef = document.getElementById('btnRefresh');
   if(btnRef) btnRef.style.display='none';
@@ -5104,7 +5100,6 @@ function doLogout(){
 function initApp(){
   // Show user chip
   document.getElementById('userChip').style.display='flex';
-  document.getElementById('btnLogout').style.display='block';
   const btnRef = document.getElementById('btnRefresh');
   if(btnRef) btnRef.style.display='flex';
   const btnCat = document.getElementById('btnCatalogo');
