@@ -2783,6 +2783,15 @@ function autoRegistrarEnDario(pedido){
 function fmt(n){ return '$'+Math.abs(n).toLocaleString('es-AR',{maximumFractionDigits:0}); }
 function fmtNum(n){ return (n||0).toLocaleString('es-AR',{maximumFractionDigits:0}); }
 function badgeClass(e){ const est=getEstados().find(x=>x.nombre===e); return est?est.color:'pending'; }
+function badgeBg(e){const m={pending:'#FFF3CD',open:'#D1ECF1',done:'#D4EDDA',enviado:'#CCE5FF'};return m[badgeClass(e)]||'#FFF3CD';}
+function badgeColor(e){const m={pending:'#856404',open:'#0C5460',done:'#155724',enviado:'#004085'};return m[badgeClass(e)]||'#856404';}
+function cambiarEstadoPedido(id, nuevoEstado){
+  const p=db.pedidos.find(x=>x.id===id); if(!p) return;
+  p.estado=nuevoEstado;
+  saveDB();
+  renderPedidosList();
+  toast('Estado actualizado: '+nuevoEstado,'success');
+}
 function today(){ return new Date().toISOString().slice(0,10); }
 
 // ════════════════════════════════════════════════
@@ -2983,7 +2992,9 @@ function openPedidoDetail(id){
       <div id="det-info">
         <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
           <h2 style="font-size:18px;font-weight:800;flex:1">Pedido #${p.numero}</h2>
-          <span class="item-badge badge-${badgeClass(p.estado)}" style="font-size:11px">${p.estado}</span>
+          <select onchange="cambiarEstadoPedido(${id},this.value)" style="border:none;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'Exo 2',sans-serif;cursor:pointer;text-transform:uppercase;letter-spacing:0.5px;outline:none;background:${badgeBg(p.estado)};color:${badgeColor(p.estado)}">
+            ${['Pendiente',...getEstados().map(e=>e.nombre)].map(e=>`<option value="${e}" ${p.estado===e?'selected':''}>${e}</option>`).join('')}
+          </select>
           <button class="btn btn-primary btn-sm" onclick="openEditPedido(${id})">Editar</button>
           <button class="btn btn-ghost btn-sm" onclick="printPedido(${id})" title="Descargar PDF">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
