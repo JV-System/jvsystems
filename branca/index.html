@@ -2406,6 +2406,10 @@ async function actualizarDatos() {
 async function limpiarEsteDispositivo() {
   const ok = await showConfirm('Limpiar este dispositivo', 'Se borra el almacenamiento local y se descarga todo desde la nube. ¿Continuar?');
   if (!ok) return;
+  const cu = getCurrentUser();
+  const pass = prompt('Ingresá tu contraseña para confirmar:');
+  if (pass === null) return;
+  if (!cu || pass !== cu.password) { showToast('✕ Contraseña incorrecta.'); return; }
   ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids','branca_reset_at'].forEach(function(k){ localStorage.removeItem(k); });
   ordenes = []; clientesDB = []; tecnicosDB = []; ordenActual = null;
   renderOrderList();
@@ -4774,7 +4778,8 @@ function cancelConfigPass() {
 }
 function verificarConfigPass() {
   const pass = document.getElementById('configPassInput').value;
-  if (pass !== getAdminPass()) {
+  const cu = getCurrentUser();
+  if (!cu || pass !== cu.password) {
     document.getElementById('configPassError').classList.remove('hidden');
     return;
   }
