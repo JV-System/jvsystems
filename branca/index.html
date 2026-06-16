@@ -2463,6 +2463,16 @@ function saveTecnicos() {
   localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
   _syncPush();
 }
+// Devuelve lista unificada de asignables: técnicos + admins (sin duplicados)
+function getAsignables() {
+  const admins = getUsers().filter(function(u){ return u.role === 'admin'; })
+    .map(function(u){ return { id: u.id, nombre: u.nombre }; });
+  const combined = tecnicosDB.slice();
+  admins.forEach(function(a){
+    if (!combined.find(function(t){ return t.nombre === a.nombre; })) combined.push(a);
+  });
+  return combined;
+}
 function saveClientes() {
   localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
   _syncPush();
@@ -2708,7 +2718,7 @@ function abrirModalPlanificada() {
   const sel = document.getElementById('plan-tecnico');
   if (sel) {
     sel.innerHTML = '<option value="">— Sin asignar —</option>' +
-      tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+      getAsignables().map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
   }
   // Fecha por defecto: mañana
   const man = new Date(); man.setDate(man.getDate() + 1);
@@ -2838,7 +2848,7 @@ function reprogramarOrden(id) {
   if (dl) dl.innerHTML = clientesDB.map(c => `<option value="${c.empresa}">`).join('');
   const sel = document.getElementById('plan-tecnico');
   if (sel) sel.innerHTML = '<option value="">— Sin asignar —</option>' +
-    tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+    getAsignables().map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
   document.getElementById('plan-empresa').value = o.empresa;
   document.getElementById('plan-fecha').value   = o.fechaPlanificada || o.fecha;
   document.getElementById('plan-tipo').value    = o.tipoServicio || 'preventivo';
@@ -2878,7 +2888,7 @@ function editarPlanificada(id) {
   if (dl) dl.innerHTML = clientesDB.map(c => `<option value="${c.empresa}">`).join('');
   const sel = document.getElementById('plan-tecnico');
   if (sel) sel.innerHTML = '<option value="">— Sin asignar —</option>' +
-    tecnicosDB.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+    getAsignables().map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
   document.getElementById('plan-empresa').value = o.empresa;
   document.getElementById('plan-fecha').value   = o.fecha;
   document.getElementById('plan-tipo').value    = o.tipoServicio || 'preventivo';
@@ -3017,7 +3027,7 @@ function renderPlanificacion() {
   }
 
   const opcionesTecnico = ['<option value="">Todos los técnicos</option>']
-    .concat(tecnicosDB.map(function(t){ return `<option value="${esc(t.nombre)}" ${_planFiltros.tecnico===t.nombre?'selected':''}>${esc(t.nombre)}</option>`; })).join('');
+    .concat(getAsignables().map(function(t){ return `<option value="${esc(t.nombre)}" ${_planFiltros.tecnico===t.nombre?'selected':''}>${esc(t.nombre)}</option>`; })).join('');
   const opcionesEstado = ['<option value="">Todos los estados</option>']
     .concat(Object.keys(PLAN_STATUS_META).map(function(k){ return `<option value="${k}" ${_planFiltros.estado===k?'selected':''}>${PLAN_STATUS_META[k].label}</option>`; })).join('');
   const opcionesCliente = ['<option value="">Todos los clientes</option>']
@@ -3775,7 +3785,7 @@ function renderTabCliente() {
             // Admin: dropdown de técnicos
             return '<select id="f-responsable" ' + (locked?'disabled':'') + '>'
               + '<option value="">Seleccionar técnico...</option>'
-              + tecnicosDB.map(function(t){ return '<option value="' + esc(t.nombre) + '" ' + (o.responsable===t.nombre?'selected':'') + '>' + esc(t.nombre) + '</option>'; }).join('')
+              + getAsignables().map(function(t){ return '<option value="' + esc(t.nombre) + '" ' + (o.responsable===t.nombre?'selected':'') + '>' + esc(t.nombre) + '</option>'; }).join('')
               + '</select>';
           })()}
         </div>
