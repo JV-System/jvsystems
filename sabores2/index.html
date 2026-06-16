@@ -3131,13 +3131,17 @@ function renderNotasPedido(pedidoId, modo){
   const thread = document.getElementById(modo ? `notas-thread-${modo}` : 'notas-thread-admin');
   if(!thread) return;
 
-  if(!notas.length){
+  // Cliente solo ve notas de cliente y admin
+  const esCliente = currentUser?.rol === 'cliente';
+  const notasVisibles = esCliente ? notas.filter(n => n.rol==='cliente' || n.rol==='admin' || !n.rol) : notas;
+
+  if(!notasVisibles.length){
     thread.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0">Sin notas aún. Escribí el primero.</div>`;
     return;
   }
 
   const rolColor = {admin:'#2E7D32', dario:'#E8770A', lucia:'#7B5EA7'};
-  thread.innerHTML = notas.map(n=>{
+  thread.innerHTML = notasVisibles.map(n=>{
     const esYo = n.autor === yo;
     const cls  = esYo ? 'yo' : `otro rol-${n.rol||''}`;
     return `<div class="nota-burbuja ${cls}">
