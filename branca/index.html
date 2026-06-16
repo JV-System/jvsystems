@@ -2004,6 +2004,18 @@
   </div>
 </div>
 
+<!-- MODAL VER CONTRASEÑA -->
+<div class="modal-bg hidden" id="verPassModal">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <h3 style="margin-bottom:4px;">🔑 Contraseña actual</h3>
+    <p id="verPassNombre" style="font-size:13px;color:var(--text-muted);margin-bottom:16px;"></p>
+    <div id="verPassValor" style="font-size:22px;font-weight:800;letter-spacing:1px;background:#f5f7fa;border:1px solid var(--border);border-radius:8px;padding:14px;color:var(--navy);"></div>
+    <div class="modal-actions" style="justify-content:center;margin-top:18px;">
+      <button class="btn btn-primary" onclick="document.getElementById('verPassModal').classList.add('hidden')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NÚMERO -->
 <div class="modal-bg hidden" id="numModal">
   <div class="modal">
@@ -5187,8 +5199,10 @@ function desbloquearDatosCliente() {
 function adminVerPass(userId, nombreUsuario) {
   const users = getUsers();
   const u = users.find(function(x){ return x.id === userId; });
-  if (!u) { alert('Usuario no encontrado.'); return; }
-  alert('Contraseña actual de ' + nombreUsuario + ':\n\n' + u.password);
+  if (!u) { showToast('Usuario no encontrado.'); return; }
+  document.getElementById('verPassNombre').textContent = nombreUsuario;
+  document.getElementById('verPassValor').textContent  = u.password;
+  document.getElementById('verPassModal').classList.remove('hidden');
 }
 
 function abrirEditarUsuario(userId) {
@@ -5654,10 +5668,6 @@ function restaurarBorradorSiExiste() {
     <div class="mob-fab-inner">＋</div>
     <span class="mob-fab-label">Nueva</span>
   </button>
-  <button class="mob-nav-btn" id="mob-facturacion" onclick="mobSetView('facturacion')" style="display:none">
-    <span class="mob-icon">💰</span>
-    <span>Factura</span>
-  </button>
   <button class="mob-nav-btn" id="mob-historial" onclick="mobSetView('historial')">
     <span class="mob-icon">🕐</span>
     <span>Historial</span>
@@ -5665,6 +5675,10 @@ function restaurarBorradorSiExiste() {
   <button class="mob-nav-btn" id="mob-planificacion" onclick="mobSetView('planificacion')" style="display:none">
     <span class="mob-icon">📅</span>
     <span>Plan.</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-facturacion" onclick="mobSetView('facturacion')" style="display:none">
+    <span class="mob-icon">💰</span>
+    <span>Factura</span>
   </button>
   <button class="mob-nav-btn" id="mob-config" onclick="mobSetView('config')">
     <span class="mob-icon">⚙️</span>
