@@ -5353,11 +5353,14 @@ function applyRoleTabs(){
 //  ESTADOS DE PEDIDOS (configurables)
 // ════════════════════════════════════════════════
 const DEFAULT_ESTADOS = [
-  {id:1, nombre:'pago parcial',  emoji:'💵', color:'open'},
-  {id:2, nombre:'pago completo', emoji:'💰', color:'done'},
-  {id:3, nombre:'despachado',    emoji:'🚚', color:'enviado'},
+  {id:1, nombre:'En proceso',    emoji:'⚙️', color:'open'},
+  {id:2, nombre:'pago parcial',  emoji:'💵', color:'partial'},
+  {id:3, nombre:'pago completo', emoji:'💰', color:'done'},
+  {id:4, nombre:'despachado',    emoji:'🚚', color:'enviado'},
 ];
 if(!db.estados) db.estados = JSON.parse(JSON.stringify(DEFAULT_ESTADOS));
+// Migración: agregar "En proceso" si no existe
+if(!db.estados.find(e=>e.nombre==='En proceso')) db.estados.unshift({id:1, nombre:'En proceso', emoji:'⚙️', color:'open'});
 // Migración: renombrar estados viejos
 db.pedidos.forEach(p=>{
   if(p.estado==='confirmado') p.estado='pago parcial';
