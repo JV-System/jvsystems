@@ -510,6 +510,10 @@ tr:hover td{background:#fafbfd}
 .user-name{font-size:11px;font-weight:600;color:rgba(255,255,255,0.85)}
 .user-role{font-size:9px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.8px}
 .btn-logout{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.55);padding:5px 10px;border-radius:var(--radius);font-size:11px;cursor:pointer;font-family:'Exo 2',sans-serif;transition:all 0.2s}
+.mob-menu-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,0.75);font-size:13px;font-family:'Exo 2',sans-serif;cursor:pointer;width:100%;text-align:left;transition:background 0.15s}
+.mob-menu-item:hover,.mob-menu-item.active{background:rgba(255,255,255,0.1);color:#fff}
+.mob-menu-item svg{width:16px;height:16px;flex-shrink:0;opacity:0.7}
+.mob-menu-sep{height:1px;background:rgba(255,255,255,0.1);margin:4px 0}
 .btn-logout:hover{background:rgba(255,255,255,0.12);color:#fff}
 
 /* ══════════════════════════════════════
@@ -726,7 +730,13 @@ tr:hover td{background:#fafbfd}
     <button class="btn-icon" id="btnRefresh" onclick="manualSyncPull()" title="Actualizar datos desde la nube" style="display:none">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
     </button>
+    <button class="btn-icon" id="btnMenuMobile" onclick="toggleMenuMobile()" title="Menú" style="display:none">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="19" r="1" fill="currentColor"/><circle cx="19" cy="5" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="19" r="1" fill="currentColor"/></svg>
+    </button>
     <button class="btn-logout" id="btnLogout" onclick="doLogout()" style="display:none">Salir</button>
+    <!-- Dropdown menú mobile -->
+    <div id="menuMobileDropdown" style="display:none;position:fixed;top:56px;right:8px;background:var(--navy);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:9000;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:80vh;overflow-y:auto" id="menuMobileDropdown">
+    </div>
   </div>
 </header>
 
@@ -846,7 +856,6 @@ tr:hover td{background:#fafbfd}
     </div>
 
     <div style="text-align:center;margin-top:10px">
-      <button onclick="quickLogin('admin')" style="background:none;border:none;color:#aaa;font-size:11px;cursor:pointer;font-family:'Exo 2',sans-serif;letter-spacing:0.5px;padding:4px 8px;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='#f0f4f0';this.style.color='#2E7D32'" onmouseout="this.style.background='none';this.style.color='#aaa'">⚡ Acceso rápido admin</button>
     </div>
     <div class="login-hint" id="loginHintBox" style="display:none"></div>
     <div class="login-footer">Desarrollado por Juan Villanueva</div>
@@ -5161,6 +5170,9 @@ function applyRoleTabs(){
   const op = document.getElementById('chatOrderPanel');
   if(op) op.style.display = 'none';
   chatPedidoActivo = null;
+  // Botón menú mobile (visible solo en mobile/tablet)
+  const bm = document.getElementById('btnMenuMobile');
+  if(bm) bm.style.display = window.innerWidth <= 900 ? 'flex' : 'none';
   // Render mobile bottom nav
   renderBottomNav();
   // Primera sección según rol
@@ -6438,6 +6450,33 @@ const BNAV_LABELS = {
   compras:'Compras', despachos:'Envíos', cuentas:'Cuentas', presupuestos:'Presup.', gastos:'Gastos', catalogo:'Catálogo', informes:'Informes', config:'Config',
 };
 let _bnavActive = '';
+
+function toggleMenuMobile(){
+  const d = document.getElementById('menuMobileDropdown');
+  if(!d) return;
+  if(d.style.display==='none'||!d.style.display){ buildMenuMobile(); d.style.display='block'; }
+  else { d.style.display='none'; }
+}
+function buildMenuMobile(){
+  const d = document.getElementById('menuMobileDropdown');
+  if(!d||!currentUser) return;
+  const allowed = ROLE_TABS[currentUser.rol]||[];
+  d.innerHTML = allowed.map(sec=>`
+    <button class="mob-menu-item${_bnavActive===sec?' active':''}" onclick="showSection('${sec}');document.getElementById('menuMobileDropdown').style.display='none'">
+      ${BNAV_ICONS[sec]||''}
+      <span>${BNAV_LABELS[sec]||sec}</span>
+    </button>`).join('') +
+    '<div class="mob-menu-sep"></div>' +
+    `<button class="mob-menu-item" onclick="doLogout();document.getElementById('menuMobileDropdown').style.display='none'" style="color:rgba(255,100,100,0.8)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      <span>Salir</span>
+    </button>`;
+}
+document.addEventListener('click', e=>{
+  const d = document.getElementById('menuMobileDropdown');
+  const btn = document.getElementById('btnMenuMobile');
+  if(d && btn && !d.contains(e.target) && !btn.contains(e.target)) d.style.display='none';
+});
 const BNAV_PRIORITY = {
   admin:   ['dashboard','pedidos','cuentas','clientes','dario'],
   dario:   ['pedidos','dario'],
