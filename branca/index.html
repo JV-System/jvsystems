@@ -1907,6 +1907,45 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR CLIENTE -->
+<div class="modal-bg hidden" id="modalEditarCliente">
+  <div class="modal" style="max-width:460px;">
+    <h3 style="margin-bottom:16px;">✏ Editar empresa</h3>
+    <input type="hidden" id="ec-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">Empresa *</label>
+        <input type="text" id="ec-empresa" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">Contacto</label>
+        <input type="text" id="ec-contacto" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">Teléfono</label>
+        <input type="text" id="ec-tel" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">CUIT</label>
+        <input type="text" id="ec-cuit" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">Ubicación</label>
+        <input type="text" id="ec-ubicacion" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+      <div class="form-group">
+        <label style="font-size:12px;font-weight:700;color:#555;">Email</label>
+        <input type="text" id="ec-email" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+      </div>
+    </div>
+    <div class="alert alert-error hidden" id="ec-error" style="margin-top:12px;"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn" onclick="document.getElementById('modalEditarCliente').classList.add('hidden')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionCliente()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL EDITAR USUARIO -->
 <div class="modal-bg hidden" id="modalEditarUsuario">
   <div class="modal" style="max-width:420px;">
@@ -2001,6 +2040,20 @@
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" id="confirmBtn">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PEDIR CONTRASEÑA (genérico) -->
+<div class="modal-bg hidden" id="askPassModal">
+  <div class="modal" style="max-width:380px;">
+    <h3 id="askPassTitle" style="margin-bottom:8px;">🔒 Contraseña requerida</h3>
+    <p id="askPassMsg" style="font-size:13px;color:var(--text-muted);margin-bottom:14px;"></p>
+    <input type="password" id="askPassInput" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+    <div class="alert alert-error hidden" id="askPassError" style="margin-top:10px;">✕ Contraseña incorrecta.</div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn" onclick="_closeAskPass(false)">Cancelar</button>
+      <button class="btn btn-primary" onclick="_closeAskPass(true)">Confirmar</button>
     </div>
   </div>
 </div>
@@ -2420,9 +2473,11 @@ async function limpiarEsteDispositivo() {
   const ok = await showConfirm('Limpiar este dispositivo', 'Se borra el almacenamiento local y se descarga todo desde la nube. ¿Continuar?');
   if (!ok) return;
   const cu = getCurrentUser();
-  const pass = prompt('Ingresá tu contraseña para confirmar:');
-  if (pass === null) return;
-  if (!cu || pass !== cu.password) { showToast('✕ Contraseña incorrecta.'); return; }
+  if (!cu) return;
+  const fresco = getUsers().find(function(u){ return u.id === cu.id; });
+  if (!fresco) return;
+  const passOk = await askPassword('🔒 Confirmar identidad', 'Ingresá tu contraseña para confirmar la limpieza de este dispositivo.', fresco.password);
+  if (!passOk) return;
   ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids','branca_reset_at'].forEach(function(k){ localStorage.removeItem(k); });
   ordenes = []; clientesDB = []; tecnicosDB = []; ordenActual = null;
   renderOrderList();
@@ -4792,7 +4847,8 @@ function cancelConfigPass() {
 function verificarConfigPass() {
   const pass = document.getElementById('configPassInput').value;
   const cu = getCurrentUser();
-  if (!cu || pass !== cu.password) {
+  const fresco = cu ? getUsers().find(function(u){ return u.id === cu.id; }) : null;
+  if (!fresco || pass !== fresco.password) {
     document.getElementById('configPassError').classList.remove('hidden');
     return;
   }
@@ -5073,16 +5129,37 @@ async function eliminarCliente(id) {
 function editarCliente(id) {
   const c = clientesDB.find(x => x.id === id);
   if (!c) return;
-  const empresa = prompt('Empresa:', c.empresa); if (empresa === null) return;
-  const contacto = prompt('Contacto:', c.contacto) || '';
-  const tel = prompt('Teléfono:', c.tel) || '';
-  const cuit = prompt('CUIT:', c.cuit) || '';
-  const ubicacion = prompt('Ubicación:', c.ubicacion) || '';
-  const email = prompt('Email:', c.email) || '';
-  Object.assign(c, { empresa: empresa.trim() || c.empresa, contacto, tel, cuit, ubicacion, email });
+  document.getElementById('ec-id').value        = c.id;
+  document.getElementById('ec-empresa').value    = c.empresa || '';
+  document.getElementById('ec-contacto').value   = c.contacto || '';
+  document.getElementById('ec-tel').value        = c.tel || '';
+  document.getElementById('ec-cuit').value       = c.cuit || '';
+  document.getElementById('ec-ubicacion').value  = c.ubicacion || '';
+  document.getElementById('ec-email').value      = c.email || '';
+  document.getElementById('ec-error').classList.add('hidden');
+  document.getElementById('modalEditarCliente').classList.remove('hidden');
+}
+
+function guardarEdicionCliente() {
+  const id  = parseInt(document.getElementById('ec-id').value);
+  const c   = clientesDB.find(x => x.id === id);
+  const err = document.getElementById('ec-error');
+  if (!c) return;
+  const empresa = document.getElementById('ec-empresa').value.trim();
+  if (!empresa) { err.textContent = '✕ La empresa es obligatoria.'; err.classList.remove('hidden'); return; }
+  Object.assign(c, {
+    empresa,
+    contacto:  document.getElementById('ec-contacto').value.trim(),
+    tel:       document.getElementById('ec-tel').value.trim(),
+    cuit:      document.getElementById('ec-cuit').value.trim(),
+    ubicacion: document.getElementById('ec-ubicacion').value.trim(),
+    email:     document.getElementById('ec-email').value.trim()
+  });
   saveClientes();
+  document.getElementById('modalEditarCliente').classList.add('hidden');
   renderConfig();
   initFirmasPads();
+  showToast('✅ Empresa actualizada.');
 }
 
 // CONTRASEÑA — cambia la contraseña del usuario logueado
@@ -5185,14 +5262,12 @@ function renderUsuariosList() {
   }).join('');
 }
 
-function desbloquearDatosCliente() {
-  const cu = getCurrentUser();
+async function desbloquearDatosCliente() {
   const users = getUsers();
   const admin = users.find(u => u.role === 'admin');
   if (!admin) { window._clienteDesbloqueado = true; renderForm(); return; }
-  const pass = prompt('Ingresá la contraseña de administrador para editar los datos del cliente:');
-  if (pass === null) return;
-  if (pass !== admin.password) { alert('Contraseña incorrecta.'); return; }
+  const ok = await askPassword('🔒 Editar datos del cliente', 'Ingresá la contraseña de administrador para continuar.', admin.password);
+  if (!ok) return;
   window._clienteDesbloqueado = true;
   renderForm();
 }
@@ -5264,20 +5339,6 @@ function guardarEdicionUsuario() {
   cerrarModalEditarUsuario();
   renderConfig(); initFirmasPads();
   showToast('✅ Usuario actualizado.');
-}
-
-function adminCambiarPass(userId, nombreUsuario) {
-  const nueva = prompt('Nueva contraseña para ' + nombreUsuario + ':');
-  if (nueva === null) return; // canceló
-  if (!nueva || nueva.length < 4) { alert('La contraseña debe tener al menos 4 caracteres.'); return; }
-  const confirmar = prompt('Confirmá la nueva contraseña:');
-  if (nueva !== confirmar) { alert('Las contraseñas no coinciden.'); return; }
-  const users = getUsers();
-  const idx = users.findIndex(function(u){ return u.id === userId; });
-  if (idx === -1) { alert('Usuario no encontrado.'); return; }
-  users[idx].password = nueva;
-  saveUsers(users);
-  alert('✅ Contraseña de ' + nombreUsuario + ' actualizada correctamente.');
 }
 
 function agregarUsuario() {
@@ -5532,6 +5593,35 @@ function showConfirm(title, msg) {
     };
     document.getElementById('confirmModal').classList.remove('hidden');
   });
+}
+
+let _askPassResolve = null;
+let _askPassExpected = '';
+function askPassword(title, msg, expectedPass) {
+  return new Promise(function(resolve) {
+    _askPassResolve = resolve;
+    _askPassExpected = expectedPass;
+    document.getElementById('askPassTitle').textContent = title;
+    document.getElementById('askPassMsg').textContent = msg;
+    document.getElementById('askPassInput').value = '';
+    document.getElementById('askPassError').classList.add('hidden');
+    document.getElementById('askPassModal').classList.remove('hidden');
+    setTimeout(function(){ document.getElementById('askPassInput').focus(); }, 100);
+  });
+}
+function _closeAskPass(confirmado) {
+  if (!confirmado) {
+    document.getElementById('askPassModal').classList.add('hidden');
+    if (_askPassResolve) { _askPassResolve(false); _askPassResolve = null; }
+    return;
+  }
+  const val = document.getElementById('askPassInput').value;
+  if (val !== _askPassExpected) {
+    document.getElementById('askPassError').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('askPassModal').classList.add('hidden');
+  if (_askPassResolve) { _askPassResolve(true); _askPassResolve = null; }
 }
 
 function closeModal() {
@@ -6167,7 +6257,7 @@ function mostrarNotifWhatsApp(o) {
 function enviarWhatsApp() {
   const tel = (document.getElementById('wa-tel')?.value||'').replace(/\D/g,'');
   const msg = document.getElementById('wa-msg')?.value || '';
-  if (!tel) { alert('Ingresá el teléfono.'); return; }
+  if (!tel) { showToast('✕ Ingresá el teléfono.'); return; }
   const url = 'https://wa.me/54' + tel + '?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
   document.querySelector('[style*="position:fixed"][style*="inset:0"]')?.remove();
