@@ -126,7 +126,7 @@ html,body{height:100%;overflow:hidden}
 body{font-family:'Exo 2','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;height:100dvh}
 
 /* ── HEADER ── */
-.app-header{background:#fff;display:flex;align-items:center;border-bottom:none;box-shadow:0 2px 12px rgba(0,0,0,0.10);position:relative;flex-shrink:0;z-index:100;padding:0 12px;height:60px}
+.app-header{background:#f4f5f6;display:flex;align-items:center;border-bottom:none;box-shadow:0 2px 8px rgba(0,0,0,0.13);position:relative;flex-shrink:0;z-index:100;padding:0 12px;height:60px}
 .app-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2E7D32,#E8770A,#4CAF50,#E8770A,#2E7D32)}
 .header-brand{display:flex;align-items:center;gap:8px;margin-right:8px}
 .brand-logo-box{display:flex;align-items:center;justify-content:center}
@@ -505,7 +505,7 @@ tr:hover td{background:#fafbfd}
 /* ══════════════════════════════════════
    TOPBAR USER INFO
 ══════════════════════════════════════ */
-.user-chip{display:flex;align-items:center;gap:8px;padding:0 10px;border-left:none;cursor:pointer;border-radius:8px;transition:background 0.15s}
+.user-chip{display:flex;align-items:center;gap:8px;padding:4px 4px 4px 8px;border-left:1px solid rgba(0,0,0,0.08);margin-left:4px;cursor:pointer;border-radius:8px;transition:background 0.15s}
 .user-chip:hover{background:rgba(46,125,50,0.08)}
 .user-avatar{width:34px;height:34px;border-radius:50%;background:#2E7D32;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
 .user-name{font-size:11px;font-weight:600;color:rgba(0,0,0,0.75)}
@@ -646,14 +646,7 @@ tr:hover td{background:#fafbfd}
 
 <!-- HEADER -->
 <header class="app-header">
-  <!-- Avatar usuario a la izquierda -->
-  <div class="user-chip" id="userChip" style="display:none;margin-right:8px;cursor:pointer" onclick="openMiPerfil()" title="Mi perfil">
-    <div class="user-avatar" id="userAvatar" style="background:#2E7D32;color:#fff;font-size:13px;font-weight:700;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">?</div>
-    <div id="userNameWrap" style="display:none">
-      <div class="user-name" id="userName">—</div>
-      <div class="user-role" id="userRoleLabel">—</div>
-    </div>
-  </div>
+  <!-- Logo: primero a la izquierda -->
   <div class="header-brand">
     <div class="brand-logo-box">
       <img src="LogoYerba.png" class="brand-logo" alt="Sabores de Misiones">
@@ -714,8 +707,6 @@ tr:hover td{background:#fafbfd}
     </button>
   </nav>
   <div class="header-right">
-    <!-- JVS brand logo top-right -->
-    <img src="jvs-icon.png" class="header-jvs-logo" alt="Juan Villanueva Software" title="Juan Villanueva Software" onerror="this.style.display='none'">
     <button class="btn-icon" onclick="clickInstall()" id="btnInstall" title="Instalar app" style="display:none">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
@@ -729,8 +720,16 @@ tr:hover td{background:#fafbfd}
     <button class="btn-icon" id="btnMenuMobile" onclick="toggleMenuMobile()" title="Menú" style="display:none">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/><circle cx="5" cy="5" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="19" r="1" fill="currentColor"/><circle cx="19" cy="5" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="19" r="1" fill="currentColor"/></svg>
     </button>
+    <!-- Avatar usuario: extremo derecho -->
+    <div class="user-chip" id="userChip" style="display:none" onclick="openMiPerfil()" title="Mi perfil" role="button">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div id="userNameWrap" style="display:none">
+        <div class="user-name" id="userName">—</div>
+        <div class="user-role" id="userRoleLabel">—</div>
+      </div>
+    </div>
     <!-- Dropdown menú mobile -->
-    <div id="menuMobileDropdown" style="display:none;position:fixed;top:56px;right:8px;background:var(--navy);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:9000;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:80vh;overflow-y:auto" id="menuMobileDropdown">
+    <div id="menuMobileDropdown" style="display:none;position:fixed;top:62px;right:8px;background:var(--navy);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px;z-index:9000;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:80vh;overflow-y:auto">
     </div>
   </div>
 </header>
