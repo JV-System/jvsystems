@@ -3015,7 +3015,7 @@ function openPedidoDetail(id){
             <div><div class="detail-label">Fecha</div><div class="detail-value">${p.fecha||'—'}</div></div>
           </div>`:`
           <div class="detail-grid-3">
-            <div><div class="detail-label">Total del pedido</div><div class="detail-value" style="font-size:16px;font-weight:800;color:var(--teal)">${p.presupuesto?fmt(p.presupuesto):fmt((p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0)*(Number(r.precio)||0),0))}</div></div>
+            <div><div class="detail-label">Total del pedido</div><div class="detail-value" style="font-size:16px;font-weight:800;color:var(--teal)">${p.presupuesto?fmt(p.presupuesto):fmt((p.productos||[]).reduce((s,r)=>s+(getPrice(r.tipo,p.lista||1)*(Number(r.kg)||0)),0))}</div></div>
             <div><div class="detail-label">Fecha</div><div class="detail-value">${p.fecha||'—'}</div></div>
             <div><div class="detail-label">Estado</div><div class="detail-value"><span class="item-badge badge-${badgeClass(p.estado)}">${p.estado}</span></div></div>
           </div>`}
