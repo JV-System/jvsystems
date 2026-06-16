@@ -2483,6 +2483,7 @@ function showSection(sec){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active', t.dataset.sec===sec));
   if(sec==='dashboard') renderDashboard();
   if(sec==='pedidos'){
+    _marcarPedidosVistos(); renderBottomNav();
     renderPedidoFiltros(); renderPedidosList(); populateClienteSelects();
     const rol=currentUser?.rol;
     const btnN=document.getElementById('btnNuevoPedido');
@@ -6631,17 +6632,30 @@ const BNAV_PRIORITY = {
   cliente: ['catalogo','pedidos'],
 };
 let _chatUnread = 0; // contador mensajes no leídos
+
+function _pedidosNuevos(){
+  if(!currentUser || currentUser.rol==='cliente') return 0;
+  const visto = parseInt(localStorage.getItem(`jvs_pedidos_vistos_${currentUser.id}`)||'0', 10);
+  const total = (db.pedidos||[]).length;
+  return Math.max(0, total - visto);
+}
+function _marcarPedidosVistos(){
+  if(!currentUser) return;
+  localStorage.setItem(`jvs_pedidos_vistos_${currentUser.id}`, String((db.pedidos||[]).length));
+}
+
 function renderBottomNav(){
   const inner = document.getElementById('bottomNavInner');
   if(!inner || !currentUser) return;
   const allowed = ROLE_TABS[currentUser.rol]||[];
   const priority = BNAV_PRIORITY[currentUser.rol] || allowed;
   const show = priority.filter(s=>allowed.includes(s)).slice(0,5);
+  const nuevosPed = _pedidosNuevos();
   inner.innerHTML = show.map(sec=>{
-    const unread = false; // comunicacion removida
+    const badge = sec==='pedidos' && nuevosPed>0 ? nuevosPed : 0;
     return `<button class="bnav-btn${_bnavActive===sec?' active':''}" onclick="showSection('${sec}')" style="position:relative">
       ${BNAV_ICONS[sec]||''}
-      ${unread?`<span class="bnav-badge">${_chatUnread>9?'9+':_chatUnread}</span>`:''}
+      ${badge?`<span class="bnav-badge">${badge>9?'9+':badge}</span>`:''}
       <span>${BNAV_LABELS[sec]||sec}</span>
     </button>`;
   }).join('');
