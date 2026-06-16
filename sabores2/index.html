@@ -4635,6 +4635,16 @@ function calcGananciaPedido(p){
   return {ingreso,costoDario,costoDesp,ganancia,totalKg,ppk:ingreso?Math.round(ingreso/totalKg):0};
 }
 
+function editarIngresoPedido(pid){
+  const p=db.pedidos.find(x=>x.id===pid); if(!p) return;
+  const wrap=document.getElementById('ingresoWrap_'+pid); if(!wrap) return;
+  wrap.innerHTML=`<input type="number" id="ingresoInput_${pid}" value="${p.ingreso||''}"
+    style="width:110px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--teal);text-align:right;font-family:'Exo 2',sans-serif"
+    onkeydown="if(event.key==='Enter') guardarIngresoPedido(${pid})">
+    <button onclick="guardarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✓</button>`;
+  document.getElementById('ingresoInput_'+pid)?.focus();
+}
+
 function guardarIngresoPedido(pid){
   const p=db.pedidos.find(x=>x.id===pid); if(!p) return;
   const input=document.getElementById('ingresoInput_'+pid); if(!input) return;
@@ -4656,11 +4666,15 @@ function renderGananciaPedido(pid){
       ${p.cuentaCobro?`<div style="margin-bottom:12px"><span class="item-badge badge-open">🏦 Cobrado en: ${p.cuentaCobro}</span></div>`:''}
       <div class="fin-row" style="align-items:center;gap:8px">
         <span class="fin-lbl">Ingreso cobrado</span>
-        <div style="display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end">
-          <input type="number" id="ingresoInput_${pid}" value="${p.ingreso||''}" placeholder="$0"
-            style="width:110px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--teal);text-align:right;font-family:'Exo 2',sans-serif"
-            onkeydown="if(event.key==='Enter') guardarIngresoPedido(${pid})">
-          <button onclick="guardarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✓</button>
+        <div style="display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end" id="ingresoWrap_${pid}">
+          ${p.ingreso
+            ? `<span style="font-weight:800;color:var(--teal);font-size:15px">${fmt(p.ingreso)}</span>
+               <button onclick="editarIngresoPedido(${pid})" style="background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;color:var(--text-muted)">Editar</button>`
+            : `<input type="number" id="ingresoInput_${pid}" value="" placeholder="0"
+                style="width:110px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--teal);text-align:right;font-family:'Exo 2',sans-serif"
+                onkeydown="if(event.key==='Enter') guardarIngresoPedido(${pid})">
+               <button onclick="guardarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✓</button>`
+          }
         </div>
       </div>
       <div class="fin-row"><span class="fin-lbl">− Costo Proceso (Darío)</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
