@@ -148,7 +148,7 @@ body{font-family:'Exo 2','Segoe UI',system-ui,sans-serif;background:var(--bg);co
 .btn-icon:hover{background:rgba(255,255,255,0.15);color:#fff}
 
 /* ── WATERMARK ── */
-.watermark{pointer-events:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;height:480px;object-fit:contain;opacity:0.10;filter:blur(2px) grayscale(10%);z-index:0;user-select:none}
+.watermark{pointer-events:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;height:480px;object-fit:contain;opacity:0.03;filter:blur(2px) grayscale(10%);z-index:0;user-select:none}
 .main{position:relative;z-index:1}
 
 /* ── FOOTER ── */
@@ -243,11 +243,12 @@ body{font-family:'Exo 2','Segoe UI',system-ui,sans-serif;background:var(--bg);co
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:20px}
 .kpi-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.kpi-blue::before{background:var(--blue)}
-.kpi-teal::before{background:var(--teal)}
-.kpi-accent::before{background:var(--accent)}
-.kpi-purple::before{background:var(--purple)}
-.kpi-red::before{background:var(--red)}
+.kpi-blue::before{background:rgba(46,125,50,0.4)}
+.kpi-teal::before{background:rgba(27,138,90,0.4)}
+.kpi-accent::before{background:rgba(232,119,10,0.4)}
+.kpi-purple::before{background:rgba(123,94,167,0.4)}
+.kpi-red::before{background:rgba(192,57,43,0.4)}
+@media(max-width:768px){#userName,#userRoleLabel{display:none}}
 .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted)}
 .kpi-value{font-size:22px;font-weight:800;color:var(--navy)}
 .kpi-sub{font-size:11px;color:var(--text-muted)}
@@ -338,11 +339,11 @@ tr:hover td{background:#fafbfd}
 .inner-tab:hover{color:var(--text)}
 
 /* ── KPI verde-misiones ── */
-.kpi-blue::before{background:linear-gradient(90deg,#2E7D32,#4CAF50)}
-.kpi-teal::before{background:linear-gradient(90deg,#1B8A5A,#2ECC71)}
-.kpi-accent::before{background:linear-gradient(90deg,#E8770A,#F59420)}
-.kpi-purple::before{background:linear-gradient(90deg,#7B5EA7,#9B59B6)}
-.kpi-red::before{background:linear-gradient(90deg,#C0392B,#E74C3C)}
+.kpi-blue::before{background:rgba(46,125,50,0.4)}
+.kpi-teal::before{background:rgba(27,138,90,0.4)}
+.kpi-accent::before{background:rgba(232,119,10,0.4)}
+.kpi-purple::before{background:rgba(123,94,167,0.4)}
+.kpi-red::before{background:rgba(192,57,43,0.4)}
 .badge-open{background:#E8F5E9;color:#2E7D32}
 .badge-pending{background:#FFF3E0;color:#E65100}
 
@@ -996,13 +997,6 @@ tr:hover td{background:#fafbfd}
           <div id="dashPedidos"></div>
         </div>
         <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">
-              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-              Saldos proveedores
-            </div>
-            <div id="dashDario"></div>
-          </div>
           <div class="card">
             <div class="card-title">🏆 Ranking moliendas del mes</div>
             <div id="dashRanking"></div>
@@ -2563,7 +2557,7 @@ function renderDashboard(){
       </div>
     </div>
     <div class="kpi-card kpi-purple" style="cursor:pointer" onclick="showSection('pedidos');setPedidoEstadoFiltro('')"><div class="kpi-label">Sin despachar</div><div class="kpi-value">${pedPend}</div><div class="kpi-sub">Con pago recibido</div></div>
-    <div class="kpi-card kpi-${disponible>=0?'teal':'red'}" style="cursor:pointer" onclick="showSection('cuentas')"><div class="kpi-label">💰 DISPONIBLE</div><div class="kpi-value" style="color:${disponible>=0?'var(--teal)':'var(--red)'};font-size:18px">${disponible>=0?'+':''}${fmt(disponible)}</div><div class="kpi-sub">Ctas − saldos</div></div>
+    <div class="kpi-card kpi-${disponible>=0?'teal':'red'}" style="cursor:pointer;grid-column:1/-1" onclick="showSection('cuentas')"><div class="kpi-label">💰 DISPONIBLE</div><div class="kpi-value" style="color:${disponible>=0?'var(--teal)':'var(--red)'};font-size:22px">${disponible>=0?'+':''}${fmt(disponible)}</div><div class="kpi-sub">Ctas − saldos</div></div>
   `;
 
   // Pedidos pendientes de despacho
@@ -2584,32 +2578,16 @@ function renderDashboard(){
     </div>`;
   }).join('') : '<div style="color:var(--teal);font-size:13px;padding:12px 0;text-align:center">✅ Todos los pedidos despachados</div>';
 
-  document.getElementById('dashDario').innerHTML = `
-    <div style="text-align:center;padding:12px 0">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO PROCESO (DARÍO)</div>
-      <div style="font-size:28px;font-weight:800;color:${saldoDario>=0?'var(--teal)':'var(--red)'}">${saldoDario>=0?'+':''}${fmt(saldoDario)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoDario>=0?'Darío te debe':'Le debés a Darío'}</div>
-    </div>
-    <div style="text-align:center;padding:8px 0;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">SALDO DESPACHO (LUCÍA)</div>
-      <div style="font-size:24px;font-weight:800;color:${saldoLucia>=0?'var(--teal)':'var(--red)'}">${saldoLucia>=0?'+':''}${fmt(saldoLucia)}</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${saldoLucia>=0?'Lucía te debe':'Le debés a Lucía'}</div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-      <button class="btn btn-primary btn-sm" onclick="showSection('dario')">Ver Proceso</button>
-      <button class="btn btn-ghost btn-sm" onclick="showSection('despachos')">Ver Despacho</button>
-    </div>`;
-
   // Contador de registros (solo admin)
   const contEl = document.getElementById('dashContadores');
   if(contEl){
     if(currentUser && currentUser.rol === 'admin'){
       const movTotal = (db.dario||[]).length + (db.despachos||[]).length + (db.gastos||[]).length;
       contEl.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border);margin-top:8px">
-        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">📦 ${(db.pedidos||[]).length} pedidos</span>
-        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">👥 ${(db.clientes||[]).length} clientes</span>
-        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">🛒 ${(db.compras||[]).length} compras</span>
-        <span style="font-size:11px;color:var(--text-muted);background:var(--navy-light);padding:3px 10px;border-radius:20px">💳 ${movTotal} movimientos</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px">📦 ${(db.pedidos||[]).length} pedidos</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px">👥 ${(db.clientes||[]).length} clientes</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px">🛒 ${(db.compras||[]).length} compras</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px">💳 ${movTotal} movimientos</span>
       </div>`;
     } else {
       contEl.innerHTML = '';
