@@ -2289,6 +2289,9 @@ function _initDbFields(){
   if(!db.config.cuentasCobro) db.config.cuentasCobro=['Mercado Pago','Transferencia bancaria','Efectivo','Otro'];
   if(!db.config.preciosCosto) db.config.preciosCosto={};
   if(!db.cuentas) db.cuentas={nombre1:'Mercado Pago',nombre2:'Cuenta Bancaria',movCuenta1:[],movCuenta2:[]};
+  // Migración estados: agregar "En proceso" si no existe
+  if(!db.estados) db.estados=JSON.parse(JSON.stringify(DEFAULT_ESTADOS));
+  if(!db.estados.find(e=>e.nombre==='En proceso')) db.estados.unshift({id:Date.now(),nombre:'En proceso',emoji:'⚙️',color:'open'});
 }
 function saveDB(){
   localStorage.setItem(DB_KEY, JSON.stringify(db));
@@ -5359,8 +5362,6 @@ const DEFAULT_ESTADOS = [
   {id:4, nombre:'despachado',    emoji:'🚚', color:'enviado'},
 ];
 if(!db.estados) db.estados = JSON.parse(JSON.stringify(DEFAULT_ESTADOS));
-// Migración: agregar "En proceso" si no existe
-if(!db.estados.find(e=>e.nombre==='En proceso')) db.estados.unshift({id:1, nombre:'En proceso', emoji:'⚙️', color:'open'});
 // Migración: renombrar estados viejos
 db.pedidos.forEach(p=>{
   if(p.estado==='confirmado') p.estado='pago parcial';
