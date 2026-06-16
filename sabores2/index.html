@@ -4635,14 +4635,12 @@ function calcGananciaPedido(p){
   return {ingreso,costoDario,costoDesp,ganancia,totalKg,ppk:ingreso?Math.round(ingreso/totalKg):0};
 }
 
-function cargarIngresoPedido(pid){
+function guardarIngresoPedido(pid){
   const p=db.pedidos.find(x=>x.id===pid); if(!p) return;
-  const actual = p.ingreso||'';
-  const val = prompt(`Ingreso cobrado — Pedido #${p.numero}\nTotal estimado: ${fmt((p.productos||[]).reduce((s,r)=>s+(getPrice(r.tipo,p.lista||1)*(Number(r.kg)||0)),0))}`, actual);
-  if(val===null) return;
-  const monto = parseFloat(val.replace(/\./g,'').replace(',','.'));
+  const input=document.getElementById('ingresoInput_'+pid); if(!input) return;
+  const monto=parseFloat(input.value);
   if(isNaN(monto)||monto<0){ toast('Monto inválido','error'); return; }
-  p.ingreso = monto;
+  p.ingreso=monto;
   saveDB();
   renderGananciaPedido(pid);
   toast('Ingreso cargado: '+fmt(monto),'success');
@@ -4656,11 +4654,13 @@ function renderGananciaPedido(pid){
     <div class="card">
       <div class="card-title">💰 Análisis financiero — Pedido #${p.numero}</div>
       ${p.cuentaCobro?`<div style="margin-bottom:12px"><span class="item-badge badge-open">🏦 Cobrado en: ${p.cuentaCobro}</span></div>`:''}
-      <div class="fin-row" style="align-items:center">
+      <div class="fin-row" style="align-items:center;gap:8px">
         <span class="fin-lbl">Ingreso cobrado</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          ${p.ingreso?`<span class="fin-val" style="color:var(--teal)">${fmt(p.ingreso)}</span>`:'<span class="fin-val" style="color:#E8770A">Pendiente</span>'}
-          <button onclick="cargarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">${p.ingreso?'Editar':'+ Cargar'}</button>
+        <div style="display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end">
+          <input type="number" id="ingresoInput_${pid}" value="${p.ingreso||''}" placeholder="$0"
+            style="width:110px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:13px;font-weight:700;color:var(--teal);text-align:right;font-family:'Exo 2',sans-serif"
+            onkeydown="if(event.key==='Enter') guardarIngresoPedido(${pid})">
+          <button onclick="guardarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">✓</button>
         </div>
       </div>
       <div class="fin-row"><span class="fin-lbl">− Costo Proceso (Darío)</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
