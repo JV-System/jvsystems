@@ -1906,6 +1906,39 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR USUARIO -->
+<div class="modal-bg hidden" id="modalEditarUsuario">
+  <div class="modal" style="max-width:420px;">
+    <h3 style="margin-bottom:16px;">✏ Editar usuario</h3>
+    <input type="hidden" id="eu-id">
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Nombre completo</label>
+      <input type="text" id="eu-nombre" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Usuario</label>
+      <input type="text" id="eu-user" autocapitalize="none" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Contraseña</label>
+      <input type="text" id="eu-pass" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+    </div>
+    <div class="form-group" style="margin-bottom:16px;">
+      <label style="font-size:12px;font-weight:700;color:#555;">Rol</label>
+      <select id="eu-rol" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-top:4px;">
+        <option value="tecnico">Técnico</option>
+        <option value="facturacion">Facturación</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="alert alert-error hidden" id="eu-error"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModalEditarUsuario()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionUsuario()">💾 Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PERFIL -->
 <div id="perfilModal" class="hidden">
   <div class="perfil-box">
@@ -5126,7 +5159,7 @@ function renderUsuariosList() {
       + '<div style="font-size:12px;color:var(--text-muted);">@'+esc(u.username)+'</div>'
       + '</div>'
       + (!esYo ? '<button onclick="adminVerPass('+u.id+',\''+esc(u.nombre)+'\')" style="background:none;border:1px solid rgba(29,158,117,0.25);color:#1D9E75;font-size:11px;font-weight:700;border-radius:5px;padding:3px 9px;cursor:pointer;margin-right:6px;flex-shrink:0;" title="Ver contraseña actual">👁 Ver</button>' : '')
-      + (!esYo ? '<button onclick="adminCambiarPass('+u.id+',\''+esc(u.nombre)+'\')" style="background:none;border:1px solid rgba(21,101,216,0.25);color:#1565D8;font-size:11px;font-weight:700;border-radius:5px;padding:3px 9px;cursor:pointer;margin-right:6px;flex-shrink:0;" title="Cambiar contraseña">🔑 Clave</button>' : '')
+      + '<button onclick="abrirEditarUsuario('+u.id+')" style="background:none;border:1px solid rgba(85,85,85,0.25);color:#555;font-size:11px;font-weight:700;border-radius:5px;padding:3px 9px;cursor:pointer;margin-right:6px;flex-shrink:0;" title="Editar usuario">✏ Editar</button>'
       + (!esYo ? '<button onclick="eliminarUsuario('+u.id+')" style="background:none;border:none;color:#ccc;font-size:18px;cursor:pointer;padding:4px 8px;flex-shrink:0;" title="Eliminar">✕</button>' : '')
       + '</div>'
       + firmaBloque
@@ -5151,6 +5184,66 @@ function adminVerPass(userId, nombreUsuario) {
   const u = users.find(function(x){ return x.id === userId; });
   if (!u) { alert('Usuario no encontrado.'); return; }
   alert('Contraseña actual de ' + nombreUsuario + ':\n\n' + u.password);
+}
+
+function abrirEditarUsuario(userId) {
+  const users = getUsers();
+  const u = users.find(function(x){ return x.id === userId; });
+  if (!u) return;
+  document.getElementById('eu-id').value     = u.id;
+  document.getElementById('eu-nombre').value = u.nombre;
+  document.getElementById('eu-user').value   = u.username;
+  document.getElementById('eu-pass').value   = u.password;
+  document.getElementById('eu-rol').value    = u.role;
+  document.getElementById('eu-error').classList.add('hidden');
+  document.getElementById('modalEditarUsuario').classList.remove('hidden');
+}
+
+function cerrarModalEditarUsuario() {
+  document.getElementById('modalEditarUsuario').classList.add('hidden');
+}
+
+function guardarEdicionUsuario() {
+  const id     = parseInt(document.getElementById('eu-id').value);
+  const nombre = document.getElementById('eu-nombre').value.trim();
+  const uname  = document.getElementById('eu-user').value.trim().toLowerCase();
+  const pass   = document.getElementById('eu-pass').value;
+  const rol    = document.getElementById('eu-rol').value;
+  const err    = document.getElementById('eu-error');
+
+  if (!nombre || !uname || !pass) {
+    err.textContent = '✕ Completá todos los campos.'; err.classList.remove('hidden'); return;
+  }
+  if (pass.length < 4) {
+    err.textContent = '✕ La contraseña debe tener al menos 4 caracteres.'; err.classList.remove('hidden'); return;
+  }
+  const users = getUsers();
+  const dup = users.find(function(u){ return u.username === uname && u.id !== id; });
+  if (dup) { err.textContent = '✕ Ya existe otro usuario con ese nombre de usuario.'; err.classList.remove('hidden'); return; }
+
+  const idx = users.findIndex(function(u){ return u.id === id; });
+  if (idx === -1) { err.textContent = '✕ Usuario no encontrado.'; err.classList.remove('hidden'); return; }
+
+  const nombreAnterior = users[idx].nombre;
+  users[idx].nombre   = nombre;
+  users[idx].username = uname;
+  users[idx].password = pass;
+  users[idx].role     = rol;
+  saveUsers(users);
+
+  // Sincronizar nombre en tecnicosDB si corresponde
+  if (rol === 'tecnico') {
+    const tec = tecnicosDB.find(function(t){ return t.nombre === nombreAnterior; });
+    if (tec) { tec.nombre = nombre; saveTecnicos(); }
+    else if (!tecnicosDB.find(function(t){ return t.nombre === nombre; })) {
+      tecnicosDB.push({ id: id, nombre: nombre, firma: null });
+      saveTecnicos();
+    }
+  }
+
+  cerrarModalEditarUsuario();
+  renderConfig(); initFirmasPads();
+  showToast('✅ Usuario actualizado.');
 }
 
 function adminCambiarPass(userId, nombreUsuario) {
