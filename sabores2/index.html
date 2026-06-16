@@ -855,8 +855,16 @@ tr:hover td{background:#fafbfd}
         <input class="login-input" id="regNombreMain" placeholder="Nombre completo *" oninput="loginSugerirUsuario()">
       </div>
       <div class="login-input-wrap">
+        <svg class="login-input-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <input class="login-input" id="regDniMain" placeholder="DNI *" type="text" inputmode="numeric">
+      </div>
+      <div class="login-input-wrap">
         <svg class="login-input-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.18 2 2 2 0 012 .18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
-        <input class="login-input" id="regTelMain" placeholder="Teléfono / WhatsApp" type="tel">
+        <input class="login-input" id="regTelMain" placeholder="Teléfono / WhatsApp *" type="tel">
+      </div>
+      <div class="login-input-wrap">
+        <svg class="login-input-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <input class="login-input" id="regEmailMain" placeholder="Email *" type="email">
       </div>
       <div class="login-input-wrap">
         <svg class="login-input-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -922,8 +930,16 @@ tr:hover td{background:#fafbfd}
           <input class="login-input" id="regNombre" placeholder="Nombre completo *" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:#fff" oninput="catSugerirUsuario()">
         </div>
         <div class="login-input-wrap">
+          <svg class="login-input-icon" width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          <input class="login-input" id="regDni" placeholder="DNI *" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:#fff" type="text" inputmode="numeric">
+        </div>
+        <div class="login-input-wrap">
           <svg class="login-input-icon" width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.59A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-          <input class="login-input" id="regTel" placeholder="Teléfono (WhatsApp)" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:#fff" type="tel">
+          <input class="login-input" id="regTel" placeholder="Teléfono / WhatsApp *" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:#fff" type="tel">
+        </div>
+        <div class="login-input-wrap">
+          <svg class="login-input-icon" width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <input class="login-input" id="regEmail" placeholder="Email *" style="background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15);color:#fff" type="email">
         </div>
         <div class="login-input-wrap">
           <svg class="login-input-icon" width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -2992,11 +3008,13 @@ function openPedidoDetail(id){
           </div>
         </div>
         <div class="card">
+          ${currentUser?.rol!=='cliente'?`
           <div class="detail-grid-3">
             <div><div class="detail-label">Presupuesto Enviado</div><div class="detail-value">${p.presupuesto?fmt(p.presupuesto):'—'}</div></div>
             <div><div class="detail-label">Ingreso Cobrado</div><div class="detail-value" style="color:var(--teal)">${p.ingreso?fmt(p.ingreso):'—'}</div></div>
             <div><div class="detail-label">Fecha</div><div class="detail-value">${p.fecha||'—'}</div></div>
-          </div>
+          </div>`:`
+          <div><div class="detail-label">Fecha</div><div class="detail-value">${p.fecha||'—'}</div></div>`}
           ${p.obs?`<div style="margin-top:12px"><div class="detail-label">Observaciones</div><div class="detail-value">${p.obs}</div></div>`:''}
         </div>
       </div>
@@ -3264,6 +3282,18 @@ function openNuevoPedido(){
   document.getElementById('modalPedidoTitle').textContent='Nuevo Pedido';
   resetPedidoForm();
   document.getElementById('pedFecha').value=today();
+  // Pre-completar datos del cliente si está logueado como cliente
+  if(currentUser?.rol==='cliente'){
+    const cli = db.clientes.find(c=>c.id===currentUser.clienteId);
+    document.getElementById('pedNombre').value = cli?.nombre || currentUser.nombre || '';
+    document.getElementById('pedDni').value    = cli?.dni    || currentUser.dni    || '';
+    document.getElementById('pedTel').value    = cli?.tel    || currentUser.tel    || '';
+    document.getElementById('pedEmail').value  = cli?.email  || currentUser.email  || '';
+    // Bloquear campos para que no los modifiquen
+    ['pedNombre','pedDni','pedTel','pedEmail'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.readOnly=true;
+    });
+  }
   openModal('modalPedido');
 }
 function openEditPedido(id){
@@ -4621,13 +4651,15 @@ function catSugerirUsuario(){
 
 function catDoRegistro(){
   const nombre  = (document.getElementById('regNombre').value||'').trim();
+  const dni     = (document.getElementById('regDni').value||'').trim();
   const tel     = (document.getElementById('regTel').value||'').trim();
+  const email   = (document.getElementById('regEmail').value||'').trim();
   const usuario = (document.getElementById('regUsuario').value||'').trim().toLowerCase();
   const pass    = (document.getElementById('regPass').value||'').trim();
   const errEl   = document.getElementById('catRegError');
 
-  if(!nombre||!usuario||!pass){
-    errEl.textContent='Completá nombre, usuario y contraseña'; errEl.classList.add('show');
+  if(!nombre||!dni||!tel||!email||!usuario||!pass){
+    errEl.textContent='Completá todos los campos (*)'; errEl.classList.add('show');
     setTimeout(()=>errEl.classList.remove('show'),3000); return;
   }
   if(USUARIOS.find(u=>u.id===usuario)){
@@ -4637,11 +4669,11 @@ function catDoRegistro(){
 
   // Crear cliente en db
   const newCliId = Date.now();
-  db.clientes.push({ id:newCliId, nombre, tel, email:'', ciudad:'', lista:1, notas:'' });
+  db.clientes.push({ id:newCliId, nombre, dni, tel, email, ciudad:'', lista:1, notas:'' });
 
   // Crear usuario
   const avatar = nombre.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  const newUser = { id:usuario, nombre, pass, rol:'cliente', avatar, clienteId:newCliId };
+  const newUser = { id:usuario, nombre, dni, tel, email, pass, rol:'cliente', avatar, clienteId:newCliId };
   USUARIOS.push(newUser);
   saveUsuarios();
   saveDB();
@@ -5140,12 +5172,14 @@ function loginSugerirUsuario(){
 
 function doRegistroMain(){
   const nombre  =(document.getElementById('regNombreMain').value||'').trim();
+  const dni     =(document.getElementById('regDniMain').value||'').trim();
   const tel     =(document.getElementById('regTelMain').value||'').trim();
+  const email   =(document.getElementById('regEmailMain').value||'').trim();
   const usuario =(document.getElementById('regUsuarioMain').value||'').trim().toLowerCase();
   const pass    =(document.getElementById('regPassMain').value||'').trim();
   const errEl   =document.getElementById('loginRegError');
-  if(!nombre||!usuario||!pass){
-    errEl.textContent='Completá nombre, usuario y contraseña';errEl.classList.add('show');
+  if(!nombre||!dni||!tel||!email||!usuario||!pass){
+    errEl.textContent='Completá todos los campos obligatorios (*)';errEl.classList.add('show');
     setTimeout(()=>errEl.classList.remove('show'),3000);return;
   }
   if(USUARIOS.find(u=>u.id===usuario)){
@@ -5153,9 +5187,9 @@ function doRegistroMain(){
     setTimeout(()=>errEl.classList.remove('show'),3000);return;
   }
   const newCliId=Date.now();
-  db.clientes.push({id:newCliId,nombre,tel,email:'',ciudad:'',lista:1,notas:''});
+  db.clientes.push({id:newCliId,nombre,dni,tel,email,ciudad:'',lista:1,notas:''});
   const avatar=nombre.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  const newUser={id:usuario,nombre,pass,rol:'cliente',avatar,clienteId:newCliId};
+  const newUser={id:usuario,nombre,dni,tel,email,pass,rol:'cliente',avatar,clienteId:newCliId};
   USUARIOS.push(newUser);saveUsuarios();saveDB();
   currentUser=newUser;
   document.getElementById('loginScreen').style.display='none';
