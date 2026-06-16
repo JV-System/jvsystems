@@ -2952,8 +2952,8 @@ function openPedidoDetail(id){
   document.getElementById('contentPedidos').innerHTML = `
     <div class="inner-tabs">
       <button class="inner-tab active" onclick="pedTab(this,'det-info')">Detalle</button>
-      <button class="inner-tab" onclick="pedTab(this,'det-wsp')">WhatsApp</button>
-      <button class="inner-tab" onclick="pedTab(this,'det-fin');renderGananciaPedido(${p.id})">💰 Financiero</button>
+      ${currentUser?.rol!=='cliente'?`<button class="inner-tab" onclick="pedTab(this,'det-wsp')">WhatsApp</button>`:''}
+      ${currentUser?.rol!=='cliente'?`<button class="inner-tab" onclick="pedTab(this,'det-fin');renderGananciaPedido(${p.id})">💰 Financiero</button>`:''}
       <button class="inner-tab" onclick="pedTab(this,'det-notas');renderNotasPedido(${p.id})">💬 Notas${(p.notas||[]).length?`<span class="nota-badge">${(p.notas||[]).length}</span>`:''}</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:20px" id="detTabBody">
