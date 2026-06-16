@@ -3135,8 +3135,10 @@ function renderNotasPedido(pedidoId, modo){
 
   // Scroll al final
   thread.scrollTop = thread.scrollHeight;
-  // Marcar como vistas al abrir
+  // Marcar como vistas y quitar badge del tab
   _marcarNotasVistas(pedidoId);
+  const notasBtn = document.querySelector('.inner-tab[onclick*="det-notas"]');
+  if(notasBtn){ const badge=notasBtn.querySelector('span[style*="E53935"]'); if(badge) badge.style.background='#aaa'; }
 }
 
 function addNotaPedido(pedidoId, modo){
