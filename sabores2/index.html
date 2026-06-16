@@ -4213,7 +4213,13 @@ function saveDespacho(){
   const flete=Number(document.getElementById('despFlete').value)||0;
   const embalExtra=Number(document.getElementById('despEmbalExtra').value)||0;
   const subtotal=Number(document.getElementById('despSubtotal').value)||0;
-  db.despachos.push({id:Date.now(),tipo:'despacho',fecha:document.getElementById('despFecha').value,pedidoId:document.getElementById('despPedido').value,pedidoNum:opt?.dataset.num||'',cliente:document.getElementById('despCliente').value,kg,tipoDespacho:tipo,embalKg:embKg,embalPrecio:embPrecio,flete,embalExtra,subtotal,obs:document.getElementById('despObs').value});
+  const despPedidoId = document.getElementById('despPedido').value;
+  db.despachos.push({id:Date.now(),tipo:'despacho',fecha:document.getElementById('despFecha').value,pedidoId:despPedidoId,pedidoNum:opt?.dataset.num||'',cliente:document.getElementById('despCliente').value,kg,tipoDespacho:tipo,embalKg:embKg,embalPrecio:embPrecio,flete,embalExtra,subtotal,obs:document.getElementById('despObs').value});
+  // Cambiar estado del pedido a Despachado automáticamente
+  if(despPedidoId){
+    const ped = db.pedidos.find(p=>String(p.id)===String(despPedidoId));
+    if(ped && ped.estado !== 'despachado') ped.estado = 'despachado';
+  }
   saveDB();closeModal('modalDespacho');renderDespachos();renderDashboard();toast('Despacho registrado ✓','success');
 }
 function deleteDespacho(id){if(!confirm('¿Eliminar?'))return;db.despachos=db.despachos.filter(d=>d.id!==id);saveDB();renderDespachos();renderDashboard();}
