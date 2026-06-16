@@ -320,6 +320,27 @@ tr:hover td{background:#fafbfd}
 .wsp-box{background:#ECF8F0;border:1px solid #b2dfcc;border-radius:var(--radius-lg);padding:16px;font-family:monospace;font-size:13px;line-height:1.7;white-space:pre-wrap;color:#1a1a1a;position:relative}
 .wsp-copy-btn{position:absolute;top:10px;right:10px}
 
+/* ── NOTAS DEL PEDIDO ── */
+.notas-thread{display:flex;flex-direction:column;gap:10px;padding:4px 0 16px}
+.nota-burbuja{display:flex;flex-direction:column;max-width:82%;gap:2px}
+.nota-burbuja.yo{align-self:flex-end;align-items:flex-end}
+.nota-burbuja.otro{align-self:flex-start;align-items:flex-start}
+.nota-autor{font-size:10px;font-weight:700;color:var(--text-muted);padding:0 6px;text-transform:uppercase;letter-spacing:0.5px}
+.nota-texto{padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word}
+.nota-burbuja.yo .nota-texto{background:#2E7D32;color:#fff;border-bottom-right-radius:4px}
+.nota-burbuja.otro .nota-texto{background:#f0f2f0;color:#1a1a1a;border-bottom-left-radius:4px}
+.nota-burbuja.rol-dario .nota-texto{background:#E8770A;color:#fff;border-bottom-left-radius:4px}
+.nota-burbuja.rol-lucia .nota-texto{background:#7B5EA7;color:#fff;border-bottom-left-radius:4px}
+.nota-hora{font-size:10px;color:var(--text-muted);padding:0 6px}
+.notas-input-wrap{display:flex;gap:8px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--border)}
+.notas-input{flex:1;border:1px solid var(--border);border-radius:20px;padding:9px 14px;font-size:13px;font-family:'Exo 2',sans-serif;resize:none;outline:none;line-height:1.4;max-height:100px;overflow-y:auto}
+.notas-input:focus{border-color:var(--teal)}
+.notas-send{background:#2E7D32;color:#fff;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background 0.2s}
+.notas-send:hover{background:#1B5E20}
+.nota-badge{background:#E53935;color:#fff;font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 3px;margin-left:4px}
+[data-theme="dark"] .nota-burbuja.otro .nota-texto{background:#1F2E28;color:#E0EAE4}
+[data-theme="dark"] .notas-input{background:#111815;color:#E0EAE4;border-color:#2A3830}
+
 /* ── DETAIL PANEL ── */
 .detail-section{margin-bottom:20px}
 .detail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:4px}
@@ -2796,7 +2817,7 @@ function renderPedidosList(){
     });
   document.getElementById('listPedidos').innerHTML=filtered.length?filtered.map(p=>`
     <div class="list-item ${p._active?'active':''}" onclick="openPedidoDetail(${p.id})">
-      <div class="list-item-num">Pedido #${p.numero} ${p.solicitadoPorCliente?'<span style="font-size:8px;background:#7B5EA7;color:#fff;padding:1px 5px;border-radius:8px;margin-left:4px">CLIENTE</span>':''}</div>
+      <div class="list-item-num">Pedido #${p.numero} ${p.solicitadoPorCliente?'<span style="font-size:8px;background:#7B5EA7;color:#fff;padding:1px 5px;border-radius:8px;margin-left:4px">CLIENTE</span>':''}${(p.notas||[]).length?`<span class="nota-badge" title="${(p.notas||[]).length} nota(s)">💬${(p.notas||[]).length}</span>`:''}</div>
       <div class="list-item-title">${p.nombre||'Sin nombre'}</div>
       <div class="list-item-meta">${p.fecha||''} · ${(p.productos||[]).reduce((s,r)=>s+(Number(r.kg)||0),0)} kg</div>
       <span class="item-badge badge-${badgeClass(p.estado)}">${p.estado}</span>
@@ -2855,7 +2876,18 @@ function openPedidoDetail(id){
           </div>
         </div>
         ${p.obs?`<div class="card"><div class="card-title">Observaciones</div><div style="font-size:13px">${p.obs}</div></div>`:''}
+        <div class="card" id="notasCard-lucia">
+          <div class="card-title">💬 Notas del pedido</div>
+          <div id="notas-thread-lucia" class="notas-thread"></div>
+          <div class="notas-input-wrap">
+            <textarea class="notas-input" id="notaInput-lucia" placeholder="Escribir nota..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNotaPedido(${p.id},'lucia')}"></textarea>
+            <button class="notas-send" onclick="addNotaPedido(${p.id},'lucia')" title="Enviar">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
       </div>`;
+    renderNotasPedido(p.id,'lucia');
     return;
   }
 
@@ -2901,7 +2933,18 @@ function openPedidoDetail(id){
           </div>
         </div>
         ${p.obs?`<div class="card"><div class="card-title">Observaciones</div><div style="font-size:13px">${p.obs}</div></div>`:''}
+        <div class="card" id="notasCard-dario">
+          <div class="card-title">💬 Notas del pedido</div>
+          <div id="notas-thread-dario" class="notas-thread"></div>
+          <div class="notas-input-wrap">
+            <textarea class="notas-input" id="notaInput-dario" placeholder="Escribir nota..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNotaPedido(${p.id},'dario')}"></textarea>
+            <button class="notas-send" onclick="addNotaPedido(${p.id},'dario')" title="Enviar">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
       </div>`;
+    renderNotasPedido(p.id,'dario');
     return;
   }
 
@@ -2911,6 +2954,7 @@ function openPedidoDetail(id){
       <button class="inner-tab active" onclick="pedTab(this,'det-info')">Detalle</button>
       <button class="inner-tab" onclick="pedTab(this,'det-wsp')">WhatsApp</button>
       <button class="inner-tab" onclick="pedTab(this,'det-fin');renderGananciaPedido(${p.id})">💰 Financiero</button>
+      <button class="inner-tab" onclick="pedTab(this,'det-notas');renderNotasPedido(${p.id})">💬 Notas${(p.notas||[]).length?`<span class="nota-badge">${(p.notas||[]).length}</span>`:''}</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:20px" id="detTabBody">
       <div id="det-info">
@@ -2957,6 +3001,7 @@ function openPedidoDetail(id){
         </div>
       </div>
       <div id="det-fin" style="display:none"></div>
+      <div id="det-notas" style="display:none"></div>
       <div id="det-wsp" style="display:none">
         <div class="card">
           <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -2994,6 +3039,81 @@ function pedTab(btn, tab){
   btn.classList.add('active');
   document.querySelectorAll('#detTabBody > div').forEach(d=>d.style.display='none');
   document.getElementById(tab).style.display='block';
+}
+
+function renderNotasPedido(pedidoId, modo){
+  const p = db.pedidos.find(x=>x.id===pedidoId); if(!p) return;
+  const notas = p.notas || [];
+  const yo = currentUser?.nombre || currentUser?.rol || '?';
+  const rolActual = currentUser?.rol || '';
+
+  const threadId = modo ? `notas-thread-${modo}` : 'notas-thread-admin';
+  const inputId  = modo ? `notaInput-${modo}`    : 'notaInput-admin';
+  const panelId  = modo ? null : 'det-notas';
+
+  // Si es la pestaña admin, construimos el panel completo
+  if(!modo){
+    const panel = document.getElementById('det-notas');
+    if(!panel) return;
+    panel.innerHTML = `
+      <div class="card">
+        <div class="card-title">💬 Notas del pedido #${p.numero}</div>
+        <div id="notas-thread-admin" class="notas-thread"></div>
+        <div class="notas-input-wrap">
+          <textarea class="notas-input" id="notaInput-admin" placeholder="Escribir nota interna..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNotaPedido(${pedidoId})}"></textarea>
+          <button class="notas-send" onclick="addNotaPedido(${pedidoId})" title="Enviar">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  const thread = document.getElementById(modo ? `notas-thread-${modo}` : 'notas-thread-admin');
+  if(!thread) return;
+
+  if(!notas.length){
+    thread.innerHTML = `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px 0">Sin notas aún. Escribí el primero.</div>`;
+    return;
+  }
+
+  const rolColor = {admin:'#2E7D32', dario:'#E8770A', lucia:'#7B5EA7'};
+  thread.innerHTML = notas.map(n=>{
+    const esYo = n.autor === yo;
+    const cls  = esYo ? 'yo' : `otro rol-${n.rol||''}`;
+    return `<div class="nota-burbuja ${cls}">
+      <div class="nota-autor">${n.autor}${n.rol&&n.rol!==n.autor?' · '+n.rol.toUpperCase():''}</div>
+      <div class="nota-texto">${n.texto.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+      <div class="nota-hora">${n.fecha||''} ${n.hora||''}</div>
+    </div>`;
+  }).join('');
+
+  // Scroll al final
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function addNotaPedido(pedidoId, modo){
+  const inputId = modo ? `notaInput-${modo}` : 'notaInput-admin';
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  const texto = input.value.trim();
+  if(!texto) return;
+
+  const p = db.pedidos.find(x=>x.id===pedidoId); if(!p) return;
+  if(!p.notas) p.notas = [];
+
+  const ahora = new Date();
+  p.notas.push({
+    autor : currentUser?.nombre || currentUser?.rol || '?',
+    rol   : currentUser?.rol || '',
+    texto,
+    fecha : ahora.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}),
+    hora  : ahora.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+  });
+
+  input.value = '';
+  saveDB();
+  renderNotasPedido(pedidoId, modo);
 }
 
 function buildWspMsg(p){
