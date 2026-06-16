@@ -1419,7 +1419,6 @@
   </div>
   <div class="nav-links">
     <a href="#sobre">Sobre mí</a>
-    <a href="#sistemas">Sistemas</a>
     <a href="#bi">Dashboards</a>
     <a href="#proceso">Proceso</a>
     <a href="#contacto">Contacto</a>
@@ -1433,7 +1432,6 @@
 <!-- MENÚ MÓVIL -->
 <div class="nav-mobile-menu" id="navMobileMenu">
   <a href="#sobre"    onclick="cerrarMenu()">Sobre mí</a>
-  <a href="#sistemas" onclick="cerrarMenu()">Sistemas</a>
   <a href="#bi"       onclick="cerrarMenu()">Dashboards</a>
   <a href="#proceso"  onclick="cerrarMenu()">Proceso</a>
   <a href="#contacto" onclick="cerrarMenu()">Contacto</a>
@@ -1633,150 +1631,6 @@
 </section>
 
 <!-- SISTEMAS -->
-<section class="sistemas-section" id="sistemas">
-  <div class="section-header reveal">
-    <span class="section-tag">— Sistemas activos</span>
-    <h2>Solicitados y usados por clientes reales</h2>
-    <p>Cada sistema nació de un problema concreto y hoy está funcionando en producción.</p>
-  </div>
-
-  <div class="carousel-wrap reveal">
-    <div class="carousel-track" id="carouselTrack">
-
-      <!-- SLIDE 1: BRANCA -->
-      <div class="carousel-slide">
-        <div class="sistema-card">
-          <div class="sistema-mockup" onclick="openGallery('branca')">
-            <div class="mockup-browser">
-              <div class="mockup-bar">
-                <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-                <div class="mockup-url">Ingeniería Branca SRL · Sistema de Órdenes de Servicio</div>
-              </div>
-              <div class="mockup-hint">🖼 Ver fotos</div>
-              <div class="mockup-shots" id="shots-branca">
-                <img src="screenshots/branca_p4.png" class="visible" alt="Branca - Comprobante PDF" />
-                <img src="screenshots/branca_p1.png" class="hidden" alt="Branca - Datos del cliente" />
-                <img src="screenshots/branca_p3.png" class="hidden" alt="Branca - Tiempos y firmas" />
-                <img src="screenshots/branca_p2.png" class="hidden" alt="Branca - Diagnóstico" />
-                <img src="screenshots/branca_p5.png" class="hidden" alt="Branca - Detalle comprobante" />
-              </div>
-            </div>
-          </div>
-          <div class="sistema-info">
-            <div class="sistema-num">Sistema 01 · Mantenimiento Industrial</div>
-            <div class="sistema-title">Ingeniería Branca SRL</div>
-            <div class="sistema-client">Empresa de servicios de mantenimiento y reparación industrial</div>
-            <div class="sistema-why">
-              <div class="sistema-why-label">¿Por qué se creó?</div>
-              <p>Las órdenes de servicio se registraban en papel. No había historial digital, la trazabilidad de cada trabajo era nula y generar un comprobante para el cliente tomaba tiempo valioso del técnico.</p>
-            </div>
-            <ul class="sistema-features">
-              <li>Orden de servicio con 4 etapas: Cliente, Diagnóstico, Tiempos y Comprobante</li>
-              <li>Registro de máquina, problema, causa raíz y repuestos usados</li>
-              <li>Visitas en planta con tiempo y descripción por día</li>
-              <li>Firma digital del técnico y del cliente en pantalla</li>
-              <li>Comprobante en PDF descargable automáticamente</li>
-              <li>Historial completo de órdenes por empresa</li>
-            </ul>
-            <button class="btn-galeria" style="margin-left:0" onclick="openGallery('branca')">🖼 Ver capturas del sistema</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SLIDE 2: SABORES DE MISIONES -->
-      <div class="carousel-slide">
-        <div class="sistema-card">
-          <div class="sistema-mockup" onclick="openGallery('sabores')">
-            <div class="mockup-browser">
-              <div class="mockup-bar">
-                <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-                <div class="mockup-url">Sabores de Misiones · Sistema de Gestión</div>
-              </div>
-              <div class="mockup-hint">🖼 Ver fotos</div>
-              <div class="mockup-shots" id="shots-sabores">
-                <img src="screenshots/sabores_p1.png" class="visible" alt="Sabores - Dashboard" />
-                <img src="screenshots/sabores_p2.png" class="hidden" alt="Sabores - Pedidos" />
-                <img src="screenshots/sabores_p3.png" class="hidden" alt="Sabores - Perfil clientes" />
-                <img src="screenshots/sabores_p4.png" class="hidden" alt="Sabores - Cuenta corriente" />
-                <img src="screenshots/sabores_p6.png" class="hidden" alt="Sabores - Despachos" />
-                <img src="screenshots/sabores_p8.png" class="hidden" alt="Sabores - Informes" />
-              </div>
-            </div>
-          </div>
-          <div class="sistema-info">
-            <div class="sistema-num">Sistema 02 · Producción & Ventas</div>
-            <div class="sistema-title">Sabores de Misiones</div>
-            <div class="sistema-client">Productor y distribuidor de yerba mate — Misiones, Argentina</div>
-            <div class="sistema-why">
-              <div class="sistema-why-label">¿Por qué se creó?</div>
-              <p>El negocio coordinaba pedidos por WhatsApp y anotaciones en papel. No había control de qué se debía a Darío (proveedor) ni a Lucía (despachos), los clientes preguntaban el estado de su pedido y armar un presupuesto era manual.</p>
-            </div>
-            <button class="btn-galeria" style="margin-left:0;margin-bottom:1rem" onclick="openGallery('sabores')">🖼 Ver capturas del sistema</button>
-            <ul class="sistema-features">
-              <li>Dashboard con saldos, KG vendidos y pedidos pendientes</li>
-              <li>Gestión de pedidos con estados y chat interno por pedido</li>
-              <li>Perfil de clientes con historial, frecuencia y productos habituales</li>
-              <li>Cuenta corriente con Darío (molienda) y Lucía (despachos)</li>
-              <li>Generador de presupuestos con 4 listas de precios y descuentos</li>
-              <li>Informes mensuales con ganancia neta estimada por mes</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- SLIDE 3: MARCACIÓN LABORAL -->
-      <div class="carousel-slide">
-        <div class="sistema-card">
-          <div class="sistema-mockup" onclick="openGallery('horas')">
-            <div class="mockup-browser">
-              <div class="mockup-bar">
-                <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-                <div class="mockup-url">Marcación Laboral · JV Systems · Panel de Control</div>
-              </div>
-              <div class="mockup-hint">🖼 Ver fotos</div>
-              <div class="mockup-shots" id="shots-horas">
-                <img src="screenshots/horas_promo.png" class="visible" onerror="this.style.display='none';this.nextElementSibling.classList.replace('hidden','visible')" alt="Marcación - Promo" />
-                <img src="screenshots/horas_p3.png" class="hidden" alt="Marcación - Panel Jornada" />
-                <img src="screenshots/horas_p5.png" class="hidden" alt="Marcación - Horas proyectos" />
-              </div>
-            </div>
-          </div>
-          <div class="sistema-info">
-            <div class="sistema-num">Sistema 03 · RRHH & Proyectos</div>
-            <div class="sistema-title">Marcación Laboral</div>
-            <div class="sistema-client">Para empresas con múltiples plantas, proyectos y órdenes de trabajo</div>
-            <div class="sistema-why">
-              <div class="sistema-why-label">¿Por qué se creó?</div>
-              <p>Empresas con empleados en distintas plantas no podían verificar dónde marcaba cada persona, ni saber cuántas horas se destinaron a cada proyecto. La liquidación de horas extras era manual y propensa a errores.</p>
-            </div>
-            <button class="btn-galeria" style="margin-left:0;margin-bottom:1rem" onclick="openGallery('horas')">🖼 Ver capturas del sistema</button>
-            <ul class="sistema-features">
-              <li>App móvil: "Mi Actividad Laboral" con login por nombre y DNI</li>
-              <li>Geolocalización GPS registrada en cada marcación</li>
-              <li>Al salir: carga de horas por OT, proyecto e ítem/tarea</li>
-              <li>Panel de control: 108 jornadas, 1130h trabajadas en producción</li>
-              <li>Cálculo automático de horas normales, 50% y 100%</li>
-              <li>Gráficos de horas por empleado, OT y tarea · Exportación CSV</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /track -->
-
-    <!-- Controles -->
-    <div class="carousel-controls">
-      <button class="carousel-btn" id="prevBtn" onclick="moveCarousel(-1)">←</button>
-      <div class="carousel-dots">
-        <div class="carousel-dot active" onclick="goToSlide(0)"></div>
-        <div class="carousel-dot" onclick="goToSlide(1)"></div>
-        <div class="carousel-dot" onclick="goToSlide(2)"></div>
-      </div>
-      <button class="carousel-btn" id="nextBtn" onclick="moveCarousel(1)">→</button>
-    </div>
-  </div>
-</section>
-
 <!-- BI SECTION -->
 <section class="bi-section" id="bi">
   <div class="bi-inner">
@@ -2163,26 +2017,6 @@
   </div>
 </section>
 
-<!-- LIGHTBOX -->
-<div class="lb-overlay" id="lbOverlay">
-  <div class="lb-header">
-    <div>
-      <div class="lb-title" id="lbTitle"></div>
-      <div class="lb-counter" id="lbCounter"></div>
-    </div>
-    <button class="lb-close" onclick="closeGallery()" title="Cerrar">✕</button>
-  </div>
-  <div class="lb-stage">
-    <button class="lb-nav" id="lbPrev" onclick="lbMove(-1)">←</button>
-    <div class="lb-img-wrap">
-      <img id="lbImg" src="" alt="" />
-    </div>
-    <button class="lb-nav" id="lbNext" onclick="lbMove(1)">→</button>
-  </div>
-  <div class="lb-caption" id="lbCaption"></div>
-  <div class="lb-thumbs" id="lbThumbs"></div>
-</div>
-
 <!-- FOOTER -->
 <footer>
   <p>© 2026 <span>JV Systems</span> · Juan Villanueva · Soluciones Digitales Inteligentes</p>
@@ -2196,7 +2030,6 @@
 <nav class="nav-bottom" aria-label="Navegación móvil">
   <div class="nav-bottom-inner">
     <a href="#sobre"    class="nav-bottom-item"><span class="nb-icon">👤</span>Sobre mí</a>
-    <a href="#sistemas" class="nav-bottom-item"><span class="nb-icon">💻</span>Sistemas</a>
     <a href="#bi"       class="nav-bottom-item"><span class="nb-icon">📊</span>Dashboards</a>
     <a href="#proceso"  class="nav-bottom-item"><span class="nb-icon">⚙️</span>Proceso</a>
   </div>
@@ -2354,141 +2187,6 @@
   document.addEventListener('click', e => {
     if (!burger.contains(e.target) && !mobileMenu.contains(e.target)) cerrarMenu();
   });
-
-  // ── CARRUSEL ──
-  let current = 0;
-  const total = 3;
-  const track = document.getElementById('carouselTrack');
-  const dots  = document.querySelectorAll('.carousel-dot');
-
-  function goToSlide(n) {
-    current = (n + total) % total;
-    track.style.transform = `translateX(-${current * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('active', i === current));
-  }
-  function moveCarousel(dir) { goToSlide(current + dir); }
-
-  // Auto-avance
-  setInterval(() => moveCarousel(1), 10000);
-
-  // ── LIGHTBOX ──
-  const galleries = {
-    branca: {
-      title: 'Ingeniería Branca SRL · Sistema de Órdenes de Servicio',
-      slides: [
-        { src: 'screenshots/branca_p1.png', caption: 'Formulario de cliente — empresa, contacto y datos del equipo' },
-        { src: 'screenshots/branca_p2.png', caption: 'Diagnóstico técnico — problema, causa raíz, repuestos y acción realizada' },
-        { src: 'screenshots/branca_p3.png', caption: 'Tiempos y firmas — visitas en planta, fecha de cierre y firma digital' },
-        { src: 'screenshots/branca_p4.png', caption: 'Comprobante en pantalla — vista previa del PDF antes de descargar' },
-        { src: 'screenshots/branca_p5.png', caption: 'Detalle del comprobante — diagnóstico, repuestos, visitas y firmas' },
-        { src: 'screenshots/branca_p6.png', caption: 'Historial de órdenes — listado de todos los trabajos por empresa' },
-      ]
-    },
-    sabores: {
-      title: 'Sabores de Misiones · Gestión de Producción y Ventas',
-      slides: [
-        { src: 'screenshots/sabores_p1.png', caption: 'Dashboard principal — saldos, KG vendidos, pendientes y ranking de moliendas' },
-        { src: 'screenshots/sabores_p2.png', caption: 'Detalle de pedido — cliente, productos, presupuesto y estado de pago' },
-        { src: 'screenshots/sabores_p3.png', caption: 'Perfil de cliente — historial completo, frecuencia y productos habituales' },
-        { src: 'screenshots/sabores_p4.png', caption: 'Cuenta corriente con Darío — todos los movimientos y saldo actual' },
-        { src: 'screenshots/sabores_p5.png', caption: 'Compras al secadero — kg totales, inversión y órdenes de compra' },
-        { src: 'screenshots/sabores_p6.png', caption: 'Despachos Lucía — kg despachados, saldo y detalle por envío' },
-        { src: 'screenshots/sabores_p7.png', caption: 'Generador de presupuestos — 4 listas de precios con todos los productos' },
-        { src: 'screenshots/sabores_p8.png', caption: 'Informes mensuales — ingresos, costos y ganancia neta estimada' },
-      ]
-    },
-    horas: {
-      title: 'Marcación Laboral · Control de Horas y Proyectos',
-      slides: [
-        { src: 'screenshots/horas_promo.png', caption: 'Mi Actividad Laboral — celular, tablet y notebook, sincronizado en tiempo real' },
-        { src: 'screenshots/horas_marketing.png', caption: 'Mi Actividad Laboral — app móvil y tablet, segura, confiable y fácil de usar' },
-        { src: 'screenshots/horas_p3.png', caption: 'Panel de control — jornada laboral con estado de cada empleado y horas extra' },
-        { src: 'screenshots/horas_p4.png', caption: 'Registro de marcaciones — historial completo con tipo, hora, fecha y ubicación GPS' },
-        { src: 'screenshots/horas_p5.png', caption: 'Horas en proyectos — gráficos por empleado, distribución por OT y horas por tarea' },
-        { src: 'screenshots/horas_p6.png', caption: 'Detalle de horas por OT — cada empleado, proyecto, ítem y cantidad de horas' },
-        { src: 'screenshots/horas_p7.png', caption: 'Carga manual de horas — formulario por empleado, fecha, OT y tarea' },
-      ]
-    }
-  };
-
-  let lbCurrent = 0;
-  let lbGallery = null;
-
-  function openGallery(key) {
-    lbGallery = galleries[key];
-    lbCurrent = 0;
-    document.getElementById('lbTitle').textContent = lbGallery.title;
-    buildThumbs();
-    lbShow(0);
-    document.getElementById('lbOverlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeGallery() {
-    document.getElementById('lbOverlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  function buildThumbs() {
-    const wrap = document.getElementById('lbThumbs');
-    wrap.innerHTML = '';
-    lbGallery.slides.forEach((s, i) => {
-      const d = document.createElement('div');
-      d.className = 'lb-thumb' + (i === 0 ? ' active' : '');
-      d.onclick = () => lbShow(i);
-      d.innerHTML = `<img src="${s.src}" alt="" />`;
-      wrap.appendChild(d);
-    });
-  }
-
-  function lbShow(idx) {
-    lbCurrent = (idx + lbGallery.slides.length) % lbGallery.slides.length;
-    const slide = lbGallery.slides[lbCurrent];
-    const img = document.getElementById('lbImg');
-    img.classList.add('lb-fade');
-    setTimeout(() => {
-      img.src = slide.src;
-      img.alt = slide.caption;
-      img.onload = () => img.classList.remove('lb-fade');
-      img.classList.remove('lb-fade');
-    }, 150);
-    document.getElementById('lbCaption').textContent = slide.caption;
-    document.getElementById('lbCounter').textContent = `${lbCurrent + 1} / ${lbGallery.slides.length}`;
-    document.querySelectorAll('.lb-thumb').forEach((t, i) => t.classList.toggle('active', i === lbCurrent));
-    // scroll thumb into view
-    const thumbs = document.querySelectorAll('.lb-thumb');
-    if (thumbs[lbCurrent]) thumbs[lbCurrent].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }
-
-  function lbMove(dir) { lbShow(lbCurrent + dir); }
-
-  // Teclado
-  document.addEventListener('keydown', e => {
-    if (!document.getElementById('lbOverlay').classList.contains('open')) return;
-    if (e.key === 'Escape') closeGallery();
-    if (e.key === 'ArrowRight') lbMove(1);
-    if (e.key === 'ArrowLeft') lbMove(-1);
-  });
-  // Click fuera cierra
-  document.getElementById('lbOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('lbOverlay')) closeGallery();
-  });
-
-  // ── ROTACIÓN DE SCREENSHOTS EN MOCKUPS ──
-  function initShotRotation(containerId) {
-    const wrap = document.getElementById(containerId);
-    if (!wrap) return;
-    const imgs = wrap.querySelectorAll('img');
-    let idx = 0;
-    setInterval(() => {
-      imgs[idx].classList.replace('visible','hidden');
-      idx = (idx + 1) % imgs.length;
-      imgs[idx].classList.replace('hidden','visible');
-    }, 5000);
-  }
-  initShotRotation('shots-branca');
-  initShotRotation('shots-sabores');
-  initShotRotation('shots-horas');
 
   // ── SCROLL REVEAL ──
   const observer = new IntersectionObserver((entries) => {
