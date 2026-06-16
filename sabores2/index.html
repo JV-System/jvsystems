@@ -4635,6 +4635,19 @@ function calcGananciaPedido(p){
   return {ingreso,costoDario,costoDesp,ganancia,totalKg,ppk:ingreso?Math.round(ingreso/totalKg):0};
 }
 
+function cargarIngresoPedido(pid){
+  const p=db.pedidos.find(x=>x.id===pid); if(!p) return;
+  const actual = p.ingreso||'';
+  const val = prompt(`Ingreso cobrado — Pedido #${p.numero}\nTotal estimado: ${fmt((p.productos||[]).reduce((s,r)=>s+(getPrice(r.tipo,p.lista||1)*(Number(r.kg)||0)),0))}`, actual);
+  if(val===null) return;
+  const monto = parseFloat(val.replace(/\./g,'').replace(',','.'));
+  if(isNaN(monto)||monto<0){ toast('Monto inválido','error'); return; }
+  p.ingreso = monto;
+  saveDB();
+  renderGananciaPedido(pid);
+  toast('Ingreso cargado: '+fmt(monto),'success');
+}
+
 function renderGananciaPedido(pid){
   const p=db.pedidos.find(x=>x.id===pid); if(!p) return;
   const g=calcGananciaPedido(p);
@@ -4643,7 +4656,13 @@ function renderGananciaPedido(pid){
     <div class="card">
       <div class="card-title">💰 Análisis financiero — Pedido #${p.numero}</div>
       ${p.cuentaCobro?`<div style="margin-bottom:12px"><span class="item-badge badge-open">🏦 Cobrado en: ${p.cuentaCobro}</span></div>`:''}
-      <div class="fin-row"><span class="fin-lbl">Ingreso cobrado</span><span class="fin-val" style="color:var(--teal)">${p.ingreso?fmt(p.ingreso):'Pendiente'}</span></div>
+      <div class="fin-row" style="align-items:center">
+        <span class="fin-lbl">Ingreso cobrado</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${p.ingreso?`<span class="fin-val" style="color:var(--teal)">${fmt(p.ingreso)}</span>`:'<span class="fin-val" style="color:#E8770A">Pendiente</span>'}
+          <button onclick="cargarIngresoPedido(${pid})" style="background:var(--teal);color:#fff;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">${p.ingreso?'Editar':'+ Cargar'}</button>
+        </div>
+      </div>
       <div class="fin-row"><span class="fin-lbl">− Costo Proceso (Darío)</span><span class="fin-val" style="color:${g.costoDario?'var(--red)':'var(--text-muted)'}">${g.costoDario?'−'+fmt(g.costoDario):'No registrado'}</span></div>
       <div class="fin-row"><span class="fin-lbl">− Costo Despacho (Lucía)</span><span class="fin-val" style="color:${g.costoDesp?'var(--red)':'var(--text-muted)'}">${g.costoDesp?'−'+fmt(g.costoDesp):'No registrado'}</span></div>
       <div class="fin-total"><span>Ganancia estimada</span><span class="${g.ganancia>=0?'ganancia-pos':'ganancia-neg'}">${g.ingreso?((g.ganancia>=0?'+':'')+fmt(g.ganancia)):'—'}</span></div>
