@@ -235,6 +235,16 @@
   .cal-plan-more { font-size:11px; font-weight:700; color:var(--jv-blue); cursor:pointer; padding:2px 4px; }
   .cal-plan-more:hover { text-decoration:underline; }
   .cal-cell-semana { min-height:160px; }
+  .plan-kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
+  .plan-kpi-card { background:white; border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; justify-content:space-between; min-height:74px; }
+  .plan-kpi-label { font-size:13px; color:var(--text-muted); font-weight:600; margin-bottom:4px; white-space:nowrap; }
+  .plan-kpi-value { font-size:26px; font-weight:800; }
+  @media (max-width: 600px) {
+    .plan-kpi-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+    .plan-kpi-card { padding:12px; min-height:64px; }
+    .plan-kpi-label { font-size:12px; }
+    .plan-kpi-value { font-size:22px; }
+  }
 
   /* CONTENT AREA */
   /* CONTENT AREA - defined in MAIN LAYOUT above */
@@ -3032,22 +3042,22 @@ function renderPlanificacion() {
         <button class="btn btn-primary" onclick="abrirModalPlanificada()" style="background:#7c3aed;">+ Nueva planificación</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;">
-        <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">📋 Planificaciones</div>
-          <div style="font-size:26px;font-weight:800;color:var(--navy);">${kpiTotal}</div>
+      <div class="plan-kpi-grid">
+        <div class="plan-kpi-card">
+          <div class="plan-kpi-label">📋 Planificaciones</div>
+          <div class="plan-kpi-value" style="color:var(--navy);">${kpiTotal}</div>
         </div>
-        <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">🕐 Pendientes</div>
-          <div style="font-size:26px;font-weight:800;color:#92400e;">${kpiPendientes}</div>
+        <div class="plan-kpi-card">
+          <div class="plan-kpi-label">🕐 Pendientes</div>
+          <div class="plan-kpi-value" style="color:#92400e;">${kpiPendientes}</div>
         </div>
-        <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">🔄 En proceso</div>
-          <div style="font-size:26px;font-weight:800;color:#1e40af;">${kpiEnProceso}</div>
+        <div class="plan-kpi-card">
+          <div class="plan-kpi-label">🔄 En proceso</div>
+          <div class="plan-kpi-value" style="color:#1e40af;">${kpiEnProceso}</div>
         </div>
-        <div style="background:white;border:1px solid var(--border);border-radius:12px;padding:16px;">
-          <div style="font-size:13px;color:var(--text-muted);font-weight:600;margin-bottom:4px;">✅ Finalizadas</div>
-          <div style="font-size:26px;font-weight:800;color:#065f46;">${kpiFinalizadas}</div>
+        <div class="plan-kpi-card">
+          <div class="plan-kpi-label">✅ Finalizadas</div>
+          <div class="plan-kpi-value" style="color:#065f46;">${kpiFinalizadas}</div>
         </div>
       </div>
 
@@ -3057,7 +3067,7 @@ function renderPlanificacion() {
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;">
           ${cargaList.map(function(t) {
             const pct = Math.round((t.count / maxCarga) * 100);
-            const nivel = pct >= 75 ? { label:'Alta carga', color:'#ef4444' } : pct >= 40 ? { label:'Media carga', color:'#f59e0b' } : { label:'Baja carga', color:'#10b981' };
+            const nivel = t.count >= 6 ? { label:'Alta carga', color:'#ef4444' } : t.count >= 3 ? { label:'Media carga', color:'#f59e0b' } : { label:'Baja carga', color:'#10b981' };
             return `<div>
               <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;">${esc(t.nombre)} <span style="color:var(--text-muted);font-weight:600;">· ${t.count}</span></div>
               <div style="background:#eee;border-radius:6px;height:6px;overflow:hidden;">
