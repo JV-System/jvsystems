@@ -2162,7 +2162,8 @@ const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
 let _syncTimer = null;
 let _calYear  = null;
 let _calMonth = null;
-const _deletedIds = new Set(); // IDs eliminados que no deben restaurarse desde Firebase
+// IDs eliminados persistidos en localStorage para sobrevivir recargas
+const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]'));
 
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
@@ -2676,6 +2677,7 @@ async function eliminarOrden(id) {
   const confirmar = await showConfirm('Eliminar orden', '¿Querés eliminar esta orden? No se puede deshacer.');
   if (!confirmar) return;
   _deletedIds.add(String(id));
+  localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
   ordenes = ordenes.filter(o => String(o.id) !== String(id));
   if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
