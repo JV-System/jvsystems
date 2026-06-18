@@ -5911,7 +5911,7 @@ function openNumModal() {
   document.getElementById('numModal').classList.remove('hidden');
 }
 function closeNumModal() { document.getElementById('numModal').classList.add('hidden'); }
-function confirmarNumero() {
+async function confirmarNumero() {
   const pass = document.getElementById('adminPass').value;
   if (pass !== getAdminPass()) {
     document.getElementById('numError').classList.remove('hidden');
@@ -5919,11 +5919,24 @@ function confirmarNumero() {
   }
   const newNum = document.getElementById('newNumInput').value.trim();
   if (!newNum) return;
+  const oldNum = ordenActual.numero;
   ordenActual.numero = newNum;
   saveData();
   closeNumModal();
   renderTab();
   renderOrderList();
+  // Actualizar Firebase: borrar clave vieja y escribir con la nueva
+  try {
+    const ordenesObj = {};
+    ordenes.forEach(function(o) {
+      const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
+      ordenesObj[key] = o;
+    });
+    await _fbPut('/db/ordenes', ordenesObj);
+    showToast('✅ Número actualizado a ' + newNum);
+  } catch(e) {
+    showToast('⚠ Guardado local. Sin conexión para sincronizar.');
+  }
 }
 
 // ── Custom toast — reemplaza el alert() nativo del browser ──
