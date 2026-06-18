@@ -2410,7 +2410,10 @@ async function loadFromCloud() {
       }
 
       // ÓRDENES — Firebase manda la lista definitiva; si no tiene nada = vacío
-      const remotas = Array.isArray(remoteDb.ordenes) ? remoteDb.ordenes : [];
+      const _ord = remoteDb.ordenes;
+      const remotas = Array.isArray(_ord) ? _ord
+        : (_ord && typeof _ord === 'object') ? Object.values(_ord).filter(Boolean)
+        : [];
       if (remotas.length > 0) {
         // Conservar borradores locales que no llegaron a Firebase
         const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
