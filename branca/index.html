@@ -2062,7 +2062,10 @@
   <div class="modal" style="max-width:380px;">
     <h3 id="askPassTitle" style="margin-bottom:8px;">🔒 Contraseña requerida</h3>
     <p id="askPassMsg" style="font-size:13px;color:var(--text-muted);margin-bottom:14px;"></p>
-    <input type="password" id="askPassInput" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+    <div style="position:relative;">
+      <input type="password" id="askPassInput" style="width:100%;padding:9px 40px 9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;box-sizing:border-box;">
+      <button type="button" onclick="var i=document.getElementById('askPassInput');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1;">👁</button>
+    </div>
     <div class="alert alert-error hidden" id="askPassError" style="margin-top:10px;">✕ Contraseña incorrecta.</div>
     <div class="modal-actions" style="margin-top:16px;">
       <button class="btn" onclick="_closeAskPass(false)">Cancelar</button>
