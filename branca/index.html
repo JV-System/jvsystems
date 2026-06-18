@@ -5445,13 +5445,15 @@ function renderUsuariosList() {
 }
 
 async function desbloquearDatosCliente() {
+  const cu = getCurrentUser();
   const users = getUsers();
-  const admin = users.find(u => u.role === 'admin');
-  if (!admin) { window._clienteDesbloqueado = true; renderForm(); return; }
-  const ok = await askPassword('🔒 Editar datos del cliente', 'Ingresá la contraseña de administrador para continuar.', admin.password);
+  const userFresco = cu ? users.find(u => u.id === cu.id) : null;
+  const target = userFresco || users.find(u => u.role === 'admin');
+  if (!target) { window._clienteDesbloqueado = true; renderFormContent(); return; }
+  const ok = await askPassword('🔒 Editar datos del cliente', 'Ingresá tu contraseña para continuar.', target.password);
   if (!ok) return;
   window._clienteDesbloqueado = true;
-  renderForm();
+  renderFormContent();
 }
 
 function adminVerPass(userId, nombreUsuario) {
