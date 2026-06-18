@@ -6655,14 +6655,6 @@ function renderHistorialCambios() {
 // Interceptar saveData para registrar cambios automáticos en campos clave
 const _origSaveData = typeof saveData === 'function' ? saveData : null;
 
-// Registrar cuando se cambia estado desde botones
-document.addEventListener('click', function(e) {
-  const btn = e.target.closest('button');
-  if (!btn || !ordenActual) return;
-  const txt = btn.textContent.trim();
-  if (txt.includes('Pendiente')) registrarCambio('Orden marcada como pendiente.');
-  if (txt.includes('Reabrir')) registrarCambio('Orden reabierta.');
-});
 
 // ══════════════════════════════════════════════
 // PANEL HISTORIAL — botón en la toolbar de acciones
