@@ -5901,14 +5901,7 @@ document.addEventListener('change', function(e) {
 function continuarBorrador() {
   const draft = ordenes.find(function(o) { return o.draft === true; });
   if (!draft) return;
-  ordenActual = draft;
-  switchView('form');
-  renderForm();
-  if (isMob()) {
-    const s = document.getElementById('sidebar');
-    if (s) s.classList.remove('mob-open');
-    mobActivate('');
-  }
+  seleccionarOrden(draft.id);
 }
 
 // Al iniciar: solo actualizar la lista (el borrador aparece arriba como card)
