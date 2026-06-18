@@ -2383,11 +2383,8 @@ function mergeById(local, cloud) {
   cloud.forEach(function(item) {
     var idx = result.findIndex(function(l){ return String(l.id) === String(item.id); });
     if (idx >= 0) {
-      // Gana la versión con updatedAt más reciente; si no hay timestamp gana local
-      var localTs  = result[idx].updatedAt || 0;
-      var cloudTs  = item.updatedAt || 0;
-      if (cloudTs > localTs) result[idx] = item;
-      // si local es igual o más nuevo, no tocar
+      // La nube siempre gana, excepto si el local es un draft no sincronizado
+      if (!result[idx].draft) result[idx] = item;
     } else {
       result.push(item); // orden nueva que viene de otro dispositivo
     }
