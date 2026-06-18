@@ -6558,25 +6558,22 @@ function enviarWSPconPDF() {
 
   var _share = function(blob) {
     var file = new File([blob], nombre, { type: 'application/pdf' });
-    var waUrl = 'https://wa.me/54' + tel + '?text=' + encodeURIComponent(msg);
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    var telLimpio = tel.startsWith('54') ? tel : '54' + tel;
+    var waUrl = 'https://wa.me/' + telLimpio + '?text=' + encodeURIComponent(msg);
+    var esMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    var _fallback = function() {
+      // Descargar PDF y abrir WhatsApp Web directo al número
+      var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href=url; a.download=nombre; a.click(); URL.revokeObjectURL(url);
+      setTimeout(function() { window.open(waUrl, '_blank'); }, 300);
+      document.getElementById('wa-modal')?.remove();
+      showToast('📄 PDF descargado — adjuntalo en la conversación que se abrió.');
+    };
+    if (esMobile && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file], title: 'Comprobante ' + (o.numero||''), text: msg })
         .then(function() { document.getElementById('wa-modal')?.remove(); showToast('✅ Compartido por WhatsApp.'); })
-        .catch(function(e) {
-          if (e.name !== 'AbortError') {
-            // Share falló: descargar PDF y abrir WA con texto
-            var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href=url; a.download=nombre; a.click(); URL.revokeObjectURL(url);
-            window.open(waUrl, '_blank');
-            document.getElementById('wa-modal')?.remove();
-            showToast('📄 PDF descargado — adjuntalo en WhatsApp.');
-          }
-        });
+        .catch(function(e) { if (e.name !== 'AbortError') _fallback(); });
     } else {
-      // Fallback desktop: descargar PDF + abrir WhatsApp Web con texto
-      var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href=url; a.download=nombre; a.click(); URL.revokeObjectURL(url);
-      window.open(waUrl, '_blank');
-      document.getElementById('wa-modal')?.remove();
-      showToast('📄 PDF descargado — adjuntalo en WhatsApp.');
+      _fallback();
     }
   };
 
