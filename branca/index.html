@@ -2705,7 +2705,8 @@ function renderOrderList() {
   // Mostrar todas las órdenes: drafts sin empresa van al bloque borrador arriba,
   // drafts CON empresa aparecen en la lista normal
   let visible = ordenes.filter(function(o) {
-    if (o.draft && !o.empresa && !o.marca) return false; // borrador vacío → ya se muestra arriba
+    // Ocultar solo el borrador activo del usuario actual (se muestra en el bloque amarillo arriba)
+    if (o.draft && !o.empresa && !o.marca && (!o.creadorId || !cu || o.creadorId === cu.id)) return false;
     return true;
   });
   // Técnico: ve sus propias órdenes + las planificadas asignadas a él
