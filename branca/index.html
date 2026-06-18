@@ -5905,6 +5905,11 @@ function continuarBorrador() {
   ordenActual = draft;
   switchView('form');
   renderForm();
+  if (isMob()) {
+    const s = document.getElementById('sidebar');
+    if (s) s.classList.remove('mob-open');
+    mobActivate('');
+  }
 }
 
 // Al iniciar: solo actualizar la lista (el borrador aparece arriba como card)
