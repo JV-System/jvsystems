@@ -2446,21 +2446,18 @@ async function loadFromCloud() {
         : []).filter(function(x){ return x && x.id; });
       // Limpiar nulls del array local también
       ordenes = ordenes.filter(function(o){ return o && o.id; });
+      // La nube es la fuente de verdad — lo que no está en Firebase no existe
+      const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
       if (remotas.length > 0) {
-        // Conservar borradores locales que no llegaron a Firebase
-        const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
-        ordenes = mergeById(ordenes, remotas);
-        ordenes = ordenes.filter(function(o) {
-          if (o.draft) return true;
-          if (!o.empresa && !o.marca) return false;
-          return true;
-        });
+        // Usar exactamente lo que está en Firebase, más los borradores locales pendientes
+        ordenes = remotas.filter(function(o) { return o && o.id; });
+        // Agregar borradores locales que aún no se subieron
         draftsLocales.forEach(function(d) {
           if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
         });
       } else {
-        // Firebase tiene la lista vacía → este dispositivo también queda vacío
-        ordenes = [];
+        // Firebase vacío → solo conservar borradores locales
+        ordenes = draftsLocales;
       }
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 
