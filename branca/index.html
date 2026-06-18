@@ -2457,16 +2457,16 @@ async function loadFromCloud() {
       // Limpiar nulls del array local también
       ordenes = ordenes.filter(function(o){ return o && o.id; });
       // La nube es la fuente de verdad — lo que no está en Firebase no existe
-      const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
+      var tieneDatos = function(o) { return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado); };
+      const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
       if (remotas.length > 0) {
-        // Usar exactamente lo que está en Firebase, más los borradores locales pendientes
-        ordenes = remotas.filter(function(o) { return o && o.id; });
-        // Agregar borradores locales que aún no se subieron
+        // Usar lo que está en Firebase, descartando borradores vacíos
+        ordenes = remotas.filter(function(o) { return o && o.id && (!o.draft || tieneDatos(o)); });
+        // Agregar borradores locales con datos que aún no se subieron
         draftsLocales.forEach(function(d) {
-          if (!ordenes.find(function(o) { return o.id === d.id; })) ordenes.unshift(d);
+          if (!ordenes.find(function(o) { return String(o.id) === String(d.id); })) ordenes.unshift(d);
         });
       } else {
-        // Firebase vacío → solo conservar borradores locales
         ordenes = draftsLocales;
       }
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
@@ -2647,8 +2647,8 @@ function crearNuevaOrden() {
 async function eliminarOrden(id) {
   const confirmar = await showConfirm('Eliminar orden', '¿Querés eliminar esta orden? No se puede deshacer.');
   if (!confirmar) return;
-  ordenes = ordenes.filter(o => o.id !== id);
-  if (ordenActual && ordenActual.id === id) ordenActual = null;
+  ordenes = ordenes.filter(o => String(o.id) !== String(id));
+  if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   renderOrderList();
   showToast('🗑 Orden eliminada.');
@@ -2697,8 +2697,12 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Borrador al tope del sidebar — solo visible para quien lo creó
-  const draft = ordenes.find(function(o) { return o.draft === true && (!o.creadorId || !cu || o.creadorId === cu.id); });
+  // Borrador al tope del sidebar — solo si tiene algún dato cargado
+  const draft = ordenes.find(function(o) {
+    if (!o.draft) return false;
+    if (o.creadorId && cu && o.creadorId !== cu.id) return false;
+    return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
+  });
   const draftHtml = draft ? `
     <div class="order-item" onclick="continuarBorrador()"
          style="border-left:3px solid #f59e0b;background:#fffbeb;">
