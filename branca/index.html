@@ -2476,6 +2476,7 @@ async function loadFromCloud() {
     }
 
     setSyncStatus('ok');
+    showToast('☁ Firebase: ' + ordenes.length + ' órdenes cargadas');
     renderOrderList();
     // Reescribir en Firebase con el nuevo formato (objeto keyed por número)
     _syncPush();
