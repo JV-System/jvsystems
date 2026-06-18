@@ -2648,8 +2648,8 @@ function renderOrderList() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   const cu = getCurrentUser();
 
-  // Borrador al tope del sidebar
-  const draft = ordenes.find(function(o) { return o.draft === true; });
+  // Borrador al tope del sidebar — solo visible para quien lo creó
+  const draft = ordenes.find(function(o) { return o.draft === true && (!o.creadorId || !cu || o.creadorId === cu.id); });
   const draftHtml = draft ? `
     <div class="order-item" onclick="continuarBorrador()"
          style="border-left:3px solid #f59e0b;background:#fffbeb;">
