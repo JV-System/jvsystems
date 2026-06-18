@@ -453,6 +453,23 @@
   .ml-auto { margin-left: auto; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* COMPROBANTE — modo compacto para PDF de 1 hoja */
+  .pdf-compact .comp-header { padding: 10px 14px !important; }
+  .pdf-compact .comp-body   { padding: 10px 14px !important; }
+  .pdf-compact .comp-section { margin-bottom: 10px !important; }
+  .pdf-compact .comp-section-title { font-size: 9px !important; margin-bottom: 5px !important; padding-bottom: 3px !important; }
+  .pdf-compact { font-size: 11px !important; }
+  .pdf-compact .comp-text-area { font-size: 11px !important; padding: 4px 7px !important; }
+  .pdf-compact table { font-size: 11px !important; }
+  .pdf-compact td { padding: 2px 0 !important; }
+  .pdf-compact .comp-num .num { font-size: 18px !important; }
+  .pdf-compact .comp-branca-logo { max-height: 42px !important; max-width: 130px !important; }
+  .pdf-compact .comp-addr { font-size: 10px !important; }
+  .pdf-compact img[src*="firma"] { max-height: 50px !important; }
+  .pdf-compact .badge { font-size: 10px !important; padding: 2px 6px !important; }
+  .pdf-compact .comp-repuestos-table td,
+  .pdf-compact .comp-visits-table td { font-size: 11px !important; padding: 3px 6px !important; }
+
   /* COMPROBANTE VIEW */
   .comprobante-wrap { padding: 24px; }
   .comprobante {
@@ -4460,8 +4477,9 @@ function exportarPDF() {
   });
 
   var generarPDF = function() {
+    el.classList.add('pdf-compact');
     html2pdf().set({
-      margin:      [8, 8, 8, 8],
+      margin:      [6, 6, 6, 6],
       filename:    'Comprobante-' + (o.numero || 'ORDEN') + '.pdf',
       image:       { type: 'jpeg', quality: 0.97 },
       html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
@@ -4470,11 +4488,13 @@ function exportarPDF() {
     .from(el)
     .save()
     .then(function() {
+      el.classList.remove('pdf-compact');
       restaurar();
       resetBtn();
       showToast('✅ PDF descargado.');
     })
     .catch(function(err) {
+      el.classList.remove('pdf-compact');
       console.warn('html2pdf error:', err);
       restaurar();
       resetBtn();
@@ -4501,8 +4521,9 @@ function compartirPDFWhatsApp(callback) {
   const nombre = 'Comprobante-' + (o.numero || 'ORDEN') + '.pdf';
 
   var _gen = function() {
+    el.classList.add('pdf-compact');
     html2pdf().set({
-      margin: [8, 8, 8, 8],
+      margin: [6, 6, 6, 6],
       filename: nombre,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
@@ -4511,6 +4532,7 @@ function compartirPDFWhatsApp(callback) {
     .from(el)
     .outputPdf('blob')
     .then(function(blob) {
+      el.classList.remove('pdf-compact');
       var file = new File([blob], nombre, { type: 'application/pdf' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({
@@ -4536,6 +4558,7 @@ function compartirPDFWhatsApp(callback) {
         if (callback) callback();
       }
     }).catch(function(err) {
+      el.classList.remove('pdf-compact');
       console.warn('Error generando PDF:', err);
       showToast('⚠ No se pudo generar el PDF.');
     });
@@ -6572,12 +6595,17 @@ function enviarWSPconPDF() {
   };
 
   var _gen = function() {
+    el.classList.add('pdf-compact');
     html2pdf().set({
-      margin: [8,8,8,8], filename: nombre,
+      margin: [6,6,6,6], filename: nombre,
       image: { type:'jpeg', quality:0.95 },
       html2canvas: { scale:2, logging:false, useCORS:false, allowTaint:false },
       jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-    }).from(el).outputPdf('blob').then(_share).catch(function(err) {
+    }).from(el).outputPdf('blob').then(function(blob) {
+      el.classList.remove('pdf-compact');
+      _share(blob);
+    }).catch(function(err) {
+      el.classList.remove('pdf-compact');
       console.warn(err);
       if (btn) { btn.disabled=false; btn.textContent='Enviar con PDF'; }
       showToast('⚠ Error generando PDF.');
