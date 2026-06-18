@@ -2653,9 +2653,21 @@ async function eliminarOrden(id) {
   ordenes = ordenes.filter(o => o.id !== id);
   if (ordenActual && ordenActual.id === id) ordenActual = null;
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  _syncPush();
   renderOrderList();
   showToast('🗑 Orden eliminada.');
+  // Push inmediato sin debounce para que Firebase se actualice antes de que loadFromCloud restaure la orden
+  clearTimeout(_syncTimer);
+  const ordenesObj = {};
+  ordenes.forEach(function(o) {
+    const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
+    ordenesObj[key] = o;
+  });
+  try {
+    await _fbPut('/db/ordenes', ordenesObj);
+    setSyncStatus('ok');
+  } catch(e) {
+    setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
+  }
 }
 
 async function cancelarOrden() {
