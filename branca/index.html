@@ -2591,9 +2591,11 @@ async function limpiarEsteDispositivo() {
   if (!passOk) return;
   ['branca_ordenes','branca_clientes','branca_tecnicos','branca_ignore_ids','branca_reset_at'].forEach(function(k){ localStorage.removeItem(k); });
   ordenes = []; clientesDB = []; tecnicosDB = []; ordenActual = null;
+  _deletedIds.clear();
   renderOrderList();
   showToast('⏳ Limpiando... descargando datos');
   await loadFromCloud();
+  renderOrderList();
   showToast('✅ Dispositivo sincronizado.');
 }
 
