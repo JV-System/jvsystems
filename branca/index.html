@@ -3710,11 +3710,11 @@ function renderTabCliente() {
         <div class="form-row cols-2" style="margin-top:6px;">
           <div class="form-group">
             <label>Contacto</label>
-            <input type="text" id="f-contacto" value="${esc(o.contacto)}" placeholder="Nombre del contacto" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
+            <input type="text" id="f-contacto" value="${esc(o.contacto)}" placeholder="Nombre del contacto" ${(locked || (clienteEnDB && !window._clienteDesbloqueado && o.contacto)) ? 'readonly' : ''}>
           </div>
           <div class="form-group">
             <label>CUIT</label>
-            <input type="text" id="f-cuit" value="${esc(o.cuit)}" placeholder="XX-XXXXXXXX-X" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
+            <input type="text" id="f-cuit" value="${esc(o.cuit)}" placeholder="XX-XXXXXXXX-X" ${(locked || (clienteEnDB && !window._clienteDesbloqueado && o.cuit)) ? 'readonly' : ''}>
           </div>
         </div>
         <div class="form-row cols-2">
@@ -3722,18 +3722,18 @@ function renderTabCliente() {
             <label>Teléfono</label>
             <div class="input-prefix">
               <span class="prefix">+54</span>
-              <input type="text" id="f-tel" value="${esc(o.tel)}" placeholder="341 XXXXXXX" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
+              <input type="text" id="f-tel" value="${esc(o.tel)}" placeholder="341 XXXXXXX" ${(locked || (clienteEnDB && !window._clienteDesbloqueado && o.tel)) ? 'readonly' : ''}>
             </div>
           </div>
           <div class="form-group">
             <label>Ubicación</label>
-            <input type="text" id="f-ubicacion" value="${esc(o.ubicacion)}" placeholder="Rosario, Santa Fe" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
+            <input type="text" id="f-ubicacion" value="${esc(o.ubicacion)}" placeholder="Rosario, Santa Fe" ${(locked || (clienteEnDB && !window._clienteDesbloqueado && o.ubicacion)) ? 'readonly' : ''}>
           </div>
         </div>
         <div class="form-row cols-2">
           <div class="form-group">
             <label>Email</label>
-            <input type="text" id="f-email" value="${esc(o.email)}" placeholder="cliente@empresa.com" ${(locked || (clienteEnDB && !window._clienteDesbloqueado)) ? 'readonly' : ''}>
+            <input type="text" id="f-email" value="${esc(o.email)}" placeholder="cliente@empresa.com" ${(locked || (clienteEnDB && !window._clienteDesbloqueado && o.email)) ? 'readonly' : ''}>
           </div>
         </div>
       ` : ''}
