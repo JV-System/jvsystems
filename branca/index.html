@@ -5110,10 +5110,22 @@ function setEstado(estado) {
 
 function guardarOrden() {
   if (!ordenActual) return;
+  // Snapshot del estado anterior (antes de guardar tabs)
+  var _snapshot = JSON.parse(JSON.stringify(ordenActual));
   saveTabCliente();
   saveTabDiagnostico();
   delete ordenActual.draft;
-  // Copiar referencia antes de limpiar
+  // Detectar cambios respecto al snapshot
+  var cambios = _detectarCambios(_snapshot, ordenActual);
+  if (!ordenActual.historialCambios) ordenActual.historialCambios = [];
+  const cu = getCurrentUser();
+  ordenActual.historialCambios.push({
+    fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
+    usuario: cu ? cu.nombre : 'Sistema',
+    rol: cu ? cu.role : '',
+    descripcion: cambios.length ? 'Orden guardada.' : 'Guardada sin cambios.',
+    detalles: cambios
+  });
   const ordenGuardada = ordenActual;
   const idx = ordenes.findIndex(o => o.id === ordenGuardada.id);
   if (idx >= 0) { ordenes[idx] = ordenGuardada; }
@@ -6559,7 +6571,7 @@ function initRoleUI() {
 // HISTORIAL DE CAMBIOS
 // ══════════════════════════════════════════════
 
-function registrarCambio(descripcion) {
+function registrarCambio(descripcion, detalles) {
   if (!ordenActual) return;
   if (!ordenActual.historialCambios) ordenActual.historialCambios = [];
   const cu = getCurrentUser();
@@ -6567,9 +6579,48 @@ function registrarCambio(descripcion) {
     fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
     usuario: cu ? cu.nombre : 'Sistema',
     rol: cu ? cu.role : '',
-    descripcion: descripcion
+    descripcion: descripcion,
+    detalles: detalles || []
   });
   saveData();
+}
+
+var _CAMPOS_SEGUIDOS = [
+  { key: 'empresa',       label: 'Empresa' },
+  { key: 'contacto',      label: 'Contacto' },
+  { key: 'telefono',      label: 'Teléfono' },
+  { key: 'email',         label: 'Email' },
+  { key: 'cuit',          label: 'CUIT' },
+  { key: 'ubicacion',     label: 'Ubicación' },
+  { key: 'marca',         label: 'Marca' },
+  { key: 'modelo',        label: 'Modelo' },
+  { key: 'nroSerie',      label: 'N° de serie' },
+  { key: 'tecnico',       label: 'Técnico' },
+  { key: 'probDetectado', label: 'Problema detectado' },
+  { key: 'diagnostico',   label: 'Diagnóstico' },
+  { key: 'trabajoRealizado', label: 'Trabajo realizado' },
+  { key: 'observaciones', label: 'Observaciones' },
+  { key: 'estado',        label: 'Estado' },
+  { key: 'numero',        label: 'N° de orden' },
+  { key: 'presupuesto',   label: 'Presupuesto' },
+];
+
+function _detectarCambios(anterior, actual) {
+  var cambios = [];
+  _CAMPOS_SEGUIDOS.forEach(function(f) {
+    var vAntes = (anterior[f.key] || '').toString().trim();
+    var vDespues = (actual[f.key] || '').toString().trim();
+    if (vAntes !== vDespues) {
+      if (!vAntes) {
+        cambios.push(f.label + ': → ' + vDespues);
+      } else if (!vDespues) {
+        cambios.push(f.label + ': eliminado');
+      } else {
+        cambios.push(f.label + ': ' + vAntes + ' → ' + vDespues);
+      }
+    }
+  });
+  return cambios;
 }
 
 function renderHistorialCambios() {
@@ -6579,13 +6630,23 @@ function renderHistorialCambios() {
   return '<div style="display:flex;flex-direction:column;gap:6px;">'
     + h.slice().reverse().map(function(c) {
       const roleColor = {admin:'#1565D8', tecnico:'#1D9E75', facturacion:'#BA7517'}[c.rol] || '#888';
-      return '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;background:#f8f9fb;border-radius:8px;border-left:3px solid '+roleColor+';">'
-        + '<div style="flex:1;">'
+      var detallesHtml = '';
+      if (c.detalles && c.detalles.length) {
+        detallesHtml = '<ul style="margin:4px 0 0 0;padding-left:14px;list-style:disc;">'
+          + c.detalles.map(function(d) {
+              return '<li style="font-size:11px;color:#555;margin:1px 0;">' + esc(d) + '</li>';
+            }).join('')
+          + '</ul>';
+      }
+      return '<div style="padding:8px 10px;background:#f8f9fb;border-radius:8px;border-left:3px solid '+roleColor+';">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
         + '<div style="font-size:12px;font-weight:700;color:#333;">' + esc(c.descripcion) + '</div>'
+        + '<div style="font-size:11px;color:#bbb;white-space:nowrap;flex-shrink:0;">' + esc(c.fecha) + '</div>'
+        + '</div>'
         + '<div style="font-size:11px;color:#aaa;margin-top:2px;">'
         + esc(c.usuario) + ' · <span style="color:'+roleColor+';font-weight:600;">'+esc(c.rol)+'</span>'
-        + '</div></div>'
-        + '<div style="font-size:11px;color:#bbb;white-space:nowrap;flex-shrink:0;">' + esc(c.fecha) + '</div>'
+        + '</div>'
+        + detallesHtml
         + '</div>';
     }).join('')
     + '</div>';
@@ -6594,12 +6655,11 @@ function renderHistorialCambios() {
 // Interceptar saveData para registrar cambios automáticos en campos clave
 const _origSaveData = typeof saveData === 'function' ? saveData : null;
 
-// Registrar cuando se guarda la orden (desde el botón Guardar)
+// Registrar cuando se cambia estado desde botones
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('button');
   if (!btn || !ordenActual) return;
   const txt = btn.textContent.trim();
-  if (txt.includes('Guardar')) registrarCambio('Orden guardada.');
   if (txt.includes('Pendiente')) registrarCambio('Orden marcada como pendiente.');
   if (txt.includes('Reabrir')) registrarCambio('Orden reabierta.');
 });
