@@ -2678,6 +2678,7 @@ function crearNuevaOrden() {
   };
   ordenes.unshift(nueva);
   ordenActual = nueva;
+  window._snapshotOrden = {};
   // Guardar inmediatamente para que aparezca en todos los dispositivos
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   _syncPush();
@@ -2729,6 +2730,7 @@ async function cancelarOrden() {
 function seleccionarOrden(id) {
   const idx = ordenes.findIndex(o => o.id == id);
   ordenActual = idx >= 0 ? ordenes[idx] : null;
+  window._snapshotOrden = ordenActual ? JSON.parse(JSON.stringify(ordenActual)) : null;
   currentTab = 0;
   window._clienteDesbloqueado = false; // resetear bloqueo al cambiar orden
   renderFormContent();
@@ -5110,12 +5112,10 @@ function setEstado(estado) {
 
 function guardarOrden() {
   if (!ordenActual) return;
-  // Snapshot del estado anterior (antes de guardar tabs)
-  var _snapshot = JSON.parse(JSON.stringify(ordenActual));
+  var _snapshot = window._snapshotOrden || {};
   saveTabCliente();
   saveTabDiagnostico();
   delete ordenActual.draft;
-  // Detectar cambios respecto al snapshot
   var cambios = _detectarCambios(_snapshot, ordenActual);
   if (!ordenActual.historialCambios) ordenActual.historialCambios = [];
   const cu = getCurrentUser();
