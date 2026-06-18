@@ -2693,7 +2693,10 @@ function renderOrderList() {
   const draftHtml = draft ? `
     <div class="order-item" onclick="continuarBorrador()"
          style="border-left:3px solid #f59e0b;background:#fffbeb;">
-      <div class="order-num" style="color:#b45309;">✏ Borrador</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="order-num" style="color:#b45309;">✏ Borrador</div>
+        <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${draft.id})" style="font-size:11px;padding:2px 8px;">🗑</button>
+      </div>
       <div class="order-empresa">${draft.empresa || '(Sin empresa aún)'}</div>
       <div class="order-meta">${fmtFecha(draft.fecha)} · ${draft.responsable || '—'}</div>
       <div class="order-status" style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block;margin-top:4px;">
