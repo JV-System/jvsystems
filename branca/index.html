@@ -2160,6 +2160,7 @@
 const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
 
 let _syncTimer = null;
+let _cloudReady = false; // bloquea _syncPush hasta que loadFromCloud termine al menos una vez
 let _calYear  = null;
 let _calMonth = null;
 // IDs eliminados persistidos en localStorage para sobrevivir recargas
@@ -2187,6 +2188,7 @@ async function _fbGet(path) {
 }
 
 function _syncPush() {
+  if (!_cloudReady) return; // no subir nada hasta que Firebase se haya cargado al menos una vez
   clearTimeout(_syncTimer);
   _syncTimer = setTimeout(async () => {
     setSyncStatus('syncing', '⏳ Guardando...');
@@ -2493,6 +2495,7 @@ async function loadFromCloud() {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Firebase load failed:', e.message);
   }
+  _cloudReady = true; // a partir de acá _syncPush puede subir datos
 }
 
 // ==================== SAVE CON SYNC ====================
