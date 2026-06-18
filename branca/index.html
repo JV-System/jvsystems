@@ -6534,7 +6534,9 @@ function mostrarNotifWhatsApp(o) {
       <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
         <button onclick="document.getElementById('wa-modal').remove()"
           style="padding:9px 18px;border:1px solid #ddd;border-radius:8px;background:white;font-size:13px;cursor:pointer;">Omitir</button>
-        <button id="wa-send-btn" onclick="enviarWSPconPDF()"
+        <button onclick="compartirPDFWhatsApp()" id="wa-pdf-btn"
+          style="padding:9px 16px;background:#f0f4ff;color:#1565D8;border:1px solid #c7d8f8;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">📎 PDF</button>
+        <button id="wa-send-btn" onclick="enviarWhatsApp()"
           style="padding:9px 20px;background:#25D366;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
           💬 Enviar WhatsApp
         </button>
@@ -6599,7 +6601,7 @@ function enviarWhatsApp() {
   if (!tel) { showToast('✕ Ingresá el teléfono.'); return; }
   const url = 'https://wa.me/54' + tel + '?text=' + encodeURIComponent(msg);
   window.open(url, '_blank');
-  document.querySelector('[style*="position:fixed"][style*="inset:0"]')?.remove();
+  document.getElementById('wa-modal')?.remove();
   showToast('💬 WhatsApp abierto.');
 }
 
