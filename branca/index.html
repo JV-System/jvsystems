@@ -2411,9 +2411,11 @@ async function loadFromCloud() {
 
       // ÓRDENES — Firebase manda la lista definitiva; si no tiene nada = vacío
       const _ord = remoteDb.ordenes;
-      const remotas = Array.isArray(_ord) ? _ord
-        : (_ord && typeof _ord === 'object') ? Object.values(_ord).filter(Boolean)
-        : [];
+      const remotas = (Array.isArray(_ord) ? _ord
+        : (_ord && typeof _ord === 'object') ? Object.values(_ord)
+        : []).filter(function(x){ return x && x.id; });
+      // Limpiar nulls del array local también
+      ordenes = ordenes.filter(function(o){ return o && o.id; });
       if (remotas.length > 0) {
         // Conservar borradores locales que no llegaron a Firebase
         const draftsLocales = ordenes.filter(function(o) { return o.draft === true; });
