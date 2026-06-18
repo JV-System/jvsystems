@@ -2535,6 +2535,8 @@ async function renumerarOrdenes() {
   const confirmar = await showConfirm('Renumerar órdenes', '¿Renumerar todas las órdenes desde 001 en orden cronológico? Se actualizará en Firebase.');
   if (!confirmar) return;
   clearTimeout(_syncTimer); // cancelar cualquier sync pendiente
+  _deletedIds.clear(); // limpiar IDs ignorados para que no filtren órdenes válidas
+  localStorage.removeItem('branca_ignore_ids');
   // Leer todas las órdenes directo desde Firebase para tener la lista completa
   setSyncStatus('syncing', '⏳ Leyendo órdenes...');
   try {
