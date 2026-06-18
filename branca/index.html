@@ -2779,10 +2779,9 @@ function guardarOrdenPlanificada() {
 }
 
 function seleccionarPlanificada(id) {
-  seleccionarOrden(id); return;
   const o = ordenes.find(x => x.id === id);
   if (!o) return;
-  if (o.estado === 'locked' || o.estado === 'pending' || o.estado === 'open') { seleccionarOrden(id); return; }
+  if (o.estado === 'locked') { seleccionarOrden(id); return; }
   ordenActual = o;
   switchView('nueva');
   const mc = document.getElementById('mainContent');
