@@ -4519,47 +4519,24 @@ function compartirPDFWhatsApp(callback) {
   if (!el) { showToast('⚠ No se encontró el comprobante.'); return; }
   const o = ordenActual;
   const nombre = 'Comprobante-' + (o.numero || 'ORDEN') + '.pdf';
+  var btn = document.getElementById('wa-pdf-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
 
   var _gen = function() {
     el.classList.add('pdf-compact');
     html2pdf().set({
-      margin: [6, 6, 6, 6],
-      filename: nombre,
+      margin: [6, 6, 6, 6], filename: nombre,
       image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    })
-    .from(el)
-    .outputPdf('blob')
-    .then(function(blob) {
+    }).from(el).save().then(function() {
       el.classList.remove('pdf-compact');
-      var file = new File([blob], nombre, { type: 'application/pdf' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({
-          files: [file],
-          title: 'Comprobante ' + (o.numero || ''),
-          text: 'Comprobante de servicio - Ingeniería Branca SRL'
-        }).then(function() {
-          if (callback) callback();
-        }).catch(function(e) {
-          if (e.name !== 'AbortError') {
-            // Si falla share, descargarlo
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
-            URL.revokeObjectURL(url);
-          }
-        });
-      } else {
-        // Fallback: descargar el PDF
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
-        URL.revokeObjectURL(url);
-        showToast('📄 PDF descargado. Adjuntalo manualmente en WhatsApp.');
-        if (callback) callback();
-      }
+      if (btn) { btn.disabled = false; btn.textContent = '📎 PDF'; }
+      showToast('✅ PDF descargado.');
+      if (callback) callback();
     }).catch(function(err) {
       el.classList.remove('pdf-compact');
-      console.warn('Error generando PDF:', err);
+      if (btn) { btn.disabled = false; btn.textContent = '📎 PDF'; }
       showToast('⚠ No se pudo generar el PDF.');
     });
   };
@@ -4568,7 +4545,7 @@ function compartirPDFWhatsApp(callback) {
     var s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
     s.onload = function() { setTimeout(_gen, 300); };
-    s.onerror = function() { showToast('⚠ Sin conexión para generar PDF.'); };
+    s.onerror = function() { if(btn){btn.disabled=false;btn.textContent='📎 PDF';} showToast('⚠ Sin conexión.'); };
     document.head.appendChild(s);
   } else {
     setTimeout(_gen, 100);
