@@ -2179,8 +2179,14 @@ function _syncPush() {
   _syncTimer = setTimeout(async () => {
     setSyncStatus('syncing', '⏳ Guardando...');
     try {
+      // Guardar órdenes como objeto keyed por número de orden para mejor visibilidad en Firebase
+      const ordenesObj = {};
+      ordenes.forEach(function(o) {
+        const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
+        ordenesObj[key] = o;
+      });
       await _fbPut('/db', {
-        ordenes:  ordenes,
+        ordenes:  ordenesObj,
         clientes: clientesDB,
         tecnicos: tecnicosDB,
         config:   { adminPass: getAdminPass() }
