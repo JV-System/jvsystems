@@ -2486,10 +2486,7 @@ async function loadFromCloud() {
     }
 
     setSyncStatus('ok');
-    showToast('☁ Firebase: ' + ordenes.length + ' órdenes cargadas');
     renderOrderList();
-    // Reescribir en Firebase con el nuevo formato (objeto keyed por número)
-    _syncPush();
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Firebase load failed:', e.message);
