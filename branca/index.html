@@ -2712,7 +2712,10 @@ function renderOrderList() {
 
   // Separar planificadas del resto para mostrarlas arriba con su sección
   const planificadas = filtered.filter(o => o.estado === 'planificada');
-  const normales     = filtered.filter(o => o.estado !== 'planificada');
+  const normales     = filtered.filter(o => o.estado !== 'planificada')
+    .sort(function(a, b) {
+      return (b.numero || '').localeCompare(a.numero || '', undefined, { numeric: true });
+    });
 
   const planHtml = planificadas.length ? `
     <div style="padding:6px 16px 2px;font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:0.5px;background:#f5f3ff;">
@@ -2740,9 +2743,7 @@ function renderOrderList() {
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
-      ${o.estado !== 'locked' ? `
-        <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">🗑 Eliminar</button>
-      ` : ''}
+      <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">🗑 Eliminar</button>
     </div>
   `).join('');
 }
