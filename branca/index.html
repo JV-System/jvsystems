@@ -1878,6 +1878,16 @@
     <div class="sidebar-search">
       <input type="text" placeholder="Buscar empresa..." id="searchInput" oninput="filtrarOrdenes(this.value)">
     </div>
+    <div style="display:flex;gap:6px;padding:6px 10px 4px;border-bottom:1px solid var(--border);">
+      <select id="filtroEstado" onchange="renderOrderList()" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:white;color:var(--text);">
+        <option value="">Todos los estados</option>
+        <option value="open">Abiertas</option>
+        <option value="pending">Pendientes</option>
+        <option value="locked">Cerradas</option>
+        <option value="planificada">Planificadas</option>
+      </select>
+      <button onclick="toggleOrdenLista()" id="btn-orden-lista" title="Ordenar" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;cursor:pointer;">↓</button>
+    </div>
     <div class="order-list" id="orderList"></div>
   </div>
 
@@ -2706,15 +2716,21 @@ function renderOrderList() {
     });
   }
 
-  const filtered = visible.filter(function(o) {
-    return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q);
+  const estadoFiltro = document.getElementById('filtroEstado')?.value || '';
+  const ordenAsc = window._ordenListaAsc || false;
+
+  let filtered = visible.filter(function(o) {
+    if (!((o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q))) return false;
+    if (estadoFiltro && o.estado !== estadoFiltro) return false;
+    return true;
   });
 
-  // Separar planificadas del resto para mostrarlas arriba con su sección
-  const planificadas = filtered.filter(o => o.estado === 'planificada');
-  const normales     = filtered.filter(o => o.estado !== 'planificada')
+  // Separar planificadas del resto (salvo que el filtro sea específico)
+  const planificadas = estadoFiltro ? [] : filtered.filter(o => o.estado === 'planificada');
+  const normales = (estadoFiltro ? filtered : filtered.filter(o => o.estado !== 'planificada'))
     .sort(function(a, b) {
-      return (b.numero || '').localeCompare(a.numero || '', undefined, { numeric: true });
+      const cmp = (a.numero || '').localeCompare(b.numero || '', undefined, { numeric: true });
+      return ordenAsc ? cmp : -cmp;
     });
 
   const planHtml = planificadas.length ? `
@@ -2749,6 +2765,13 @@ function renderOrderList() {
 }
 
 function filtrarOrdenes(q) { renderOrderList(); }
+
+function toggleOrdenLista() {
+  window._ordenListaAsc = !window._ordenListaAsc;
+  const btn = document.getElementById('btn-orden-lista');
+  if (btn) btn.textContent = window._ordenListaAsc ? '↑' : '↓';
+  renderOrderList();
+}
 
 // ==================== PLANIFICACIÓN ====================
 
