@@ -2534,27 +2534,38 @@ function getAdminPass() { return localStorage.getItem('branca_admin_pass') || DE
 async function renumerarOrdenes() {
   const confirmar = await showConfirm('Renumerar órdenes', '¿Renumerar todas las órdenes desde 001 en orden cronológico? Se actualizará en Firebase.');
   if (!confirmar) return;
-  // Ordenar por fecha y luego por id (más viejo primero)
-  const sorted = ordenes.filter(function(o){ return !o.draft; }).slice().sort(function(a,b){
-    return (a.fecha||'').localeCompare(b.fecha||'') || (a.id - b.id);
-  });
-  const year = new Date().getFullYear();
-  sorted.forEach(function(o, i) {
-    o.numero = year + '-' + String(i+1).padStart(3,'0');
-  });
-  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  // Push inmediato
-  const ordenesObj = {};
-  ordenes.forEach(function(o) {
-    const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
-    ordenesObj[key] = o;
-  });
+  clearTimeout(_syncTimer); // cancelar cualquier sync pendiente
+  // Leer todas las órdenes directo desde Firebase para tener la lista completa
+  setSyncStatus('syncing', '⏳ Leyendo órdenes...');
   try {
+    const remoteDb = await _fbGet('/db');
+    const _ord = remoteDb && remoteDb.ordenes;
+    const todas = (Array.isArray(_ord) ? _ord
+      : (_ord && typeof _ord === 'object') ? Object.values(_ord)
+      : []).filter(function(x){ return x && x.id && !x.draft; });
+    // Ordenar por fecha y luego por id
+    todas.sort(function(a,b){
+      return (a.fecha||'').localeCompare(b.fecha||'') || (a.id - b.id);
+    });
+    const year = new Date().getFullYear();
+    todas.forEach(function(o, i) {
+      o.numero = year + '-' + String(i+1).padStart(3,'0');
+    });
+    // Construir objeto con nuevas claves
+    const ordenesObj = {};
+    todas.forEach(function(o) {
+      ordenesObj[o.numero] = o;
+    });
     await _fbPut('/db/ordenes', ordenesObj);
+    // Actualizar memoria local
+    ordenes = todas;
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
     renderOrderList();
-    showToast('✅ Órdenes renumeradas correctamente.');
+    setSyncStatus('ok');
+    showToast('✅ ' + todas.length + ' órdenes renumeradas correctamente.');
   } catch(e) {
-    showToast('⚠ Error al guardar en Firebase.');
+    setSyncStatus('error');
+    showToast('⚠ Error: ' + e.message);
   }
 }
 
