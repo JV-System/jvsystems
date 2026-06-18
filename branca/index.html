@@ -2779,6 +2779,7 @@ function guardarOrdenPlanificada() {
 }
 
 function seleccionarPlanificada(id) {
+  seleccionarOrden(id); return;
   const o = ordenes.find(x => x.id === id);
   if (!o) return;
   if (o.estado === 'locked' || o.estado === 'pending' || o.estado === 'open') { seleccionarOrden(id); return; }
