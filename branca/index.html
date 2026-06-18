@@ -2691,9 +2691,8 @@ function renderOrderList() {
     </div>
   ` : '';
 
-  // Mostrar órdenes reales (con empresa), sin drafts
+  // Mostrar todas las órdenes excepto drafts
   let visible = ordenes.filter(function(o) {
-    if (!o.empresa && !o.marca) return false;
     if (o.draft) return false;
     return true;
   });
