@@ -5919,7 +5919,7 @@ function restaurarBorradorSiExiste() {
 
 // Al iniciar si ya está logueado, restaurar borrador
 (function() {
-  if (isLoggedIn()) setTimeout(restaurarBorradorSiExiste, 1000);
+  if (sessionStorage.getItem('branca_session') || localStorage.getItem('branca_session')) setTimeout(restaurarBorradorSiExiste, 1000);
 })();
 </script>
 <!-- FOOTER -->
