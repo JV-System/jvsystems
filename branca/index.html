@@ -3604,7 +3604,24 @@ function renderTab() {
 
 // Los listeners de los tabs se definen con onclick en el HTML generado;
 // esta función existe para no romper la llamada en renderTab().
+let _autoSaveTimer = null;
+function _autoSaveTab() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(function() {
+    if (currentTab === 0) saveTabCliente();
+    else if (currentTab === 1) saveTabDiagnostico();
+  }, 1500);
+}
+
 function attachTabEvents() {
+  // Auto-save al escribir en cualquier input/textarea del tab actual
+  const tc = document.getElementById('tabContent');
+  if (tc) {
+    tc.querySelectorAll('input, textarea, select').forEach(function(el) {
+      el.addEventListener('input', _autoSaveTab);
+      el.addEventListener('change', _autoSaveTab);
+    });
+  }
   const canvas = document.getElementById('sigCanvas');
   if (canvas && typeof initSignature === 'function') { initSignature(canvas); }
 
