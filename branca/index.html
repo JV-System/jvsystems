@@ -206,11 +206,11 @@
   .order-item.active { background: #EBF8FF; border-left: 3px solid var(--teal); }
   .order-item.pending { border-left: 3px solid var(--pending); }
   .order-item.locked { opacity: 0.85; }
-  .order-num { font-size: 12px; font-weight: 700; color: var(--navy); }
-  .order-empresa { font-size: 13px; font-weight: 600; margin: 2px 0; }
+  .order-num { font-size: 13px; font-weight: 800; color: var(--navy); letter-spacing: 0.3px; }
+  .order-empresa { font-size: 12px; font-weight: 600; margin: 1px 0; color: var(--text); }
   .order-meta { font-size: 11px; color: var(--text-muted); }
   .order-status {
-    position: absolute; top: 12px; right: 12px;
+    position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
     font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
     text-transform: uppercase; letter-spacing: 0.5px;
   }
@@ -2726,12 +2726,14 @@ function renderOrderList() {
   list.innerHTML = draftHtml + planHtml + normales.map(o => `
     <div class="order-item ${o.estado === 'pending' ? 'pending' : ''} ${o.estado === 'locked' ? 'locked' : ''} ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
          onclick="seleccionarOrden(${o.id})">
-      <div class="order-num">${o.numero || 'Nueva'}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div class="order-num">${o.numero || 'Nueva'}</div>
+        <div class="order-status ${o.estado === 'pending' ? 'status-pending' : o.estado === 'locked' ? 'status-locked' : 'status-open'}" style="position:static;transform:none;">
+          ${o.estado === 'pending' ? 'Pendiente' : o.estado === 'locked' ? 'Cerrada' : 'Abierta'}
+        </div>
+      </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
-      <div class="order-status ${o.estado === 'pending' ? 'status-pending' : o.estado === 'locked' ? 'status-locked' : 'status-open'}">
-        ${o.estado === 'pending' ? 'Pendiente' : o.estado === 'locked' ? 'Cerrada' : 'Abierta'}
-      </div>
       ${o.estado !== 'locked' ? `
         <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">🗑 Eliminar</button>
       ` : ''}
