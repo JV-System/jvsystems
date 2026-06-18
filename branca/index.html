@@ -2121,13 +2121,13 @@
 <div class="modal-bg hidden" id="numModal">
   <div class="modal">
     <h3>Editar número de orden</h3>
-    <p>Ingresá el nuevo número (requiere permiso de administrador)</p>
+    <p>Ingresá el nuevo número y tu contraseña para confirmar.</p>
     <div class="form-group" style="margin-bottom:12px">
-      <label>Contraseña admin</label>
+      <label>Tu contraseña</label>
       <input type="password" id="adminPass" placeholder="••••••">
     </div>
     <div class="form-group" style="margin-bottom:16px">
-      <label>Número de orden</label>
+      <label>Nuevo número de orden</label>
       <input type="text" id="newNumInput" placeholder="2026-001">
     </div>
     <div class="alert alert-error hidden" id="numError">Contraseña incorrecta</div>
@@ -5913,7 +5913,11 @@ function openNumModal() {
 function closeNumModal() { document.getElementById('numModal').classList.add('hidden'); }
 async function confirmarNumero() {
   const pass = document.getElementById('adminPass').value;
-  if (pass !== getAdminPass()) {
+  const cu = getCurrentUser();
+  const users = getUsers();
+  const userActual = cu ? users.find(function(u){ return u.id === cu.id; }) : null;
+  const passOk = userActual ? (pass === userActual.password) : (pass === getAdminPass());
+  if (!passOk) {
     document.getElementById('numError').classList.remove('hidden');
     return;
   }
@@ -5921,6 +5925,13 @@ async function confirmarNumero() {
   if (!newNum) return;
   const oldNum = ordenActual.numero;
   ordenActual.numero = newNum;
+  // Registrar cambio en historial de la orden
+  if (!ordenActual.historialNumeros) ordenActual.historialNumeros = [];
+  ordenActual.historialNumeros.push({
+    de: oldNum, a: newNum,
+    por: cu ? cu.nombre : 'Admin',
+    fecha: new Date().toISOString().split('T')[0]
+  });
   saveData();
   closeNumModal();
   renderTab();
