@@ -3917,7 +3917,7 @@ function renderTabCliente() {
           <label>N° de orden</label>
           <div class="orden-num-display">
             <input type="text" id="f-numero" value="${esc(o.numero)}" readonly style="font-family:monospace;font-weight:700;color:var(--navy);">
-            ${!locked ? `<button class="btn-edit-num" onclick="openNumModal()">✏ Cambiar</button>` : ''}
+            ${(!locked || isAdmin()) ? `<button class="btn-edit-num" onclick="openNumModal()">✏ Cambiar</button>` : ''}
           </div>
         </div>
       </div>
