@@ -5963,11 +5963,6 @@ function esc(str) {
 }
 
 // ==================== INIT ====================
-// Filtrar solo órdenes sin ningún dato (nunca completadas)
-ordenes = ordenes.filter(function(o) {
-  if (!o.empresa && !o.marca) return false;
-  return true;
-});
 localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
 loadFromCloud();
