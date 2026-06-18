@@ -2692,9 +2692,10 @@ function renderOrderList() {
     </div>
   ` : '';
 
-  // Mostrar todas las órdenes excepto drafts
+  // Mostrar todas las órdenes: drafts sin empresa van al bloque borrador arriba,
+  // drafts CON empresa aparecen en la lista normal
   let visible = ordenes.filter(function(o) {
-    if (o.draft) return false;
+    if (o.draft && !o.empresa && !o.marca) return false; // borrador vacío → ya se muestra arriba
     return true;
   });
   // Técnico: ve sus propias órdenes + las planificadas asignadas a él
