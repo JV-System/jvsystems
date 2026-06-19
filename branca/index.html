@@ -2131,6 +2131,7 @@
       <input type="text" id="newNumInput" placeholder="2026-001">
     </div>
     <div class="alert alert-error hidden" id="numError">Contraseña incorrecta</div>
+    <div class="alert alert-error hidden" id="numDupError">Ya existe una orden con ese número</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeNumModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="confirmarNumero()">Guardar</button>
@@ -2754,7 +2755,7 @@ function renderOrderList() {
     if (o.creadorId && cu && o.creadorId !== cu.id) return false;
     return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
   });
-  const draftHtml = draft ? `
+  const draftHtml = (draft && cu && cu.role !== 'facturacion') ? `
     <div class="order-item" onclick="continuarBorrador()"
          style="border-left:3px solid #f59e0b;background:#fffbeb;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -2782,6 +2783,10 @@ function renderOrderList() {
       if (o.estado === 'planificada') return o.responsable === cu.nombre;
       return o.creadorId === cu.id || o.responsable === cu.nombre;
     });
+  }
+  // Facturación: solo ve órdenes cerradas (locked)
+  if (cu && cu.role === 'facturacion') {
+    visible = visible.filter(function(o) { return o.estado === 'locked'; });
   }
 
   const estadoFiltro = document.getElementById('filtroEstado')?.value || '';
@@ -3326,7 +3331,7 @@ function switchView(v) {
     if (isAdmin() && !configUnlocked) { openConfigPass(); return; }
   }
   if (v === 'facturacion' && !canFacturar()) return;
-  if ((v === 'nueva' || v === 'historial') && user && user.role === 'facturacion') return;
+  if (v === 'nueva' && user && user.role === 'facturacion') return;
 
   viewMode = v;
   // Nav tabs
@@ -5936,6 +5941,12 @@ async function confirmarNumero() {
   }
   const newNum = document.getElementById('newNumInput').value.trim();
   if (!newNum) return;
+  const duplicado = ordenes.find(function(o) { return String(o.id) !== String(ordenActual.id) && o.numero === newNum; });
+  if (duplicado) {
+    document.getElementById('numDupError').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('numDupError').classList.add('hidden');
   const oldNum = ordenActual.numero;
   ordenActual.numero = newNum;
   // Registrar cambio en historial de la orden
@@ -6529,8 +6540,12 @@ function initRoleUI() {
     const el = document.getElementById(id);
     if (el) el.style.display = canCrearOrden() ? '' : 'none';
   });
-  // Si es rol facturacion, ir directo a facturación
+  // Si es rol facturacion, ir directo a facturación y mostrar historial en nav
   if (user.role === 'facturacion') {
+    ['nav-historial','mob-historial'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
     switchView('facturacion');
   }
 }
