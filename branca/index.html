@@ -2492,11 +2492,12 @@ async function loadFromCloud() {
 
     setSyncStatus('ok');
     renderOrderList();
+    _cloudReady = true; // solo habilitar sync después de una carga exitosa de Firebase
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Firebase load failed:', e.message);
+    // NO poner _cloudReady = true si Firebase falló — evita subir datos locales viejos
   }
-  _cloudReady = true; // a partir de acá _syncPush puede subir datos
 }
 
 // ==================== SAVE CON SYNC ====================
