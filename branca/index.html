@@ -6895,7 +6895,11 @@ function enviarEmail() {
   const url = 'mailto:' + encodeURIComponent(to)
     + '?subject=' + encodeURIComponent(asunto)
     + '&body='    + encodeURIComponent(cuerpo);
-  window.open(url, '_blank');
+  const a = document.createElement('a');
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
   document.getElementById('email-modal')?.remove();
   showToast('✉ Cliente de email abierto.');
 }
