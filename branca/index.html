@@ -6895,13 +6895,9 @@ function enviarEmail() {
   const url = 'mailto:' + encodeURIComponent(to)
     + '?subject=' + encodeURIComponent(asunto)
     + '&body='    + encodeURIComponent(cuerpo);
-  const a = document.createElement('a');
-  a.href = url;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
   document.getElementById('email-modal')?.remove();
-  showToast('✉ Cliente de email abierto.');
+  setTimeout(function() { location.href = url; }, 100);
+  showToast('✉ Abriendo email...');
 }
 
 function descargarPDFEmail() {
