@@ -6888,16 +6888,47 @@ function mostrarModalEmail(o) {
 }
 
 function enviarEmail() {
-  const to      = (document.getElementById('email-to')?.value||'').trim();
-  const asunto  = (document.getElementById('email-asunto')?.value||'').trim();
-  const cuerpo  = (document.getElementById('email-cuerpo')?.value||'').trim();
+  const to     = (document.getElementById('email-to')?.value||'').trim();
+  const asunto = (document.getElementById('email-asunto')?.value||'').trim();
+  const cuerpo = (document.getElementById('email-cuerpo')?.value||'').trim();
   if (!to) { showToast('✕ Ingresá el email del destinatario.'); return; }
-  const url = 'mailto:' + encodeURIComponent(to)
+  const o = ordenActual;
+  if (!o) return;
+  const el = document.getElementById('printArea');
+  if (!el) { showToast('⚠ No se encontró el comprobante.'); return; }
+  const nombre = 'Comprobante-' + (o.numero||'ORDEN') + '.pdf';
+  const btn = document.querySelector('#email-modal button[onclick="enviarEmail()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando PDF...'; }
+  const mailUrl = 'mailto:' + encodeURIComponent(to)
     + '?subject=' + encodeURIComponent(asunto)
     + '&body='    + encodeURIComponent(cuerpo);
-  document.getElementById('email-modal')?.remove();
-  window.open(url, '_blank');
-  showToast('✉ Abriendo email...');
+  var _gen = function() {
+    el.classList.add('pdf-compact');
+    html2pdf().set({
+      margin: [6,6,6,6], filename: nombre,
+      image: { type:'jpeg', quality:0.95 },
+      html2canvas: { scale:2, logging:false, useCORS:false, allowTaint:false },
+      jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+    }).from(el).save().then(function() {
+      el.classList.remove('pdf-compact');
+      document.getElementById('email-modal')?.remove();
+      setTimeout(function() { window.open(mailUrl, '_blank'); }, 400);
+      showToast('📄 PDF descargado — adjuntalo al email que se abrió.');
+    }).catch(function() {
+      el.classList.remove('pdf-compact');
+      if (btn) { btn.disabled = false; btn.textContent = '✉ Abrir email'; }
+      showToast('⚠ Error generando PDF.');
+    });
+  };
+  if (!window.html2pdf) {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload = function() { setTimeout(_gen, 300); };
+    s.onerror = function() { if (btn) { btn.disabled=false; btn.textContent='✉ Abrir email'; } showToast('⚠ Sin conexión.'); };
+    document.head.appendChild(s);
+  } else {
+    setTimeout(_gen, 100);
+  }
 }
 
 function descargarPDFEmail() {
