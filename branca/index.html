@@ -2465,6 +2465,14 @@ async function loadFromCloud() {
       var tieneDatos = function(o) { return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado); };
       const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
       if (remotas.length > 0) {
+        const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
+        // Cualquier orden local que NO esté en Firebase y no sea borrador → marcarla como eliminada
+        ordenes.forEach(function(o) {
+          if (!o.draft && !remotasIds.has(String(o.id))) {
+            _deletedIds.add(String(o.id));
+          }
+        });
+        localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
         // Usar lo que está en Firebase, descartando borradores vacíos
         ordenes = remotas.filter(function(o) { return o && o.id && !_deletedIds.has(String(o.id)) && (!o.draft || tieneDatos(o)); });
         // Agregar borradores locales con datos que aún no se subieron
