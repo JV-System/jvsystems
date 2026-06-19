@@ -6896,7 +6896,7 @@ function enviarEmail() {
     + '?subject=' + encodeURIComponent(asunto)
     + '&body='    + encodeURIComponent(cuerpo);
   document.getElementById('email-modal')?.remove();
-  setTimeout(function() { location.href = url; }, 100);
+  window.open(url, '_blank');
   showToast('✉ Abriendo email...');
 }
 
