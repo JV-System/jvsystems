@@ -6540,12 +6540,17 @@ function initRoleUI() {
     const el = document.getElementById(id);
     if (el) el.style.display = canCrearOrden() ? '' : 'none';
   });
-  // Si es rol facturacion, ir directo a facturación y mostrar historial en nav
+  // Si es rol facturacion: ocultar sidebar y botón Órdenes, ir directo a facturación
   if (user.role === 'facturacion') {
     ['nav-historial','mob-historial'].forEach(function(id) {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
+    // Ocultar sidebar (lista de órdenes) y botón Órdenes del nav móvil
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.style.display = 'none';
+    const mobOrdenes = document.getElementById('mob-ordenes');
+    if (mobOrdenes) mobOrdenes.style.display = 'none';
     switchView('facturacion');
   }
 }
