@@ -4771,7 +4771,7 @@ function renderFactRow(o) {
       // Totales
       + '<div class="fact-totales" id="fact-totales-'+o.id+'">' + renderFactTotalesHTML(o) + '</div>'
       // Botones
-      + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">'
+      + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;padding-bottom:80px;">'
       + '<button onclick="event.stopPropagation();guardarFacturacion('+o.id+')" style="flex:1;background:var(--jv-blue);color:white;border:none;border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;">💾 Guardar</button>'
       + (f.nroFactura ? '<button onclick="event.stopPropagation();generarFacturaPDF('+o.id+')" style="flex:1;background:transparent;color:#1a7a3c;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.07);">📄 PDF</button>' : '')
       + (f.nroFactura ? '<button onclick="event.stopPropagation();enviarMailFactura('+o.id+')" style="flex:1;background:transparent;color:#1a56db;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.07);">✉ Mail</button>' : '')
