@@ -4318,32 +4318,32 @@ function renderTabComprobante() {
   ).join('');
   return `
     <div class="comprobante-wrap">
-<div class="comp-toolbar" style="display:flex;gap:6px;margin-bottom:16px;align-items:center;flex-wrap:nowrap;overflow-x:auto;">
+<div class="comp-toolbar" style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;">
 
   <button onclick="toggleHistorialPanel()"
-          style="background:none;border:none;cursor:pointer;padding:4px;flex-shrink:0;display:flex;align-items:center;">
-    <img src="../iconos/historial.png" style="width:18px;height:18px;object-fit:contain;opacity:0.5;">
+          style="background:transparent;border:1px solid rgba(0,0,0,0.12);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;padding:7px 9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+    <img src="../iconos/historial.png" style="width:18px;height:18px;object-fit:contain;opacity:0.55;">
   </button>
 
-  <button class="btn btn-success" onclick="exportarPDF()" id="btn-pdf"
-          style="display:flex;align-items:center;gap:6px;padding:8px 12px;flex-shrink:0;">
+  <button onclick="exportarPDF()" id="btn-pdf"
+          style="background:transparent;border:1px solid rgba(0,0,0,0.12);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 13px;flex-shrink:0;font-size:13px;font-weight:600;color:#1a7a3c;">
     <img src="../iconos/descargar_PDF.png" style="width:20px;height:20px;object-fit:contain;">
     <span style="white-space:nowrap;">Descargar PDF</span>
   </button>
 
-  <button class="btn" onclick="mostrarNotifWhatsApp(ordenActual)"
-          style="background:#e8f5e9;color:#2d7a31;border:1px solid #c8e6c9;display:flex;align-items:center;gap:6px;padding:8px 12px;flex-shrink:0;">
+  <button onclick="mostrarNotifWhatsApp(ordenActual)"
+          style="background:transparent;border:1px solid rgba(0,0,0,0.12);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 13px;flex-shrink:0;font-size:13px;font-weight:600;color:#1a7a3c;">
     <img src="../iconos/WhatsApp_icon.png" style="width:20px;height:20px;object-fit:contain;border-radius:50%;">
     <span style="white-space:nowrap;">WhatsApp</span>
   </button>
 
-  <button class="btn" onclick="mostrarModalEmail(ordenActual)"
-          style="background:#e8f0fe;color:#1a56db;border:1px solid #c3d4fd;display:flex;align-items:center;gap:6px;padding:8px 12px;flex-shrink:0;">
+  <button onclick="mostrarModalEmail(ordenActual)"
+          style="background:transparent;border:1px solid rgba(0,0,0,0.12);border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.08);cursor:pointer;display:flex;align-items:center;gap:7px;padding:7px 13px;flex-shrink:0;font-size:13px;font-weight:600;color:#1a56db;">
     <img src="../iconos/mail_icon.png" style="width:20px;height:20px;object-fit:contain;border-radius:50%;">
     <span style="white-space:nowrap;">Email</span>
   </button>
 
-  <span style="font-size:12px;color:var(--teal);font-weight:600;" id="pdf-status"></span>
+  <span style="font-size:12px;color:var(--teal);font-weight:600;flex-shrink:0;" id="pdf-status"></span>
 
 </div>
       <div id="panel-estados" class="hidden" style="margin-bottom:16px;background:white;border:1px solid var(--border);border-radius:10px;padding:16px;">
