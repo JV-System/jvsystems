@@ -6903,7 +6903,7 @@ function enviarEmail(tipo) {
     }).from(el).save().then(function() {
       el.classList.remove('pdf-compact');
       document.getElementById('email-modal')?.remove();
-      setTimeout(function() { window.open(mailUrl, '_blank'); }, 400);
+      setTimeout(function() { location.href = mailUrl; }, 400);
       showToast('📄 PDF descargado — adjuntalo al email que se abrió.');
     }).catch(function() {
       el.classList.remove('pdf-compact');
