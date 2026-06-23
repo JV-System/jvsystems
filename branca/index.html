@@ -6882,17 +6882,9 @@ function enviarEmail(tipo) {
   const nombre = 'Comprobante-' + (o.numero||'ORDEN') + '.pdf';
   const btns = document.querySelectorAll('#email-modal button');
   btns.forEach(function(b){ b.disabled = true; });
-  var mailUrl;
-  if (tipo === 'gmail') {
-    mailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
-      + '&to=' + encodeURIComponent(to)
-      + '&su=' + encodeURIComponent(asunto)
-      + '&body=' + encodeURIComponent(cuerpo);
-  } else {
-    mailUrl = 'mailto:' + encodeURIComponent(to)
-      + '?subject=' + encodeURIComponent(asunto)
-      + '&body='    + encodeURIComponent(cuerpo);
-  }
+  var mailUrl = 'mailto:' + encodeURIComponent(to)
+    + '?subject=' + encodeURIComponent(asunto)
+    + '&body='    + encodeURIComponent(cuerpo);
   var _gen = function() {
     el.classList.add('pdf-compact');
     html2pdf().set({
