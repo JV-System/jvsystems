@@ -5529,6 +5529,7 @@ function guardarEdicionCliente() {
   if (!c) return;
   const empresa = document.getElementById('ec-empresa').value.trim();
   if (!empresa) { err.textContent = '✕ La empresa es obligatoria.'; err.classList.remove('hidden'); return; }
+  const nombreAnterior = c.empresa;
   Object.assign(c, {
     empresa,
     contacto:  document.getElementById('ec-contacto').value.trim(),
@@ -5537,11 +5538,24 @@ function guardarEdicionCliente() {
     ubicacion: document.getElementById('ec-ubicacion').value.trim(),
     email:     document.getElementById('ec-email').value.trim()
   });
+  // Actualizar órdenes que tenían el nombre anterior de esta empresa
+  var ordenesActualizadas = 0;
+  ordenes.forEach(function(o) {
+    if (o.empresa === nombreAnterior) {
+      Object.assign(o, { empresa: c.empresa, contacto: c.contacto, telefono: c.tel, cuit: c.cuit, ubicacion: c.ubicacion, email: c.email });
+      ordenesActualizadas++;
+    }
+  });
   saveClientes();
+  if (ordenesActualizadas > 0) {
+    saveData();
+    showToast('✅ Empresa actualizada en ' + ordenesActualizadas + ' orden' + (ordenesActualizadas > 1 ? 'es' : '') + '.');
+  } else {
+    showToast('✅ Empresa actualizada.');
+  }
   document.getElementById('modalEditarCliente').classList.add('hidden');
   renderConfig();
   initFirmasPads();
-  showToast('✅ Empresa actualizada.');
 }
 
 // CONTRASEÑA — cambia la contraseña del usuario logueado
