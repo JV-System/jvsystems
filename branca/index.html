@@ -2503,9 +2503,29 @@ async function loadFromCloud() {
       localStorage.setItem('branca_users', JSON.stringify(remoteUsuarios));
     }
 
+    // MIGRACIÓN: locked sin firma → locked_nosign (corre una vez por dispositivo)
+    if (!localStorage.getItem('branca_migr_nosign2')) {
+      var migrCambios = 0;
+      ordenes.forEach(function(o) {
+        if (o.estado === 'locked' && !o.firmaCliente) {
+          o.estado = 'locked_nosign';
+          migrCambios++;
+        }
+      });
+      localStorage.setItem('branca_migr_nosign2', '1');
+      if (migrCambios > 0) {
+        localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+      }
+    }
+
     setSyncStatus('ok');
     renderOrderList();
     _cloudReady = true; // solo habilitar sync después de una carga exitosa de Firebase
+    // Si hubo migración, sincronizar ahora que _cloudReady es true
+    if (localStorage.getItem('branca_migr_nosign2') && !localStorage.getItem('branca_migr_nosign2_synced')) {
+      localStorage.setItem('branca_migr_nosign2_synced', '1');
+      _syncPush();
+    }
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Firebase load failed:', e.message);
