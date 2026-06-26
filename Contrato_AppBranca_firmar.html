@@ -38,12 +38,14 @@
 
   .pago-bloque { background: #F7FAFF; border: 1px solid #D0DEF7; border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
   .pago-bloque-titulo { font-size: 11px; font-weight: 700; color: #1565D8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
-  .tbl-precio { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl-precio { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  .tbl-precio col.c1 { width: 55%; }
+  .tbl-precio col.c2 { width: 45%; }
   .tbl-precio th { background: #1565D8; color: #fff; font-weight: 700; padding: 9px 14px; text-align: left; }
   .tbl-precio th:last-child { text-align: center; }
-  .tbl-precio td { padding: 10px 14px; border-bottom: 1px solid #e0e8f7; vertical-align: middle; }
+  .tbl-precio td { padding: 10px 14px; border-bottom: 1px solid #e0e8f7; vertical-align: middle; word-break: break-word; }
   .tbl-precio td:last-child { text-align: center; }
-  .precio-destacado { background: #E8EFFE; border-radius: 6px; padding: 8px 18px; font-size: 18px; font-weight: 700; color: #1565D8; display: inline-block; white-space: nowrap; }
+  .precio-destacado { background: #E8EFFE; border-radius: 6px; padding: 8px 12px; font-size: 17px; font-weight: 700; color: #1565D8; display: block; white-space: nowrap; text-align: center; }
   .tbl-precio .incluido { color: #555; font-size: 12px; }
   .pago-items { list-style: none; padding: 0; margin: 0; }
   .pago-items li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #e0e8f7; font-size: 12px; color: #333; line-height: 1.5; }
@@ -151,6 +153,7 @@
     <div class="pago-bloque">
       <div class="pago-bloque-titulo">🏷 Esquema de inversión</div>
       <table class="tbl-precio">
+        <colgroup><col class="c1"><col class="c2"></colgroup>
         <tr><th>Concepto</th><th>Valor mensual</th></tr>
         <tr>
           <td>🖥 <strong>Suscripción del sistema</strong></td>
