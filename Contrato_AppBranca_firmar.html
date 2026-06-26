@@ -294,7 +294,14 @@
   <!-- FIRMAS -->
   <div class="firma-seccion">
     <div class="seccion-titulo">Aceptación y firmas</div>
-    <p style="color:#333;margin-bottom:16px;">Las partes declaran haber leído y aceptado las condiciones establecidas en el presente contrato.</p>
+
+    <!-- Checkbox aceptación -->
+    <div style="background:#F7FAFF;border:1.5px solid #D0DEF7;border-radius:10px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
+      <input type="checkbox" id="chk-acepto" style="width:18px;height:18px;margin-top:2px;accent-color:#1565D8;cursor:pointer;" onchange="verificarAceptacion()">
+      <label for="chk-acepto" style="font-size:13px;color:#333;cursor:pointer;line-height:1.5;">
+        Declaro haber leído y comprendido todas las cláusulas del presente contrato, y acepto los términos y condiciones establecidos en el mismo.
+      </label>
+    </div>
 
     <div class="firmas-grid">
 
@@ -308,7 +315,7 @@
         <img id="img-prov" class="firma-img" alt="Firma proveedor">
         <div class="firma-timestamp" id="ts-prov"></div>
         <div class="btn-wrap" id="btns-prov">
-          <button class="btn btn-firmar" onclick="confirmarFirma('prov')">✔ Confirmar firma</button>
+          <button class="btn btn-firmar" id="btn-confirm-prov" onclick="confirmarFirma('prov')" disabled style="opacity:0.4;cursor:not-allowed;">✔ Confirmar firma</button>
           <button class="btn btn-borrar" onclick="borrarFirma('prov')">Borrar</button>
         </div>
         <div class="firma-ok" id="ok-prov">✅ Firma registrada</div>
@@ -329,7 +336,7 @@
         <img id="img-cli" class="firma-img" alt="Firma cliente">
         <div class="firma-timestamp" id="ts-cli"></div>
         <div class="btn-wrap" id="btns-cli">
-          <button class="btn btn-firmar" onclick="confirmarFirma('cli')">✔ Confirmar firma</button>
+          <button class="btn btn-firmar" id="btn-confirm-cli" onclick="confirmarFirma('cli')" disabled style="opacity:0.4;cursor:not-allowed;">✔ Confirmar firma</button>
           <button class="btn btn-borrar" onclick="borrarFirma('cli')">Borrar</button>
         </div>
         <div class="firma-ok" id="ok-cli">✅ Firma registrada</div>
@@ -347,7 +354,6 @@
 
 <!-- BARRA DE ACCIONES -->
 <div id="acciones">
-  <button class="btn-accion" onclick="guardarHTML()" style="background:#e8effe;color:#1565D8;border:1.5px solid #1565D8;">💾 Guardar HTML firmado</button>
   <button class="btn-accion btn-pdf" onclick="descargarPDF()">📄 Descargar PDF</button>
 </div>
 
@@ -390,6 +396,14 @@
       })
       .catch(function(){});
   });
+
+  function verificarAceptacion() {
+    var ok = document.getElementById('chk-acepto').checked;
+    ['prov','cli'].forEach(function(id) {
+      var btn = document.getElementById('btn-confirm-' + id);
+      if (btn) { btn.disabled = !ok; btn.style.opacity = ok ? '1' : '0.4'; btn.style.cursor = ok ? 'pointer' : 'not-allowed'; }
+    });
+  }
 
   function borrarFirma(id) {
     if (pads[id]) pads[id].clear();
