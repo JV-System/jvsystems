@@ -2910,7 +2910,7 @@ function renderOrderList() {
         <div class="order-num">${o.numero || '—'}</div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
           <div class="order-status ${badgeStyle}" ${badgeExtra} style="position:static;transform:none;">${badgeLabel}</div>
-          ${esSinFirma ? '<span style="font-size:10px;color:#aaa;font-weight:500;">sin firma cliente</span>' : ''}
+          ${esSinFirma ? '<span style="font-size:10px;color:#1565D8;font-weight:600;">sin firma cliente</span>' : ''}
         </div>
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
@@ -3537,13 +3537,15 @@ function filtrarHistorial() {
     <div class="hist-card ${o.estado}" onclick="abrirDesdeHist(${o.id})">
       <div class="hist-top">
         <span class="hist-num">${o.numero}</span>
-        <span class="badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;${estadoStyle[o.estado]||''}">
-          ${estadoLabel[o.estado]||o.estado}
-        </span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <span class="badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;${estadoStyle[o.estado]||''}">
+            ${estadoLabel[o.estado]||o.estado}
+          </span>
+          ${o.estado === 'locked_nosign' ? '<span style="font-size:10px;color:#1565D8;font-weight:600;">sin firma cliente</span>' : ''}
+        </div>
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${o.empresa||'(Sin empresa)'}</div>
       <div style="font-size:12px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
-      ${o.estado === 'locked_nosign' ? '<div style="font-size:11px;color:#aaa;margin-top:3px;">sin firma cliente</div>' : ''}
       ${o.marca ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
   `; }).join('');
