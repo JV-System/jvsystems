@@ -1798,11 +1798,14 @@
              autocomplete="username" autocapitalize="none" autocorrect="off"
              onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
     </div>
-    <div class="login-input-wrap">
+    <div class="login-input-wrap" style="position:relative;">
       <span class="lii">🔒</span>
       <input type="password" id="login-pass" placeholder="Contraseña"
              autocomplete="current-password"
+             style="padding-right:40px;"
              onkeydown="if(event.key==='Enter')doLogin()">
+      <button type="button" onclick="var i=document.getElementById('login-pass');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈';"
+        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1;">👁</button>
     </div>
 
     <label class="login-remember">
