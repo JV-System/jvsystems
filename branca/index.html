@@ -3474,6 +3474,8 @@ function renderHistorial() {
             <option value="open">Abierta</option>
             <option value="pending">Pendiente</option>
             <option value="locked">Cerrada</option>
+            <option value="locked_nosign">Sin firma cliente</option>
+            <option value="anulada">Anulada</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
@@ -3510,7 +3512,7 @@ function filtrarHistorial() {
   let lista = ordenes.filter(function(o){ return !o.draft && o.empresa && o.estado !== 'planificada'; });
 
   if (fCliente) lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(fCliente); });
-  if (fEstado)  lista = lista.filter(function(o){ return o.estado === fEstado; });
+  if (fEstado)  lista = lista.filter(function(o){ return fEstado === 'locked' ? (o.estado === 'locked' || o.estado === 'locked_nosign') : o.estado === fEstado; });
   if (fDesde)   lista = lista.filter(function(o){ return (o.fecha||'') >= fDesde; });
   if (fHasta)   lista = lista.filter(function(o){ return (o.fecha||'') <= fHasta; });
 
