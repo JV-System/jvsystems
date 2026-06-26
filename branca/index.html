@@ -6238,6 +6238,23 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ==================== MIGRACIÓN: locked sin firma → locked_nosign ====================
+(function migrarLockedSinFirma() {
+  if (localStorage.getItem('branca_migr_nosign')) return;
+  var cambios = 0;
+  ordenes.forEach(function(o) {
+    if (o.estado === 'locked' && !o.firmaCliente) {
+      o.estado = 'locked_nosign';
+      cambios++;
+    }
+  });
+  if (cambios > 0) {
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+    _syncPush();
+  }
+  localStorage.setItem('branca_migr_nosign', '1');
+})();
+
 // ==================== INIT ====================
 localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
