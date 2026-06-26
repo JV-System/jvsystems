@@ -2520,6 +2520,7 @@ async function loadFromCloud() {
 
     setSyncStatus('ok');
     renderOrderList();
+    if (viewMode === 'historial') filtrarHistorial();
     _cloudReady = true; // solo habilitar sync después de una carga exitosa de Firebase
     // Si hubo migración, sincronizar ahora que _cloudReady es true
     if (localStorage.getItem('branca_migr_nosign2') && !localStorage.getItem('branca_migr_nosign2_synced')) {
