@@ -3446,8 +3446,8 @@ function renderHistorial() {
   const mc = document.getElementById('mainContent');
 
   // Clientes únicos para el filtro
-  const todasOrdenes = ordenes.filter(function(o){ return !o.draft && o.empresa; });
-  const clientesUnicos = [...new Set(todasOrdenes.map(function(o){ return o.empresa; }))].sort();
+  const todasOrdenes = ordenes.filter(function(o){ return !o.draft; });
+  const clientesUnicos = [...new Set(todasOrdenes.map(function(o){ return o.empresa; }).filter(Boolean))].sort();
 
   mc.innerHTML = `
     <div class="historial-content">
@@ -3510,7 +3510,7 @@ function filtrarHistorial() {
   const fDesde   = document.getElementById('hf-desde')?.value || '';
   const fHasta   = document.getElementById('hf-hasta')?.value || '';
 
-  let lista = ordenes.filter(function(o){ return !o.draft && o.empresa; });
+  let lista = ordenes.filter(function(o){ return !o.draft; });
 
   if (fCliente) lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(fCliente); });
   if (fEstado)  lista = lista.filter(function(o){ return fEstado === 'locked' ? (o.estado === 'locked' || o.estado === 'locked_nosign') : o.estado === fEstado; });
