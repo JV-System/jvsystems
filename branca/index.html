@@ -5253,7 +5253,7 @@ function guardarOrden() {
   showToast('✓ Orden guardada.');
 }
 
-function finalizarOrden() {
+async function finalizarOrden() {
 
   // VALIDACIÓN
   if (!ordenActual.empresa || !ordenActual.marca) {
