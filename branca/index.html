@@ -6804,28 +6804,69 @@ function _detectarCambios(anterior, actual) {
 
 function renderHistorialCambios() {
   if (!ordenActual) return '';
-  const h = ordenActual.historialCambios || [];
-  if (!h.length) return '<div style="color:#aaa;font-size:13px;padding:12px 0;">Sin cambios registrados aún.</div>';
-  return '<div style="display:flex;flex-direction:column;gap:6px;">'
-    + h.slice().reverse().map(function(c) {
-      const roleColor = {admin:'#1565D8', tecnico:'#1D9E75', facturacion:'#BA7517'}[c.rol] || '#888';
+
+  // Unificar historialCambios + historialEstados en un solo timeline
+  var items = [];
+
+  (ordenActual.historialCambios || []).forEach(function(c) {
+    items.push({ tipo: 'cambio', fecha: c.fecha, usuario: c.usuario, rol: c.rol, descripcion: c.descripcion, detalles: c.detalles || [] });
+  });
+
+  (ordenActual.historialEstados || []).forEach(function(e) {
+    // Evitar duplicar si ya existe igual en historialCambios
+    var yaExiste = items.find(function(i) { return i.descripcion === e.texto && i.fecha && i.fecha.startsWith && i.fecha.startsWith(e.fecha); });
+    if (!yaExiste) {
+      items.push({ tipo: 'estado', fecha: e.fecha, usuario: '', rol: '', descripcion: e.texto, detalles: [] });
+    }
+  });
+
+  if (!items.length) return '<div style="color:#aaa;font-size:13px;padding:16px 0;text-align:center;">Sin actividad registrada.</div>';
+
+  // Ordenar: más reciente primero (orden inverso)
+  items.reverse();
+
+  const roleColor = function(rol) { return {admin:'#1565D8', tecnico:'#1D9E75', facturacion:'#BA7517'}[rol] || '#888'; };
+  const iconTipo  = function(desc) {
+    var d = (desc||'').toLowerCase();
+    if (d.includes('cerr')) return '🔒';
+    if (d.includes('anulad')) return '🚫';
+    if (d.includes('firma')) return '✍';
+    if (d.includes('wsp') || d.includes('whatsapp')) return '💬';
+    if (d.includes('mail') || d.includes('email')) return '📧';
+    if (d.includes('número') || d.includes('numero')) return '🔢';
+    if (d.includes('guardad') || d.includes('guarda')) return '💾';
+    if (d.includes('iniciada') || d.includes('creada') || d.includes('abierta')) return '🆕';
+    if (d.includes('pendiente')) return '⏸';
+    return '📝';
+  };
+
+  return '<div style="display:flex;flex-direction:column;gap:0;">'
+    + items.map(function(c, idx) {
+      var rc = roleColor(c.rol);
       var detallesHtml = '';
       if (c.detalles && c.detalles.length) {
-        detallesHtml = '<ul style="margin:4px 0 0 0;padding-left:14px;list-style:disc;">'
+        detallesHtml = '<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;">'
           + c.detalles.map(function(d) {
-              return '<li style="font-size:11px;color:#555;margin:1px 0;">' + esc(d) + '</li>';
+              return '<div style="font-size:11px;color:#555;padding:3px 8px;background:#f0f4ff;border-radius:4px;">' + esc(d) + '</div>';
             }).join('')
-          + '</ul>';
+          + '</div>';
       }
-      return '<div style="padding:8px 10px;background:#f8f9fb;border-radius:8px;border-left:3px solid '+roleColor+';">'
-        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'
-        + '<div style="font-size:12px;font-weight:700;color:#333;">' + esc(c.descripcion) + '</div>'
-        + '<div style="font-size:11px;color:#bbb;white-space:nowrap;flex-shrink:0;">' + esc(c.fecha) + '</div>'
+      var isLast = idx === items.length - 1;
+      return '<div style="display:flex;gap:10px;position:relative;">'
+        // línea vertical
+        + '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">'
+        + '<div style="width:28px;height:28px;border-radius:50%;background:' + (c.tipo==='estado' ? '#f0f4ff' : '#f8f9fb') + ';border:2px solid '+(c.tipo==='estado'?'#c7d7f5':'#e2e8f0')+';display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">' + iconTipo(c.descripcion) + '</div>'
+        + (!isLast ? '<div style="width:2px;flex:1;background:#eef0f5;margin:2px 0;min-height:12px;"></div>' : '')
         + '</div>'
-        + '<div style="font-size:11px;color:#aaa;margin-top:2px;">'
-        + esc(c.usuario) + ' · <span style="color:'+roleColor+';font-weight:600;">'+esc(c.rol)+'</span>'
+        // contenido
+        + '<div style="flex:1;padding-bottom:12px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">'
+        + '<div style="font-size:12px;font-weight:700;color:#1a202c;">' + esc(c.descripcion) + '</div>'
+        + '<div style="font-size:10px;color:#bbb;white-space:nowrap;flex-shrink:0;padding-top:1px;">' + esc(c.fecha) + '</div>'
         + '</div>'
+        + (c.usuario ? '<div style="font-size:11px;color:#aaa;margin-top:1px;">' + esc(c.usuario) + (c.rol ? ' · <span style="color:'+rc+';font-weight:600;">'+esc(c.rol)+'</span>' : '') + '</div>' : '')
         + detallesHtml
+        + '</div>'
         + '</div>';
     }).join('')
     + '</div>';
