@@ -185,6 +185,42 @@
       <li>Los datos se almacenan en Realtime Database, con cifrado en tránsito (HTTPS/TLS) y en reposo.</li>
       <li>El acceso al sistema está protegido por autenticación de usuario y contraseña. Cada rol tiene permisos diferenciados y auditables.</li>
       <li>El sistema cuenta con <strong>copias de seguridad automáticas diarias</strong> gestionadas por Firebase (Google Cloud), almacenadas en Google Cloud Storage. Cada respaldo incluye los datos y las reglas de seguridad de la base de datos.</li>
+    </ul>
+
+    <!-- Panel backup -->
+    <div style="border:1px solid #D0DEF7;border-radius:10px;overflow:hidden;margin:14px 0;font-size:12px;">
+      <div style="display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid #D0DEF7;">
+        <div style="flex:1;min-width:140px;padding:14px 16px;border-right:1px solid #D0DEF7;">
+          <div style="color:#1565D8;font-weight:700;font-size:11px;margin-bottom:6px;">🗄 Base de datos</div>
+          <div style="color:#222;font-weight:600;">branca-ingenieria-default-rtdb</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding:14px 16px;border-right:1px solid #D0DEF7;">
+          <div style="color:#1565D8;font-weight:700;font-size:11px;margin-bottom:6px;">🕐 Última copia</div>
+          <div style="color:#222;font-weight:600;">Hace menos de 24 hs</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding:14px 16px;border-right:1px solid #D0DEF7;">
+          <div style="color:#1565D8;font-weight:700;font-size:11px;margin-bottom:6px;">☁ Almacenamiento</div>
+          <div style="color:#1565D8;font-weight:600;">Google Cloud Storage</div>
+        </div>
+        <div style="flex:0 0 auto;padding:14px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+          <div style="color:#1565D8;font-weight:700;font-size:11px;">Frecuencia</div>
+          <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:#1a7a3a;"><span style="background:#d1fae5;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:13px;">✓</span> Diario</div>
+        </div>
+      </div>
+      <div style="padding:0;">
+        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:0;font-size:11px;font-weight:700;color:#1565D8;padding:8px 16px;border-bottom:1px solid #e0e8f7;background:#F7FAFF;">
+          <span>Estado</span><span style="padding-left:16px;">Fecha</span><span>Tamaño</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;padding:7px 16px;border-bottom:1px solid #f0f4fb;background:#fff;"><span style="color:#1a7a3a;font-weight:700;">✓ OK</span><span style="padding-left:16px;color:#333;">26 jun 2026</span><span style="color:#555;">66.16 KB</span></div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;padding:7px 16px;border-bottom:1px solid #f0f4fb;background:#fafcff;"><span style="color:#1a7a3a;font-weight:700;">✓ OK</span><span style="padding-left:16px;color:#333;">25 jun 2026</span><span style="color:#555;">36.75 KB</span></div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;padding:7px 16px;border-bottom:1px solid #f0f4fb;background:#fff;"><span style="color:#1a7a3a;font-weight:700;">✓ OK</span><span style="padding-left:16px;color:#333;">24 jun 2026</span><span style="color:#555;">25 KB</span></div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;padding:7px 16px;border-bottom:1px solid #f0f4fb;background:#fafcff;"><span style="color:#1a7a3a;font-weight:700;">✓ OK</span><span style="padding-left:16px;color:#333;">23 jun 2026</span><span style="color:#555;">19.35 KB</span></div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto;padding:7px 16px;border-bottom:1px solid #f0f4fb;background:#fff;"><span style="color:#1a7a3a;font-weight:700;">✓ OK</span><span style="padding-left:16px;color:#333;">22 jun 2026</span><span style="color:#555;">19.35 KB</span></div>
+        <div style="padding:8px 16px;color:#888;font-size:11px;font-style:italic;">+ copias anteriores almacenadas en Google Cloud Storage</div>
+      </div>
+    </div>
+
+    <ul style="margin-top:0;">
       <li>Ante cualquier incidente de pérdida de datos, el proveedor se compromete a restaurar el último respaldo disponible dentro de las 48 horas hábiles de recibida la notificación.</li>
       <li>El proveedor no comparte, cede ni utiliza los datos del cliente para ningún fin distinto a la operación del sistema contratado.</li>
       <li>Ante la cancelación del contrato, el cliente puede solicitar la exportación completa de sus datos en formato JSON o Excel, sin costo adicional, dentro de los 30 días posteriores a la baja.</li>
