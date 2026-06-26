@@ -184,7 +184,7 @@
       <li>Todos los datos ingresados en el sistema (órdenes, clientes, técnicos, historial) son propiedad exclusiva de Ingeniería Branca SRL.</li>
       <li>Los datos se almacenan en Realtime Database, con cifrado en tránsito (HTTPS/TLS) y en reposo.</li>
       <li>El acceso al sistema está protegido por autenticación de usuario y contraseña. Cada rol tiene permisos diferenciados y auditables.</li>
-      <li>El sistema cuenta con <strong>copias de seguridad automáticas diarias</strong> gestionadas por Firebase (Google Cloud), almacenadas en Google Cloud Storage. Cada respaldo incluye los datos y las reglas de seguridad de la base de datos.</li>
+      <li>El sistema cuenta con <strong>copias de seguridad automáticas diarias</strong> gestionadas por Firebase (Google Cloud), almacenadas en Google Cloud Storage. El backup se ejecuta automáticamente durante la madrugada todos los días. Ante necesidad puntual, el proveedor puede iniciar una copia manual en cualquier momento.</li>
     </ul>
 
     <!-- Panel backup -->
