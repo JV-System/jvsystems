@@ -39,14 +39,14 @@
   .pago-bloque { background: #F7FAFF; border: 1px solid #D0DEF7; border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
   .pago-bloque-titulo { font-size: 11px; font-weight: 700; color: #1565D8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
   .tbl-precio { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
-  .tbl-precio col.c1 { width: 55%; }
-  .tbl-precio col.c2 { width: 45%; }
-  .tbl-precio th { background: #1565D8; color: #fff; font-weight: 700; padding: 9px 14px; text-align: left; }
+  .tbl-precio col.c1 { width: 50%; }
+  .tbl-precio col.c2 { width: 50%; }
+  .tbl-precio th { background: #1565D8; color: #fff; font-weight: 700; padding: 9px 10px; text-align: left; font-size: 11px; }
   .tbl-precio th:last-child { text-align: center; }
-  .tbl-precio td { padding: 10px 14px; border-bottom: 1px solid #e0e8f7; vertical-align: middle; word-break: break-word; }
+  .tbl-precio td { padding: 8px 10px; border-bottom: 1px solid #e0e8f7; vertical-align: middle; font-size: 11px; }
   .tbl-precio td:last-child { text-align: center; }
-  .precio-destacado { background: #E8EFFE; border-radius: 6px; padding: 8px 12px; font-size: 17px; font-weight: 700; color: #1565D8; display: block; white-space: nowrap; text-align: center; }
-  .tbl-precio .incluido { color: #555; font-size: 12px; }
+  .precio-destacado { background: #E8EFFE; border-radius: 6px; padding: 7px 8px; font-size: 15px; font-weight: 700; color: #1565D8; display: block; white-space: nowrap; text-align: center; }
+  .tbl-precio .incluido { color: #555; font-size: 11px; }
   .pago-items { list-style: none; padding: 0; margin: 0; }
   .pago-items li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #e0e8f7; font-size: 12px; color: #333; line-height: 1.5; }
   .pago-items li:last-child { border-bottom: none; }
@@ -297,7 +297,7 @@
 
     <!-- Checkbox aceptación -->
     <div style="background:#F7FAFF;border:1.5px solid #D0DEF7;border-radius:10px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;">
-      <input type="checkbox" id="chk-acepto" style="width:18px;height:18px;margin-top:2px;accent-color:#1565D8;cursor:pointer;" onchange="verificarAceptacion()">
+      <input type="checkbox" id="chk-acepto" style="width:24px;height:24px;min-width:24px;margin-top:2px;accent-color:#1565D8;cursor:pointer;" onchange="verificarAceptacion()">
       <label for="chk-acepto" style="font-size:13px;color:#333;cursor:pointer;line-height:1.5;">
         Declaro haber leído y comprendido todas las cláusulas del presente contrato, y acepto los términos y condiciones establecidos en el mismo.
       </label>
