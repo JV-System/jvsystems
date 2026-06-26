@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrato App Branca — Firma Digital</title>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #222; background: #f2f4f8; }
+  #contrato { max-width: 820px; margin: 32px auto; background: #fff; padding: 52px 60px; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,.10); }
+
+  .titulo { font-size: 26px; font-weight: 700; color: #0A1628; margin-bottom: 6px; }
+  .subtitulo { font-size: 14px; font-weight: 700; color: #1565D8; margin-bottom: 2px; }
+  .linea-azul { border: none; border-bottom: 3px solid #1565D8; margin: 14px 0 28px; }
+  .linea-azul-fina { border: none; border-bottom: 1.5px solid #1565D8; margin-bottom: 10px; }
+
+  .seccion-titulo { font-size: 14px; font-weight: 700; color: #1565D8; padding: 10px 0 8px; border-bottom: 1.5px solid #1565D8; margin: 28px 0 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  td, th { padding: 8px 12px; font-size: 12px; border: 1px solid #ccc; vertical-align: middle; }
+
+  .tbl-partes td:first-child { background: #EBF3FB; font-weight: 700; color: #1565D8; width: 37%; }
+  .tbl-partes tr:nth-child(even) td:first-child { background: #F7FAFF; }
+  .tbl-partes td:last-child { background: #fff; }
+  .tbl-partes tr:nth-child(even) td:last-child { background: #FAFAFA; }
+
+  .tbl-modulos th { background: #1565D8; color: #fff; font-weight: 700; text-align: center; }
+  .tbl-modulos th:first-child { text-align: left; }
+  .tbl-modulos tr:nth-child(odd) td { background: #F7FAFF; }
+  .tbl-modulos tr:nth-child(even) td { background: #fff; }
+  .tbl-modulos td:nth-child(2) { text-align: center; font-weight: 700; }
+  .tbl-modulos td:nth-child(3) { font-size: 11px; color: #666; }
+  .check { color: #2D7A31; font-size: 15px; }
+  .en-dev { color: #E07B00; font-size: 11px; font-weight: 600; }
+
+  .tbl-precio th { background: #1565D8; color: #fff; font-weight: 700; }
+  .tbl-precio td:first-child { background: #F7FAFF; }
+  .tbl-precio td:last-child { background: #F7FAFF; text-align: center; font-weight: 700; color: #1565D8; font-size: 18px; }
+
+  .clausula { margin: 26px 0 0; }
+  .clausula-titulo { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .clausula-titulo span { color: #1565D8; }
+  .clausula p { margin-bottom: 8px; line-height: 1.6; color: #333; }
+  .clausula ul { margin: 6px 0 8px 22px; }
+  .clausula ul li { margin-bottom: 4px; line-height: 1.6; color: #333; }
+  .clausula .negrita { font-weight: 700; }
+
+  /* Firma */
+  .firma-seccion { margin-top: 40px; }
+  .firmas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+  .firma-box { border: 1px solid #ddd; border-radius: 8px; padding: 18px; background: #fafafa; }
+  .firma-box h4 { font-size: 13px; font-weight: 700; color: #1565D8; margin-bottom: 4px; }
+  .firma-box .firma-nombre { font-size: 12px; color: #444; margin-bottom: 12px; }
+  .firma-canvas-wrap { position: relative; border: 1.5px dashed #aaa; border-radius: 6px; background: #fff; margin-bottom: 10px; }
+  .firma-canvas-wrap canvas { display: block; width: 100%; height: 140px; border-radius: 6px; cursor: crosshair; }
+  .firma-img { display: none; width: 100%; height: 140px; object-fit: contain; border-radius: 6px; border: 1px solid #eee; background: #fff; }
+  .firma-timestamp { font-size: 10px; color: #888; margin-top: 6px; min-height: 14px; }
+  .firma-linea { border: none; border-bottom: 1px solid #555; margin: 14px 0 6px; }
+  .firma-pie { font-size: 11px; color: #555; }
+  .firma-pie strong { display: block; font-size: 12px; color: #222; }
+
+  .btn-wrap { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-firmar { background: #1565D8; color: #fff; }
+  .btn-firmar:hover { background: #1050b0; }
+  .btn-borrar { background: #eee; color: #555; }
+  .btn-borrar:hover { background: #ddd; }
+  .firma-ok { display: none; font-size: 11px; color: #2D7A31; font-weight: 600; margin-top: 6px; }
+
+  /* Barra de acciones */
+  #acciones { max-width: 820px; margin: 0 auto 40px; display: flex; gap: 12px; justify-content: flex-end; padding: 0 4px; flex-wrap: wrap; }
+  .btn-accion { padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-pdf { background: #1565D8; color: #fff; }
+  .btn-pdf:hover { background: #1050b0; }
+
+  @media print {
+    body { background: #fff; }
+    #acciones { display: none !important; }
+    #contrato { margin: 0; padding: 30px 40px; box-shadow: none; border-radius: 0; }
+    .btn-wrap { display: none !important; }
+    .firma-canvas-wrap canvas { display: none !important; }
+    .firma-img { display: block !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="contrato">
+
+  <!-- ENCABEZADO -->
+  <div class="titulo">Contrato de Prestación de Servicios Digitales</div>
+  <div class="subtitulo">App Branca — Sistema de Gestión de Órdenes de Servicio</div>
+  <hr class="linea-azul">
+
+  <!-- PARTES -->
+  <div class="seccion-titulo">Partes del contrato</div>
+  <table class="tbl-partes">
+    <tr><td>Proveedor</td><td>Juan Villanueva / +54 9 343 4728 484</td></tr>
+    <tr><td>Cliente</td><td>Ingeniería Branca SRL</td></tr>
+    <tr><td>Fecha de inicio</td><td>Mayo 2026</td></tr>
+    <tr><td>Fecha de actualización</td><td>Junio 2026</td></tr>
+    <tr><td>Vigencia</td><td>Renovación mensual automática</td></tr>
+  </table>
+
+  <!-- CLÁUSULA 1 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 1. <span>Objeto del contrato</span></div>
+    <p>El proveedor se compromete a mantener, operar y desarrollar la aplicación web progresiva (PWA) denominada App Branca, alojada en jvsystems.com.ar/branca/, destinada a la gestión digital de órdenes de servicio técnico de Ingeniería Branca SRL.</p>
+    <p>La aplicación incluye los siguientes módulos activos a la fecha de actualización de este contrato:</p>
+    <table class="tbl-modulos">
+      <tr><th>Servicio / Módulo</th><th>Incluido</th><th>Observaciones</th></tr>
+      <tr><td>Gestión de órdenes de servicio</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Edición de orden cerrada con contraseña admin</td><td><span class="check">✓</span></td><td>Cambios registrados en historial</td></tr>
+      <tr><td>Multi-usuario con roles diferenciados</td><td><span class="check">✓</span></td><td>Admin / Técnico / Facturación</td></tr>
+      <tr><td>Sincronización en tiempo real</td><td><span class="check">✓</span></td><td>Multi-dispositivo</td></tr>
+      <tr><td>Historial de cambios por orden</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Módulo de facturación</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Envío por WhatsApp y Email</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Planificación de visitas técnicas</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Estados avanzados de órdenes (Anulada / Sin firma del cliente)</td><td><span class="check">✓</span></td><td>Migración automática incluida</td></tr>
+      <tr><td>Numeración automática de órdenes al guardar</td><td><span class="check">✓</span></td><td>Sin conflictos entre usuarios</td></tr>
+      <tr><td>Registro de envíos en historial (WhatsApp y Email)</td><td><span class="check">✓</span></td><td></td></tr>
+      <tr><td>Comprobante PDF con firma digital del cliente (remota)</td><td><span class="en-dev">En desarrollo</span></td><td>Módulo adicional</td></tr>
+      <tr><td>Integración con Xubio</td><td><span class="en-dev">En desarrollo</span></td><td>Módulo adicional</td></tr>
+    </table>
+  </div>
+
+  <!-- CLÁUSULA 2 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 2. <span>Precio y condiciones de pago</span></div>
+    <p>En virtud de la ampliación significativa del alcance del sistema respecto a la propuesta original, las partes acuerdan el siguiente esquema de inversión actualizado:</p>
+    <table class="tbl-precio">
+      <tr><th>Concepto</th><th>Valor</th></tr>
+      <tr><td>Suscripción mensual — Mantenimiento, soporte y actualizaciones</td><td>USD 200 / mes</td></tr>
+    </table>
+    <p>El pago mensual se realiza dentro de los primeros 10 días hábiles de cada mes. La moneda de referencia es el dólar estadounidense (USD); el pago puede realizarse en pesos argentinos al tipo de cambio acordado entre las partes al momento de cada pago.</p>
+    <p>La falta de pago por más de 60 días corridos habilita al proveedor a suspender el acceso al sistema hasta regularizar la situación.</p>
+  </div>
+
+  <!-- CLÁUSULA 3 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 3. <span>Protección de datos y respaldo (Backup)</span></div>
+    <p>El proveedor garantiza las siguientes condiciones respecto al tratamiento y resguardo de los datos del cliente:</p>
+    <ul>
+      <li>Todos los datos ingresados en el sistema (órdenes, clientes, técnicos, historial) son propiedad exclusiva de Ingeniería Branca SRL.</li>
+      <li>Los datos se almacenan en Realtime Database, con cifrado en tránsito (HTTPS/TLS) y en reposo.</li>
+      <li>El acceso al sistema está protegido por autenticación de usuario y contraseña. Cada rol tiene permisos diferenciados y auditables.</li>
+      <li>El proveedor realiza respaldos (exportaciones) de la base de datos con una frecuencia mínima mensual, almacenados en entorno seguro independiente.</li>
+      <li>Ante cualquier incidente de pérdida de datos, el proveedor se compromete a restaurar el último respaldo disponible dentro de las 48 horas hábiles de recibida la notificación.</li>
+      <li>El proveedor no comparte, cede ni utiliza los datos del cliente para ningún fin distinto a la operación del sistema contratado.</li>
+      <li>Ante la cancelación del contrato, el cliente puede solicitar la exportación completa de sus datos en formato JSON o Excel, sin costo adicional, dentro de los 30 días posteriores a la baja.</li>
+    </ul>
+  </div>
+
+  <!-- CLÁUSULA 4 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 4. <span>Disponibilidad y nivel de servicio</span></div>
+    <p>El proveedor se compromete a mantener el sistema operativo con una disponibilidad objetivo del 99% mensual, exceptuando:</p>
+    <ul>
+      <li>Mantenimientos programados notificados con al menos 24 horas de anticipación.</li>
+      <li>Interrupciones causadas por terceros.</li>
+    </ul>
+    <p>Ante fallas no programadas, el proveedor notificará al cliente dentro de las 2 horas de detectada la incidencia e informará el tiempo estimado de resolución.</p>
+    <p>El soporte técnico se brinda de manera flexible, puede ser en horario hábil o nocturno, según la prioridad del problema.</p>
+  </div>
+
+  <!-- CLÁUSULA 5 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 5. <span>Mantenimiento y actualizaciones</span></div>
+    <p>La suscripción mensual incluye:</p>
+    <ul>
+      <li>Corrección de errores (bugs) detectados en el sistema.</li>
+      <li>Actualizaciones de seguridad y compatibilidad con navegadores y dispositivos.</li>
+      <li>Mejoras menores de funcionalidad acordadas entre las partes.</li>
+      <li>Soporte ante consultas de uso del sistema.</li>
+    </ul>
+    <p>El desarrollo de nuevos módulos o funcionalidades significativas no incluidas en el alcance actual se cotizará por separado y requerirá acuerdo escrito previo (puede ser por mensaje de texto, email o documento).</p>
+  </div>
+
+  <!-- CLÁUSULA 6 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 6. <span>Cancelación y rescisión</span></div>
+    <p>Cualquiera de las partes puede cancelar este contrato notificando a la otra parte con un mínimo de 30 días corridos de anticipación, sin necesidad de expresar causa.</p>
+    <p><span class="negrita">Cancelación por el cliente:</span> El cliente abona el mes en curso completo.</p>
+    <p><span class="negrita">Cancelación por el proveedor:</span> El proveedor garantiza el funcionamiento del sistema durante los 30 días de preaviso. Si la cancelación fuera por causa imputable al proveedor (incumplimiento grave), se reembolsa la parte proporcional del mes no prestado.</p>
+    <p><span class="negrita">Rescisión inmediata por el cliente:</span> Procede ante incumplimiento grave del proveedor (caída prolongada sin solución, incumplimiento en materia de datos). El cliente no abona el período en que el incumplimiento ocurrió.</p>
+    <p><span class="negrita">Rescisión inmediata por el proveedor:</span> Procede ante falta de pago de 2 meses consecutivos o uso del sistema para fines ilícitos.</p>
+    <p>En todos los casos, el cliente tiene derecho a la exportación completa de sus datos conforme lo establecido en la Cláusula 3.</p>
+  </div>
+
+  <!-- CLÁUSULA 7 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 7. <span>Confidencialidad</span></div>
+    <p>Ambas partes se comprometen a mantener la confidencialidad de la información intercambiada en el marco de este contrato. El proveedor no divulgará información sobre los clientes, procesos o datos de Ingeniería Branca SRL. El cliente no divulgará información sobre el sistema, su arquitectura o configuración a terceros sin consentimiento del proveedor.</p>
+  </div>
+
+  <!-- CLÁUSULA 8 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 8. <span>Propiedad intelectual</span></div>
+    <p>El código fuente, diseño y arquitectura de la App Branca son propiedad intelectual del proveedor (Juan Villanueva). Los datos generados por el cliente son propiedad exclusiva de Ingeniería Branca SRL.</p>
+    <p>El cliente tiene licencia de uso del sistema mientras el contrato esté vigente. Dicha licencia no incluye el derecho a copiar, modificar, redistribuir o ceder el acceso al sistema a terceros no autorizados.</p>
+  </div>
+
+  <!-- CLÁUSULA 9 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 9. <span>Límite de responsabilidad</span></div>
+    <p>La responsabilidad máxima del proveedor por daños derivados de fallas del sistema no podrá exceder el valor de un mes de suscripción. El proveedor no responde por daños indirectos, pérdida de ingresos o perjuicios causados por factores externos (conectividad, servicios de terceros, fuerza mayor).</p>
+    <p>El cliente es responsable de la correcta utilización del sistema, del resguardo de sus credenciales de acceso y de la veracidad de los datos ingresados.</p>
+  </div>
+
+  <!-- CLÁUSULA 10 -->
+  <div class="clausula">
+    <div class="clausula-titulo">Cláusula 10. <span>Vigencia y renovación</span></div>
+    <p>Este contrato entra en vigencia a partir de la fecha de actualización indicada en el encabezado y se renueva automáticamente mes a mes, salvo notificación de cancelación conforme a la Cláusula 6.</p>
+    <p>Las condiciones económicas podrán revisarse con un preaviso de 30 días. Cualquier modificación al alcance del servicio o al precio deberá acordarse por escrito entre las partes.</p>
+  </div>
+
+  <!-- FIRMAS -->
+  <div class="firma-seccion">
+    <div class="seccion-titulo">Aceptación y firmas</div>
+    <p style="color:#333;margin-bottom:16px;">Las partes declaran haber leído y aceptado las condiciones establecidas en el presente contrato.</p>
+
+    <div class="firmas-grid">
+
+      <!-- FIRMA PROVEEDOR -->
+      <div class="firma-box">
+        <h4>Proveedor</h4>
+        <div class="firma-nombre">Juan Villanueva</div>
+        <div class="firma-canvas-wrap" id="wrap-prov">
+          <canvas id="canvas-prov"></canvas>
+        </div>
+        <img id="img-prov" class="firma-img" alt="Firma proveedor">
+        <div class="firma-timestamp" id="ts-prov"></div>
+        <div class="btn-wrap" id="btns-prov">
+          <button class="btn btn-firmar" onclick="confirmarFirma('prov')">✔ Confirmar firma</button>
+          <button class="btn btn-borrar" onclick="borrarFirma('prov')">Borrar</button>
+        </div>
+        <div class="firma-ok" id="ok-prov">✅ Firma registrada</div>
+        <hr class="firma-linea">
+        <div class="firma-pie">
+          <strong>Juan Villanueva</strong>
+          Proveedor
+        </div>
+      </div>
+
+      <!-- FIRMA CLIENTE -->
+      <div class="firma-box">
+        <h4>Cliente</h4>
+        <div class="firma-nombre">Ingeniería Branca SRL</div>
+        <div class="firma-canvas-wrap" id="wrap-cli">
+          <canvas id="canvas-cli"></canvas>
+        </div>
+        <img id="img-cli" class="firma-img" alt="Firma cliente">
+        <div class="firma-timestamp" id="ts-cli"></div>
+        <div class="btn-wrap" id="btns-cli">
+          <button class="btn btn-firmar" onclick="confirmarFirma('cli')">✔ Confirmar firma</button>
+          <button class="btn btn-borrar" onclick="borrarFirma('cli')">Borrar</button>
+        </div>
+        <div class="firma-ok" id="ok-cli">✅ Firma registrada</div>
+        <hr class="firma-linea">
+        <div class="firma-pie">
+          <strong>Ingeniería Branca SRL</strong>
+          Cliente
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /contrato -->
+
+<!-- BARRA DE ACCIONES -->
+<div id="acciones">
+  <button class="btn-accion btn-pdf" onclick="descargarPDF()">📄 Descargar PDF</button>
+</div>
+
+<script>
+  // ── Inicializar pads ──
+  var pads = {};
+
+  function initPad(id) {
+    var canvas = document.getElementById('canvas-' + id);
+    var wrap = document.getElementById('wrap-' + id);
+    // ajustar canvas al tamaño real del contenedor
+    canvas.width = wrap.offsetWidth * window.devicePixelRatio;
+    canvas.height = 140 * window.devicePixelRatio;
+    canvas.getContext('2d').scale(window.devicePixelRatio, window.devicePixelRatio);
+    pads[id] = new SignaturePad(canvas, { penColor: '#0A1628', minWidth: 1.5, maxWidth: 3 });
+  }
+
+  window.addEventListener('load', function() {
+    initPad('prov');
+    initPad('cli');
+  });
+
+  function borrarFirma(id) {
+    if (pads[id]) pads[id].clear();
+  }
+
+  function confirmarFirma(id) {
+    var pad = pads[id];
+    if (!pad || pad.isEmpty()) {
+      alert('Dibujá tu firma antes de confirmar.');
+      return;
+    }
+
+    // Obtener imagen
+    var dataURL = pad.toDataURL('image/png');
+
+    // Mostrar imagen en lugar del canvas
+    var img = document.getElementById('img-' + id);
+    img.src = dataURL;
+    img.style.display = 'block';
+
+    // Ocultar canvas y botones
+    document.getElementById('wrap-' + id).style.display = 'none';
+    document.getElementById('btns-' + id).style.display = 'none';
+
+    // Timestamp
+    var ahora = new Date();
+    var ts = ahora.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' })
+           + ' ' + ahora.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('ts-' + id).textContent = 'Firmado el ' + ts;
+
+    // Mostrar check
+    document.getElementById('ok-' + id).style.display = 'block';
+
+    // Mostrar botón descargar PDF
+    document.getElementById('acciones').style.display = 'flex';
+  }
+
+  function descargarPDF() {
+    var acciones = document.getElementById('acciones');
+    acciones.style.display = 'none';
+
+    var el = document.getElementById('contrato');
+    var opt = {
+      margin: 8,
+      filename: 'Contrato_AppBranca.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: el.scrollWidth,
+        logging: false
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(el).save().then(function() {
+      acciones.style.display = 'flex';
+    });
+  }
+
+  function guardarHTML() {
+    // serializa el DOM actual (con imgs de firma ya embebidas)
+    var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    // eliminar los scripts de signature_pad para que el HTML guardado no intente re-inicializar
+    html = html.replace(/<script src="https:\/\/cdn\.jsdelivr\.net[^"]*"><\/script>/g, '');
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Contrato_AppBranca_firmado.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+</script>
+</body>
+</html>
