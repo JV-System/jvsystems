@@ -352,22 +352,43 @@
 </div>
 
 <script>
+  var FIREBASE = 'https://branca-ingenieria-default-rtdb.firebaseio.com/contrato_firmas.json';
+
   // ── Inicializar pads ──
   var pads = {};
 
   function initPad(id) {
     var canvas = document.getElementById('canvas-' + id);
     var wrap = document.getElementById('wrap-' + id);
-    // ajustar canvas al tamaño real del contenedor
     canvas.width = wrap.offsetWidth * window.devicePixelRatio;
     canvas.height = 140 * window.devicePixelRatio;
     canvas.getContext('2d').scale(window.devicePixelRatio, window.devicePixelRatio);
     pads[id] = new SignaturePad(canvas, { penColor: '#0A1628', minWidth: 1.5, maxWidth: 3 });
   }
 
+  function mostrarFirma(id, dataURL, ts) {
+    var img = document.getElementById('img-' + id);
+    img.src = dataURL;
+    img.style.display = 'block';
+    document.getElementById('wrap-' + id).style.display = 'none';
+    document.getElementById('btns-' + id).style.display = 'none';
+    document.getElementById('ts-' + id).textContent = 'Firmado el ' + ts;
+    document.getElementById('ok-' + id).style.display = 'block';
+    document.getElementById('acciones').style.display = 'flex';
+  }
+
+  // Al cargar: traer firmas guardadas de Firebase
   window.addEventListener('load', function() {
     initPad('prov');
     initPad('cli');
+    fetch(FIREBASE)
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (!data) return;
+        if (data.prov) mostrarFirma('prov', data.prov.img, data.prov.ts);
+        if (data.cli)  mostrarFirma('cli',  data.cli.img,  data.cli.ts);
+      })
+      .catch(function(){});
   });
 
   function borrarFirma(id) {
@@ -380,30 +401,19 @@
       alert('Dibujá tu firma antes de confirmar.');
       return;
     }
-
-    // Obtener imagen
     var dataURL = pad.toDataURL('image/png');
-
-    // Mostrar imagen en lugar del canvas
-    var img = document.getElementById('img-' + id);
-    img.src = dataURL;
-    img.style.display = 'block';
-
-    // Ocultar canvas y botones
-    document.getElementById('wrap-' + id).style.display = 'none';
-    document.getElementById('btns-' + id).style.display = 'none';
-
-    // Timestamp
     var ahora = new Date();
     var ts = ahora.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' })
            + ' ' + ahora.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-    document.getElementById('ts-' + id).textContent = 'Firmado el ' + ts;
 
-    // Mostrar check
-    document.getElementById('ok-' + id).style.display = 'block';
+    // Guardar en Firebase
+    fetch(FIREBASE.replace('.json', '/' + id + '.json'), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ img: dataURL, ts: ts })
+    }).catch(function(){});
 
-    // Mostrar botón descargar PDF
-    document.getElementById('acciones').style.display = 'flex';
+    mostrarFirma(id, dataURL, ts);
   }
 
   function descargarPDF() {
