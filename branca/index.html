@@ -1884,6 +1884,8 @@
         <option value="open">Abiertas</option>
         <option value="pending">Pendientes</option>
         <option value="locked">Cerradas</option>
+        <option value="locked_nosign">Sin firma</option>
+        <option value="anulada">Anuladas</option>
         <option value="planificada">Planificadas</option>
       </select>
       <button onclick="toggleOrdenLista()" id="btn-orden-lista" title="Ordenar" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;cursor:pointer;">↓</button>
@@ -2466,9 +2468,9 @@ async function loadFromCloud() {
       const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
       if (remotas.length > 0) {
         const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
-        // Cualquier orden local que NO esté en Firebase y no sea borrador → marcarla como eliminada
+        // Cualquier orden local que NO esté en Firebase, no sea borrador y no sea anulada → marcarla como eliminada
         ordenes.forEach(function(o) {
-          if (!o.draft && !remotasIds.has(String(o.id))) {
+          if (!o.draft && o.estado !== 'anulada' && !remotasIds.has(String(o.id))) {
             _deletedIds.add(String(o.id));
           }
         });
@@ -2635,19 +2637,23 @@ async function resetearTodoElSistema() {
   setTimeout(function() { window.location.reload(); }, 1500);
 }
 
+// Helper: orden está bloqueada (cerrada con o sin firma, o anulada)
+function esLocked(o) {
+  var est = (o || {}).estado;
+  return est === 'locked' || est === 'locked_nosign' || est === 'anulada';
+}
+
 function getNextNum() {
   const year = new Date().getFullYear();
-
   const nums = ordenes
-    .map(o => {
-      const parts = o.numero?.split('-');
-      return parts && parts[0] == year ? parseInt(parts[1]) : 0;
+    .filter(function(o) { return o.estado !== 'anulada'; }) // no contar anuladas
+    .map(function(o) {
+      const parts = o.numero ? o.numero.split('-') : [];
+      return parts.length === 2 && parts[0] == year ? parseInt(parts[1]) : 0;
     })
-    .filter(n => !isNaN(n));
-
-  const next = nums.length ? Math.max(...nums) + 1 : 1;
-
-  return `${year}-${String(next).padStart(3, '0')}`;
+    .filter(function(n) { return !isNaN(n) && n > 0; });
+  const next = nums.length ? Math.max.apply(null, nums) + 1 : 1;
+  return year + '-' + String(next).padStart(3, '0');
 }
 
 function ordenIncompleta() {
@@ -2664,7 +2670,7 @@ function crearNuevaOrden() {
   const cu = getCurrentUser();
   const nueva = {
     id: Date.now(),
-    numero: getNextNum(),
+    numero: null, // se asigna al primer guardado
     estado: 'open',
     draft: true,
     fecha: new Date().toISOString().split('T')[0],
@@ -2703,21 +2709,47 @@ function crearNuevaOrden() {
 }
 
 async function eliminarOrden(id) {
-  const confirmar = await showConfirm('Eliminar orden', '¿Querés eliminar esta orden? No se puede deshacer.');
-  if (!confirmar) return;
-  _deletedIds.add(String(id));
-  localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
-  ordenes = ordenes.filter(o => String(o.id) !== String(id));
-  if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
-  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
-  renderOrderList();
-  showToast('🗑 Orden eliminada.');
-  // Push inmediato sin debounce para que Firebase se actualice antes de que loadFromCloud restaure la orden
+  const o = ordenes.find(function(x) { return String(x.id) === String(id); });
+  if (!o) return;
+
+  // Borrador sin número: borrar directamente
+  if (!o.numero) {
+    const confirmar = await showConfirm('Eliminar borrador', '¿Eliminar este borrador? No tiene número asignado y no se puede recuperar.');
+    if (!confirmar) return;
+    _deletedIds.add(String(id));
+    localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
+    ordenes = ordenes.filter(function(x) { return String(x.id) !== String(id); });
+    if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+    renderOrderList();
+    showToast('🗑 Borrador eliminado.');
+  } else {
+    // Orden con número: pasar a anulada (mantiene correlatividad)
+    const confirmar = await showConfirm('Anular orden', '¿Anular la orden ' + o.numero + '? Quedará registrada como anulada y no se perderá el número.');
+    if (!confirmar) return;
+    o.estado = 'anulada';
+    o.updatedAt = Date.now();
+    if (!o.historialCambios) o.historialCambios = [];
+    const cu = getCurrentUser();
+    o.historialCambios.push({
+      fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
+      usuario: cu ? cu.nombre : 'Sistema',
+      rol: cu ? cu.role : '',
+      descripcion: 'Orden anulada.',
+      detalles: []
+    });
+    if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
+    localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+    renderOrderList();
+    showToast('⚠ Orden ' + o.numero + ' anulada.');
+  }
+
+  // Sincronizar con Firebase
   clearTimeout(_syncTimer);
   const ordenesObj = {};
-  ordenes.forEach(function(o) {
-    const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
-    ordenesObj[key] = o;
+  ordenes.forEach(function(x) {
+    const key = (x.numero || String(x.id)).replace(/[.#$\[\]]/g, '-');
+    ordenesObj[key] = x;
   });
   try {
     await _fbPut('/db/ordenes', ordenesObj);
@@ -2747,7 +2779,8 @@ function seleccionarOrden(id) {
   ordenActual = idx >= 0 ? ordenes[idx] : null;
   window._snapshotOrden = ordenActual ? JSON.parse(JSON.stringify(ordenActual)) : null;
   currentTab = 0;
-  window._clienteDesbloqueado = false; // resetear bloqueo al cambiar orden
+  window._clienteDesbloqueado = false;
+  window._adminEditando = null; // resetear edición admin al cambiar orden
   renderFormContent();
   renderOrderList();
 }
@@ -2793,9 +2826,9 @@ function renderOrderList() {
       return o.creadorId === cu.id || o.responsable === cu.nombre;
     });
   }
-  // Facturación: solo ve órdenes cerradas (locked)
+  // Facturación: solo ve órdenes cerradas (con o sin firma)
   if (cu && cu.role === 'facturacion') {
-    visible = visible.filter(function(o) { return o.estado === 'locked'; });
+    visible = visible.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
   }
 
   const estadoFiltro = document.getElementById('filtroEstado')?.value || '';
@@ -2803,7 +2836,11 @@ function renderOrderList() {
 
   let filtered = visible.filter(function(o) {
     if (!((o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q))) return false;
-    if (estadoFiltro && o.estado !== estadoFiltro) return false;
+    if (estadoFiltro) {
+      if (o.estado !== estadoFiltro) return false;
+    } else {
+      if (o.estado === 'anulada') return false; // ocultar anuladas por defecto
+    }
     return true;
   });
 
@@ -2830,20 +2867,32 @@ function renderOrderList() {
     <div style="height:1px;background:var(--border);margin:4px 0;"></div>
   ` : '';
 
-  list.innerHTML = draftHtml + planHtml + normales.map(o => `
-    <div class="order-item ${o.estado === 'pending' ? 'pending' : ''} ${o.estado === 'locked' ? 'locked' : ''} ${ordenActual && ordenActual.id === o.id ? 'active' : ''}"
-         onclick="seleccionarOrden(${o.id})">
+  list.innerHTML = draftHtml + planHtml + normales.map(o => {
+    const esAnulada   = o.estado === 'anulada';
+    const esCerrada   = o.estado === 'locked';
+    const esSinFirma  = o.estado === 'locked_nosign';
+    const esPend      = o.estado === 'pending';
+    var itemClass = 'order-item';
+    if (esPend)     itemClass += ' pending';
+    if (esCerrada)  itemClass += ' locked';
+    if (esSinFirma) itemClass += ' locked';
+    if (esAnulada)  itemClass += ' anulada';
+    if (ordenActual && ordenActual.id === o.id) itemClass += ' active';
+    var badgeStyle = esPend ? 'status-pending' : (esCerrada || esSinFirma) ? 'status-locked' : esAnulada ? '' : 'status-open';
+    var badgeLabel = esPend ? 'Pendiente' : esCerrada ? 'Cerrada' : esSinFirma ? '⚠ Sin firma' : esAnulada ? '🚫 Anulada' : 'Abierta';
+    var badgeExtra = esAnulada ? 'style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"'
+                   : esSinFirma ? 'style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"' : '';
+    return `
+    <div class="${itemClass}" onclick="seleccionarOrden(${o.id})" style="${esAnulada ? 'opacity:0.6;' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <div class="order-num">${o.numero || 'Nueva'}</div>
-        <div class="order-status ${o.estado === 'pending' ? 'status-pending' : o.estado === 'locked' ? 'status-locked' : 'status-open'}" style="position:static;transform:none;">
-          ${o.estado === 'pending' ? 'Pendiente' : o.estado === 'locked' ? 'Cerrada' : 'Abierta'}
-        </div>
+        <div class="order-num">${o.numero || '—'}</div>
+        <div class="order-status ${badgeStyle}" ${badgeExtra} style="position:static;transform:none;">${badgeLabel}</div>
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
-      <button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">🗑 Eliminar</button>
-    </div>
-  `).join('');
+      ${!esAnulada ? `<button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${esCerrada||esSinFirma ? '🚫 Anular' : '🗑 Eliminar'}</button>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function filtrarOrdenes(q) { renderOrderList(); }
@@ -2927,7 +2976,7 @@ function guardarOrdenPlanificada() {
 function seleccionarPlanificada(id) {
   const o = ordenes.find(x => x.id === id);
   if (!o) return;
-  if (o.estado === 'locked') { seleccionarOrden(id); return; }
+  if (esLocked(o)) { seleccionarOrden(id); return; }
   ordenActual = o;
   switchView('nueva');
   const mc = document.getElementById('mainContent');
@@ -3078,7 +3127,7 @@ const PLAN_STATUS_META = {
 };
 
 function calcEstadoPlan(o, hoyStr) {
-  if (o.estado === 'locked')  return 'finalizada';
+  if (esLocked(o))  return 'finalizada';
   if (o.estado === 'pending') return 'enproceso';
   return (o.fechaPlanificada && o.fechaPlanificada < hoyStr) ? 'vencida' : 'pendiente';
 }
@@ -3088,7 +3137,7 @@ function renderPlanificacion() {
   const hoy = new Date();
   const hoyStr = hoy.toISOString().split('T')[0];
 
-  const todas = ordenes.filter(o => (o.estado === 'planificada' || o.estado === 'pending' || o.estado === 'locked') && o.fechaPlanificada);
+  const todas = ordenes.filter(o => (o.estado === 'planificada' || o.estado === 'pending' || esLocked(o)) && o.fechaPlanificada);
   todas.forEach(o => { o._estadoPlan = calcEstadoPlan(o, hoyStr); });
 
   const kpiTotal       = todas.length;
@@ -3450,11 +3499,13 @@ function filtrarHistorial() {
     return;
   }
 
-  const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada' };
+  const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada', locked_nosign:'⚠ Sin firma', anulada:'🚫 Anulada' };
   const estadoStyle = {
-    open:    'background:#f0f0f0;color:#555;',
-    pending: 'background:#fef3c7;color:#92400e;',
-    locked:  'background:#d1fae5;color:#065f46;'
+    open:         'background:#f0f0f0;color:#555;',
+    pending:      'background:#fef3c7;color:#92400e;',
+    locked:       'background:#d1fae5;color:#065f46;',
+    locked_nosign:'background:#fef3c7;color:#92400e;',
+    anulada:      'background:#fee2e2;color:#991b1b;'
   };
 
   grid.innerHTML = lista.map(function(o) { return `
@@ -3491,7 +3542,7 @@ function renderFormContent() {
   if (!ordenActual) return;
 
   const mc = document.getElementById('mainContent');
-  const locked = ordenActual.estado === 'locked';
+  const locked = esLocked(ordenActual) && !(window._adminEditando === ordenActual.id);
 
   const tabs = [
     'Cliente',
@@ -3655,7 +3706,7 @@ function cambiarTab(i) {
 
   if (!ordenActual) return;
 
-  const locked = ordenActual.estado === 'locked';
+  const locked = esLocked(ordenActual);
 
   // limitar tabs
   i = Math.max(0, Math.min(i, 3));
@@ -3784,12 +3835,15 @@ function attachTabEvents() {
 // ==================== TAB CLIENTE ====================
 function renderTabCliente() {
   const o = ordenActual;
-  const locked = o.estado === 'locked';
+  const locked = esLocked(o) && !(window._adminEditando === o.id);
   const clienteEnDB = clientesDB.find(c => c.empresa === o.empresa);
   const tieneEmpresa = !!o.empresa;
 
   return `
-    ${locked ? `<div class="locked-banner">🔒 Esta planilla está bloqueada tras la firma del cliente. Solo lectura.</div>` : ''}
+    ${esLocked(o) ? `<div class="locked-banner">
+      <span>${o.estado === 'locked_nosign' ? '⚠ Cerrada sin firma del cliente.' : o.estado === 'anulada' ? '🚫 Orden anulada.' : '🔒 Planilla bloqueada — solo lectura.'}</span>
+      ${isAdmin() && o.estado !== 'anulada' ? `<button onclick="solicitarEdicionAdmin()" style="font-size:11px;padding:4px 10px;border:1px solid #0F6E56;border-radius:6px;background:white;color:#0F6E56;cursor:pointer;font-weight:700;">🔓 Editar</button>` : ''}
+    </div>` : ''}
     <div class="form-section">
       <div class="section-title">📋 Datos del cliente</div>
 
@@ -4059,7 +4113,7 @@ function confirmarNuevoClienteInline() {
 }
 
 function setTipo(t) {
-  if (ordenActual.estado === 'locked') return;
+  if (esLocked(ordenActual)) return;
   ordenActual.tipoServicio = t;
   saveTabCliente();
   renderTab();
@@ -4068,7 +4122,7 @@ function setTipo(t) {
 // ==================== TAB DIAGNÓSTICO ====================
 function renderTabDiagnostico() {
   const o = ordenActual;
-  const locked = o.estado === 'locked';
+  const locked = esLocked(o) && !(window._adminEditando === o.id);
   const reps = o.repuestos || [];
   return `
     ${locked ? `<div class="locked-banner">🔒 Esta planilla está bloqueada.</div>` : ''}
@@ -4143,7 +4197,7 @@ function toggleCondicion(c, checked) {
 // ==================== TAB TIEMPOS ====================
 function renderTabTiempos() {
   const o = ordenActual;
-  const locked = o.estado === 'locked';
+  const locked = esLocked(o) && !(window._adminEditando === o.id);
   const visitas = o.visitas || [{ fecha: '', tiempo: '', causa: '' }];
   return `
     ${locked ? `<div class="locked-banner">🔒 Esta planilla está bloqueada.</div>` : ''}
@@ -4206,20 +4260,22 @@ function renderTabTiempos() {
           }
         </div>
         <div>
-          <p style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Firma del cliente ${!o.firmaCliente && !locked ? '<span style="color:var(--amber)">(pendiente)</span>' : ''}</p>
+          <p style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px;">Firma del cliente ${!o.firmaCliente ? '<span style="color:var(--amber)">(pendiente)</span>' : ''}</p>
           ${o.firmaCliente
             ? `<img src="${o.firmaCliente}" style="max-height:80px;border-bottom:1px solid var(--border);display:block;margin-bottom:4px;border:2px solid var(--teal);border-radius:4px;">
                <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Aclaración: <strong>${esc(o.firmaClienteNombre||'')}</strong></p>
                <p style="font-size:11px;color:var(--teal);font-weight:600;">✓ Firma guardada</p>`
-            : `<div class="sig-container">
-                <canvas id="canvasCliente" class="sig-canvas" width="280" height="100"></canvas>
-                <div class="sig-toolbar">
-                  <span>Firma del cliente</span>
-                  <button class="btn-clear-sig" onclick="clearCanvas('canvasCliente')">Limpiar</button>
-                </div>
-               </div>
-               <input type="text" id="inputNombreCliente" placeholder="Aclaración (nombre y apellido) *" value="${esc(o.firmaClienteNombre||'')}" style="width:100%;margin-top:8px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" oninput="ordenActual.firmaClienteNombre=this.value">
-               ${!locked ? `<button class="btn btn-success btn-sm" style="margin-top:6px;width:100%" onclick="guardarFirmaCliente()">✍ Guardar firma cliente</button>` : ''}`
+            : (locked && o.estado !== 'locked_nosign')
+              ? `<p style="font-size:12px;color:#999;font-style:italic;">Sin firma del cliente</p>`
+              : `<div class="sig-container">
+                  <canvas id="canvasCliente" class="sig-canvas" width="280" height="100"></canvas>
+                  <div class="sig-toolbar">
+                    <span>Firma del cliente</span>
+                    <button class="btn-clear-sig" onclick="clearCanvas('canvasCliente')">Limpiar</button>
+                  </div>
+                 </div>
+                 <input type="text" id="inputNombreCliente" placeholder="Aclaración (nombre y apellido) *" value="${esc(o.firmaClienteNombre||'')}" style="width:100%;margin-top:8px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" oninput="ordenActual.firmaClienteNombre=this.value">
+                 <button class="btn btn-success btn-sm" style="margin-top:6px;width:100%" onclick="guardarFirmaClientePendiente()">✍ Guardar firma cliente</button>`
           }
         </div>
       </div>
@@ -4301,11 +4357,45 @@ function guardarFirmaCliente() {
   if (!nombre) { showToast('✏ Ingresá el nombre y apellido del cliente.'); document.getElementById('inputNombreCliente') && document.getElementById('inputNombreCliente').focus(); return; }
   const c = document.getElementById('canvasCliente');
   ordenActual.firmaCliente = c.toDataURL();
-  // NO bloquear aquí — solo se bloquea al presionar Finalizar
   registrarCambio('Firma del cliente guardada.');
   saveData();
   renderTab();
   showToast('✅ Firma guardada. Presioná Finalizar para cerrar la planilla.');
+}
+
+async function solicitarEdicionAdmin() {
+  if (!isAdmin()) return;
+  const users = JSON.parse(localStorage.getItem('branca_users') || '[]');
+  const admin = users.find(function(u) { return u.role === 'admin'; });
+  if (!admin) return;
+  const ok = await askPassword('🔓 Edición admin', 'Ingresá tu contraseña para desbloquear la edición de esta planilla.', admin.password);
+  if (!ok) { showToast('⚠ Contraseña incorrecta.'); return; }
+  window._adminEditando = ordenActual.id;
+  registrarCambio('Planilla desbloqueada para edición por admin.');
+  saveData();
+  renderFormContent();
+  showToast('🔓 Planilla desbloqueada. Recordá guardar los cambios.');
+}
+
+// Guardar firma del cliente en órdenes cerradas sin firma (locked_nosign → locked)
+function guardarFirmaClientePendiente() {
+  if (canvasIsEmpty('canvasCliente')) { showToast('✏ El cliente debe firmar primero.'); return; }
+  const nombre = (ordenActual.firmaClienteNombre || '').trim();
+  if (!nombre) { showToast('✏ Ingresá el nombre y apellido del cliente.'); document.getElementById('inputNombreCliente') && document.getElementById('inputNombreCliente').focus(); return; }
+  const c = document.getElementById('canvasCliente');
+  ordenActual.firmaCliente = c.toDataURL();
+  ordenActual.firmaClienteNombre = nombre;
+  if (ordenActual.estado === 'locked_nosign') {
+    ordenActual.estado = 'locked';
+    registrarEvento(ordenActual, 'Firma del cliente recibida — orden completada');
+  } else {
+    registrarCambio('Firma del cliente guardada.');
+  }
+  saveData();
+  _syncPush();
+  renderFormContent();
+  renderOrderList();
+  showToast('✅ Firma guardada. La orden queda cerrada y completa.');
 }
 
 // ==================== TAB COMPROBANTE ====================
@@ -4682,7 +4772,7 @@ var _factOpenId = null; // id de la carta actualmente abierta
 function renderFacturacion() {
   const mc = document.getElementById('mainContent');
   if (!mc) return;
-  const lista = ordenes.filter(function(o) { return o.estado === 'locked'; });
+  const lista = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
   // Resumen rápido: totales
   var totalCobrado = 0, totalPend = 0, sinFact = 0;
   lista.forEach(function(o) {
@@ -4975,7 +5065,7 @@ function renderActions() {
 
   if (!ordenActual) return;
 
-  const locked      = ordenActual.estado === 'locked';
+  const locked      = esLocked(ordenActual);
   const isPending   = ordenActual.estado === 'pending';
   const esComprobante = currentTab === 3;
 
@@ -5132,6 +5222,12 @@ function guardarOrden() {
   saveTabCliente();
   saveTabDiagnostico();
   delete ordenActual.draft;
+  // Asignar número al primer guardado
+  if (!ordenActual.numero) {
+    ordenActual.numero = getNextNum();
+    window._snapshotOrden = window._snapshotOrden || {};
+    window._snapshotOrden.numero = ordenActual.numero; // no contar como cambio
+  }
   var cambios = _detectarCambios(_snapshot, ordenActual);
   if (!ordenActual.historialCambios) ordenActual.historialCambios = [];
   const cu = getCurrentUser();
@@ -5178,9 +5274,23 @@ function finalizarOrden() {
     return;
   }
 
-  // CAMBIAR ESTADO A COMPLETADA Y BLOQUEADA
-  ordenActual.estado = 'locked';
-  registrarEvento(ordenActual, 'Orden cerrada');
+  // Si no tiene firma del cliente, ofrecer cerrar sin firma
+  if (!ordenActual.firmaCliente) {
+    const sinFirma = await showConfirm(
+      'Sin firma del cliente',
+      'El cliente no firmó la planilla. ¿Cerrar igual como "Cerrada sin firma"? Después podés agregar la firma del cliente desde el comprobante.'
+    );
+    if (!sinFirma) return;
+    ordenActual.estado = 'locked_nosign';
+    registrarEvento(ordenActual, 'Orden cerrada sin firma del cliente');
+  } else {
+    ordenActual.estado = 'locked';
+    registrarEvento(ordenActual, 'Orden cerrada');
+  }
+
+  // Asignar número si no tiene
+  if (!ordenActual.numero) ordenActual.numero = getNextNum();
+
   delete ordenActual.draft;
   const ordenFinal = ordenActual;
   const idxF = ordenes.findIndex(o => o.id === ordenFinal.id);
@@ -5193,7 +5303,7 @@ function finalizarOrden() {
   ordenActual = null;
   renderOrderList();
   switchView('nueva');
-  showToast('✅ Planilla finalizada y guardada.');
+  showToast(ordenFinal.estado === 'locked_nosign' ? '⚠ Planilla cerrada sin firma del cliente.' : '✅ Planilla finalizada y guardada.');
 }
 
 // ==================== SAVE HELPERS ====================
@@ -6775,6 +6885,11 @@ function enviarWSPconPDF() {
     URL.revokeObjectURL(url);
     setTimeout(function() { window.open(waUrl, '_blank'); }, 400);
     document.getElementById('wa-modal')?.remove();
+    // Registrar envío en historial
+    if (ordenActual) {
+      registrarCambio('Comprobante enviado por WhatsApp a ' + tel + '.');
+      saveData();
+    }
     showToast('📄 PDF descargado — adjuntalo en la conversación que se abrió.');
   };
 
@@ -6919,6 +7034,11 @@ function enviarEmail(tipo) {
       el.classList.remove('pdf-compact');
       document.getElementById('email-modal')?.remove();
       setTimeout(function() { location.href = mailUrl; }, 400);
+      // Registrar envío en historial
+      if (ordenActual) {
+        registrarCambio('Comprobante enviado por email a ' + to + '.');
+        saveData();
+      }
       showToast('📄 PDF descargado — adjuntalo al email que se abrió.');
     }).catch(function() {
       el.classList.remove('pdf-compact');
