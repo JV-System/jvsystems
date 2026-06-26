@@ -50,6 +50,11 @@
   /* Firma */
   .firma-seccion { margin-top: 40px; }
   .firmas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
+  @media (max-width: 600px) {
+    .firmas-grid { grid-template-columns: 1fr; gap: 20px; }
+    .firma-canvas-wrap canvas { height: 120px; }
+    .firma-img { height: 120px; }
+  }
   .firma-box { border: 1px solid #ddd; border-radius: 8px; padding: 18px; background: #fafafa; }
   .firma-box h4 { font-size: 13px; font-weight: 700; color: #1565D8; margin-bottom: 4px; }
   .firma-box .firma-nombre { font-size: 12px; color: #444; margin-bottom: 12px; }
