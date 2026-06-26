@@ -2902,14 +2902,16 @@ function renderOrderList() {
     if (esAnulada)  itemClass += ' anulada';
     if (ordenActual && ordenActual.id === o.id) itemClass += ' active';
     var badgeStyle = esPend ? 'status-pending' : (esCerrada || esSinFirma) ? 'status-locked' : esAnulada ? '' : 'status-open';
-    var badgeLabel = esPend ? 'Pendiente' : esCerrada ? 'Cerrada' : esSinFirma ? '⚠ Sin firma' : esAnulada ? '🚫 Anulada' : 'Abierta';
-    var badgeExtra = esAnulada ? 'style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"'
-                   : esSinFirma ? 'style="background:#fef3c7;color:#92400e;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"' : '';
+    var badgeLabel = esPend ? 'Pendiente' : (esCerrada || esSinFirma) ? 'Cerrada' : esAnulada ? '🚫 Anulada' : 'Abierta';
+    var badgeExtra = esAnulada ? 'style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"' : '';
     return `
     <div class="${itemClass}" onclick="seleccionarOrden(${o.id})" style="${esAnulada ? 'opacity:0.6;' : ''}">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
         <div class="order-num">${o.numero || '—'}</div>
-        <div class="order-status ${badgeStyle}" ${badgeExtra} style="position:static;transform:none;">${badgeLabel}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="order-status ${badgeStyle}" ${badgeExtra} style="position:static;transform:none;">${badgeLabel}</div>
+          ${esSinFirma ? '<span style="font-size:10px;color:#aaa;font-weight:500;">sin firma cliente</span>' : ''}
+        </div>
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
