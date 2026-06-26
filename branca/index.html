@@ -2893,7 +2893,7 @@ function renderOrderList() {
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
-      ${!esAnulada ? `<button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${esCerrada||esSinFirma ? '🚫 Anular' : '🗑 Eliminar'}</button>` : ''}
+      ${!esAnulada ? `<button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${o.numero ? '🚫 Anular' : '🗑 Eliminar'}</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -4562,7 +4562,11 @@ function renderTabComprobante() {
                   </div>
                 </td>
                 <td style="width:50%;text-align:center;padding:0 0 0 32px;vertical-align:bottom;border-left:1px solid #eee;">
-                  ${o.firmaCliente ? `<img src="${o.firmaCliente}" style="max-height:70px;max-width:180px;display:block;margin:0 auto;">` : `<div style="height:60px;"></div>`}
+                  ${o.firmaCliente
+                    ? `<img src="${o.firmaCliente}" style="max-height:70px;max-width:180px;display:block;margin:0 auto;">`
+                    : o.estado === 'locked_nosign'
+                      ? `<div style="height:60px;display:flex;align-items:center;justify-content:center;"><span style="font-size:11px;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:4px 10px;font-weight:700;">⚠ Firma pendiente</span></div>`
+                      : `<div style="height:60px;"></div>`}
                   <div style="border-top:1px solid #ccc;padding-top:8px;margin-top:6px;">
                     <div style="font-size:12px;font-weight:600;">${esc(o.firmaClienteNombre||o.contacto||'Cliente')}</div>
                     <div style="font-size:11px;color:var(--text-muted);">${esc(o.empresa||'')}</div>
