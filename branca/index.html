@@ -3524,12 +3524,12 @@ function filtrarHistorial() {
     return;
   }
 
-  const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada', locked_nosign:'⚠ Sin firma', anulada:'🚫 Anulada' };
+  const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada', locked_nosign:'🔒 Cerrada', anulada:'🚫 Anulada' };
   const estadoStyle = {
     open:         'background:#f0f0f0;color:#555;',
     pending:      'background:#fef3c7;color:#92400e;',
     locked:       'background:#d1fae5;color:#065f46;',
-    locked_nosign:'background:#fef3c7;color:#92400e;',
+    locked_nosign:'background:#d1fae5;color:#065f46;',
     anulada:      'background:#fee2e2;color:#991b1b;'
   };
 
@@ -3543,6 +3543,7 @@ function filtrarHistorial() {
       </div>
       <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${o.empresa||'(Sin empresa)'}</div>
       <div style="font-size:12px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
+      ${o.estado === 'locked_nosign' ? '<div style="font-size:11px;color:#aaa;margin-top:3px;">sin firma cliente</div>' : ''}
       ${o.marca ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
   `; }).join('');
