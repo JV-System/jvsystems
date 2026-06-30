@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructivo Admin — App Branca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { color-scheme: light only; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; background: #f2f4f8; }
+  .wrap { max-width: 820px; margin: 32px auto; padding: 0 16px 60px; }
+
+  .header { background: #0A1628; border-radius: 10px; padding: 28px 32px; margin-bottom: 28px; color: #fff; }
+  .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header .rol { display: inline-block; background: rgba(124,58,237,0.3); color: #c4b5fd; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+
+  .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
+  .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .seccion-header .icon { font-size: 20px; }
+  .seccion-header h2 { font-size: 14px; font-weight: 700; color: #1565D8; }
+  .seccion-body { padding: 20px; }
+
+  .paso { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+  .paso:last-child { margin-bottom: 0; }
+  .paso-num { background: #1565D8; color: #fff; font-size: 12px; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .paso-txt { flex: 1; line-height: 1.6; color: #333; }
+  .paso-txt strong { color: #0A1628; }
+
+  .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
+  .tip strong { color: #7C5A00; }
+
+  .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .tag-verde { background: #d1fae5; color: #065f46; }
+  .tag-naranja { background: #fef3c7; color: #92400e; }
+  .tag-rojo { background: #fee2e2; color: #991b1b; }
+  .tag-azul { background: #dbeafe; color: #1e40af; }
+  .tag-violeta { background: #ede9fe; color: #5b21b6; }
+
+  .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
+  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">App Branca — Instructivo de uso</div>
+    <h1>Guía para Administrador</h1>
+    <div class="rol">👑 Rol: Admin</div>
+  </div>
+
+  <!-- ACCESO Y PERMISOS -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🔐</span><h2>Acceso y permisos del administrador</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Entrá a <strong>jvsystems.com.ar/branca/</strong> con tu usuario y contraseña de administrador.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Como admin ves <strong>todas las órdenes</strong> de todos los técnicos, en todos los estados.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Sos el único rol que puede entrar a <strong>Configuración</strong>, editar órdenes cerradas y gestionar la planificación.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">⚙️</span><h2>Acceder a Configuración</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Configuración</strong> en la barra superior.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">El sistema te va a pedir una <strong>contraseña adicional</strong> para entrar — es una protección extra para esta sección.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Una vez dentro podés gestionar usuarios, técnicos y otros parámetros del sistema.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si cerrás la app o recargás, vas a tener que volver a ingresar esa contraseña — es por sesión.</div>
+    </div>
+  </div>
+
+  <!-- EDITAR ORDEN CERRADA -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">✏️</span><h2>Editar una orden ya cerrada</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Por defecto, una orden cerrada (firmada) <strong>no se puede modificar</strong> — esto protege la integridad del comprobante ya entregado al cliente.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Si necesitás corregir algo, abrí la orden y tocá <strong>Editar</strong>. El sistema te va a pedir la contraseña de administrador para desbloquearla.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Una vez desbloqueada podés modificar los datos necesarios y guardar de nuevo.</div>
+      </div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Usá esta función solo para correcciones reales (errores de tipeo, datos mal cargados). Cada edición queda registrada en el historial de cambios de la orden.</div>
+    </div>
+  </div>
+
+  <!-- NÚMERO DE ORDEN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🔢</span><h2>Cambiar el número de una orden</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Abrí la orden cerrada y tocá el número de orden.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Vas a poder asignar o corregir el número manualmente, útil si hay que ordenar correlativos o corregir un error de carga.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLANIFICACIÓN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📅</span><h2>Planificación de visitas</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Planificación</strong> en la barra superior para ver las visitas programadas a futuro (órdenes en estado <strong>Planificada</strong>).</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Desde cualquier orden podés tocar <strong>📅 Reprogramar</strong> para cambiar la fecha de la visita.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Si una orden ya no corresponde, tocá <strong>🗑 Eliminar</strong> (o <strong>🚫 Anular</strong> si ya tiene número asignado).</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Anular conserva el registro en el historial pero lo excluye de la facturación. Eliminar borra la orden por completo — usalo solo con borradores o errores de carga.</div>
+    </div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📊</span><h2>Estados de las órdenes</h2></div>
+    <div class="seccion-body">
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-azul">Abierta</span> &nbsp;Orden en curso por un técnico.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-naranja">Pendiente</span> &nbsp;Esperando repuesto, aprobación o respuesta del cliente.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Cerrada</span> &nbsp;Trabajo terminado y firmado.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Sin firma cliente</span> &nbsp;Terminada, falta la firma del cliente.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-rojo">Anulada</span> &nbsp;Cancelada, no se factura.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-violeta">Planificada</span> &nbsp;Visita programada a futuro.</div></div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL Y FILTROS -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Historial completo</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">En <strong>Historial</strong> ves absolutamente todas las órdenes del sistema, de todos los técnicos.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Podés filtrar por <strong>cliente, estado o fecha</strong> usando los filtros de arriba.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px;">
+    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  </div>
+
+  <div class="footer">
+    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.0 Julio 2026
+  </div>
+
+</div>
+</body>
+</html>

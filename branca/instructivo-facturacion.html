@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructivo Facturación — App Branca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { color-scheme: light only; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; background: #f2f4f8; }
+  .wrap { max-width: 820px; margin: 32px auto; padding: 0 16px 60px; }
+
+  .header { background: #0A1628; border-radius: 10px; padding: 28px 32px; margin-bottom: 28px; color: #fff; }
+  .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header .rol { display: inline-block; background: rgba(245,158,11,0.3); color: #fcd34d; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+
+  .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
+  .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .seccion-header .icon { font-size: 20px; }
+  .seccion-header h2 { font-size: 14px; font-weight: 700; color: #1565D8; }
+  .seccion-body { padding: 20px; }
+
+  .paso { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+  .paso:last-child { margin-bottom: 0; }
+  .paso-num { background: #1565D8; color: #fff; font-size: 12px; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .paso-txt { flex: 1; line-height: 1.6; color: #333; }
+  .paso-txt strong { color: #0A1628; }
+
+  .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
+  .tip strong { color: #7C5A00; }
+
+  .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .tag-verde { background: #d1fae5; color: #065f46; }
+  .tag-naranja { background: #fef3c7; color: #92400e; }
+  .tag-gris { background: #e5e7eb; color: #374151; }
+
+  .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
+  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">App Branca — Instructivo de uso</div>
+    <h1>Guía para Facturación</h1>
+    <div class="rol">🧾 Rol: Facturación</div>
+  </div>
+
+  <!-- ACCESO -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🔐</span><h2>Cómo ingresar al sistema</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Entrá a <strong>jvsystems.com.ar/branca/</strong> con tu usuario y contraseña.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Con el rol de Facturación solo vas a ver las órdenes <strong>cerradas</strong> (las que ya están terminadas), no las abiertas ni pendientes de los técnicos.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Esto es intencional — tu trabajo es sobre lo que ya está listo para facturar, no sobre el trabajo en curso de los técnicos.</div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Ver órdenes en el Historial</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Ahí aparecen todas las órdenes <strong>cerradas</strong> y las <strong>sin firma del cliente</strong> de todos los técnicos.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Podés filtrar por <strong>cliente o fecha</strong> para ubicar rápido lo que necesitás facturar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL FACTURACIÓN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">💰</span><h2>Panel de Facturación</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Facturación</strong> en la barra superior para ver el panel dedicado.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Cada orden cerrada aparece con su estado de cobro:</div>
+      </div>
+      <div style="margin-left:40px;margin-top:-6px;margin-bottom:10px;">
+        <p style="margin-bottom:6px;"><span class="tag tag-gris">Sin facturar</span> &nbsp;Todavía no se le asignó número de factura.</p>
+        <p style="margin-bottom:6px;"><span class="tag tag-naranja">Pendiente de cobro</span> &nbsp;Ya tiene factura asignada, pero el cliente todavía no pagó.</p>
+        <p><span class="tag tag-verde">Cobrado</span> &nbsp;Facturada y cobrada — proceso completo.</p>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Tocando una orden podés cargar el <strong>número de factura</strong> (ej. F-001) y luego marcarla como <strong>Cobrada</strong> cuando el cliente pague.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Usá los filtros del panel para ver de un vistazo qué falta facturar y qué está pendiente de cobro.</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px;">
+    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  </div>
+
+  <div class="footer">
+    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.0 Julio 2026
+  </div>
+
+</div>
+</body>
+</html>

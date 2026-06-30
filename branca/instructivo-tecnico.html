@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructivo Técnico — App Branca</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { color-scheme: light only; }
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; background: #f2f4f8; }
+  .wrap { max-width: 820px; margin: 32px auto; padding: 0 16px 60px; }
+
+  .header { background: #0A1628; border-radius: 10px; padding: 28px 32px; margin-bottom: 28px; color: #fff; }
+  .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header .rol { display: inline-block; background: rgba(29,158,117,0.3); color: #80cbc4; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+
+  .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
+  .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
+  .seccion-header .icon { font-size: 20px; }
+  .seccion-header h2 { font-size: 14px; font-weight: 700; color: #1565D8; }
+  .seccion-body { padding: 20px; }
+
+  .paso { display: flex; gap: 14px; margin-bottom: 16px; align-items: flex-start; }
+  .paso:last-child { margin-bottom: 0; }
+  .paso-num { background: #1565D8; color: #fff; font-size: 12px; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .paso-txt { flex: 1; line-height: 1.6; color: #333; }
+  .paso-txt strong { color: #0A1628; }
+
+  .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
+  .tip strong { color: #7C5A00; }
+
+  .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
+
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .tag-verde { background: #d1fae5; color: #065f46; }
+  .tag-naranja { background: #fef3c7; color: #92400e; }
+  .tag-rojo { background: #fee2e2; color: #991b1b; }
+  .tag-azul { background: #dbeafe; color: #1e40af; }
+  .tag-violeta { background: #ede9fe; color: #5b21b6; }
+
+  .estados-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  @media (max-width: 500px) { .estados-grid { grid-template-columns: 1fr; } }
+  .estado-item { border: 1px solid #e0e8f7; border-radius: 8px; padding: 10px 12px; }
+  .estado-item .badge { font-size: 12px; font-weight: 700; }
+  .estado-item p { font-size: 12px; color: #555; margin-top: 4px; line-height: 1.5; }
+
+  .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
+  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">App Branca — Instructivo de uso</div>
+    <h1>Guía para Técnicos</h1>
+    <div class="rol">🔧 Rol: Técnico</div>
+  </div>
+
+  <!-- ACCESO -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🔐</span><h2>Cómo ingresar al sistema</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Abrí el navegador y entrá a <strong>jvsystems.com.ar/branca/</strong></div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Ingresá tu <strong>usuario y contraseña</strong> asignados por el administrador.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Una vez dentro vas a ver solo las órdenes que te corresponden a vos.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Podés instalar la app en tu celular desde el navegador tocando "Agregar a pantalla de inicio" para acceso rápido.</div>
+    </div>
+  </div>
+
+  <!-- NUEVA ORDEN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">➕</span><h2>Crear una nueva orden de servicio</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá el botón <strong>+ Nueva Orden</strong> en la barra superior.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Completá los datos del cliente: <strong>Empresa, Contacto, Teléfono, Email y Ubicación</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Completá los datos de la máquina: <strong>Marca, Modelo y Número de serie</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Cargá el diagnóstico: <strong>Problema detectado, Causa raíz y Acción realizada</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-txt">Tocá <strong>Guardar</strong> — el sistema le asigna un número automático a la orden.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si tenés que salir antes de terminar, la orden queda guardada como borrador. La encontrás arriba del todo en el panel izquierdo para seguir editando.</div>
+    </div>
+  </div>
+
+  <!-- ESTADOS -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📊</span><h2>Estados de las órdenes</h2></div>
+    <div class="seccion-body">
+      <div class="estados-grid">
+        <div class="estado-item">
+          <div class="badge tag tag-azul">● Abierta</div>
+          <p>Orden creada y en curso. Podés seguir editándola.</p>
+        </div>
+        <div class="estado-item">
+          <div class="badge tag tag-naranja">⏸ Pendiente</div>
+          <p>En espera de repuesto, aprobación o respuesta del cliente.</p>
+        </div>
+        <div class="estado-item">
+          <div class="badge tag tag-verde">🔒 Cerrada</div>
+          <p>Trabajo terminado y firmado por el cliente.</p>
+        </div>
+        <div class="estado-item">
+          <div class="badge tag tag-verde">🔒 Sin firma cliente</div>
+          <p>Trabajo terminado pero el cliente aún no firmó.</p>
+        </div>
+        <div class="estado-item">
+          <div class="badge tag tag-rojo">🚫 Anulada</div>
+          <p>Orden cancelada. No cuenta para facturación.</p>
+        </div>
+        <div class="estado-item">
+          <div class="badge tag tag-violeta">📅 Planificada</div>
+          <p>Visita programada a futuro.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERRAR ORDEN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">✅</span><h2>Cerrar una orden</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Con la orden abierta, asegurate de que todos los campos estén completos.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Tocá <strong>Finalizar orden</strong> — el sistema te va a pedir confirmación.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">El cliente puede <strong>firmar en pantalla</strong> directamente en el celular o tablet.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Una vez cerrada podés enviar el comprobante por <strong>WhatsApp o Email</strong> desde la misma orden.</div>
+      </div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Una vez cerrada la orden no se puede editar. Si necesitás hacer cambios, pedíselo al administrador.</div>
+    </div>
+  </div>
+
+  <!-- ENVÍO COMPROBANTE -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📤</span><h2>Enviar comprobante al cliente</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Abrí la orden cerrada desde el panel izquierdo.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Tocá <strong>Enviar por WhatsApp</strong> o <strong>Enviar por Email</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">El sistema genera el comprobante PDF y abre WhatsApp/Email automáticamente.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Cada envío queda registrado en el historial de la orden automáticamente.</div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Ver el historial de órdenes</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Vas a ver todas tus órdenes. Podés filtrar por <strong>cliente, estado o fecha</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Tocando cualquier orden podés ver todos sus detalles e historial de cambios.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:28px;">
+    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  </div>
+
+  <div class="footer">
+    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.0 Julio 2026
+  </div>
+
+</div>
+</body>
+</html>
