@@ -6824,8 +6824,8 @@ function hideLoginScreen() {
 function mostrarBienvenida() {
   const cu = getCurrentUser();
   if (!cu) return;
-  const key = 'branca_bienvenida_' + cu.id;
-  if (localStorage.getItem(key)) return;
+  const key = 'branca_bienvenida_' + (cu.username || cu.id || 'user');
+  try { if (localStorage.getItem(key)) return; } catch(e) { return; }
   const modal = document.getElementById('modal-bienvenida');
   if (!modal) return;
   document.getElementById('bienvenida-nombre').textContent = '¡Hola, ' + (cu.nombre || cu.username) + '!';
@@ -6838,7 +6838,7 @@ function mostrarBienvenida() {
   rolEl.style.background = r.bg;
   rolEl.style.color = r.color;
   modal.style.display = 'flex';
-  localStorage.setItem(key, '1');
+  try { localStorage.setItem(key, '1'); } catch(e) {}
 }
 
 function cerrarBienvenida() {
