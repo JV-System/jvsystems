@@ -14,6 +14,7 @@
   .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
   .header .rol { display: inline-block; background: rgba(245,158,11,0.3); color: #fcd34d; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+  .header .subtitulo { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
   .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
   .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
@@ -29,16 +30,40 @@
 
   .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
   .tip strong { color: #7C5A00; }
-
   .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
 
-  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
-  .tag-verde { background: #d1fae5; color: #065f46; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .tag-verde  { background: #d1fae5; color: #065f46; }
   .tag-naranja { background: #fef3c7; color: #92400e; }
-  .tag-gris { background: #e5e7eb; color: #374151; }
+  .tag-azul   { background: #dbeafe; color: #1e40af; }
+  .tag-gris   { background: #e5e7eb; color: #374151; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 12px 0; }
+  @media (max-width:500px) { .kpi-grid { grid-template-columns: 1fr; } }
+  .kpi { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; border-left: 4px solid #e5e7eb; }
+  .kpi.amarillo { border-left-color: #f59e0b; }
+  .kpi.azul     { border-left-color: #3b82f6; }
+  .kpi.verde    { border-left-color: #10b981; }
+  .kpi .kpi-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+  .kpi .kpi-val   { font-size: 18px; font-weight: 800; color: #0A1628; }
+  .kpi .kpi-sub   { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+  .comprobante-preview { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin: 12px 0; }
+  .comp-header { background: #0A1628; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .comp-header span { font-size: 11px; font-weight: 700; }
+  .comp-header .izq { color: #7EB3F7; text-transform: uppercase; letter-spacing: 0.6px; }
+  .comp-header .der { color: #fff; }
+  .comp-body { padding: 14px; background: #fff; }
+  .comp-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  @media (max-width:500px) { .comp-fields { grid-template-columns: 1fr; } }
+  .comp-field label { display: block; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 3px; }
+  .comp-field .val { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 10px; font-size: 12px; color: #111; }
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
+  .comp-table th { background: #f1f5f9; padding: 6px 8px; text-align: left; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb; }
+  .comp-table td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; color: #333; }
+  .comp-table td.num { text-align: right; }
 
   .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
-  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -48,40 +73,22 @@
     <div class="logo">App Branca — Instructivo de uso</div>
     <h1>Guía para Facturación</h1>
     <div class="rol">🧾 Rol: Facturación</div>
+    <div class="subtitulo">Podés consultar este instructivo en cualquier momento desde el botón <strong style="color:#fff;">📖 Instructivo</strong> en la barra superior de la app.</div>
   </div>
 
-  <!-- ACCESO -->
+  <!-- QUÉ VES -->
   <div class="seccion">
-    <div class="seccion-header"><span class="icon">🔐</span><h2>Cómo ingresar al sistema</h2></div>
+    <div class="seccion-header"><span class="icon">👁</span><h2>¿Qué ves en la app?</h2></div>
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Entrá a <strong>jvsystems.com.ar/branca/</strong> con tu usuario y contraseña.</div>
+        <div class="paso-txt">Con el rol de Facturación solo ves las órdenes <strong>cerradas</strong> y las <strong>sin firma del cliente</strong> — las que ya están listas para facturar. Las abiertas o pendientes de los técnicos no aparecen.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Con el rol de Facturación solo vas a ver las órdenes <strong>cerradas</strong> (las que ya están terminadas), no las abiertas ni pendientes de los técnicos.</div>
+        <div class="paso-txt">En la barra superior tenés acceso a <strong>Historial</strong>, <strong>Facturación</strong> y <strong>Configuración</strong>.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Esto es intencional — tu trabajo es sobre lo que ya está listo para facturar, no sobre el trabajo en curso de los técnicos.</div>
-    </div>
-  </div>
-
-  <!-- HISTORIAL -->
-  <div class="seccion">
-    <div class="seccion-header"><span class="icon">📋</span><h2>Ver órdenes en el Historial</h2></div>
-    <div class="seccion-body">
-      <div class="paso">
-        <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">2</div>
-        <div class="paso-txt">Ahí aparecen todas las órdenes <strong>cerradas</strong> y las <strong>sin firma del cliente</strong> de todos los técnicos.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">Podés filtrar por <strong>cliente o fecha</strong> para ubicar rápido lo que necesitás facturar.</div>
-      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si falta una orden que esperabas ver, puede que el técnico todavía no la haya cerrado. Consultalo con el administrador.</div>
     </div>
   </div>
 
@@ -91,27 +98,145 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Facturación</strong> en la barra superior para ver el panel dedicado.</div>
+        <div class="paso-txt">Tocá <strong>Facturación</strong> en la barra superior. Vas a ver 3 indicadores con el resumen de situación:</div>
       </div>
-      <div class="paso">
+
+      <div class="kpi-grid">
+        <div class="kpi amarillo">
+          <div class="kpi-label">Sin facturar</div>
+          <div class="kpi-val">27</div>
+          <div class="kpi-sub">órdenes</div>
+        </div>
+        <div class="kpi azul">
+          <div class="kpi-label">Pendiente cobro</div>
+          <div class="kpi-val">$ 0</div>
+          <div class="kpi-sub">a cobrar</div>
+        </div>
+        <div class="kpi verde">
+          <div class="kpi-label">Cobrado</div>
+          <div class="kpi-val">$ 0</div>
+          <div class="kpi-sub">total</div>
+        </div>
+      </div>
+
+      <div class="paso" style="margin-top:12px;">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Cada orden cerrada aparece con su estado de cobro:</div>
-      </div>
-      <div style="margin-left:40px;margin-top:-6px;margin-bottom:10px;">
-        <p style="margin-bottom:6px;"><span class="tag tag-gris">Sin facturar</span> &nbsp;Todavía no se le asignó número de factura.</p>
-        <p style="margin-bottom:6px;"><span class="tag tag-naranja">Pendiente de cobro</span> &nbsp;Ya tiene factura asignada, pero el cliente todavía no pagó.</p>
-        <p><span class="tag tag-verde">Cobrado</span> &nbsp;Facturada y cobrada — proceso completo.</p>
+        <div class="paso-txt">Usá los <strong>botones de filtro</strong> para ver solo lo que necesitás: Todas / Sin facturar / Pendiente / Cobrado.</div>
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
-        <div class="paso-txt">Tocando una orden podés cargar el <strong>número de factura</strong> (ej. F-001) y luego marcarla como <strong>Cobrada</strong> cuando el cliente pague.</div>
+        <div class="paso-txt">El <strong>buscador</strong> te permite encontrar una orden por nombre de empresa, número de orden o número de factura.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Usá los filtros del panel para ver de un vistazo qué falta facturar y qué está pendiente de cobro.</div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">La lista aparece ordenada automáticamente: primero las <span class="tag tag-naranja">Sin facturar</span>, después <span class="tag tag-azul">Pendiente</span>, y al final <span class="tag tag-verde">Cobrado</span>.</div>
+      </div>
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:28px;">
-    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  <!-- CARGAR COMPROBANTE -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Cargar un comprobante de venta</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá cualquier orden de la lista para expandir el comprobante.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Completá los campos del comprobante:</div>
+      </div>
+
+      <div class="comprobante-preview">
+        <div class="comp-header">
+          <span class="izq">Comprobante de Venta</span>
+          <span class="der">Ingeniería Branca SRL</span>
+        </div>
+        <div class="comp-body">
+          <div class="comp-fields">
+            <div class="comp-field"><label>Cliente</label><div class="val">Arhon Srl <span style="color:#9ca3af;font-size:10px;">(automático)</span></div></div>
+            <div class="comp-field"><label>Tipo</label><div class="val">Factura <span style="color:#9ca3af;font-size:10px;">(automático)</span></div></div>
+            <div class="comp-field"><label>N° Comprobante</label><div class="val" style="background:#fff;border-color:#1565D8;">F-002 ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Fecha</label><div class="val" style="background:#fff;border-color:#1565D8;">05/07/2026 ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Condición de Pago</label><div class="val" style="background:#fff;border-color:#1565D8;">Contado ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Estado</label><div class="val" style="background:#fff;border-color:#1565D8;">Pendiente / Cobrado ← <strong>ingresás vos</strong></div></div>
+          </div>
+          <table class="comp-table">
+            <thead><tr><th>Producto/Servicio</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr><td>Mano de obra</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+              <tr><td>Repuestos</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+              <tr><td>Gastos varios</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="paso" style="margin-top:12px;">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">El sistema calcula automáticamente el <strong>subtotal, IVA 21% y TOTAL</strong> a medida que cargás los precios.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Tocá <strong>💾 Guardar</strong> para registrar el comprobante. Si querés un PDF, tocá <strong>📄 Vista previa PDF</strong>. Para enviarlo por mail al cliente, tocá <strong>✉ Enviar por mail</strong>.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Guardá primero antes de generar el PDF o enviar el mail, así el comprobante queda registrado correctamente.</div>
+    </div>
+  </div>
+
+  <!-- ESTADOS DE COBRO -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">✅</span><h2>Estados de cobro</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt"><span class="tag tag-naranja">Sin facturar</span> &nbsp;La orden cerrada todavía no tiene número de factura cargado. Es lo primero que hay que procesar.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt"><span class="tag tag-azul">⏳ Pendiente cobro</span> &nbsp;Ya tiene factura asignada pero el cliente todavía no pagó. Cambiá el estado a <strong>Cobrado</strong> cuando el pago ingrese.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt"><span class="tag tag-verde">✓ Cobrado</span> &nbsp;Facturada y cobrada — proceso completo. Queda en el historial como registro.</div>
+      </div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Solo cambiá el estado a Cobrado cuando el pago ya esté confirmado, no antes.</div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Ver órdenes en el Historial</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior para ver el detalle completo de cualquier orden cerrada.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Podés filtrar por <strong>cliente o fecha</strong>. Tocando una orden ves todos sus detalles: cliente, equipo, técnico, diagnóstico y comprobante.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">👤</span><h2>Mi perfil — contraseña y sesión</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá tu avatar o inicial en la esquina superior derecha para abrir tu perfil.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">En <strong>Cambiar contraseña</strong> tocá la sección para expandirla, ingresá la contraseña actual, la nueva y confirmala.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Desde el perfil también podés <strong>cerrar sesión</strong> de forma segura.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si olvidás tu contraseña, pedísela al administrador para que te la restablezca.</div>
+    </div>
   </div>
 
   <div class="footer">

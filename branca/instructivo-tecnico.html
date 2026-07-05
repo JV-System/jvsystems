@@ -14,6 +14,7 @@
   .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
   .header .rol { display: inline-block; background: rgba(29,158,117,0.3); color: #80cbc4; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+  .header .subtitulo { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
   .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
   .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
@@ -29,7 +30,6 @@
 
   .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
   .tip strong { color: #7C5A00; }
-
   .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
 
   .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
@@ -46,7 +46,6 @@
   .estado-item p { font-size: 12px; color: #555; margin-top: 4px; line-height: 1.5; }
 
   .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
-  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -56,26 +55,7 @@
     <div class="logo">App Branca — Instructivo de uso</div>
     <h1>Guía para Técnicos</h1>
     <div class="rol">🔧 Rol: Técnico</div>
-  </div>
-
-  <!-- ACCESO -->
-  <div class="seccion">
-    <div class="seccion-header"><span class="icon">🔐</span><h2>Cómo ingresar al sistema</h2></div>
-    <div class="seccion-body">
-      <div class="paso">
-        <div class="paso-num">1</div>
-        <div class="paso-txt">Abrí el navegador y entrá a <strong>jvsystems.com.ar/branca/</strong></div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">2</div>
-        <div class="paso-txt">Vas a ver solo las órdenes que te corresponden a vos.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">La primera vez que cierres una orden, dibujá tu <strong>firma</strong> en el recuadro correspondiente. El sistema la guarda automáticamente en tu perfil, así que de ahí en más se va a completar sola en cada orden nueva.</div>
-      </div>
-      <div class="tip"><strong>💡 Tip:</strong> Podés instalar la app en tu celular desde el navegador tocando "Agregar a pantalla de inicio" para acceso rápido.</div>
-    </div>
+    <div class="subtitulo">Podés consultar este instructivo en cualquier momento desde el botón <strong style="color:#fff;">📖 Instructivo</strong> en la barra superior de la app.</div>
   </div>
 
   <!-- NUEVA ORDEN -->
@@ -102,7 +82,7 @@
         <div class="paso-num">5</div>
         <div class="paso-txt">Tocá <strong>Guardar</strong> — el sistema le asigna un número automático a la orden.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Si tenés que salir antes de terminar, la orden queda guardada como borrador. La encontrás arriba del todo en el panel izquierdo para seguir editando.</div>
+      <div class="tip"><strong>💡 Tip:</strong> Si tenés que salir antes de terminar, la orden queda guardada como borrador. La encontrás arriba en el panel izquierdo para seguir editando.</div>
     </div>
   </div>
 
@@ -153,10 +133,14 @@
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
-        <div class="paso-txt">El cliente puede <strong>firmar en pantalla</strong> directamente en el celular o tablet.</div>
+        <div class="paso-txt">Dibujá tu <strong>firma de técnico</strong> en el recuadro. La primera vez que firmás, el sistema la guarda en tu perfil y se completa sola en las siguientes órdenes.</div>
       </div>
       <div class="paso">
         <div class="paso-num">4</div>
+        <div class="paso-txt">El cliente puede <strong>firmar en pantalla</strong> directamente en el celular o tablet.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">5</div>
         <div class="paso-txt">Una vez cerrada podés enviar el comprobante por <strong>WhatsApp o Email</strong> desde la misma orden.</div>
       </div>
       <div class="alerta"><strong>⚠ Importante:</strong> Una vez cerrada la orden no se puede editar. Si necesitás hacer cambios, pedíselo al administrador.</div>
@@ -181,9 +165,9 @@
       </div>
       <div class="paso">
         <div class="paso-num">4</div>
-        <div class="paso-txt">En la conversación o el email que se abrió, <strong>adjuntá manualmente</strong> el PDF que se descargó (normalmente lo encontrás en la carpeta "Descargas").</div>
+        <div class="paso-txt">En la conversación o el email que se abrió, <strong>adjuntá manualmente</strong> el PDF que se descargó (normalmente en la carpeta "Descargas").</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Cada envío queda registrado en el historial de la orden automáticamente. El PDF no se envía solo — siempre hay que adjuntarlo a mano desde donde se descargó.</div>
+      <div class="tip"><strong>💡 Tip:</strong> Cada envío queda registrado en el historial de la orden automáticamente.</div>
     </div>
   </div>
 
@@ -206,8 +190,28 @@
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:28px;">
-    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  <!-- PERFIL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">👤</span><h2>Mi perfil — firma y contraseña</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá tu avatar o inicial en la esquina superior derecha para abrir tu perfil.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">En <strong>Mi firma digital</strong> podés ver tu firma guardada o dibujar una nueva. Esta firma se usa automáticamente al cerrar órdenes.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">En <strong>Cambiar contraseña</strong> ingresá tu contraseña actual, la nueva y confirmala. Luego tocá <strong>Cambiar contraseña</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Desde el perfil también podés <strong>cerrar sesión</strong> cuando termines de usar la app.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si olvidás tu contraseña, pedísela al administrador para que te la restablezca.</div>
+    </div>
   </div>
 
   <div class="footer">

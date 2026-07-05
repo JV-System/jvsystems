@@ -14,6 +14,7 @@
   .header .logo { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
   .header .rol { display: inline-block; background: rgba(124,58,237,0.3); color: #c4b5fd; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-top: 8px; }
+  .header .subtitulo { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 8px; }
 
   .seccion { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); margin-bottom: 20px; overflow: hidden; }
   .seccion-header { background: #F0F6FF; border-bottom: 2px solid #1565D8; padding: 14px 20px; display: flex; align-items: center; gap: 10px; }
@@ -29,7 +30,6 @@
 
   .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
   .tip strong { color: #7C5A00; }
-
   .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
 
   .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
@@ -40,7 +40,6 @@
   .tag-violeta { background: #ede9fe; color: #5b21b6; }
 
   .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
-  .btn-app { display: inline-block; background: #1565D8; color: #fff; font-weight: 700; font-size: 14px; padding: 12px 28px; border-radius: 8px; text-decoration: none; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -50,44 +49,39 @@
     <div class="logo">App Branca — Instructivo de uso</div>
     <h1>Guía para Administrador</h1>
     <div class="rol">👑 Rol: Admin</div>
+    <div class="subtitulo">Podés consultar este instructivo en cualquier momento desde el botón <strong style="color:#fff;">📖 Instructivo</strong> en la barra superior de la app.</div>
   </div>
 
-  <!-- ACCESO Y PERMISOS -->
+  <!-- NUEVA ORDEN -->
   <div class="seccion">
-    <div class="seccion-header"><span class="icon">🔐</span><h2>Acceso y permisos del administrador</h2></div>
+    <div class="seccion-header"><span class="icon">➕</span><h2>Crear una nueva orden de servicio</h2></div>
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Entrá a <strong>jvsystems.com.ar/branca/</strong> con tu usuario y contraseña de administrador.</div>
+        <div class="paso-txt">Tocá <strong>+ Nueva Orden</strong> en la barra superior.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Como admin ves <strong>todas las órdenes</strong> de todos los técnicos, en todos los estados.</div>
+        <div class="paso-txt">Completá los datos del cliente, de la máquina y el diagnóstico. Podés asignar la orden a cualquier técnico desde el campo <strong>Responsable</strong>.</div>
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
-        <div class="paso-txt">Sos el único rol que puede entrar a <strong>Configuración</strong>, editar órdenes cerradas y gestionar la planificación.</div>
+        <div class="paso-txt">Tocá <strong>Guardar</strong> para registrarla. El sistema asigna el número automáticamente.</div>
       </div>
+      <div class="tip"><strong>💡 Tip:</strong> Como admin ves todas las órdenes de todos los técnicos, no solo las tuyas.</div>
     </div>
   </div>
 
-  <!-- CONFIGURACIÓN -->
+  <!-- ESTADOS -->
   <div class="seccion">
-    <div class="seccion-header"><span class="icon">⚙️</span><h2>Acceder a Configuración</h2></div>
+    <div class="seccion-header"><span class="icon">📊</span><h2>Estados de las órdenes</h2></div>
     <div class="seccion-body">
-      <div class="paso">
-        <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Configuración</strong> en la barra superior.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">2</div>
-        <div class="paso-txt">El sistema te va a pedir una <strong>contraseña adicional</strong> para entrar — es una protección extra para esta sección.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">Una vez dentro podés gestionar usuarios, técnicos y otros parámetros del sistema.</div>
-      </div>
-      <div class="tip"><strong>💡 Tip:</strong> Si cerrás la app o recargás, vas a tener que volver a ingresar esa contraseña — es por sesión.</div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-azul">Abierta</span> &nbsp;Orden en curso.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-naranja">Pendiente</span> &nbsp;En espera de repuesto, aprobación o respuesta del cliente.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Cerrada</span> &nbsp;Trabajo terminado y firmado.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Sin firma cliente</span> &nbsp;Terminada, falta la firma del cliente.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-rojo">Anulada</span> &nbsp;Cancelada, no se factura.</div></div>
+      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-violeta">Planificada</span> &nbsp;Visita programada a futuro.</div></div>
     </div>
   </div>
 
@@ -97,17 +91,13 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Por defecto, una orden cerrada (firmada) <strong>no se puede modificar</strong> — esto protege la integridad del comprobante ya entregado al cliente.</div>
+        <div class="paso-txt">Abrí la orden cerrada y tocá <strong>Editar</strong>. El sistema te va a pedir la contraseña de administrador para desbloquearla.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Si necesitás corregir algo, abrí la orden y tocá <strong>Editar</strong>. El sistema te va a pedir la contraseña de administrador para desbloquearla.</div>
+        <div class="paso-txt">Una vez desbloqueada podés corregir los datos necesarios y guardar de nuevo.</div>
       </div>
-      <div class="paso">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">Una vez desbloqueada podés modificar los datos necesarios y guardar de nuevo.</div>
-      </div>
-      <div class="alerta"><strong>⚠ Importante:</strong> Usá esta función solo para correcciones reales (errores de tipeo, datos mal cargados). Cada edición queda registrada en el historial de cambios de la orden.</div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Usá esta función solo para correcciones reales. Cada edición queda registrada en el historial de cambios de la orden.</div>
     </div>
   </div>
 
@@ -117,12 +107,28 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Abrí la orden cerrada y tocá el número de orden.</div>
+        <div class="paso-txt">Abrí la orden cerrada y tocá el número de orden para editarlo manualmente.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Vas a poder asignar o corregir el número manualmente, útil si hay que ordenar correlativos o corregir un error de carga.</div>
+        <div class="paso-txt">Útil para ordenar correlativos o corregir un error de carga.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ANULAR / ELIMINAR -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🚫</span><h2>Anular o eliminar una orden</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt"><strong>Anular</strong> — Si la orden ya tiene número asignado, aparece el botón 🚫 Anular. La orden queda en el historial pero no cuenta para facturación.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt"><strong>Eliminar</strong> — Si la orden no tiene número (borrador o error de carga), aparece el botón 🗑 Eliminar. Borra la orden por completo.</div>
+      </div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Eliminar es irreversible. Preferí anular si tenés dudas, así queda registro.</div>
     </div>
   </div>
 
@@ -132,50 +138,75 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Planificación</strong> en la barra superior para ver las visitas programadas a futuro (órdenes en estado <strong>Planificada</strong>).</div>
+        <div class="paso-txt">Tocá <strong>Planificación</strong> en la barra superior para ver las visitas programadas a futuro.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Desde cualquier orden podés tocar <strong>📅 Reprogramar</strong> para cambiar la fecha de la visita.</div>
+        <div class="paso-txt">Desde cualquier orden podés tocar <strong>📅 Reprogramar</strong> para cambiar la fecha de visita.</div>
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
-        <div class="paso-txt">Si una orden ya no corresponde, tocá <strong>🗑 Eliminar</strong> (o <strong>🚫 Anular</strong> si ya tiene número asignado).</div>
+        <div class="paso-txt">Si una orden ya no corresponde, usá <strong>🚫 Anular</strong> o <strong>🗑 Eliminar</strong> según corresponda.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Anular conserva el registro en el historial pero lo excluye de la facturación. Eliminar borra la orden por completo — usalo solo con borradores o errores de carga.</div>
     </div>
   </div>
 
-  <!-- ESTADOS -->
-  <div class="seccion">
-    <div class="seccion-header"><span class="icon">📊</span><h2>Estados de las órdenes</h2></div>
-    <div class="seccion-body">
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-azul">Abierta</span> &nbsp;Orden en curso por un técnico.</div></div>
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-naranja">Pendiente</span> &nbsp;Esperando repuesto, aprobación o respuesta del cliente.</div></div>
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Cerrada</span> &nbsp;Trabajo terminado y firmado.</div></div>
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-verde">Sin firma cliente</span> &nbsp;Terminada, falta la firma del cliente.</div></div>
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-rojo">Anulada</span> &nbsp;Cancelada, no se factura.</div></div>
-      <div class="paso"><div class="paso-num">●</div><div class="paso-txt"><span class="tag tag-violeta">Planificada</span> &nbsp;Visita programada a futuro.</div></div>
-    </div>
-  </div>
-
-  <!-- HISTORIAL Y FILTROS -->
+  <!-- HISTORIAL -->
   <div class="seccion">
     <div class="seccion-header"><span class="icon">📋</span><h2>Historial completo</h2></div>
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">En <strong>Historial</strong> ves absolutamente todas las órdenes del sistema, de todos los técnicos.</div>
+        <div class="paso-txt">En <strong>Historial</strong> ves absolutamente todas las órdenes del sistema, de todos los técnicos y en todos los estados.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Podés filtrar por <strong>cliente, estado o fecha</strong> usando los filtros de arriba.</div>
+        <div class="paso-txt">Filtrá por <strong>cliente, estado o fecha</strong> para encontrar rápido lo que buscás.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Tocando cualquier orden podés ver todos sus detalles, incluyendo el historial de cambios y envíos.</div>
       </div>
     </div>
   </div>
 
-  <div style="text-align:center;margin-top:28px;">
-    <a href="https://jvsystems.com.ar/branca/" class="btn-app">Ir a la App →</a>
+  <!-- CONFIGURACIÓN -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">⚙️</span><h2>Configuración del sistema</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Configuración</strong> en la barra superior. Te va a pedir una contraseña adicional para acceder — es una protección extra de esta sección.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Desde ahí podés gestionar <strong>usuarios</strong>: crear nuevos, cambiarles la contraseña, asignar roles (técnico, admin, facturación) o darlos de baja.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">También podés gestionar el listado de <strong>técnicos</strong> disponibles para asignar en las órdenes.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> La contraseña de configuración se pide por sesión — si recargás la app tenés que ingresarla de nuevo.</div>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">👤</span><h2>Mi perfil — contraseña y sesión</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá tu avatar o inicial en la esquina superior derecha para abrir tu perfil.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">En <strong>Cambiar contraseña</strong> ingresá tu contraseña actual, la nueva y confirmala. Luego tocá <strong>Cambiar contraseña</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Desde el perfil también podés <strong>cerrar sesión</strong> de forma segura.</div>
+      </div>
+    </div>
   </div>
 
   <div class="footer">

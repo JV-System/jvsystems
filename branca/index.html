@@ -1473,7 +1473,7 @@
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: #07101f;
+    background: radial-gradient(ellipse at center, #ffffff 0%, #e8edf5 60%, #d0d8e8 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1481,16 +1481,16 @@
     overflow: hidden;
     transition: opacity 0.8s cubic-bezier(.4,0,.2,1);
   }
-  /* Fondo: halo azul detrás del logo */
+  /* Halo suave detrás del logo */
   #splash-screen::before {
     content: '';
     position: absolute;
     top: 38%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 340px;
-    height: 340px;
-    background: radial-gradient(circle, rgba(21,101,216,0.2) 0%, transparent 68%);
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%);
     pointer-events: none;
     animation: glowPulse 3.5s ease-in-out infinite;
   }
@@ -1520,7 +1520,7 @@
     position: absolute;
     inset: -8px;
     border-radius: 36px;
-    background: #07101f;
+    background: #fff;
     z-index: 1;
   }
   #splash-logo {
@@ -1550,19 +1550,42 @@
     box-shadow: 0 14px 55px rgba(21,101,216,0.55);
   }
 
+  /* ── OLAS ── */
+  #splash-waves {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 320px;
+    pointer-events: none;
+  }
+  #splash-waves svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  @keyframes waveMove1 { 0%,100% { d: path("M0,80 C240,150 480,20 720,90 C960,160 1200,30 1440,100 L1440,180 L0,180 Z"); } 50% { d: path("M0,100 C220,30 500,160 720,70 C940,0 1220,150 1440,80 L1440,180 L0,180 Z"); } }
+  @keyframes waveMove2 { 0%,100% { d: path("M0,100 C200,40 500,160 720,80 C940,0 1200,140 1440,60 L1440,180 L0,180 Z"); } 50% { d: path("M0,70 C250,150 480,30 720,110 C960,180 1180,50 1440,100 L1440,180 L0,180 Z"); } }
+  @keyframes waveMove3 { 0%,100% { d: path("M0,120 C300,60 600,170 900,100 C1100,50 1300,140 1440,90 L1440,180 L0,180 Z"); } 50% { d: path("M0,90 C280,160 580,50 880,130 C1080,180 1280,80 1440,120 L1440,180 L0,180 Z"); } }
+  #wave1 path { animation: waveMove1 6s ease-in-out infinite; }
+  #wave2 path { animation: waveMove2 8s ease-in-out infinite; }
+  #wave3 path { animation: waveMove3 5s ease-in-out infinite; }
+
   /* ── BIENVENIDO ── */
   #splash-welcome {
     font-family: 'Exo 2', sans-serif;
     font-size: 34px;
     font-weight: 900;
     letter-spacing: 10px;
-    color: #F5A623;
+    color: #2c4a8a;
     text-transform: uppercase;
     margin-top: 46px;
     opacity: 0;
     animation: welcomeIn 0.75s cubic-bezier(0.34, 1.2, 0.64, 1) both;
     animation-delay: 0.85s;
-    text-shadow: 0 0 40px rgba(245,166,35,0.5), 0 0 90px rgba(245,166,35,0.18);
+    text-shadow: 0 2px 16px rgba(44,74,138,0.15);
   }
 
   /* ── Dots ── */
@@ -1578,7 +1601,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.45);
+    background: rgba(44,74,138,0.35);
     animation: dotBounce 1.4s ease-in-out infinite;
   }
   .splash-dot:nth-child(1) { animation-delay: 0s; }
@@ -1591,11 +1614,12 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 16px 28px 40px;
+    padding: 16px 28px 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 11px;
+    z-index: 10;
     opacity: 0;
     animation: fadeUp 0.6s ease both;
     animation-delay: 1.55s;
@@ -1604,7 +1628,7 @@
   #splash-dev-sep {
     width: 44px;
     height: 1px;
-    background: rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.3);
   }
   #splash-dev-label {
     font-family: 'Exo 2', sans-serif;
@@ -1612,7 +1636,7 @@
     font-weight: 500;
     letter-spacing: 2.8px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.62);
+    color: rgba(255,255,255,0.7);
   }
   #splash-dev-name {
     display: flex;
@@ -1717,16 +1741,15 @@
 ════════════════════════════════════════ -->
 <div id="splash-screen">
 
-  <!-- Logo con anillo giratorio -->
+  <!-- Logo Branca -->
   <div id="splash-logo-wrap">
-    <div id="splash-ring"></div>
-    <div id="splash-ring-mask"></div>
     <img
       id="splash-logo"
-      src="icon-192.png"
-      alt="JV Systems"
+      src="branca-logo.png"
+      alt="Ingeniería Branca SRL"
+      style="width:240px;height:auto;border-radius:0;box-shadow:none;position:relative;z-index:2;"
       onerror="this.style.display='none';document.getElementById('splash-logo-fb').style.display='flex'">
-    <div id="splash-logo-fb">JV</div>
+    <div id="splash-logo-fb">B</div>
   </div>
 
   <!-- BIENVENIDO -->
@@ -1737,6 +1760,19 @@
     <div class="splash-dot"></div>
     <div class="splash-dot"></div>
     <div class="splash-dot"></div>
+  </div>
+
+  <!-- Olas animadas -->
+  <div id="splash-waves">
+    <svg id="wave1" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,80 C240,150 480,20 720,90 C960,160 1200,30 1440,100 L1440,180 L0,180 Z" fill="rgba(21,101,216,0.18)"/>
+    </svg>
+    <svg id="wave2" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,100 C200,40 500,160 720,80 C940,0 1200,140 1440,60 L1440,180 L0,180 Z" fill="rgba(21,101,216,0.28)"/>
+    </svg>
+    <svg id="wave3" viewBox="0 0 1440 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,120 C300,60 600,170 900,100 C1100,50 1300,140 1440,90 L1440,180 L0,180 Z" fill="rgba(10,22,40,0.85)"/>
+    </svg>
   </div>
 
   <!-- Crédito pegado al fondo -->
@@ -1848,6 +1884,9 @@
     <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos"
             style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:15px;cursor:pointer;padding:5px 9px;border-radius:7px;transition:background 0.15s;line-height:1;"
             onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">🔄</button>
+    <button id="btn-instructivo" onclick="abrirInstructivo()" title="Ver instructivo de uso"
+            style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:13px;font-weight:700;cursor:pointer;padding:5px 11px;border-radius:7px;transition:background 0.15s;line-height:1;"
+            onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">📖 Instructivo</button>
     <div id="sistema-activo-badge" style="display:flex;align-items:center;gap:6px;margin-left:10px;">
       <div style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex-shrink:0;"></div>
       <span style="font-size:11px;color:rgba(255,255,255,0.92);font-weight:600;letter-spacing:0.3px;">Sistema activo</span>
@@ -2061,8 +2100,11 @@
       <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px;">
       <!-- Cambiar contraseña -->
       <div>
-        <div class="perfil-section-title">🔑 Cambiar contraseña</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="perfil-section-title" onclick="toggleCambiarPass()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+          <span>🔑 Cambiar contraseña</span>
+          <span id="perfil-pass-arrow" style="font-size:11px;color:var(--text-muted);transition:transform 0.2s;">▼</span>
+        </div>
+        <div id="perfil-pass-panel" style="display:none;flex-direction:column;gap:10px;margin-top:10px;">
           <input type="password" id="perfil-pass-actual" placeholder="Contraseña actual"
             style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Exo 2',sans-serif;">
           <input type="password" id="perfil-pass-nueva" placeholder="Nueva contraseña"
@@ -2079,6 +2121,55 @@
       </button>
     </div>
   </div>
+</div>
+
+<!-- MODAL BIENVENIDA -->
+<style>
+@keyframes bienvenidaIn {
+  from { opacity:0; transform:translateY(18px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+#modal-bienvenida-card {
+  background:#fff;
+  border-radius:20px;
+  max-width:340px;
+  width:100%;
+  box-shadow:0 24px 64px rgba(0,0,0,0.28);
+  overflow:hidden;
+  animation:bienvenidaIn 0.38s cubic-bezier(0.22,1,0.36,1) both;
+  font-family:Arial,sans-serif;
+}
+#modal-bienvenida-card * { letter-spacing:normal !important; font-family:Arial,sans-serif !important; }
+</style>
+<div id="modal-bienvenida" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-bienvenida-card">
+    <div style="background:linear-gradient(135deg,#0A1628 60%,#1a3a6e);padding:26px 24px 18px;text-align:center;">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;border:1.5px solid rgba(255,255,255,0.15);">👋</div>
+      <div style="font-size:10px;font-weight:700;color:#7EB3F7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Bienvenido a App Branca</div>
+      <div id="bienvenida-nombre" style="color:#fff;font-size:19px;font-weight:800;line-height:1.25;margin-bottom:10px;"></div>
+      <div id="bienvenida-rol" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 13px;border-radius:20px;"></div>
+    </div>
+    <div style="padding:20px 22px 22px;">
+      <p style="color:#64748b;font-size:13px;line-height:1.55;margin:0 0 16px;text-align:center;">Tenés un instructivo con todo lo que necesitás saber sobre tu rol.</p>
+      <button id="bienvenida-link-instructivo" onclick="cerrarBienvenida();abrirInstructivo();"
+         style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;background:#1565D8;color:#fff;font-weight:700;font-size:14px;padding:13px;border-radius:10px;border:none;cursor:pointer;margin-bottom:10px;">
+        <span style="font-size:16px;">📖</span> Ver mi instructivo
+      </button>
+      <button onclick="cerrarBienvenida()"
+              style="width:100%;background:#f1f5f9;border:none;color:#64748b;font-size:13px;font-weight:600;padding:11px;border-radius:10px;cursor:pointer;">
+        Entrar a la app →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL INSTRUCTIVO -->
+<div id="panel-instructivo" style="display:none;position:fixed;inset:0;z-index:10000;background:#f2f4f8;flex-direction:column;">
+  <iframe id="iframe-instructivo" src="" style="flex:1;border:none;width:100%;height:100%;"></iframe>
+  <button onclick="cerrarInstructivo()"
+    style="position:fixed;bottom:24px;right:20px;background:#0A1628;color:#fff;border:none;border-radius:50px;padding:13px 22px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,0.35);display:flex;align-items:center;gap:8px;z-index:10001;">
+    ← Volver a la app
+  </button>
 </div>
 
 <!-- MODAL CONFIRMACIÓN -->
@@ -4809,116 +4900,229 @@ function compartirPDFWhatsApp(callback) {
 // ══════════════════════════════════════════════════════
 var _factOpenId = null; // id de la carta actualmente abierta
 
+var _factFiltro = 'todos';
+var _factBusca  = '';
+
 function renderFacturacion() {
   const mc = document.getElementById('mainContent');
   if (!mc) return;
-  const lista = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
-  // Resumen rápido: totales
+  const todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
+
   var totalCobrado = 0, totalPend = 0, sinFact = 0;
-  lista.forEach(function(o) {
-    if (!o.facturacion || !o.facturacion.nroFactura) { sinFact++; }
+  todas.forEach(function(o) {
+    if (!o.facturacion || !o.facturacion.nroFactura) sinFact++;
     else if (o.facturacion.estadoPago === 'pagado') totalCobrado += o.facturacion.total || 0;
     else totalPend += o.facturacion.total || 0;
   });
-  const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}); };
 
-  mc.innerHTML = '<div style="overflow-y:auto;flex:1;height:100%;padding:16px 20px;">'
+  // Filtrar por tab + búsqueda
+  var lista = todas.filter(function(o) {
+    const f = o.facturacion || {};
+    if (_factFiltro === 'sin')     return !f.nroFactura;
+    if (_factFiltro === 'pend')    return f.nroFactura && f.estadoPago !== 'pagado';
+    if (_factFiltro === 'cobrado') return f.estadoPago === 'pagado';
+    return true;
+  });
+  if (_factBusca) {
+    const q = _factBusca.toLowerCase();
+    lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q) || ((o.facturacion||{}).nroFactura||'').toLowerCase().includes(q); });
+  }
+  // Ordenar: sin facturar primero, luego pendiente, luego cobrado
+  lista.sort(function(a,b){
+    const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
+    return rank(a)-rank(b);
+  });
+
+  const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}); };
+  const tab = function(key,label,count,col){
+    const active = _factFiltro === key;
+    return '<button onclick="setFactFiltro(\''+key+'\')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.15s;'
+      + (active ? 'background:'+col+';color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);' : 'background:#f1f5f9;color:#64748b;')
+      + '">' + label + (count !== null ? ' <span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 7px;font-size:11px;">'+count+'</span>' : '') + '</button>';
+  };
+
+  mc.innerHTML = '<div style="overflow-y:auto;flex:1;height:100%;padding:16px 20px 40px;">'
     + '<div style="max-width:960px;margin:0 auto;">'
 
-    // ── Header con KPIs ──
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">'
-    + '<h2 style="font-size:19px;font-weight:800;color:var(--navy);">💰 Facturación</h2>'
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-    + '<div style="background:#e8f5e9;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;color:#2d7a31;">✓ Cobrado: <strong>' + fmt(totalCobrado) + '</strong></div>'
-    + '<div style="background:#fff8e1;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;color:#8a6000;">⏳ Pendiente: <strong>' + fmt(totalPend) + '</strong></div>'
-    + (sinFact ? '<div style="background:#fff0ef;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;color:#c0392b;">⚠ Sin facturar: <strong>' + sinFact + '</strong></div>' : '')
-    + '</div></div>'
+    // ── Título + KPI cards ──
+    + '<div style="margin-bottom:16px;">'
+    + '<h2 style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:12px;">💰 Facturación</h2>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;border-left:4px solid #f59e0b;">'
+    + '<div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Sin facturar</div>'
+    + '<div style="font-size:22px;font-weight:800;color:#0A1628;">'+sinFact+'</div>'
+    + '<div style="font-size:11px;color:#9ca3af;margin-top:2px;">órdenes</div>'
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;border-left:4px solid #3b82f6;">'
+    + '<div style="font-size:11px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Pendiente cobro</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#0A1628;">'+fmt(totalPend)+'</div>'
+    + '<div style="font-size:11px;color:#9ca3af;margin-top:2px;">a cobrar</div>'
+    + '</div>'
+    + '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 16px;border-left:4px solid #10b981;">'
+    + '<div style="font-size:11px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Cobrado</div>'
+    + '<div style="font-size:18px;font-weight:800;color:#0A1628;">'+fmt(totalCobrado)+'</div>'
+    + '<div style="font-size:11px;color:#9ca3af;margin-top:2px;">total</div>'
+    + '</div>'
+    + '</div>'
 
-    // ── Tabla de filas compactas ──
+    // ── Tabs de filtro ──
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">'
+    + tab('todos',   'Todas',         todas.length,  '#0A1628')
+    + tab('sin',     '⚠ Sin facturar', sinFact,       '#f59e0b')
+    + tab('pend',    '⏳ Pendiente',    null,          '#3b82f6')
+    + tab('cobrado', '✓ Cobrado',      null,          '#10b981')
+    + '</div>'
+
+    // ── Buscador ──
+    + '<div style="position:relative;margin-bottom:12px;">'
+    + '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;">🔍</span>'
+    + '<input id="fact-busca" type="text" placeholder="Buscar por empresa, N° orden o factura..." value="'+esc(_factBusca)+'"'
+    + ' oninput="setFactBusca(this.value)"'
+    + ' style="width:100%;padding:10px 12px 10px 36px;border:1px solid #e5e7eb;border-radius:9px;font-size:13px;background:#fff;box-sizing:border-box;">'
+    + '</div>'
+    + '</div>'
+
+    // ── Lista ──
     + (lista.length === 0
-      ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin órdenes para facturar</h3><p>Las órdenes finalizadas aparecerán aquí</p></div>'
-      : '<div style="background:white;border-radius:12px;border:1px solid #eee;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+      ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin resultados</h3><p>Probá cambiando el filtro o la búsqueda</p></div>'
+      : '<div style="background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">'
         + lista.map(renderFactRow).join('')
         + '</div>')
 
     + '</div></div>';
 }
 
+function setFactFiltro(f) { _factFiltro = f; _factOpenId = null; renderFacturacion(); }
+function setFactBusca(v)  { _factBusca  = v; _factOpenId = null; renderFacturacion(); }
+
 function renderFactRow(o) {
-  const f  = o.facturacion || {};
-  const fmt = function(n){ return '$ ' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:0}); };
+  const f   = o.facturacion || {};
+  const fmt = function(n){ return '$ ' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); };
   const isOpen = (_factOpenId === o.id);
 
-  const badgeColor = !f.nroFactura ? '#fff8e1;color:#8a6000' : f.estadoPago === 'pagado' ? '#e3f2fd;color:#1565D8' : '#e8f5e9;color:#2d7a31';
-  const badgeText  = !f.nroFactura ? 'Sin facturar' : f.estadoPago === 'pagado' ? '✓ Cobrado' : 'Pendiente cobro';
+  const badgeSt = !f.nroFactura
+    ? 'background:#fef3c7;color:#92400e'
+    : f.estadoPago === 'pagado'
+      ? 'background:#d1fae5;color:#065f46'
+      : 'background:#dbeafe;color:#1e40af';
+  const badgeTxt = !f.nroFactura ? 'Sin facturar' : f.estadoPago === 'pagado' ? '✓ Cobrado' : '⏳ Pendiente cobro';
 
-  // Fila compacta rediseñada para mobile
-  var row = '<div onclick="toggleFactCard('+o.id+')" style="'
-    + 'padding:14px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;'
-    + 'transition:background 0.15s;user-select:none;'
-    + (isOpen ? 'background:#f0f4fb;' : 'background:white;') + '">'
+  // ── Fila resumen ──
+  var row = '<div onclick="toggleFactCard('+o.id+')" style="padding:14px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.15s;user-select:none;'+(isOpen?'background:#f0f6ff;':'background:white;')+'">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
-    // Izquierda: número + empresa
     + '<div style="min-width:0;flex:1;">'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
-    + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + esc(o.numero) + '</span>'
-    + (f.nroFactura ? '<span style="font-size:11px;font-weight:600;color:#888;">' + esc(f.nroFactura) + '</span>' : '')
+    + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">'
+    + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + esc(o.numero||'—') + '</span>'
+    + (f.nroFactura ? '<span style="font-size:11px;color:#888;font-weight:600;">' + esc(f.nroFactura) + '</span>' : '')
     + '</div>'
     + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(o.empresa||'—') + '</div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-top:1px;">' + esc(o.fecha) + (o.responsable ? ' · ' + esc(o.responsable) : '') + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.fecha||'') + (o.responsable?' · '+esc(o.responsable):'') + '</div>'
     + '</div>'
-    // Derecha: total + badge + chevron
     + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">'
     + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + (f.total ? fmt(f.total) : '—') + '</span>'
-    + '<span style="background:' + badgeColor + ';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;">' + badgeText + '</span>'
+    + '<span style="'+badgeSt+';padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;">' + badgeTxt + '</span>'
     + '</div>'
-    + '<div style="font-size:11px;color:#bbb;flex-shrink:0;margin-left:4px;transition:transform 0.22s;'+(isOpen?'transform:rotate(180deg)':'')+'">▼</div>'
-    + '</div>'
-    + '</div>';
+    + '<div style="font-size:11px;color:#bbb;margin-left:4px;transition:transform 0.22s;'+(isOpen?'transform:rotate(180deg)':'')+'"">▼</div>'
+    + '</div></div>';
 
-  // Panel de detalle (colapsado o expandido)
-  row += '<div id="fact-detail-'+o.id+'" style="'
-    + 'overflow:hidden;transition:max-height 0.3s ease,opacity 0.3s ease;'
-    + (isOpen ? 'max-height:1200px;opacity:1;' : 'max-height:0;opacity:0;pointer-events:none;')
-    + '">';
+  // ── Panel de detalle estilo Xubio ──
+  row += '<div id="fact-detail-'+o.id+'" style="overflow:hidden;transition:max-height 0.35s ease,opacity 0.3s ease;'+(isOpen?'max-height:2000px;opacity:1;':'max-height:0;opacity:0;pointer-events:none;')+'">';
 
   if (isOpen) {
-    const reps = (o.repuestos||[]).filter(function(r){ return r.desc; });
-    row += '<div style="padding:16px 20px;border-bottom:2px solid #e8ecf4;background:#f9fafb;">'
-      // Resumen del trabajo
-      + '<div style="background:white;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--text);line-height:1.7;border:1px solid #eee;">'
-      + (o.probDetectado ? '<strong>Problema:</strong> '+esc(o.probDetectado)+'<br>' : '')
-      + (o.accionRealizada ? '<strong>Acción:</strong> '+esc(o.accionRealizada)+'<br>' : '')
-      + (reps.length ? '<strong>Repuestos:</strong> '+reps.map(function(r){return esc(r.desc)+(r.cantidad>1?' (x'+r.cantidad+')':'');}).join(', ') : '')
+    const today = new Date().toISOString().split('T')[0];
+    const fechaVal = f.fechaFactura || today;
+    const inp = 'width:100%;padding:9px 11px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;background:#fff;box-sizing:border-box;font-family:inherit;';
+    const lbl = 'display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;';
+    const fld = function(label, content){ return '<div style="flex:1;min-width:140px;"><label style="'+lbl+'">'+label+'</label>'+content+'</div>'; };
+
+    // Cabecera del comprobante
+    row += '<div style="padding:16px 16px 0;background:#f8fafc;border-top:1px solid #e5e7eb;">'
+      // Tipo comprobante + empresa
+      + '<div style="background:#0A1628;border-radius:10px 10px 0 0;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">'
+      + '<div style="color:#7EB3F7;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Comprobante de Venta</div>'
+      + '<div style="color:#fff;font-size:12px;font-weight:700;">Ingeniería Branca SRL</div>'
       + '</div>'
-      // Campos de facturación
-      + '<div class="fact-grid" style="margin-bottom:14px;">'
-      + factField('N° Factura',       'fact-nro-'+o.id,    'text',   f.nroFactura  || getNextFacturaNum(), '')
-      + factField('Mano de obra ($)',  'fact-mo-'+o.id,     'number', f.manoDeObra  || '', '0')
-      + factField('Repuestos ($)',     'fact-rep-'+o.id,    'number', f.repuestosCosto||'', '0')
-      + factField('Gastos varios ($)', 'fact-gastos-'+o.id, 'number', f.gastos      || '', '0')
-      + factField('Descuento ($)',     'fact-desc-'+o.id,   'number', f.descuento   || '', '0')
-      + '<div class="fact-field"><label>Cond. pago</label><select id="fact-cond-'+o.id+'">'
-      + ['Contado','30 días','60 días','Cuenta corriente'].map(function(c){ return '<option'+(f.condPago===c?' selected':'')+'>'+c+'</option>'; }).join('')
-      + '</select></div>'
-      + factField('Fecha factura', 'fact-fecha-'+o.id, 'date', f.fechaFactura||new Date().toISOString().split('T')[0], '')
-      + '<div class="fact-field"><label>Estado pago</label><select id="fact-estado-'+o.id+'">'
-      + '<option value="pendiente"'+((!f.estadoPago||f.estadoPago==='pendiente')?' selected':'')+'>Pendiente de cobro</option>'
-      + '<option value="pagado"'+(f.estadoPago==='pagado'?' selected':'')+'>Pagado ✓</option>'
-      + '</select></div>'
+      // Campos encabezado
+      + '<div style="background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:14px 14px 10px;">'
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">'
+      + fld('Cliente', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-weight:600;color:#111;">'+esc(o.empresa||'—')+'</div>')
+      + fld('Tipo', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">Factura</div>')
+      + fld('N° Comprobante', '<input id="fact-nro-'+o.id+'" type="text" value="'+esc(f.nroFactura||getNextFacturaNum())+'" onclick="event.stopPropagation()" style="'+inp+'">')
       + '</div>'
-      // Totales
-      + '<div class="fact-totales" id="fact-totales-'+o.id+'">' + renderFactTotalesHTML(o) + '</div>'
-      // Botones
-      + '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;padding-bottom:80px;">'
-      + '<button onclick="event.stopPropagation();guardarFacturacion('+o.id+')" style="flex:1;background:var(--jv-blue);color:white;border:none;border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;">💾 Guardar</button>'
-      + (f.nroFactura ? '<button onclick="event.stopPropagation();generarFacturaPDF('+o.id+')" style="flex:1;background:transparent;color:#1a7a3c;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.07);">📄 PDF</button>' : '')
-      + (f.nroFactura ? '<button onclick="event.stopPropagation();enviarMailFactura('+o.id+')" style="flex:1;background:transparent;color:#1a56db;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Exo 2\',sans-serif;box-shadow:0 2px 6px rgba(0,0,0,0.07);">✉ Mail</button>' : '')
+      + '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
+      + fld('Fecha', '<input id="fact-fecha-'+o.id+'" type="date" value="'+fechaVal+'" onclick="event.stopPropagation()" style="'+inp+'">')
+      + fld('Condición de pago', '<select id="fact-cond-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'+['Contado','30 días','60 días','Cuenta corriente'].map(function(c){ return '<option'+(f.condPago===c?' selected':'')+'>'+c+'</option>'; }).join('')+'</select>')
+      + fld('Estado', '<select id="fact-estado-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'
+          + '<option value="pendiente"'+(!f.estadoPago||f.estadoPago==='pendiente'?' selected':'')+'>Pendiente de cobro</option>'
+          + '<option value="pagado"'+(f.estadoPago==='pagado'?' selected':'')+'>✓ Cobrado</option>'
+          + '</select>')
       + '</div>'
-      + '</div>';
+      + '</div>'
+      + '</div>'
+
+    // Tabla de ítems
+    + '<div style="padding:0 16px;background:#f8fafc;">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">'
+    + '<thead>'
+    + '<tr style="background:#f1f5f9;">'
+    + '<th style="text-align:left;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Producto / Servicio</th>'
+    + '<th style="text-align:left;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Observaciones</th>'
+    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Cant.</th>'
+    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Precio</th>'
+    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">IVA</th>'
+    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Total</th>'
+    + '</tr>'
+    + '</thead>'
+    + '<tbody id="fact-items-'+o.id+'">'
+    + factItemRow(o.id, 'fact-mo',     'Mano de obra',  o.accionRealizada||'', 1, f.manoDeObra||0)
+    + factItemRow(o.id, 'fact-rep',    'Repuestos',     '', 1, f.repuestosCosto||0)
+    + factItemRow(o.id, 'fact-gastos', 'Gastos varios', '', 1, f.gastos||0)
+    + '</tbody>'
+    + '</table>'
+    + '</div>'
+
+    // Descuento + Totales
+    + '<div style="padding:10px 16px 14px;background:#f8fafc;">'
+    + '<div style="display:flex;justify-content:flex-end;">'
+    + '<div style="width:260px;">'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+    + '<label style="font-size:12px;color:#6b7280;font-weight:700;flex:1;">Descuento ($)</label>'
+    + '<input id="fact-desc-'+o.id+'" type="number" value="'+(f.descuento||0)+'" onclick="event.stopPropagation()" oninput="recalcFact('+o.id+')" style="width:100px;padding:6px 8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;text-align:right;">'
+    + '</div>'
+    + '<div class="fact-totales" id="fact-totales-'+o.id+'" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">' + renderFactTotalesHTML(o) + '</div>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+
+    // Botones estilo Xubio
+    + '<div style="padding:12px 16px 20px;background:#f8fafc;border-top:1px solid #e5e7eb;display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<button onclick="event.stopPropagation();guardarFacturacion('+o.id+')" style="flex:1;background:#0A1628;color:#fff;border:none;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar</button>'
+    + (f.nroFactura ? '<button onclick="event.stopPropagation();generarFacturaPDF('+o.id+')" style="flex:1;background:#fff;color:#1a7a3c;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">📄 Vista previa PDF</button>' : '')
+    + (f.nroFactura ? '<button onclick="event.stopPropagation();enviarMailFactura('+o.id+')" style="flex:1;background:#fff;color:#1a56db;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">✉ Enviar por mail</button>' : '')
+    + '</div>';
   }
-  row += '</div>'; // cierre fact-detail
+  row += '</div>';
   return row;
+}
+
+function factItemRow(oid, field, nombre, obs, cant, precio) {
+  const iva21 = Math.round(precio * 0.21 * 100) / 100;
+  const total = Math.round((precio + iva21) * 100) / 100;
+  const fmt2 = function(n){ return '$ '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+  const inp = 'border:none;border-bottom:1px solid #e5e7eb;padding:4px 6px;font-size:12px;width:100%;text-align:right;background:transparent;font-family:inherit;';
+  return '<tr style="border-bottom:1px solid #f3f4f6;">'
+    + '<td style="padding:8px 10px;font-weight:600;color:#111;">' + nombre + '</td>'
+    + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(obs) + '</td>'
+    + '<td style="padding:8px 10px;text-align:right;color:#555;">1</td>'
+    + '<td style="padding:6px 10px;text-align:right;"><input id="'+field+'-'+oid+'" type="number" value="'+(precio||0)+'" onclick="event.stopPropagation()" oninput="recalcFact('+oid+')" style="'+inp+'" placeholder="0.00"></td>'
+    + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+    + '<td style="padding:8px 10px;text-align:right;font-weight:700;color:var(--navy);">' + fmt2(total) + '</td>'
+    + '</tr>';
+}
+
+function recalcFact(oid) {
+  const totDiv = document.getElementById('fact-totales-'+oid);
+  if (totDiv) totDiv.innerHTML = renderFactTotalesHTML(null, oid);
 }
 
 function toggleFactCard(oid) {
@@ -6614,6 +6818,54 @@ function hideLoginScreen() {
   if (s) s.classList.add('hidden');
   initRoleUI();
   setTimeout(restaurarBorradorSiExiste, 800);
+  mostrarBienvenida();
+}
+
+function mostrarBienvenida() {
+  const cu = getCurrentUser();
+  if (!cu) return;
+  const modal = document.getElementById('modal-bienvenida');
+  if (!modal) return;
+  document.getElementById('bienvenida-nombre').textContent = '¡Hola, ' + (cu.nombre || cu.username) + '!';
+  const rolEl = document.getElementById('bienvenida-rol');
+  const roles = { admin: { label: '👑 Administrador', bg: 'rgba(124,58,237,0.25)', color: '#c4b5fd' },
+                  tecnico: { label: '🔧 Técnico', bg: 'rgba(29,158,117,0.25)', color: '#80cbc4' },
+                  facturacion: { label: '🧾 Facturación', bg: 'rgba(245,158,11,0.25)', color: '#fcd34d' } };
+  const r = roles[cu.role] || { label: cu.role, bg: 'rgba(255,255,255,0.1)', color: '#fff' };
+  rolEl.textContent = r.label;
+  rolEl.style.background = r.bg;
+  rolEl.style.color = r.color;
+  modal.style.display = 'flex';
+}
+
+function cerrarBienvenida() {
+  const modal = document.getElementById('modal-bienvenida');
+  if (modal) modal.style.display = 'none';
+}
+
+function abrirInstructivo() {
+  const cu = getCurrentUser();
+  if (!cu) return;
+  const links = { admin: 'https://jvsystems.com.ar/branca/instructivo-admin.html',
+                  tecnico: 'https://jvsystems.com.ar/branca/instructivo-tecnico.html',
+                  facturacion: 'https://jvsystems.com.ar/branca/instructivo-facturacion.html' };
+  const url = links[cu.role];
+  if (!url) return;
+  document.getElementById('iframe-instructivo').src = url;
+  document.getElementById('panel-instructivo').style.display = 'flex';
+}
+
+function cerrarInstructivo() {
+  document.getElementById('panel-instructivo').style.display = 'none';
+  document.getElementById('iframe-instructivo').src = '';
+}
+
+function toggleCambiarPass() {
+  const panel = document.getElementById('perfil-pass-panel');
+  const arrow = document.getElementById('perfil-pass-arrow');
+  const abierto = panel.style.display === 'flex';
+  panel.style.display = abierto ? 'none' : 'flex';
+  arrow.style.transform = abierto ? '' : 'rotate(180deg)';
 }
 
 function doLogin() {
