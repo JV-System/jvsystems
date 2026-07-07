@@ -2562,9 +2562,13 @@ async function loadFromCloud() {
       const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
       if (remotas.length > 0) {
         const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
+        // Si Firebase tiene una orden, sacarla de _deletedIds (por si quedó ahí por error)
+        remotasIds.forEach(function(id) { _deletedIds.delete(id); });
         // Cualquier orden local que NO esté en Firebase, no sea borrador y no sea anulada → marcarla como eliminada
+        // Excepción: si fue modificada hace menos de 15 segundos, está en tránsito (aún no subió a Firebase)
         ordenes.forEach(function(o) {
-          if (!o.draft && o.estado !== 'anulada' && !remotasIds.has(String(o.id))) {
+          const enTransito = o.updatedAt && (Date.now() - o.updatedAt) < 15000;
+          if (!o.draft && o.estado !== 'anulada' && !remotasIds.has(String(o.id)) && !enTransito) {
             _deletedIds.add(String(o.id));
           }
         });
@@ -6585,6 +6589,10 @@ function restaurarBorradorSiExiste() {
   <button class="mob-nav-btn" id="mob-facturacion" onclick="mobSetView('facturacion')" style="display:none">
     <span class="mob-icon">💰</span>
     <span>Factura</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-instructivo" onclick="abrirInstructivo()">
+    <span class="mob-icon">📖</span>
+    <span>Ayuda</span>
   </button>
   <button class="mob-nav-btn" id="mob-config" onclick="mobSetView('config')">
     <span class="mob-icon">⚙️</span>
