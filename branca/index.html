@@ -2867,7 +2867,7 @@ async function eliminarOrden(id) {
   clearTimeout(_syncTimer);
   const ordenesObj = {};
   ordenes.forEach(function(x) {
-    const key = (x.numero || String(x.id)).replace(/[.#$\[\]]/g, '-');
+    const key = String(x.id); // usar id único para evitar colisión de números
     ordenesObj[key] = x;
   });
   try {
@@ -2958,7 +2958,7 @@ function renderOrderList() {
     if (estadoFiltro) {
       if (o.estado !== estadoFiltro) return false;
     } else {
-      if (o.estado === 'anulada') return false; // ocultar anuladas por defecto
+      // anuladas siempre visibles en el historial
     }
     return true;
   });
