@@ -7194,25 +7194,10 @@ function toggleHistorialPanel() {
 // WHATSAPP AL CERRAR ORDEN
 // ══════════════════════════════════════════════
 function mostrarNotifWhatsApp(o) {
-  // Si la orden no está cerrada, avisar antes de continuar
+  // Si la orden no está cerrada, guardarla automáticamente antes de continuar
   if (o && o.estado !== 'locked' && o.estado !== 'locked_nosign') {
-    const aviso = document.createElement('div');
-    aviso.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    aviso.innerHTML = `
-      <div style="background:white;border-radius:16px;padding:24px 28px;max-width:400px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,.25);">
-        <div style="font-size:22px;text-align:center;margin-bottom:10px;">⚠️</div>
-        <div style="font-size:16px;font-weight:800;color:#0A1628;margin-bottom:8px;text-align:center;">La orden no está cerrada</div>
-        <div style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;text-align:center;">Podés enviar el WhatsApp, pero <strong>la orden todavía no quedó guardada en el sistema</strong>. Cerrala antes para que quede registrada y no se pierda.</div>
-        <div style="display:flex;gap:10px;flex-direction:column;">
-          <button onclick="this.closest('div[style]').remove()"
-            style="padding:11px;background:#0A1628;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">✅ Volver y cerrar la orden</button>
-          <button onclick="this.closest('div[style]').remove();_mostrarWAModal(window._waOrden)"
-            style="padding:11px;background:white;color:#64748b;border:1px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;">Enviar igual sin cerrar</button>
-        </div>
-      </div>`;
-    window._waOrden = o;
-    document.body.appendChild(aviso);
-    return;
+    saveData();
+    showToast('💾 Orden guardada automáticamente.');
   }
   _mostrarWAModal(o);
 }
