@@ -2765,7 +2765,6 @@ function esLocked(o) {
 function getNextNum() {
   const year = new Date().getFullYear();
   const nums = ordenes
-    .filter(function(o) { return o.estado !== 'anulada'; }) // no contar anuladas
     .map(function(o) {
       const parts = o.numero ? o.numero.split('-') : [];
       return parts.length === 2 && parts[0] == year ? parseInt(parts[1]) : 0;
