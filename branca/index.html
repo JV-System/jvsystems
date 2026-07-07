@@ -3616,8 +3616,12 @@ function filtrarHistorial() {
   if (fDesde)   lista = lista.filter(function(o){ return (o.fecha||'') >= fDesde; });
   if (fHasta)   lista = lista.filter(function(o){ return (o.fecha||'') <= fHasta; });
 
-  // Ordenar por fecha descendente
-  lista.sort(function(a,b){ return (b.fecha||'').localeCompare(a.fecha||''); });
+  // Ordenar por número de orden descendente
+  lista.sort(function(a,b){
+    const na = parseInt((a.numero||'').split('-')[1]) || 0;
+    const nb = parseInt((b.numero||'').split('-')[1]) || 0;
+    return nb - na;
+  });
 
   if (countEl) countEl.textContent = lista.length + ' orden' + (lista.length !== 1 ? 'es' : '');
 
