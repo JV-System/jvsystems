@@ -5107,7 +5107,8 @@ function renderFactRow(o) {
     + (f.nroFactura ? '<button onclick="event.stopPropagation();generarFacturaPDF('+o.id+')" style="flex:1;background:#fff;color:#1a7a3c;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">📄 Vista previa PDF</button>' : '')
     + (getCurrentUser()?.role === 'facturacion' ? (o.xubioEnvios && o.xubioEnvios.length ? '<button onclick="event.stopPropagation();abrirModalXubio('+o.id+')" style="flex:1;background:#059669;color:#fff;border:none;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">✅ Enviado a Xubio</button>' : '<button onclick="event.stopPropagation();abrirModalXubio('+o.id+')" style="flex:1;background:#1565D8;color:#fff;border:none;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚡ Enviar a Xubio</button>') : '')
     + (f.nroFactura ? '<button onclick="event.stopPropagation();enviarMailFactura('+o.id+')" style="flex:1;background:#fff;color:#1a56db;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">✉ Enviar por mail</button>' : '')
-    + '</div>';
+    + '</div>'
+    + (o.xubioEnvios && o.xubioEnvios.length ? '<div style="padding:8px 16px 12px;background:#f0fdf4;border-top:1px solid #d1fae5;">' + o.xubioEnvios.map(function(e){ return '<div style="font-size:11px;color:#065f46;">✅ Enviado a Xubio el ' + new Date(e.fecha).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) + (e.nro ? ' · Comprobante N° ' + e.nro : '') + '</div>'; }).join('') + '</div>' : '');
   }
   row += '</div>';
   return row;
