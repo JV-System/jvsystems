@@ -5095,7 +5095,7 @@ function renderFactRow(o) {
     + '</thead>'
     + '<tbody id="fact-items-'+o.id+'">'
     + factItemRow(o.id, 'fact-mo',     'Mano de obra',  o.accionRealizada||'', 1, f.manoDeObra||0)
-    + factItemRow(o.id, 'fact-rep',    'Repuestos',     '', 1, f.repuestosCosto||0)
+    + factItemRow(o.id, 'fact-rep', 'Repuestos', (o.repuestos||[]).filter(function(r){return r.desc;}).map(function(r){return r.desc+(r.cant&&r.cant>1?' (x'+r.cant+')':'');}).join(' · '), 1, f.repuestosCosto||0)
     + factItemRow(o.id, 'fact-gastos', 'Gastos varios', '', 1, f.gastos||0)
     + '</tbody>'
     + '</table>'
