@@ -210,12 +210,58 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior para ver el detalle completo de cualquier orden cerrada.</div>
+        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior para ver el registro completo de todas las órdenes. Las órdenes aparecen ordenadas por <strong>número de orden</strong>, la más reciente primero.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Podés filtrar por <strong>cliente o fecha</strong>. Tocando una orden ves todos sus detalles: cliente, equipo, técnico, diagnóstico y comprobante.</div>
+        <div class="paso-txt">Podés filtrar por <strong>cliente, estado o fecha</strong>. Los estados disponibles son: <span class="tag tag-verde">🔒 Cerrada</span> <span class="tag tag-naranja">⏸ Pendiente</span> <span class="tag tag-gris">🚫 Anulada</span> entre otros.</div>
       </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Las órdenes <span class="tag tag-gris">🚫 Anuladas</span> también aparecen en el historial para mantener el registro completo. No se borra ningún número — quedan como referencia.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Tocando cualquier orden ves todos sus detalles: cliente, equipo, técnico, diagnóstico y comprobante.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si buscás una orden específica, usá el filtro de <strong>cliente</strong> o escribí el número de orden en el buscador del panel de Facturación.</div>
+    </div>
+  </div>
+
+  <!-- XUBIO -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">⚡</span><h2>Enviar comprobante a Xubio</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Dentro del panel de <strong>Facturación</strong>, abrí una orden y completá los montos (mano de obra, repuestos, gastos). Guardá con <strong>💾 Guardar</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Tocá el botón <strong>⚡ Enviar a Xubio</strong>. Se abre un panel con todos los campos:</div>
+      </div>
+
+      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin:10px 0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Punto de venta</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">0001</div></div>
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Tipo de comprobante</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Factura B ▾</div></div>
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Fecha</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">07/07/2026</div></div>
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Vencimiento del cobro</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">07/07/2026</div></div>
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Condición de pago</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Contado ▾</div></div>
+          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Moneda</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Pesos ▾</div></div>
+        </div>
+      </div>
+
+      <div class="paso" style="margin-top:12px;">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Revisá y ajustá los datos si hace falta (podés editar descripciones, cantidades y precios de cada ítem). Luego tocá <strong>⚡ Confirmar y enviar a Xubio</strong>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Si el envío fue exitoso aparece el mensaje <strong style="color:#065f46;">✅ Comprobante creado en Xubio correctamente</strong>. El comprobante ya figura en Xubio automáticamente.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> El vencimiento se calcula solo según la condición de pago — Contado = misma fecha, 30 días = fecha + 30, etc. Podés cambiarlo manualmente si hace falta.</div>
+      <div class="alerta"><strong>⚠ Importante:</strong> Cada vez que tocás "Confirmar y enviar" se crea un comprobante nuevo en Xubio. No lo toques dos veces para la misma orden.</div>
     </div>
   </div>
 
