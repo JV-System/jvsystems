@@ -5113,7 +5113,11 @@ function renderFactRow(o) {
         var totalHsStr = totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs';
         var moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
           + td('Mano de obra')
-          + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(o.accionRealizada||'') + '</td>'
+          + '<td style="padding:6px 8px;font-size:11px;line-height:1.5;">'
+          + (o.probDetectado ? '<div><span style="color:#9ca3af;font-weight:700;">Problema:</span> <span style="color:#374151;">'+esc(o.probDetectado)+'</span></div>' : '')
+          + (o.causaRaiz    ? '<div><span style="color:#9ca3af;font-weight:700;">Causa:</span> <span style="color:#374151;">'+esc(o.causaRaiz)+'</span></div>' : '')
+          + (o.accionRealizada ? '<div><span style="color:#9ca3af;font-weight:700;">Acción:</span> <span style="color:#374151;">'+esc(o.accionRealizada)+'</span></div>' : '')
+          + '</td>'
           + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;" id="fact-mo-hs-'+o.id+'">' + totalHsStr + '</td>'
           + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'" type="number" placeholder="$/hs" value="'+(f.precioHora||'')+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
           + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
