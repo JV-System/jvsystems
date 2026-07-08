@@ -7661,7 +7661,7 @@ function abrirModalXubio(oid) {
           <div><label style="${lbl}">Punto de venta</label><input id="xb-pv" value="0001" style="${inp}"></div>
           <div><label style="${lbl}">Tipo de comprobante</label><select id="xb-tipo" style="${inp}"><option>Factura B</option><option>Factura A</option><option>Factura C</option></select></div>
         </div>
-        <div style="margin-bottom:12px;"><label style="${lbl}">Cliente</label><div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-weight:600;">${esc(o.empresa||'—')}</div></div>
+        <div style="margin-bottom:12px;"><label style="${lbl}">Cliente (nombre exacto en Xubio)</label><input id="xb-cliente" value="${esc(o.empresa||'')}" style="${inp}"></div>
         <div style="${r2}">
           <div><label style="${lbl}">N° Comprobante</label><input id="xb-nro" value="${esc(nro)}" style="${inp}"></div>
           <div><label style="${lbl}">Condición de pago</label><select id="xb-cond" style="${inp}">${['Contado','30 días','60 días','Cuenta corriente'].map(function(c){ return '<option'+(cond===c?' selected':'')+'>'+c+'</option>'; }).join('')}</select></div>
@@ -7734,7 +7734,7 @@ async function confirmarEnvioXubio(oid) {
     return;
   }
   const payload = {
-    empresa:           o.empresa || '',
+    empresa:           document.getElementById('xb-cliente')?.value || o.empresa || '',
     puntoDeVenta:      document.getElementById('xb-pv')?.value     || '0001',
     tipoComprobante:   document.getElementById('xb-tipo')?.value   || 'Factura B',
     numeroComprobante: document.getElementById('xb-nro')?.value    || '',
