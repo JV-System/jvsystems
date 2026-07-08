@@ -7313,6 +7313,19 @@ function enviarWhatsApp() {
   var _abrir = function() {
     document.getElementById('wa-modal')?.remove();
     setTimeout(function() { window.open(waUrl, '_blank'); }, 300);
+    if (o) {
+      registrarCambio('Comprobante enviado por WhatsApp a ' + tel + '.');
+      if (!o.wspEnvios) o.wspEnvios = [];
+      o.wspEnvios.push({ fecha: new Date().toISOString(), tel: tel });
+      saveData();
+      // Actualizar panel de estados si está visible
+      var panel = document.getElementById('panel-estados');
+      if (panel && !panel.classList.contains('hidden')) {
+        var hist = panel.querySelector('#wsp-envios');
+        if (!hist) { hist = document.createElement('div'); hist.id = 'wsp-envios'; hist.style.cssText = 'margin-top:12px;border-top:1px solid #f0f0f0;padding-top:10px;'; panel.appendChild(hist); }
+        hist.innerHTML = o.wspEnvios.map(function(e){ return '<div style="font-size:12px;color:#065f46;margin-bottom:4px;">💬 WhatsApp enviado el ' + new Date(e.fecha).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) + ' al +' + e.tel + '</div>'; }).join('');
+      }
+    }
   };
 
   if (!el || !o) { _abrir(); return; }
