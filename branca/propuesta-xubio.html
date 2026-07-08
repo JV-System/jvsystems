@@ -3,316 +3,129 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Integración Xubio — App Branca</title>
+<title>Presupuesto — Integración Xubio · App Branca</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+body { font-family: Arial, sans-serif; background: #fff; color: #111; max-width: 680px; margin: 0 auto; padding: 48px 40px; }
 
-/* PORTADA */
-.portada {
-  background: linear-gradient(135deg, #0A1628 0%, #1a3a6e 60%, #1565D8 100%);
-  min-height: 100vh; display: flex; flex-direction: column;
-  justify-content: center; align-items: center; text-align: center;
-  padding: 60px 40px; position: relative; overflow: hidden;
+.header { border-bottom: 3px solid #1565D8; padding-bottom: 20px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end; }
+.header h1 { font-size: 22px; font-weight: 900; color: #0A1628; }
+.header h1 span { color: #1565D8; }
+.header-meta { text-align: right; font-size: 12px; color: #888; line-height: 1.8; }
+
+.section { margin-bottom: 28px; }
+.section h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #1565D8; margin-bottom: 10px; }
+
+.desc { font-size: 14px; color: #444; line-height: 1.7; }
+
+.items { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.items tr { border-bottom: 1px solid #f0f0f0; }
+.items tr:last-child { border-bottom: none; }
+.items td { padding: 11px 0; font-size: 13px; vertical-align: top; }
+.items td:first-child { color: #0A1628; font-weight: 600; width: 60%; }
+.items td:last-child { text-align: right; color: #10b981; font-weight: 700; }
+.items .sub { font-size: 12px; color: #888; font-weight: 400; margin-top: 2px; }
+
+.total-box { background: #0A1628; color: #fff; border-radius: 10px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.total-box span { font-size: 14px; color: rgba(255,255,255,0.7); }
+.total-box strong { font-size: 28px; color: #60a5fa; font-weight: 900; }
+
+.condicion { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cond-item { border-radius: 8px; padding: 14px 16px; }
+.cond-item.si { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.cond-item.no { background: #fff7ed; border: 1px solid #fed7aa; }
+.cond-item .icon { font-size: 18px; margin-bottom: 6px; }
+.cond-item h4 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.cond-item.si h4 { color: #065f46; }
+.cond-item.no h4 { color: #9a3412; }
+.cond-item p { font-size: 12px; line-height: 1.5; }
+.cond-item.si p { color: #047857; }
+.cond-item.no p { color: #c2410c; }
+
+.estado { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; line-height: 1.6; }
+.estado strong { color: #78350f; }
+
+.footer { border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 32px; display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
+
+@media print {
+  body { padding: 32px 36px; }
 }
-.portada::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse at 70% 30%, rgba(21,101,216,0.3) 0%, transparent 60%);
-}
-.portada-logo { font-size: 12px; font-weight: 700; color: #7EB3F7; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px; position: relative; }
-.portada h1 { font-size: 42px; font-weight: 900; color: #fff; line-height: 1.15; position: relative; margin-bottom: 14px; }
-.portada h1 span { color: #60a5fa; }
-.portada .sub { font-size: 17px; color: rgba(255,255,255,0.7); position: relative; margin-bottom: 36px; line-height: 1.6; max-width: 520px; }
-.portada-badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; position: relative; margin-bottom: 50px; }
-.badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 12px; font-weight: 700; padding: 7px 16px; border-radius: 30px; }
-.portada-meta { position: relative; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 24px; width: 100%; max-width: 520px; }
-.portada-meta p { color: rgba(255,255,255,0.5); font-size: 13px; line-height: 1.9; }
-.portada-meta strong { color: rgba(255,255,255,0.9); }
-.wave-bottom { position: absolute; bottom: 0; left: 0; width: 100%; }
-
-/* SECCIONES */
-.page { max-width: 860px; margin: 0 auto; padding: 60px 30px; }
-.section-tag { font-size: 11px; font-weight: 700; color: #1565D8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
-.section-title { font-size: 26px; font-weight: 800; color: #0A1628; margin-bottom: 8px; line-height: 1.2; }
-.section-title span { color: #1565D8; }
-.section-sub { font-size: 15px; color: #555; line-height: 1.7; margin-bottom: 28px; }
-.divider { height: 3px; width: 50px; background: linear-gradient(90deg, #1565D8, #60a5fa); border-radius: 2px; margin-bottom: 28px; }
-
-/* FLUJO */
-.flujo { display: flex; align-items: center; gap: 0; margin: 28px 0 36px; flex-wrap: wrap; justify-content: center; }
-.flujo-step { background: #fff; border-radius: 12px; padding: 18px 16px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,.07); width: 145px; }
-.flujo-step .fs-icon { font-size: 26px; margin-bottom: 8px; }
-.flujo-step .fs-title { font-size: 12px; font-weight: 700; color: #0A1628; margin-bottom: 3px; }
-.flujo-step .fs-sub { font-size: 10px; color: #9ca3af; line-height: 1.4; }
-.flujo-arrow { font-size: 20px; color: #1565D8; padding: 0 6px; }
-
-/* MOCKUP */
-.mockup-wrap { background: #fff; border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,.1); overflow: hidden; margin-bottom: 10px; }
-.mockup-bar { background: #0A1628; padding: 9px 14px; display: flex; align-items: center; gap: 7px; }
-.mockup-bar .dot { width: 9px; height: 9px; border-radius: 50%; }
-.mockup-bar .dot.r { background: #ff5f57; } .mockup-bar .dot.y { background: #ffbd2e; } .mockup-bar .dot.g { background: #28c840; }
-.mockup-bar .url { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); font-size: 11px; padding: 3px 10px; border-radius: 5px; flex: 1; text-align: center; }
-.nav-mock { background: #0A1628; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.nav-mock .logo-text { font-size: 11px; font-weight: 800; color: #fff; }
-.nav-mock .nav-btns { display: flex; gap: 5px; }
-.nav-mock .nb { background: rgba(255,255,255,0.1); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 5px; }
-.nav-mock .nb.active { background: #1565D8; }
-.nav-mock .avatar { width: 24px; height: 24px; background: #1565D8; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; }
-
-.comp-mock { background: #fff; }
-.comp-header-m { background: #0A1628; padding: 9px 14px; display: flex; justify-content: space-between; }
-.comp-header-m span { font-size: 10px; font-weight: 700; }
-.comp-header-m .left { color: #7EB3F7; } .comp-header-m .right { color: #fff; }
-.comp-fields-m { padding: 12px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cf label { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; display: block; margin-bottom: 3px; }
-.cf .val { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px 8px; font-size: 11px; color: #111; }
-.comp-table-m { width: 100%; border-collapse: collapse; font-size: 10px; }
-.comp-table-m th { background: #f1f5f9; padding: 6px 8px; text-align: left; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb; }
-.comp-table-m td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; }
-.comp-table-m td.r { text-align: right; } .comp-table-m td.b { font-weight: 700; color: #1565D8; }
-.totales-m { background: #f8fafc; padding: 10px 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.tot-row { display: flex; gap: 20px; font-size: 11px; }
-.tot-row span:first-child { color: #6b7280; }
-.tot-row span:last-child { font-weight: 700; color: #0A1628; min-width: 70px; text-align: right; }
-.tot-total { font-size: 14px; font-weight: 800; color: #0A1628; border-top: 2px solid #e5e7eb; padding-top: 5px; margin-top: 2px; }
-.action-btns-m { padding: 10px 14px; display: flex; gap: 6px; flex-wrap: wrap; }
-.btn-m { font-size: 10px; font-weight: 700; padding: 7px 12px; border-radius: 7px; cursor: default; }
-.btn-m.outline { background: #fff; color: #0A1628; border: 1.5px solid #d1d5db; }
-.btn-m.xubio { background: linear-gradient(135deg, #1565D8, #3b82f6); color: #fff; border: none; }
-
-/* PRESUPUESTO */
-.presup { background: #fff; border-radius: 16px; box-shadow: 0 4px 30px rgba(0,0,0,.1); overflow: hidden; margin-bottom: 0; }
-.presup-header { background: linear-gradient(135deg, #0A1628, #1a3a6e); padding: 26px 30px; }
-.presup-header h2 { font-size: 19px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-.presup-header p { font-size: 13px; color: rgba(255,255,255,0.55); }
-.presup-body { padding: 24px 30px; }
-.presup-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #f3f4f6; gap: 20px; }
-.presup-item:last-child { border-bottom: none; }
-.pi-desc h4 { font-size: 14px; font-weight: 700; color: #0A1628; margin-bottom: 3px; }
-.pi-desc p { font-size: 12px; color: #6b7280; line-height: 1.5; }
-.pi-price { font-size: 13px; font-weight: 700; color: #10b981; white-space: nowrap; }
-.presup-total { background: #0A1628; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
-.presup-total span { font-size: 15px; color: rgba(255,255,255,0.75); font-weight: 600; }
-.presup-total strong { font-size: 30px; color: #60a5fa; font-weight: 900; }
-.presup-nota { padding: 16px 30px; background: #f8fafc; font-size: 12px; color: #6b7280; line-height: 1.8; border-top: 1px solid #f0f0f0; }
-
-/* ESTADO */
-.estado-box { border-radius: 12px; overflow: hidden; margin-bottom: 30px; border: 1px solid #e5e7eb; }
-.estado-item { display: flex; gap: 16px; padding: 16px 20px; align-items: flex-start; border-bottom: 1px solid #f3f4f6; }
-.estado-item:last-child { border-bottom: none; }
-.estado-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.done { background: #d1fae5; color: #065f46; }
-.active { background: #fef3c7; color: #92400e; }
-.estado-txt h4 { font-size: 14px; font-weight: 700; color: #0A1628; margin-bottom: 3px; }
-.estado-txt .dia { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.dia.verde { color: #10b981; } .dia.naranja { color: #f59e0b; }
-.estado-txt p { font-size: 12px; color: #6b7280; line-height: 1.5; }
-
-/* FOOTER */
-.footer-doc { background: #0A1628; padding: 28px; text-align: center; }
-.footer-doc p { color: rgba(255,255,255,0.45); font-size: 12px; line-height: 2; }
-.footer-doc strong { color: #7EB3F7; }
 </style>
 </head>
 <body>
 
-<!-- PORTADA -->
-<div class="portada">
-  <div class="portada-logo">JV Systems · Julio 2026</div>
-  <h1>App Branca <span>+ Xubio</span></h1>
-  <p class="sub">El módulo de conexión automática con Xubio está desarrollado y activo. Un botón en la app crea la factura directamente en Xubio, sin tocar nada más.</p>
-  <div class="portada-badges">
-    <div class="badge">✅ Módulo activo en producción</div>
-    <div class="badge" style="background:rgba(245,158,11,0.25);border-color:rgba(245,158,11,0.4);">⏳ Pendiente: prueba con Ornela</div>
+<div class="header">
+  <div>
+    <h1>Integración <span>App Branca ↔ Xubio</span></h1>
+    <div style="font-size:13px;color:#555;margin-top:4px;">Presupuesto · Pago único</div>
   </div>
-  <div class="portada-meta">
-    <p><strong>Para:</strong> Ingeniería Branca SRL &nbsp;·&nbsp; <strong>Por:</strong> Juan Villanueva · JV Systems</p>
-    <p><strong>Fecha:</strong> Julio 2026</p>
-  </div>
-  <svg class="wave-bottom" viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#f0f2f5"/>
-  </svg>
-</div>
-
-<!-- CÓMO FUNCIONA -->
-<div class="page">
-  <div class="section-tag">01 — Cómo funciona</div>
-  <h2 class="section-title">Un botón. <span>Todo en Xubio.</span></h2>
-  <div class="divider"></div>
-  <p class="section-sub">Ornela carga el comprobante en la app como siempre. Cuando toca <strong>"Enviar a Xubio"</strong>, el sistema crea la factura automáticamente con todos los datos: cliente, ítems, IVA, fecha y condición de pago. No hay que cargar nada en Xubio.</p>
-
-  <div class="flujo">
-    <div class="flujo-step">
-      <div class="fs-icon">📋</div>
-      <div class="fs-title">Orden cerrada</div>
-      <div class="fs-sub">El técnico cierra la orden con firma</div>
-    </div>
-    <div class="flujo-arrow">→</div>
-    <div class="flujo-step">
-      <div class="fs-icon">🧾</div>
-      <div class="fs-title">Comprobante</div>
-      <div class="fs-sub">Ornela carga precio y N° de factura</div>
-    </div>
-    <div class="flujo-arrow">→</div>
-    <div class="flujo-step">
-      <div class="fs-icon">⚡</div>
-      <div class="fs-title">Enviar a Xubio</div>
-      <div class="fs-sub">Un botón envía todo automáticamente</div>
-    </div>
-    <div class="flujo-arrow">→</div>
-    <div class="flujo-step">
-      <div class="fs-icon">✅</div>
-      <div class="fs-title">Factura creada</div>
-      <div class="fs-sub">Aparece en Xubio lista para emitir</div>
-    </div>
+  <div class="header-meta">
+    <div>Para: <strong style="color:#111;">Ingeniería Branca SRL</strong></div>
+    <div>Por: Juan Villanueva · JV Systems</div>
+    <div>Julio 2026</div>
   </div>
 </div>
 
-<!-- MOCKUP APP -->
-<div class="page" style="background:#fff;padding-top:50px;padding-bottom:50px;">
-  <div class="page" style="padding:0;">
-    <div class="section-tag">02 — Cómo se ve en la app</div>
-    <h2 class="section-title">El botón aparece <span>en la orden</span></h2>
-    <div class="divider"></div>
-    <p class="section-sub">En la pestaña de Facturación, al expandir una orden, aparece el comprobante completo con el botón azul de Xubio. Solo lo ve y lo puede usar Ornela.</p>
+<div class="section">
+  <h2>¿Qué resuelve?</h2>
+  <p class="desc">Hoy cada vez que se cierra una orden, alguien tiene que entrar a Xubio y cargar todos los datos a mano: cliente, servicio, monto, fecha. Son entre 5 y 10 minutos por orden, con riesgo de error en cada carga.<br><br>Con la integración, ese proceso desaparece. Al tocar un botón en la app, el comprobante se crea solo en Xubio con todo ya completado. El contador lo ve listo para emitir sin tocar nada.</p>
+</div>
 
-    <div class="mockup-wrap">
-      <div class="mockup-bar">
-        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="url">jvsystems.com.ar/branca</div>
-      </div>
-      <div class="nav-mock">
-        <div class="logo-text">BRANCA SRL</div>
-        <div class="nav-btns">
-          <div class="nb">Órdenes</div>
-          <div class="nb">Historial</div>
-          <div class="nb active">Facturación</div>
-          <div class="nb">Config.</div>
-        </div>
-        <div class="avatar">O</div>
-      </div>
-      <div class="comp-mock">
-        <div class="comp-header-m">
-          <span class="left">Comprobante de Venta</span>
-          <span class="right">Ingeniería Branca SRL</span>
-        </div>
-        <div class="comp-fields-m">
-          <div class="cf"><label>Cliente</label><div class="val">Arhon Srl</div></div>
-          <div class="cf"><label>Tipo</label><div class="val">Factura B</div></div>
-          <div class="cf"><label>N° Comprobante</label><div class="val">F-0090</div></div>
-          <div class="cf"><label>Condición de pago</label><div class="val">Contado</div></div>
-        </div>
-        <table class="comp-table-m">
-          <thead><tr><th>Producto / Servicio</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Total</th></tr></thead>
-          <tbody>
-            <tr><td>Mano de obra — Service aire acond.</td><td class="r">1</td><td class="r b">$ 85.000</td><td class="r">21%</td><td class="r">$ 102.850</td></tr>
-            <tr><td>Repuestos — Gas R-410A</td><td class="r">1</td><td class="r b">$ 42.000</td><td class="r">21%</td><td class="r">$ 50.820</td></tr>
-          </tbody>
-        </table>
-        <div class="totales-m">
-          <div class="tot-row"><span>Subtotal</span><span>$ 127.000</span></div>
-          <div class="tot-row"><span>IVA 21%</span><span>$ 26.670</span></div>
-          <div class="tot-row tot-total"><span>TOTAL</span><span>$ 153.670</span></div>
-        </div>
-        <div class="action-btns-m">
-          <div class="btn-m outline">💾 Guardar</div>
-          <div class="btn-m outline">📄 PDF</div>
-          <div class="btn-m xubio">⚡ Enviar a Xubio</div>
-        </div>
-      </div>
-    </div>
+<div class="section">
+  <h2>Estado actual</h2>
+  <div class="estado">
+    <strong>✅ Módulo desarrollado y activo en producción.</strong> Ornela está realizando la primera prueba de conexión real con Xubio para validar el flujo completo y ajustar los detalles que surjan.
   </div>
 </div>
 
-<!-- ESTADO ACTUAL -->
-<div class="page">
-  <div class="section-tag">03 — Estado actual</div>
-  <h2 class="section-title">Módulo <span>desarrollado y activo</span></h2>
-  <div class="divider"></div>
+<div class="section">
+  <h2>Incluye</h2>
+  <table class="items">
+    <tr>
+      <td>
+        Conexión automática con API de Xubio
+        <div class="sub">Autenticación OAuth2, tokens automáticos, envío de comprobantes con todos los campos requeridos</div>
+      </td>
+      <td>✔ incluido</td>
+    </tr>
+    <tr>
+      <td>
+        Botón "Enviar a Xubio" en la app
+        <div class="sub">Visible solo para el usuario de Facturación. Confirmación antes de enviar, indicador de éxito o error</div>
+      </td>
+      <td>✔ incluido</td>
+    </tr>
+    <tr>
+      <td>
+        Prueba en vivo, ajuste de detalles y mantenimiento
+        <div class="sub">Acompañamiento en la prueba real con Ornela y corrección de cualquier inconveniente que surja con el uso</div>
+      </td>
+      <td>✔ incluido</td>
+    </tr>
+  </table>
+</div>
 
-  <div class="estado-box">
-    <div class="estado-item" style="background:#f0fdf4;">
-      <div class="estado-num done">✓</div>
-      <div class="estado-txt">
-        <div class="dia verde">Completado</div>
-        <h4>Módulo construido y desplegado en producción</h4>
-        <p>Autenticación OAuth2 con Xubio, modal de comprobante con todos los campos (punto de venta, tipo, fecha, vencimiento, moneda, ítems), botón visible únicamente para el usuario Ornela. Todo activo en la app real.</p>
-      </div>
-    </div>
-    <div class="estado-item" style="background:#fffbeb;">
-      <div class="estado-num active">▶</div>
-      <div class="estado-txt">
-        <div class="dia naranja">Próximo paso — Con Ornela</div>
-        <h4>Prueba de conexión real con Xubio</h4>
-        <p>Ornela envía una orden real desde la app y verifica que el comprobante aparezca correctamente en Xubio. Se ajustan los detalles que surjan. Una vez confirmado, el sistema queda validado para uso diario.</p>
-      </div>
-    </div>
+<div class="total-box">
+  <span>Total · Pago único · Sin costo mensual</span>
+  <strong>USD 200</strong>
+</div>
+
+<div class="condicion">
+  <div class="cond-item si">
+    <div class="icon">✅</div>
+    <h4>Si se adquiere</h4>
+    <p>El módulo queda habilitado definitivamente en la app al valor indicado.</p>
+  </div>
+  <div class="cond-item no">
+    <div class="icon">↩️</div>
+    <h4>Si no se adquiere</h4>
+    <p>La app vuelve a la versión anterior sin el módulo. Sin costo adicional.</p>
   </div>
 </div>
 
-<!-- PRESUPUESTO -->
-<div class="page" style="background:#fff;padding-top:50px;padding-bottom:60px;">
-  <div class="page" style="padding:0;">
-    <div class="section-tag">04 — Inversión</div>
-    <h2 class="section-title">Presupuesto <span>pago único</span></h2>
-    <div class="divider"></div>
-
-    <div class="presup">
-      <div class="presup-header">
-        <h2>Módulo de integración App Branca ↔ Xubio</h2>
-        <p>Julio 2026</p>
-      </div>
-      <div class="presup-body">
-        <div class="presup-item">
-          <div class="pi-desc">
-            <h4>Conexión automática con API de Xubio</h4>
-            <p>Autenticación OAuth2, gestión de tokens, envío de comprobantes con todos los campos requeridos por Xubio (cliente, ítems, IVA, condición de pago, moneda, vencimiento).</p>
-          </div>
-          <div class="pi-price">✔ incluido</div>
-        </div>
-        <div class="presup-item">
-          <div class="pi-desc">
-            <h4>Botón "Enviar a Xubio" exclusivo para Facturación</h4>
-            <p>Visible y funcional solo para el usuario con rol Facturación. Confirmación antes de enviar, indicador de éxito o error en pantalla.</p>
-          </div>
-          <div class="pi-price">✔ incluido</div>
-        </div>
-        <div class="presup-item">
-          <div class="pi-desc">
-            <h4>Prueba en vivo, ajuste de detalles y mantenimiento</h4>
-            <p>Se acompaña a Ornela en la primera prueba real y se corrigen los detalles que surjan. Incluye el mantenimiento del módulo ante cualquier cambio o inconveniente que vaya surgiendo con el uso.</p>
-          </div>
-          <div class="pi-price">✔ incluido</div>
-        </div>
-      </div>
-      <div class="presup-total">
-        <span>Total · Pago único</span>
-        <strong>USD 200</strong>
-      </div>
-      <div class="presup-nota">
-        ✔ Pago único — sin costo mensual adicional por la integración.<br>
-        ✔ El módulo ya está desarrollado y activo. El precio se mantiene en USD 200.
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid #e5e7eb;">
-        <div style="padding:20px 24px;background:#f0fdf4;border-right:1px solid #e5e7eb;">
-          <div style="font-size:22px;margin-bottom:8px;">✅</div>
-          <div style="font-size:12px;font-weight:800;color:#065f46;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Si se adquiere</div>
-          <p style="font-size:12px;color:#047857;line-height:1.6;">El módulo queda habilitado definitivamente en la app al valor indicado. USD 200, pago único.</p>
-        </div>
-        <div style="padding:20px 24px;background:#fff7ed;">
-          <div style="font-size:22px;margin-bottom:8px;">↩️</div>
-          <div style="font-size:12px;font-weight:800;color:#9a3412;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Si no se adquiere</div>
-          <p style="font-size:12px;color:#c2410c;line-height:1.6;">La app vuelve a la versión anterior sin el módulo de conexión con Xubio. Sin costo adicional.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<div class="footer-doc">
-  <p><strong>JV Systems</strong> · Desarrollo de software a medida</p>
-  <p>jv2066037@gmail.com · Julio 2026</p>
+<div class="footer">
+  <span>JV Systems · jv2066037@gmail.com</span>
+  <span>Julio 2026</span>
 </div>
 
 </body>
