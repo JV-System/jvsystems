@@ -7550,11 +7550,7 @@ function abrirModalXubio(oid) {
                 <td style="padding:8px 8px;text-align:right;"><input id="xb-cant-mo" type="number" value="1" style="border:none;font-size:12px;width:40px;text-align:right;background:transparent;font-family:inherit;"></td>
                 <td style="padding:8px 12px;text-align:right;"><input id="xb-precio-mo" type="number" value="${mdo||''}" placeholder="0" style="border:none;font-size:12px;width:90px;text-align:right;background:transparent;font-family:inherit;"></td>
               </tr>
-              <tr style="border-bottom:1px solid #f3f4f6;">
-                <td style="padding:8px 12px;"><input id="xb-desc-rep" value="Repuestos" style="border:none;font-size:12px;width:100%;background:transparent;font-family:inherit;"></td>
-                <td style="padding:8px 8px;text-align:right;"><input id="xb-cant-rep" type="number" value="1" style="border:none;font-size:12px;width:40px;text-align:right;background:transparent;font-family:inherit;"></td>
-                <td style="padding:8px 12px;text-align:right;"><input id="xb-precio-rep" type="number" value="${rep||''}" placeholder="0" style="border:none;font-size:12px;width:90px;text-align:right;background:transparent;font-family:inherit;"></td>
-              </tr>
+              ${(o.repuestos && o.repuestos.filter(function(r){return r.desc;}).length ? o.repuestos.filter(function(r){return r.desc;}) : [{desc:'Repuestos',cant:1}]).map(function(r,i){ return '<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:8px 12px;"><input id="xb-desc-rep-'+i+'" value="'+esc(r.desc)+'" style="border:none;font-size:12px;width:100%;background:transparent;font-family:inherit;"></td><td style="padding:8px 8px;text-align:right;"><input id="xb-cant-rep-'+i+'" type="number" value="'+esc(String(r.cant||1))+'" style="border:none;font-size:12px;width:40px;text-align:right;background:transparent;font-family:inherit;"></td><td style="padding:8px 12px;text-align:right;"><input id="xb-precio-rep-'+i+'" type="number" placeholder="0" style="border:none;font-size:12px;width:90px;text-align:right;background:transparent;font-family:inherit;"></td></tr>'; }).join('')}
               <tr>
                 <td style="padding:8px 12px;"><input id="xb-desc-gas" value="Gastos varios" style="border:none;font-size:12px;width:100%;background:transparent;font-family:inherit;"></td>
                 <td style="padding:8px 8px;text-align:right;"><input id="xb-cant-gas" type="number" value="1" style="border:none;font-size:12px;width:40px;text-align:right;background:transparent;font-family:inherit;"></td>
@@ -7589,8 +7585,13 @@ async function confirmarEnvioXubio(oid) {
       PorcentajeIVA:  21
     });
   };
-  addItem('xb-desc-mo',  'xb-cant-mo',  'xb-precio-mo');
-  addItem('xb-desc-rep', 'xb-cant-rep', 'xb-precio-rep');
+  addItem('xb-desc-mo', 'xb-cant-mo', 'xb-precio-mo');
+  // Repuestos dinámicos
+  var i = 0;
+  while (document.getElementById('xb-desc-rep-' + i)) {
+    addItem('xb-desc-rep-' + i, 'xb-cant-rep-' + i, 'xb-precio-rep-' + i);
+    i++;
+  }
   addItem('xb-desc-gas', 'xb-cant-gas', 'xb-precio-gas');
   if (!items.length) {
     if (statusEl) statusEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin-bottom:10px;">⚠ Ingresá al menos un producto con precio.</div>';
