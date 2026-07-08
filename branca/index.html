@@ -4923,6 +4923,26 @@ var _factOpenId = null; // id de la carta actualmente abierta
 var _factFiltro = 'todos';
 var _factBusca  = '';
 
+function _getFactLista() {
+  var todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
+  var lista = todas.filter(function(o) {
+    const f = o.facturacion || {};
+    if (_factFiltro === 'sin')     return !f.nroFactura;
+    if (_factFiltro === 'pend')    return f.nroFactura && f.estadoPago !== 'pagado';
+    if (_factFiltro === 'cobrado') return f.estadoPago === 'pagado';
+    return true;
+  });
+  if (_factBusca) {
+    const q = _factBusca.toLowerCase();
+    lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q) || ((o.facturacion||{}).nroFactura||'').toLowerCase().includes(q); });
+  }
+  lista.sort(function(a,b){
+    const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
+    return rank(a)-rank(b);
+  });
+  return lista;
+}
+
 function renderFacturacion() {
   const mc = document.getElementById('mainContent');
   if (!mc) return;
@@ -4935,23 +4955,7 @@ function renderFacturacion() {
     else totalPend += o.facturacion.total || 0;
   });
 
-  // Filtrar por tab + búsqueda
-  var lista = todas.filter(function(o) {
-    const f = o.facturacion || {};
-    if (_factFiltro === 'sin')     return !f.nroFactura;
-    if (_factFiltro === 'pend')    return f.nroFactura && f.estadoPago !== 'pagado';
-    if (_factFiltro === 'cobrado') return f.estadoPago === 'pagado';
-    return true;
-  });
-  if (_factBusca) {
-    const q = _factBusca.toLowerCase();
-    lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q) || ((o.facturacion||{}).nroFactura||'').toLowerCase().includes(q); });
-  }
-  // Ordenar: sin facturar primero, luego pendiente, luego cobrado
-  lista.sort(function(a,b){
-    const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
-    return rank(a)-rank(b);
-  });
+  var lista = _getFactLista();
 
   const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}); };
   const tab = function(key,label,count,col){
@@ -5003,17 +5007,34 @@ function renderFacturacion() {
     + '</div>'
 
     // ── Lista ──
+    + '<div id="fact-lista-container">'
     + (lista.length === 0
       ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin resultados</h3><p>Probá cambiando el filtro o la búsqueda</p></div>'
       : '<div style="background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">'
         + lista.map(renderFactRow).join('')
         + '</div>')
+    + '</div>'
 
     + '</div></div>';
 }
 
 function setFactFiltro(f) { _factFiltro = f; _factOpenId = null; renderFacturacion(); }
-function setFactBusca(v)  { _factBusca  = v; _factOpenId = null; renderFacturacion(); }
+function setFactBusca(v)  {
+  _factBusca = v;
+  _factOpenId = null;
+  // Solo re-renderizar la lista, no el buscador (evita pérdida de foco)
+  var lista = _getFactLista();
+  var listContainer = document.getElementById('fact-lista-container');
+  if (listContainer) {
+    listContainer.innerHTML = lista.length === 0
+      ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin resultados</h3><p>Probá cambiando el filtro o la búsqueda</p></div>'
+      : '<div style="background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">'
+        + lista.map(renderFactRow).join('')
+        + '</div>';
+  } else {
+    renderFacturacion();
+  }
+}
 
 function renderFactRow(o) {
   const f   = o.facturacion || {};
@@ -5081,25 +5102,79 @@ function renderFactRow(o) {
       + '</div>'
 
     // Tabla de ítems
-    + '<div style="padding:0 16px;background:#f8fafc;">'
-    + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">'
-    + '<thead>'
-    + '<tr style="background:#f1f5f9;">'
-    + '<th style="text-align:left;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Producto / Servicio</th>'
-    + '<th style="text-align:left;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Observaciones</th>'
-    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Cant.</th>'
-    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Precio</th>'
-    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">IVA</th>'
-    + '<th style="text-align:right;padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">Total</th>'
-    + '</tr>'
-    + '</thead>'
-    + '<tbody id="fact-items-'+o.id+'">'
-    + factItemRow(o.id, 'fact-mo', 'Mano de obra', (function(){ var vis = (o.visitas||[]).filter(function(v){return v.tiempo;}); return vis.length ? vis.map(function(v){return (v.fecha?v.fecha+' ':'')+(v.tiempo||'')+(v.causa?' — '+v.causa:'');}).join(' · ') : (o.accionRealizada||''); })(), 1, f.manoDeObra||0)
-    + factItemRow(o.id, 'fact-rep', 'Repuestos', (o.repuestos||[]).filter(function(r){return r.desc;}).map(function(r){return r.desc+(r.cant&&r.cant>1?' (x'+r.cant+')':'');}).join(' · '), 1, f.repuestosCosto||0)
-    + factItemRow(o.id, 'fact-gastos', 'Gastos varios', '', 1, f.gastos||0)
-    + '</tbody>'
-    + '</table>'
-    + '</div>'
+    + (function(){
+        var inpS = 'border:none;border-bottom:1px solid #d1d5db;padding:4px 6px;font-size:12px;text-align:right;background:transparent;font-family:inherit;';
+        var th = function(t,r){ return '<th style="text-align:'+(r?'right':'left')+';padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">'+t+'</th>'; };
+        var td = function(t,r,b){ return '<td style="padding:8px 10px;'+(r?'text-align:right;':'')+(b?'font-weight:700;':'')+'color:#111;">'+t+'</td>'; };
+
+        // Mano de obra — total hs automático de visitas
+        var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
+        var totalHs = vis.reduce(function(acc,v){ return acc + parsearHoras(v.tiempo); }, 0);
+        var totalHsStr = totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs';
+        var moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
+          + td('Mano de obra')
+          + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(o.accionRealizada||'') + '</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;" id="fact-mo-hs-'+o.id+'">' + totalHsStr + '</td>'
+          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'" type="number" placeholder="$/hs" value="'+(f.precioHora||'')+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-total-'+o.id+'">'+(f.manoDeObra ? '$ '+f.manoDeObra.toLocaleString('es-AR') : '$ 0')+'</td>'
+          + '</tr>';
+        // Campo oculto para compatibilidad con recalcFact
+        moRow += '<input type="hidden" id="fact-mo-'+o.id+'" value="'+(f.manoDeObra||0)+'">';
+
+        // Repuestos — una fila por repuesto
+        var reps = (o.repuestos||[]).filter(function(r){ return r.desc; });
+        var preciosRep = f.preciosRepuestos || [];
+        var repRows = '';
+        if (reps.length) {
+          reps.forEach(function(r, i){
+            var precioGuardado = preciosRep[i] || '';
+            var totalRep = precioGuardado ? Math.round(parseFloat(precioGuardado) * (parseFloat(r.cant)||1)) : 0;
+            repRows += '<tr style="border-bottom:1px solid #f3f4f6;">'
+              + td(i===0 ? 'Repuestos' : '')
+              + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(r.desc) + '</td>'
+              + '<td style="padding:8px 10px;text-align:right;color:#555;">' + esc(String(r.cant||1)) + '</td>'
+              + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-p-'+o.id+'-'+i+'" type="number" placeholder="precio" value="'+precioGuardado+'" data-cant="'+(r.cant||1)+'" onclick="event.stopPropagation()" oninput="recalcRep('+o.id+')" style="'+inpS+'width:80px;"></td>'
+              + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+              + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-rep-t-'+o.id+'-'+i+'">$ '+totalRep.toLocaleString('es-AR')+'</td>'
+              + '</tr>';
+          });
+        } else {
+          repRows = '<tr style="border-bottom:1px solid #f3f4f6;">'
+            + td('Repuestos') + '<td style="padding:8px 6px;color:#aaa;font-size:11px;font-style:italic;">Sin repuestos cargados</td>'
+            + '<td style="padding:8px 10px;text-align:right;">—</td>'
+            + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-'+o.id+'" type="number" placeholder="0" value="'+(f.repuestosCosto||0)+'" onclick="event.stopPropagation()" oninput="recalcFact('+o.id+')" style="'+inpS+'width:80px;"></td>'
+            + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+            + '<td style="padding:8px 10px;text-align:right;font-weight:700;">$ '+(f.repuestosCosto||0).toLocaleString('es-AR')+'</td>'
+            + '</tr>';
+        }
+        repRows += '<input type="hidden" id="fact-rep-'+o.id+'" value="'+(f.repuestosCosto||0)+'">';
+
+        // Viáticos
+        var viaticos = f.gastos || 0;
+        var viatRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
+          + td('Viáticos') + '<td style="padding:8px 6px;"></td>'
+          + '<td style="padding:8px 10px;text-align:right;">—</td>'
+          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-gastos-'+o.id+'" type="number" placeholder="0" value="'+viaticos+'" onclick="event.stopPropagation()" oninput="recalcFact('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:700;">$ '+viaticos.toLocaleString('es-AR')+'</td>'
+          + '</tr>';
+
+        return '<div style="padding:0 16px;background:#f8fafc;">'
+          + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">'
+          + '<thead><tr style="background:#f1f5f9;">'
+          + th('Producto / Servicio') + th('Descripción') + th('Cant.',true) + th('$ Unit.',true) + th('IVA',true) + th('Total',true)
+          + '</tr></thead>'
+          + '<tbody id="fact-items-'+o.id+'">'
+          + moRow + repRows + viatRow
+          + '</tbody></table></div>'
+          + (vis.length ? '<div style="padding:6px 16px 0;background:#f8fafc;">'
+            + '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:0;">'
+            + '<div style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Detalle de visitas</div>'
+            + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
+            + vis.map(function(v){ return '<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td><td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td><td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td></tr>'; }).join('')
+            + '</table></div></div>' : '');
+      })()
 
     // Descuento + Totales
     + '<div style="padding:10px 16px 14px;background:#f8fafc;">'
@@ -5145,6 +5220,50 @@ function factItemRow(oid, field, nombre, obs, cant, precio) {
 function recalcFact(oid) {
   const totDiv = document.getElementById('fact-totales-'+oid);
   if (totDiv) totDiv.innerHTML = renderFactTotalesHTML(null, oid);
+}
+
+function parsearHoras(str) {
+  if (!str) return 0;
+  str = String(str).toLowerCase().trim();
+  var h = 0, m = 0;
+  var mh = str.match(/(\d+(?:[.,]\d+)?)\s*h/);
+  var mm = str.match(/(\d+)\s*min/);
+  if (mh) h = parseFloat(mh[1].replace(',','.'));
+  if (mm) m = parseInt(mm[1]);
+  if (!mh && !mm) h = parseFloat(str.replace(',','.')) || 0;
+  return h + m / 60;
+}
+
+function recalcMO(oid) {
+  var phInp = document.getElementById('fact-mo-ph-'+oid);
+  var hsEl = document.getElementById('fact-mo-hs-'+oid);
+  var totEl = document.getElementById('fact-mo-total-'+oid);
+  var hidInp = document.getElementById('fact-mo-'+oid);
+  if (!phInp || !hsEl) return;
+  var hsText = hsEl.textContent || '';
+  var hs = parseFloat(hsText) || 0;
+  var ph = parseFloat(phInp.value) || 0;
+  var total = Math.round(hs * ph);
+  if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
+  if (hidInp) { hidInp.value = total; recalcFact(oid); }
+}
+
+function recalcRep(oid) {
+  var total = 0;
+  var i = 0;
+  while (true) {
+    var pInp = document.getElementById('fact-rep-p-'+oid+'-'+i);
+    var tEl = document.getElementById('fact-rep-t-'+oid+'-'+i);
+    if (!pInp) break;
+    var cant = parseFloat(pInp.dataset.cant) || 1;
+    var precio = parseFloat(pInp.value) || 0;
+    var sub = Math.round(cant * precio);
+    if (tEl) tEl.textContent = '$ ' + sub.toLocaleString('es-AR');
+    total += sub;
+    i++;
+  }
+  var hidInp = document.getElementById('fact-rep-'+oid);
+  if (hidInp) { hidInp.value = total; recalcFact(oid); }
 }
 
 function toggleFactCard(oid) {
@@ -5216,9 +5335,21 @@ function guardarFacturacion(oid) {
   const o = ordenes.find(function(x){ return String(x.id) === String(oid); });
   if (!o) return;
   const v = getFactValues(oid);
+  // Guardar precioHora
+  var phInp = document.getElementById('fact-mo-ph-'+oid);
+  var precioHora = phInp ? (parseFloat(phInp.value) || 0) : 0;
+  // Guardar precios de repuestos individuales
+  var preciosRep = [];
+  var ri = 0;
+  while (document.getElementById('fact-rep-p-'+oid+'-'+ri)) {
+    var rInp = document.getElementById('fact-rep-p-'+oid+'-'+ri);
+    preciosRep.push(parseFloat(rInp.value) || 0);
+    ri++;
+  }
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
-    condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago };
+    condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
+    precioHora: precioHora, preciosRepuestos: preciosRep };
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
   saveData();
