@@ -2252,9 +2252,43 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script>
 // ==================== FIREBASE CONFIG ====================
 const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
+
+firebase.initializeApp({
+  apiKey: "AIzaSyBCZ_CIrCx8u98oP7lBTx5sAHC429ShRZQ",
+  authDomain: "branca-ingenieria.firebaseapp.com",
+  databaseURL: FIREBASE_URL,
+  projectId: "branca-ingenieria",
+  appId: "1:289616533512:web:c92efae9010e61c3ef99bd"
+});
+
+let _fbAuthToken = null;
+// Autenticación anónima — se renueva automáticamente
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    user.getIdToken().then(function(t) { _fbAuthToken = t; });
+    // Renovar token cada 50 minutos (expira a los 60)
+    setInterval(function() {
+      firebase.auth().currentUser && firebase.auth().currentUser.getIdToken(true).then(function(t) { _fbAuthToken = t; });
+    }, 50 * 60 * 1000);
+  } else {
+    firebase.auth().signInAnonymously().catch(function(e) { console.warn('Firebase auth error:', e.message); });
+  }
+});
+
+async function _getAuthParam() {
+  if (_fbAuthToken) return '?auth=' + _fbAuthToken;
+  // Esperar hasta 3s a que el token esté disponible
+  for (var i = 0; i < 30; i++) {
+    await new Promise(function(r){ setTimeout(r, 100); });
+    if (_fbAuthToken) return '?auth=' + _fbAuthToken;
+  }
+  return '';
+}
 
 let _syncTimer = null;
 let _cloudReady = false; // bloquea _syncPush hasta que loadFromCloud termine al menos una vez
@@ -2264,7 +2298,8 @@ let _calMonth = null;
 const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]'));
 
 async function _fbPut(path, data) {
-  const r = await fetch(FIREBASE_URL + path + '.json', {
+  const auth = await _getAuthParam();
+  const r = await fetch(FIREBASE_URL + path + '.json' + auth, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -2274,10 +2309,11 @@ async function _fbPut(path, data) {
 }
 
 async function _fbGet(path) {
+  const auth = await _getAuthParam();
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), 8000);
   try {
-    const r = await fetch(FIREBASE_URL + path + '.json', { signal: controller.signal });
+    const r = await fetch(FIREBASE_URL + path + '.json' + auth, { signal: controller.signal });
     clearTimeout(t);
     if (!r.ok) throw new Error('Firebase error: ' + r.status);
     return r.json();
