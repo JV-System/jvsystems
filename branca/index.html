@@ -5285,7 +5285,7 @@ function recalcMO(oid) {
   var hidInp = document.getElementById('fact-mo-'+oid);
   if (!phInp || !hsEl) return;
   var hsText = hsEl.textContent || '';
-  var hs = parseFloat(hsText) || 0;
+  var hs = parseFloat(hsText) || 1;
   var ph = parseFloat(phInp.value) || 0;
   var total = Math.round(hs * ph);
   if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
