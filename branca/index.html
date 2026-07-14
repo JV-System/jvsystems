@@ -5087,7 +5087,7 @@ function renderFactRow(o) {
       + '<div style="background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:14px 14px 10px;">'
       + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">'
       + fld('Cliente', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-weight:600;color:#111;">'+esc(o.empresa||'—')+'</div>')
-      + fld('Equipo', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">'+(o.marca||o.modelo ? esc((o.marca||'')+(o.marca&&o.modelo?' ':'')+( o.modelo||'')) : '—')+'</div>')
+      + fld('Máquina', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">'+(o.marca||o.modelo ? esc((o.marca||'')+(o.marca&&o.modelo?' ':'')+( o.modelo||'')) : '—')+'</div>')
       + fld('Tipo', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">Factura</div>')
       + fld('N° Comprobante', '<input id="fact-nro-'+o.id+'" type="text" value="'+esc(f.nroFactura||getNextFacturaNum())+'" onclick="event.stopPropagation()" style="'+inp+'">')
       + '</div>'
