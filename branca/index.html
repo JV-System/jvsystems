@@ -5087,6 +5087,7 @@ function renderFactRow(o) {
       + '<div style="background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;padding:14px 14px 10px;">'
       + '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">'
       + fld('Cliente', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;font-weight:600;color:#111;">'+esc(o.empresa||'—')+'</div>')
+      + fld('Equipo', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">'+(o.marca||o.modelo ? esc((o.marca||'')+(o.marca&&o.modelo?' ':'')+( o.modelo||'')) : '—')+'</div>')
       + fld('Tipo', '<div style="padding:9px 11px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111;">Factura</div>')
       + fld('N° Comprobante', '<input id="fact-nro-'+o.id+'" type="text" value="'+esc(f.nroFactura||getNextFacturaNum())+'" onclick="event.stopPropagation()" style="'+inp+'">')
       + '</div>'
@@ -5156,13 +5157,16 @@ function renderFactRow(o) {
 
         // Viáticos
         var viaticos = f.gastos || 0;
+        var viatCant = f.gastosCant || 1;
+        var viatPH = viatCant > 0 ? Math.round(viaticos / viatCant) : 0;
         var viatRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
           + td('Viáticos') + '<td style="padding:8px 6px;"></td>'
-          + '<td style="padding:8px 10px;text-align:right;">—</td>'
-          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-gastos-'+o.id+'" type="number" placeholder="0" value="'+viaticos+'" onclick="event.stopPropagation()" oninput="recalcFact('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:4px 6px;text-align:right;"><input id="fact-gastos-cant-'+o.id+'" type="number" min="1" value="'+viatCant+'" onclick="event.stopPropagation()" oninput="recalcGastos('+o.id+')" style="'+inpS+'width:45px;text-align:center;"></td>'
+          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-gastos-ph-'+o.id+'" type="number" placeholder="0" value="'+viatPH+'" onclick="event.stopPropagation()" oninput="recalcGastos('+o.id+')" style="'+inpS+'width:80px;"></td>'
           + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
-          + '<td style="padding:8px 10px;text-align:right;font-weight:700;">$ '+viaticos.toLocaleString('es-AR')+'</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-gastos-total-'+o.id+'">$ '+viaticos.toLocaleString('es-AR')+'</td>'
           + '</tr>';
+        viatRow += '<input type="hidden" id="fact-gastos-'+o.id+'" value="'+viaticos+'">';
 
         return '<div style="padding:0 16px;background:#f8fafc;">'
           + '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">'
@@ -5250,6 +5254,18 @@ function recalcMO(oid) {
   var total = Math.round(hs * ph);
   if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
   if (hidInp) { hidInp.value = total; recalcFact(oid); }
+}
+
+function recalcGastos(oid) {
+  var cantInp = document.getElementById('fact-gastos-cant-'+oid);
+  var phInp   = document.getElementById('fact-gastos-ph-'+oid);
+  var totEl   = document.getElementById('fact-gastos-total-'+oid);
+  var hidInp  = document.getElementById('fact-gastos-'+oid);
+  var cant  = parseFloat(cantInp && cantInp.value) || 1;
+  var ph    = parseFloat(phInp && phInp.value) || 0;
+  var total = Math.round(cant * ph);
+  if (totEl)   totEl.textContent = '$ ' + total.toLocaleString('es-AR');
+  if (hidInp)  { hidInp.value = total; recalcFact(oid); }
 }
 
 function recalcRep(oid) {
@@ -5350,10 +5366,12 @@ function guardarFacturacion(oid) {
     preciosRep.push(parseFloat(rInp.value) || 0);
     ri++;
   }
+  var gastosCantInp = document.getElementById('fact-gastos-cant-'+oid);
+  var gastosCant = gastosCantInp ? (parseFloat(gastosCantInp.value) || 1) : 1;
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
-    precioHora: precioHora, preciosRepuestos: preciosRep };
+    precioHora: precioHora, preciosRepuestos: preciosRep, gastosCant: gastosCant };
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
   saveData();
