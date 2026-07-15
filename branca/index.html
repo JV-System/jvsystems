@@ -4830,16 +4830,7 @@ function exportarPDF() {
   });
 
   var generarPDF = function() {
-    // Clonar el elemento antes de cualquier operación async para evitar que
-    // una sincronización de Firebase durante la generación pise los datos
     el.classList.add('pdf-compact');
-    var elClone = el.cloneNode(true);
-    el.classList.remove('pdf-compact');
-    elClone.classList.add('pdf-compact');
-    elClone.style.position = 'absolute';
-    elClone.style.left = '-9999px';
-    elClone.style.top = '0';
-    document.body.appendChild(elClone);
     html2pdf().set({
       margin:      [6, 6, 6, 6],
       filename:    'Comprobante-' + (o.numero || 'ORDEN') + '.pdf',
@@ -4847,16 +4838,16 @@ function exportarPDF() {
       html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
     })
-    .from(elClone)
+    .from(el)
     .save()
     .then(function() {
-      document.body.removeChild(elClone);
+      el.classList.remove('pdf-compact');
       restaurar();
       resetBtn();
       showToast('✅ PDF descargado.');
     })
     .catch(function(err) {
-      document.body.removeChild(elClone);
+      el.classList.remove('pdf-compact');
       console.warn('html2pdf error:', err);
       restaurar();
       resetBtn();
