@@ -4872,15 +4872,17 @@ function exportarPDF() {
     var elClone = el.cloneNode(true);
     el.classList.remove('pdf-compact');
     elClone.classList.add('pdf-compact');
-    elClone.style.position = 'absolute';
+    elClone.style.position = 'fixed';
     elClone.style.left = '-9999px';
     elClone.style.top = '0';
+    elClone.style.width = el.offsetWidth + 'px';
+    elClone.style.background = '#fff';
     document.body.appendChild(elClone);
     html2pdf().set({
       margin:      [6, 6, 6, 6],
       filename:    'Comprobante-' + (o.numero || 'ORDEN') + '.pdf',
       image:       { type: 'jpeg', quality: 0.97 },
-      html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
+      html2canvas: { scale: 2, logging: false, useCORS: true, allowTaint: true },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
     })
     .from(elClone)
