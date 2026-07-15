@@ -4130,10 +4130,11 @@ function renderTabCliente() {
           ${(function(){
             const cu = getCurrentUser();
             if (cu && cu.role === 'tecnico') {
-              // Técnico: campo readonly con su nombre
+              // Técnico: campo readonly — muestra el responsable actual de la orden (o el técnico si es nueva)
+              const respNombre = o.responsable || cu.nombre;
               return '<div style="padding:9px 12px;background:#f0f4f9;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:600;color:var(--navy);">'
-                + '👤 ' + esc(cu.nombre) + '</div>'
-                + '<input type="hidden" id="f-responsable" value="' + esc(cu.nombre) + '">';
+                + '👤 ' + esc(respNombre) + '</div>'
+                + '<input type="hidden" id="f-responsable" value="' + esc(respNombre) + '">';
             }
             // Admin: dropdown de técnicos
             return '<select id="f-responsable" ' + (locked?'disabled':'') + '>'
