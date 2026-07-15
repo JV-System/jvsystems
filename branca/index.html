@@ -4836,20 +4836,15 @@ function exportarPDF() {
     var elClone = el.cloneNode(true);
     el.classList.remove('pdf-compact');
     elClone.classList.add('pdf-compact');
-    var w = Math.max(el.scrollWidth || 0, el.offsetWidth || 0, 800);
     elClone.style.position = 'absolute';
-    elClone.style.left = '0';
+    elClone.style.left = '-9999px';
     elClone.style.top = '0';
-    elClone.style.width = w + 'px';
-    elClone.style.background = '#fff';
-    elClone.style.zIndex = '-1';
-    elClone.style.visibility = 'hidden';
     document.body.appendChild(elClone);
     html2pdf().set({
       margin:      [6, 6, 6, 6],
       filename:    'Comprobante-' + (o.numero || 'ORDEN') + '.pdf',
       image:       { type: 'jpeg', quality: 0.97 },
-      html2canvas: { scale: 2, logging: false, useCORS: true, allowTaint: true, windowWidth: w },
+      html2canvas: { scale: 2, logging: false, useCORS: false, allowTaint: false },
       jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' }
     })
     .from(elClone)
