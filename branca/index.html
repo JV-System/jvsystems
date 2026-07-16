@@ -1011,8 +1011,8 @@
   @media (max-width: 768px) {
 
     /* BODY mobile — ya está gestionado por el desktop */
-    .main { flex-direction: column; height: calc(100dvh - 52px - 58px); }
-    .app-header { height: 52px; }
+    .main { flex-direction: column; height: calc(100dvh - 52px - env(safe-area-inset-top, 0px) - 58px); }
+    .app-header { min-height: 52px; }
     .logo-area { border-right: none; }
     .header-branca-box { padding: 0 16px; min-width: 0; }
     .header-branca-img { max-height: 46px; max-width: 170px; }
