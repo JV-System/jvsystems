@@ -4940,7 +4940,9 @@ function _getFactLista() {
     const fa = a.facturacion||{}, fb = b.facturacion||{};
     if (_factFiltro === 'cobrado') {
       const parseF = function(s){ if(!s) return 0; var p=s.split('/'); return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():new Date(s).getTime()||0; };
-      return parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
+      var dateDiff = parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
+      if (dateDiff !== 0) return dateDiff;
+      return (parseInt(fb.nroFactura) || 0) - (parseInt(fa.nroFactura) || 0);
     }
     const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
     return rank(a)-rank(b);
