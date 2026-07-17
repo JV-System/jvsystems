@@ -5108,22 +5108,31 @@ function renderFactRow(o) {
         var th = function(t,r){ return '<th style="text-align:'+(r?'right':'left')+';padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">'+t+'</th>'; };
         var td = function(t,r,b){ return '<td style="padding:8px 10px;'+(r?'text-align:right;':'')+(b?'font-weight:700;':'')+'color:#111;">'+t+'</td>'; };
 
-        // Mano de obra — total hs automático de visitas
+        // Mano de obra — una fila por visita con precio individual
         var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
-        var totalHs = vis.reduce(function(acc,v){ return acc + parsearHoras(v.tiempo); }, 0);
-        var totalHsStr = totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs';
-        var moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
-          + td('Mano de obra')
-          + '<td style="padding:6px 8px;font-size:11px;line-height:1.5;">'
-          + (o.probDetectado ? '<div><span style="color:#9ca3af;font-weight:700;">Problema:</span> <span style="color:#374151;">'+esc(o.probDetectado)+'</span></div>' : '')
-          + (o.causaRaiz    ? '<div><span style="color:#9ca3af;font-weight:700;">Causa:</span> <span style="color:#374151;">'+esc(o.causaRaiz)+'</span></div>' : '')
-          + (o.accionRealizada ? '<div><span style="color:#9ca3af;font-weight:700;">Acción:</span> <span style="color:#374151;">'+esc(o.accionRealizada)+'</span></div>' : '')
-          + '</td>'
-          + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;" id="fact-mo-hs-'+o.id+'">' + totalHsStr + '</td>'
-          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'" type="number" placeholder="$/hs" value="'+(f.precioHora||'')+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
-          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
-          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-total-'+o.id+'">'+(f.manoDeObra ? '$ '+f.manoDeObra.toLocaleString('es-AR') : '$ 0')+'</td>'
-          + '</tr>';
+        var preciosHora = f.preciosHora || (f.precioHora ? vis.map(function(){ return f.precioHora; }) : []);
+        var moRow = '';
+        if (vis.length === 0) {
+          moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
+            + td('Mano de obra')
+            + '<td colspan="4" style="padding:8px 10px;color:#aaa;font-size:11px;font-style:italic;">Sin visitas registradas</td>'
+            + '</tr>';
+        } else {
+          vis.forEach(function(v, i) {
+            var hs = parsearHoras(v.tiempo);
+            var hsStr = hs % 1 === 0 ? hs + ' hs' : hs.toFixed(1) + ' hs';
+            var ph = preciosHora[i] || '';
+            var totalV = ph ? Math.round(hs * parseFloat(ph)) : 0;
+            moRow += '<tr style="border-bottom:1px solid #f3f4f6;">'
+              + '<td style="padding:8px 10px;color:#111;">' + (i === 0 ? 'Mano de obra' : '') + '</td>'
+              + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + (v.fecha || '') + (v.causa ? ' — '+esc(v.causa) : '') + '</td>'
+              + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">' + hsStr + '</td>'
+              + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
+              + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+              + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-'+i+'">$ '+totalV.toLocaleString('es-AR')+'</td>'
+              + '</tr>';
+          });
+        }
         // Campo oculto para compatibilidad con recalcFact
         moRow += '<input type="hidden" id="fact-mo-'+o.id+'" value="'+(f.manoDeObra||0)+'">';
 
@@ -5243,16 +5252,20 @@ function parsearHoras(str) {
 }
 
 function recalcMO(oid) {
-  var phInp = document.getElementById('fact-mo-ph-'+oid);
-  var hsEl = document.getElementById('fact-mo-hs-'+oid);
-  var totEl = document.getElementById('fact-mo-total-'+oid);
+  var total = 0;
+  var i = 0;
+  while (true) {
+    var phInp = document.getElementById('fact-mo-ph-'+oid+'-'+i);
+    if (!phInp) break;
+    var hs = parseFloat(phInp.dataset.hs) || 1;
+    var ph = parseFloat(phInp.value) || 0;
+    var sub = Math.round(hs * ph);
+    var tEl = document.getElementById('fact-mo-t-'+oid+'-'+i);
+    if (tEl) tEl.textContent = '$ ' + sub.toLocaleString('es-AR');
+    total += sub;
+    i++;
+  }
   var hidInp = document.getElementById('fact-mo-'+oid);
-  if (!phInp || !hsEl) return;
-  var hsText = hsEl.textContent || '';
-  var hs = parseFloat(hsText) || 1;
-  var ph = parseFloat(phInp.value) || 0;
-  var total = Math.round(hs * ph);
-  if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
   if (hidInp) { hidInp.value = total; recalcFact(oid); }
 }
 
@@ -5355,9 +5368,15 @@ function guardarFacturacion(oid) {
   const o = ordenes.find(function(x){ return String(x.id) === String(oid); });
   if (!o) return;
   const v = getFactValues(oid);
-  // Guardar precioHora
-  var phInp = document.getElementById('fact-mo-ph-'+oid);
-  var precioHora = phInp ? (parseFloat(phInp.value) || 0) : 0;
+  // Guardar precios por visita
+  var preciosHora = [];
+  var vi = 0;
+  while (document.getElementById('fact-mo-ph-'+oid+'-'+vi)) {
+    var vInp = document.getElementById('fact-mo-ph-'+oid+'-'+vi);
+    preciosHora.push(parseFloat(vInp.value) || 0);
+    vi++;
+  }
+  var precioHora = preciosHora[0] || 0;
   // Guardar precios de repuestos individuales
   var preciosRep = [];
   var ri = 0;
@@ -5371,7 +5390,7 @@ function guardarFacturacion(oid) {
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
-    precioHora: precioHora, preciosRepuestos: preciosRep, gastosCant: gastosCant };
+    precioHora: precioHora, preciosHora: preciosHora, preciosRepuestos: preciosRep, gastosCant: gastosCant };
   o.updatedAt = Date.now();
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
