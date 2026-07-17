@@ -5126,7 +5126,7 @@ function renderFactRow(o) {
           + '<td style="padding:8px 10px;color:#111;">Mano de obra' + selectorHTML + '</td>'
           + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(moDesc) + '</td>'
           + '<td id="fact-mo-cant-'+o.id+'" style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">'+(modoMO==='hora'?hsStr:'—')+'</td>'
-          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-unit-'+o.id+'" type="number" placeholder="$ total" value="'+(f.manoDeObra||'')+'" onclick="event.stopPropagation()" oninput="recalcMOtotal('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-unit-'+o.id+'" type="number" placeholder="$ total" value="'+(f.manoDeObra||'')+'" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" oninput="recalcMOtotal('+o.id+')" style="'+inpS+'width:80px;"></td>'
           + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
           + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-total-'+o.id+'">$ '+moInitTotal.toLocaleString('es-AR')+'</td>'
           + '</tr>';
