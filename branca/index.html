@@ -7872,7 +7872,7 @@ async function confirmarEnvioXubio(oid) {
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
       saveData();
-      renderOrdenes();
+      renderFacturacion();
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
