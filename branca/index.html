@@ -5108,40 +5108,21 @@ function renderFactRow(o) {
         var th = function(t,r){ return '<th style="text-align:'+(r?'right':'left')+';padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">'+t+'</th>'; };
         var td = function(t,r,b){ return '<td style="padding:8px 10px;'+(r?'text-align:right;':'')+(b?'font-weight:700;':'')+'color:#111;">'+t+'</td>'; };
 
-        // Mano de obra — una fila por visita con precio individual
+        // Mano de obra — fila única con horas totales
         var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
-        var preciosHora = f.preciosHora || (f.precioHora ? vis.map(function(){ return f.precioHora; }) : []);
-        var moRow = '';
-        if (vis.length === 0) {
-          moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
-            + td('Mano de obra')
-            + '<td colspan="4" style="padding:8px 10px;color:#aaa;font-size:11px;font-style:italic;">Sin visitas registradas</td>'
-            + '</tr>';
-        } else {
-          vis.forEach(function(v, i) {
-            var hs = parsearHoras(v.tiempo);
-            var hsStr = hs % 1 === 0 ? hs + ' hs' : hs.toFixed(1) + ' hs';
-            var ph = preciosHora[i] || '';
-            var totalV = ph ? Math.round(hs * parseFloat(ph)) : 0;
-            moRow += '<tr style="border-bottom:1px solid #f3f4f6;">'
-              + '<td style="padding:8px 10px;color:#111;">' + (i === 0 ? 'Mano de obra' : '') + '</td>'
-              + (function(){
-                  var desc = v.causa || '';
-                  if (!desc && i === 0) {
-                    if (o.probDetectado) desc = 'Problema: ' + o.probDetectado;
-                    if (o.accionRealizada) desc += (desc ? ' / ' : '') + 'Acción: ' + o.accionRealizada;
-                  } else if (!desc && i > 0) {
-                    if (o.accionRealizada) desc = o.accionRealizada;
-                  }
-                  return '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(v.fecha || '') + (desc ? '<br><span style="color:#888;">' + esc(desc) + '</span>' : '') + '</td>';
-                })()
-              + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">' + hsStr + '</td>'
-              + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
-              + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
-              + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-'+i+'">$ '+totalV.toLocaleString('es-AR')+'</td>'
-              + '</tr>';
-          });
-        }
+        var totalHs = vis.reduce(function(sum,v){ return sum + parsearHoras(v.tiempo); }, 0);
+        var ph = f.precioHora || '';
+        var moTotal = ph ? Math.round(totalHs * parseFloat(ph)) : 0;
+        var hsStr = totalHs > 0 ? (totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs') : '—';
+        var moDesc = (o.probDetectado ? 'Problema: '+o.probDetectado : '') + (o.accionRealizada ? (o.probDetectado?' / ':'') + 'Acción: '+o.accionRealizada : '');
+        var moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
+          + td('Mano de obra')
+          + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(moDesc) + '</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">' + hsStr + '</td>'
+          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-0" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+totalHs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-0">$ '+moTotal.toLocaleString('es-AR')+'</td>'
+          + '</tr>';
         // Campo oculto para compatibilidad con recalcFact
         moRow += '<input type="hidden" id="fact-mo-'+o.id+'" value="'+(f.manoDeObra||0)+'">';
 
