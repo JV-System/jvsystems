@@ -5125,7 +5125,16 @@ function renderFactRow(o) {
             var totalV = ph ? Math.round(hs * parseFloat(ph)) : 0;
             moRow += '<tr style="border-bottom:1px solid #f3f4f6;">'
               + '<td style="padding:8px 10px;color:#111;">' + (i === 0 ? 'Mano de obra' : '') + '</td>'
-              + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + (v.fecha || '') + (v.causa ? ' — '+esc(v.causa) : '') + '</td>'
+              + (function(){
+                  var desc = v.causa || '';
+                  if (!desc && i === 0) {
+                    if (o.problema) desc = 'Problema: ' + o.problema;
+                    if (o.accionRealizada) desc += (desc ? ' / ' : '') + 'Acción: ' + o.accionRealizada;
+                  } else if (!desc && i > 0) {
+                    if (o.accionRealizada) desc = o.accionRealizada;
+                  }
+                  return '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(v.fecha || '') + (desc ? '<br><span style="color:#888;">' + esc(desc) + '</span>' : '') + '</td>';
+                })()
               + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">' + hsStr + '</td>'
               + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
               + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
