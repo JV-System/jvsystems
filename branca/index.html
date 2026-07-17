@@ -7766,7 +7766,8 @@ async function confirmarEnvioXubio(oid) {
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       saveData();
     } else {
-      var errMsg = typeof data.error === 'string' ? data.error.replace(/<[^>]*>/g,'').trim().substring(0,200) : JSON.stringify(data.error).substring(0,200);
+      var errObj = data.error;
+      var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
       var debugInfo = data.debug ? '<br><small style="color:#6b7280;">Payload: ' + JSON.stringify(data.debug.payload).substring(0,300) + '</small>' : '';
       if (statusEl) statusEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;font-size:12px;word-break:break-all;">❌ Error Xubio: ' + errMsg + debugInfo + '</div>';
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
