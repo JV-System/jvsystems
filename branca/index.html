@@ -5062,7 +5062,7 @@ function renderFactRow(o) {
     + (f.nroFactura ? '<span style="font-size:11px;color:#888;font-weight:600;">' + esc(f.nroFactura) + '</span>' : '')
     + '</div>'
     + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(o.empresa||'—') + '</div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.fecha||'') + (o.responsable?' · '+esc(o.responsable):'') + '</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.fecha||'') + (o.responsable?' · '+esc(o.responsable):'') + (f.fechaFactura ? ' · <span style="color:#1565D8;font-weight:600;">Fact: '+esc(f.fechaFactura)+'</span>' : '') + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">'
     + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + (f.total ? fmt(f.total) : '—') + '</span>'
