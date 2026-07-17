@@ -4963,11 +4963,11 @@ function renderFacturacion() {
   if (!mc) return;
   const todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
 
-  var totalCobrado = 0, totalPend = 0, sinFact = 0;
+  var totalCobrado = 0, totalPend = 0, sinFact = 0, cntPend = 0, cntCobrado = 0;
   todas.forEach(function(o) {
     if (!o.facturacion || !o.facturacion.nroFactura) sinFact++;
-    else if (o.facturacion.estadoPago === 'pagado') totalCobrado += o.facturacion.total || 0;
-    else totalPend += o.facturacion.total || 0;
+    else if (o.facturacion.estadoPago === 'pagado') { totalCobrado += o.facturacion.total || 0; cntCobrado++; }
+    else { totalPend += o.facturacion.total || 0; cntPend++; }
   });
 
   var lista = _getFactLista();
@@ -5008,8 +5008,8 @@ function renderFacturacion() {
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">'
     + tab('todos',   'Todas',         todas.length,  '#0A1628')
     + tab('sin',     '⚠ Sin facturar', sinFact,       '#f59e0b')
-    + tab('pend',    '⏳ Pendiente',    null,          '#3b82f6')
-    + tab('cobrado', '✓ Cobrado',      null,          '#10b981')
+    + tab('pend',    '⏳ Pendiente',    cntPend,       '#3b82f6')
+    + tab('cobrado', '✓ Cobrado',      cntCobrado,    '#10b981')
     + '</div>'
 
     // ── Ordenar (solo en cobrado) ──
