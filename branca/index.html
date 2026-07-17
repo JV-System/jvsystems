@@ -4964,10 +4964,20 @@ function renderFacturacion() {
   const todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
 
   var totalCobrado = 0, totalPend = 0, sinFact = 0, cntPend = 0, cntCobrado = 0;
+  var calcTotal = function(o) {
+    var f = o.facturacion || {};
+    if (f.total) return f.total;
+    var sub = (f.manoDeObra||0) + (f.repuestosCosto||0) + (f.gastos||0) - (f.descuento||0);
+    return Math.round(sub * 1.21 * 100) / 100;
+  };
   todas.forEach(function(o) {
-    if (!o.facturacion || !o.facturacion.nroFactura) sinFact++;
-    else if (o.facturacion.estadoPago === 'pagado') { totalCobrado += o.facturacion.total || 0; cntCobrado++; }
-    else { totalPend += o.facturacion.total || 0; cntPend++; }
+    if (o.facturacion && o.facturacion.estadoPago === 'pagado') {
+      totalCobrado += o.facturacion.total || 0; cntCobrado++;
+    } else {
+      if (!o.facturacion || !o.facturacion.nroFactura) sinFact++;
+      else cntPend++;
+      totalPend += calcTotal(o);
+    }
   });
 
   var lista = _getFactLista();
