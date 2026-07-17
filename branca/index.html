@@ -1882,16 +1882,11 @@
     <span id="sync-status" title="Estado de sincronización Firebase"
           style="font-size:11px;font-weight:600;transition:color 0.3s;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s;"
           onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"></span>
-    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos"
-            style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:15px;cursor:pointer;padding:5px 9px;border-radius:7px;transition:background 0.15s;line-height:1;"
-            onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">🔄</button>
+    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos" style="display:none"></button>
     <button id="btn-instructivo" onclick="abrirInstructivo()" title="Ver instructivo de uso"
             style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:13px;font-weight:700;cursor:pointer;padding:5px 11px;border-radius:7px;transition:background 0.15s;line-height:1;"
             onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">📖 Instructivo</button>
-    <div id="sistema-activo-badge" style="display:flex;align-items:center;gap:6px;margin-left:10px;">
-      <div style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex-shrink:0;"></div>
-      <span style="font-size:11px;color:rgba(255,255,255,0.92);font-weight:600;letter-spacing:0.3px;">Sistema activo</span>
-    </div>
+    <div id="sistema-activo-badge" style="display:none"></div>
     <div id="header-user-display" onclick="abrirPerfil()" title="Mi perfil"
          style="margin-left:10px;display:flex;align-items:center;gap:7px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.18s;"
          onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
