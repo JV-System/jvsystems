@@ -31,12 +31,13 @@
   .tip { background: #FFF8E7; border-left: 3px solid #F59E0B; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #7C5A00; }
   .tip strong { color: #7C5A00; }
   .alerta { background: #FFF0F0; border-left: 3px solid #E53E3E; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #9B2C2C; }
+  .info { background: #EFF6FF; border-left: 3px solid #1565D8; border-radius: 0 6px 6px 0; padding: 10px 14px; margin-top: 10px; font-size: 13px; color: #1e40af; }
 
   .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-  .tag-verde  { background: #d1fae5; color: #065f46; }
+  .tag-verde   { background: #d1fae5; color: #065f46; }
   .tag-naranja { background: #fef3c7; color: #92400e; }
-  .tag-azul   { background: #dbeafe; color: #1e40af; }
-  .tag-gris   { background: #e5e7eb; color: #374151; }
+  .tag-azul    { background: #dbeafe; color: #1e40af; }
+  .tag-gris    { background: #e5e7eb; color: #374151; }
 
   .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 12px 0; }
   @media (max-width:500px) { .kpi-grid { grid-template-columns: 1fr; } }
@@ -48,20 +49,29 @@
   .kpi .kpi-val   { font-size: 18px; font-weight: 800; color: #0A1628; }
   .kpi .kpi-sub   { font-size: 11px; color: #9ca3af; margin-top: 2px; }
 
-  .comprobante-preview { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin: 12px 0; }
+  .comp-preview { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin: 12px 0; }
   .comp-header { background: #0A1628; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
-  .comp-header span { font-size: 11px; font-weight: 700; }
-  .comp-header .izq { color: #7EB3F7; text-transform: uppercase; letter-spacing: 0.6px; }
-  .comp-header .der { color: #fff; }
+  .comp-header .izq { font-size: 11px; font-weight: 700; color: #7EB3F7; text-transform: uppercase; letter-spacing: 0.6px; }
+  .comp-header .der { font-size: 11px; font-weight: 700; color: #fff; }
   .comp-body { padding: 14px; background: #fff; }
   .comp-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
   @media (max-width:500px) { .comp-fields { grid-template-columns: 1fr; } }
   .comp-field label { display: block; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; margin-bottom: 3px; }
   .comp-field .val { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 7px 10px; font-size: 12px; color: #111; }
+  .comp-field .val.edit { background: #fff; border-color: #1565D8; }
   .comp-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
   .comp-table th { background: #f1f5f9; padding: 6px 8px; text-align: left; color: #6b7280; font-weight: 700; border-bottom: 2px solid #e5e7eb; }
   .comp-table td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; color: #333; }
   .comp-table td.num { text-align: right; }
+  .comp-table td.azul { color: #1565D8; font-weight: 700; }
+
+  .modo-box { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+  .modo-btn { padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 700; border: 2px solid #e5e7eb; background: #f9fafb; color: #6b7280; }
+  .modo-btn.activo { border-color: #1565D8; background: #EFF6FF; color: #1565D8; }
+
+  .sort-box { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  .sort-btn { padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; }
+  .sort-btn.activo { border-color: #1565D8; background: #1565D8; color: #fff; }
 
   .footer { text-align: center; font-size: 11px; color: #999; margin-top: 32px; }
 </style>
@@ -82,7 +92,7 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Con el rol de Facturación solo ves las órdenes <strong>cerradas</strong> y las <strong>sin firma del cliente</strong> — las que ya están listas para facturar. Las abiertas o pendientes de los técnicos no aparecen.</div>
+        <div class="paso-txt">Con el rol de Facturación solo ves las órdenes <strong>cerradas</strong> — las que ya están listas para facturar. Las órdenes abiertas o en curso de los técnicos no aparecen.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
@@ -104,33 +114,51 @@
       <div class="kpi-grid">
         <div class="kpi amarillo">
           <div class="kpi-label">Sin facturar</div>
-          <div class="kpi-val">27</div>
+          <div class="kpi-val">20</div>
           <div class="kpi-sub">órdenes</div>
         </div>
         <div class="kpi azul">
           <div class="kpi-label">Pendiente cobro</div>
-          <div class="kpi-val">$ 0</div>
-          <div class="kpi-sub">a cobrar</div>
+          <div class="kpi-val">$ 1.240.000</div>
+          <div class="kpi-sub">total estimado</div>
         </div>
         <div class="kpi verde">
           <div class="kpi-label">Cobrado</div>
-          <div class="kpi-val">$ 0</div>
+          <div class="kpi-val">$ 19.500.000</div>
           <div class="kpi-sub">total</div>
         </div>
       </div>
 
-      <div class="paso" style="margin-top:12px;">
+      <div class="info" style="margin-top:10px;"><strong>ℹ</strong> El total de <strong>Pendiente cobro</strong> incluye todas las órdenes que todavía no fueron cobradas — tanto las sin facturar como las pendientes de cobro.</div>
+
+      <div class="paso" style="margin-top:14px;">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Usá los <strong>botones de filtro</strong> para ver solo lo que necesitás: Todas / Sin facturar / Pendiente / Cobrado.</div>
+        <div class="paso-txt">Usá los <strong>botones de filtro</strong> para ver solo lo que necesitás:</div>
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px;">
+        <span style="padding:7px 14px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:700;">Todas <span style="background:rgba(0,0,0,0.1);border-radius:20px;padding:1px 7px;font-size:11px;">37</span></span>
+        <span style="padding:7px 14px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:700;">⚠ Sin facturar <span style="background:rgba(0,0,0,0.1);border-radius:20px;padding:1px 7px;font-size:11px;">20</span></span>
+        <span style="padding:7px 14px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:700;">⏳ Pendiente <span style="background:rgba(0,0,0,0.1);border-radius:20px;padding:1px 7px;font-size:11px;">2</span></span>
+        <span style="padding:7px 14px;border-radius:8px;background:#10b981;color:#fff;font-size:13px;font-weight:700;">✓ Cobrado <span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 7px;font-size:11px;">15</span></span>
+      </div>
+
       <div class="paso">
         <div class="paso-num">3</div>
         <div class="paso-txt">El <strong>buscador</strong> te permite encontrar una orden por nombre de empresa, número de orden o número de factura.</div>
       </div>
+
       <div class="paso">
         <div class="paso-num">4</div>
-        <div class="paso-txt">La lista aparece ordenada automáticamente: primero las <span class="tag tag-naranja">Sin facturar</span>, después <span class="tag tag-azul">Pendiente</span>, y al final <span class="tag tag-verde">Cobrado</span>.</div>
+        <div class="paso-txt">En la pestaña <span class="tag tag-verde">✓ Cobrado</span> aparecen botones para <strong>ordenar la lista</strong> como más te convenga:</div>
       </div>
+      <div class="sort-box">
+        <span style="font-size:11px;color:#9ca3af;font-weight:700;">ORDENAR:</span>
+        <span class="sort-btn activo">Fecha ↓</span>
+        <span class="sort-btn">Fecha ↑</span>
+        <span class="sort-btn">N° orden ↓</span>
+        <span class="sort-btn">N° orden ↑</span>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Cada orden cobrada muestra la <strong style="color:#1565D8;">Fact:</strong> fecha de facturación en azul, así podés ver fácilmente por qué están ordenadas de esa manera.</div>
     </div>
   </div>
 
@@ -144,10 +172,10 @@
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Completá los campos del comprobante:</div>
+        <div class="paso-txt">Completá los campos: N° comprobante, fecha, condición de pago y estado.</div>
       </div>
 
-      <div class="comprobante-preview">
+      <div class="comp-preview">
         <div class="comp-header">
           <span class="izq">Comprobante de Venta</span>
           <span class="der">Ingeniería Branca SRL</span>
@@ -155,18 +183,17 @@
         <div class="comp-body">
           <div class="comp-fields">
             <div class="comp-field"><label>Cliente</label><div class="val">Arhon Srl <span style="color:#9ca3af;font-size:10px;">(automático)</span></div></div>
-            <div class="comp-field"><label>Tipo</label><div class="val">Factura <span style="color:#9ca3af;font-size:10px;">(automático)</span></div></div>
-            <div class="comp-field"><label>N° Comprobante</label><div class="val" style="background:#fff;border-color:#1565D8;">F-002 ← <strong>ingresás vos</strong></div></div>
-            <div class="comp-field"><label>Fecha</label><div class="val" style="background:#fff;border-color:#1565D8;">05/07/2026 ← <strong>ingresás vos</strong></div></div>
-            <div class="comp-field"><label>Condición de Pago</label><div class="val" style="background:#fff;border-color:#1565D8;">Contado ← <strong>ingresás vos</strong></div></div>
-            <div class="comp-field"><label>Estado</label><div class="val" style="background:#fff;border-color:#1565D8;">Pendiente / Cobrado ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>N° Comprobante</label><div class="val edit">F-002 ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Fecha</label><div class="val edit">17/07/2026 ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Condición de Pago</label><div class="val edit">Contado ← <strong>ingresás vos</strong></div></div>
+            <div class="comp-field"><label>Estado</label><div class="val edit">Pendiente / Cobrado ← <strong>ingresás vos</strong></div></div>
           </div>
           <table class="comp-table">
-            <thead><tr><th>Producto/Servicio</th><th>Cant.</th><th>Precio</th><th>IVA</th><th>Total</th></tr></thead>
+            <thead><tr><th>Concepto</th><th>Cant.</th><th>Precio unit.</th><th>IVA</th><th>Total</th></tr></thead>
             <tbody>
-              <tr><td>Mano de obra</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
-              <tr><td>Repuestos</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
-              <tr><td>Gastos varios</td><td class="num">1</td><td class="num" style="color:#1565D8;font-weight:700;">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+              <tr><td>Mano de obra</td><td class="num">—</td><td class="num azul">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+              <tr><td>Repuestos</td><td class="num">1</td><td class="num azul">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
+              <tr><td>Gastos varios</td><td class="num">1</td><td class="num azul">← ingresás vos</td><td class="num">21%</td><td class="num">$ 0,00</td></tr>
             </tbody>
           </table>
         </div>
@@ -178,9 +205,50 @@
       </div>
       <div class="paso">
         <div class="paso-num">4</div>
-        <div class="paso-txt">Tocá <strong>💾 Guardar</strong> para registrar el comprobante. Si querés un PDF, tocá <strong>📄 Vista previa PDF</strong>. Para enviarlo por mail al cliente, tocá <strong>✉ Enviar por mail</strong>.</div>
+        <div class="paso-txt">Tocá <strong>💾 Guardar</strong> para registrar el comprobante. Si querés un PDF, tocá <strong>📄 Vista previa PDF</strong>.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> Guardá primero antes de generar el PDF o enviar el mail, así el comprobante queda registrado correctamente.</div>
+      <div class="tip"><strong>💡 Tip:</strong> Guardá siempre antes de generar el PDF o enviar a Xubio, así el comprobante queda registrado correctamente.</div>
+    </div>
+  </div>
+
+  <!-- MANO DE OBRA -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🔧</span><h2>Mano de obra — $/hs por visita o Por trabajo</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">En la fila de <strong>Mano de obra</strong> del comprobante hay un selector que te permite elegir cómo cobrarla:</div>
+      </div>
+
+      <div class="modo-box">
+        <span class="modo-btn activo">$/hs por visita</span>
+        <span class="modo-btn">Por trabajo</span>
+      </div>
+
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt"><strong>$/hs por visita</strong> — Ingresás el precio por hora. El sistema multiplica automáticamente por las horas de cada visita y suma el total. Ideal cuando cada técnico cobra por hora trabajada.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt"><strong>Por trabajo</strong> — Ingresás directamente el monto total de la mano de obra, sin importar las horas. Ideal para trabajos con precio cerrado (por ejemplo, un driver que vale $10 dólares fijos).</div>
+      </div>
+
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">En los dos modos se muestra el <strong>Detalle de visitas</strong> como referencia: fechas, horas trabajadas y descripción de cada visita. Es solo para consulta, no lo podés editar desde acá.</div>
+      </div>
+
+      <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin:10px 0;font-size:12px;">
+        <div style="background:#f1f5f9;padding:7px 14px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Detalle de visitas</div>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="background:#f9fafb;"><th style="padding:6px 8px;text-align:left;color:#6b7280;font-weight:700;border-bottom:1px solid #e5e7eb;">Fecha</th><th style="padding:6px 8px;text-align:left;color:#6b7280;font-weight:700;border-bottom:1px solid #e5e7eb;">Tiempo</th><th style="padding:6px 8px;text-align:left;color:#6b7280;font-weight:700;border-bottom:1px solid #e5e7eb;">Causa / Acción</th></tr>
+          <tr><td style="padding:7px 8px;border-bottom:1px solid #f3f4f6;">12/06/2026</td><td style="padding:7px 8px;border-bottom:1px solid #f3f4f6;">1.5 hs</td><td style="padding:7px 8px;border-bottom:1px solid #f3f4f6;color:#555;">No enfría — limpieza de filtros</td></tr>
+          <tr><td style="padding:7px 8px;">24/06/2026</td><td style="padding:7px 8px;">0.5 hs</td><td style="padding:7px 8px;color:#555;">Control post-reparación</td></tr>
+        </table>
+      </div>
+
+      <div class="tip"><strong>💡 Tip:</strong> Podés cambiar entre los dos modos en cualquier momento — el precio que cargaste se mantiene, no se borra.</div>
     </div>
   </div>
 
@@ -190,7 +258,7 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt"><span class="tag tag-naranja">Sin facturar</span> &nbsp;La orden cerrada todavía no tiene número de factura cargado. Es lo primero que hay que procesar.</div>
+        <div class="paso-txt"><span class="tag tag-naranja">⚠ Sin facturar</span> &nbsp;La orden cerrada todavía no tiene número de factura cargado. Es lo primero que hay que procesar.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
@@ -198,33 +266,9 @@
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
-        <div class="paso-txt"><span class="tag tag-verde">✓ Cobrado</span> &nbsp;Facturada y cobrada — proceso completo. Queda en el historial como registro.</div>
+        <div class="paso-txt"><span class="tag tag-verde">✓ Cobrado</span> &nbsp;Facturada y cobrada — proceso completo. Si fue enviado a Xubio, pasa automáticamente a este estado.</div>
       </div>
       <div class="alerta"><strong>⚠ Importante:</strong> Solo cambiá el estado a Cobrado cuando el pago ya esté confirmado, no antes.</div>
-    </div>
-  </div>
-
-  <!-- HISTORIAL -->
-  <div class="seccion">
-    <div class="seccion-header"><span class="icon">📋</span><h2>Ver órdenes en el Historial</h2></div>
-    <div class="seccion-body">
-      <div class="paso">
-        <div class="paso-num">1</div>
-        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior para ver el registro completo de todas las órdenes. Las órdenes aparecen ordenadas por <strong>número de orden</strong>, la más reciente primero.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">2</div>
-        <div class="paso-txt">Podés filtrar por <strong>cliente, estado o fecha</strong>. Los estados disponibles son: <span class="tag tag-verde">🔒 Cerrada</span> <span class="tag tag-naranja">⏸ Pendiente</span> <span class="tag tag-gris">🚫 Anulada</span> entre otros.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">Las órdenes <span class="tag tag-gris">🚫 Anuladas</span> también aparecen en el historial para mantener el registro completo. No se borra ningún número — quedan como referencia.</div>
-      </div>
-      <div class="paso">
-        <div class="paso-num">4</div>
-        <div class="paso-txt">Tocando cualquier orden ves todos sus detalles: cliente, equipo, técnico, diagnóstico y comprobante.</div>
-      </div>
-      <div class="tip"><strong>💡 Tip:</strong> Si buscás una orden específica, usá el filtro de <strong>cliente</strong> o escribí el número de orden en el buscador del panel de Facturación.</div>
     </div>
   </div>
 
@@ -234,34 +278,60 @@
     <div class="seccion-body">
       <div class="paso">
         <div class="paso-num">1</div>
-        <div class="paso-txt">Dentro del panel de <strong>Facturación</strong>, abrí una orden y completá los montos (mano de obra, repuestos, gastos). Guardá con <strong>💾 Guardar</strong>.</div>
+        <div class="paso-txt">Abrí una orden, completá los montos y guardá con <strong>💾 Guardar</strong>. Luego tocá <strong>⚡ Enviar a Xubio</strong>.</div>
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">Tocá el botón <strong>⚡ Enviar a Xubio</strong>. Se abre un panel con todos los campos:</div>
-      </div>
-
-      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin:10px 0;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Punto de venta</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">0001</div></div>
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Tipo de comprobante</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Factura B ▾</div></div>
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Fecha</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">07/07/2026</div></div>
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Vencimiento del cobro</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">07/07/2026</div></div>
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Condición de pago</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Contado ▾</div></div>
-          <div><span style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;">Moneda</span><div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:6px 10px;margin-top:3px;">Pesos ▾</div></div>
-        </div>
-      </div>
-
-      <div class="paso" style="margin-top:12px;">
-        <div class="paso-num">3</div>
-        <div class="paso-txt">Revisá y ajustá los datos si hace falta (podés editar descripciones, cantidades y precios de cada ítem). Luego tocá <strong>⚡ Confirmar y enviar a Xubio</strong>.</div>
+        <div class="paso-txt">Se abre un panel con todos los datos del comprobante para revisar antes de enviar. Podés ajustar tipo de comprobante, fecha, vencimiento, etc.</div>
       </div>
       <div class="paso">
-        <div class="paso-num">4</div>
-        <div class="paso-txt">Si el envío fue exitoso aparece el mensaje <strong style="color:#065f46;">✅ Comprobante creado en Xubio correctamente</strong>. El comprobante ya figura en Xubio automáticamente.</div>
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Tocá <strong>⚡ Confirmar y enviar a Xubio</strong>. El sistema busca el cliente en Xubio automáticamente por nombre de empresa.</div>
       </div>
-      <div class="tip"><strong>💡 Tip:</strong> El vencimiento se calcula solo según la condición de pago — Contado = misma fecha, 30 días = fecha + 30, etc. Podés cambiarlo manualmente si hace falta.</div>
+
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt"><strong>Si el cliente no existe en Xubio</strong> aparece este aviso:</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin:8px 0 14px;background:#f8fafc;">
+        <div style="font-size:14px;font-weight:800;color:#0A1628;margin-bottom:6px;">Cliente no encontrado en Xubio</div>
+        <div style="font-size:13px;color:#374151;margin-bottom:12px;"><b>INDUSTRIAS PROFILA S.A.</b> no existe en tu cuenta de Xubio.</div>
+        <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:5px;">CONDICIÓN IVA</div>
+        <div style="background:#fff;border:1px solid #1565D8;border-radius:7px;padding:8px 12px;font-size:13px;color:#111;margin-bottom:14px;">Responsable Inscripto ▾</div>
+        <div style="display:flex;gap:10px;">
+          <span style="flex:1;padding:10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:12px;font-weight:700;text-align:center;">Cancelar</span>
+          <span style="flex:2;padding:10px;border-radius:8px;background:#1565D8;color:#fff;font-size:12px;font-weight:700;text-align:center;">Crear cliente y facturar</span>
+        </div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">5</div>
+        <div class="paso-txt">Elegí la <strong>condición IVA</strong> del cliente (Responsable Inscripto, Monotributista, Consumidor Final, Exento) y tocá <strong>Crear cliente y facturar</strong>. El sistema crea el cliente en Xubio y manda la factura en un solo paso.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">6</div>
+        <div class="paso-txt">Si el envío fue exitoso aparece <strong style="color:#065f46;">✅ Comprobante creado en Xubio correctamente</strong> y la orden pasa automáticamente a estado <span class="tag tag-verde">✓ Cobrado</span>.</div>
+      </div>
       <div class="alerta"><strong>⚠ Importante:</strong> Cada vez que tocás "Confirmar y enviar" se crea un comprobante nuevo en Xubio. No lo toques dos veces para la misma orden.</div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">📋</span><h2>Ver órdenes en el Historial</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Tocá <strong>Historial</strong> en la barra superior para ver el registro completo de todas las órdenes cerradas.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Podés filtrar por <strong>cliente, estado o fecha</strong>. Los estados disponibles son: <span class="tag tag-verde">🔒 Cerrada</span> <span class="tag tag-naranja">⏸ Pendiente</span> <span class="tag tag-gris">🚫 Anulada</span>.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Tocando cualquier orden ves todos sus detalles: cliente, equipo, técnico, diagnóstico, visitas y comprobante.</div>
+      </div>
+      <div class="tip"><strong>💡 Tip:</strong> Si buscás una orden específica, usá el buscador del panel de Facturación — buscá por empresa, número de orden o número de factura.</div>
     </div>
   </div>
 
@@ -275,7 +345,7 @@
       </div>
       <div class="paso">
         <div class="paso-num">2</div>
-        <div class="paso-txt">En <strong>Cambiar contraseña</strong> tocá la sección para expandirla, ingresá la contraseña actual, la nueva y confirmala.</div>
+        <div class="paso-txt">En <strong>Cambiar contraseña</strong> ingresá la contraseña actual, la nueva y confirmala.</div>
       </div>
       <div class="paso">
         <div class="paso-num">3</div>
@@ -286,7 +356,7 @@
   </div>
 
   <div class="footer">
-    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.0 Julio 2026
+    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.1 Julio 2026
   </div>
 
 </div>
