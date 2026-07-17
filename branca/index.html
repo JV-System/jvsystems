@@ -5283,13 +5283,8 @@ function toggleModoMO(oid, modo) {
   if (thPh) thPh.style.display = modo === 'total' ? 'none' : '';
   if (thT)  thT.style.display  = modo === 'total' ? 'none' : '';
   if (modo === 'total') {
-    if (detLbl)  detLbl.style.display = 'none';
-    if (unitInp) unitInp.style.removeProperty('display');
-    if (cantEl)  cantEl.textContent = '—';
-    recalcMOtotal(oid);
+    if (cantEl) cantEl.textContent = '—';
   } else {
-    if (detLbl)  detLbl.style.removeProperty('display');
-    if (unitInp) { unitInp.style.display = 'none'; unitInp.value = ''; }
     var hs = 0, i = 0;
     while (true) {
       var ph = document.getElementById('fact-mo-ph-'+oid+'-'+i);
@@ -5298,8 +5293,8 @@ function toggleModoMO(oid, modo) {
       i++;
     }
     if (cantEl) cantEl.textContent = hs > 0 ? (hs % 1 === 0 ? hs+' hs' : hs.toFixed(1)+' hs') : '—';
-    recalcMO(oid);
   }
+  recalcMOtotal(oid);
 }
 function recalcMOtotal(oid) {
   var unitInp = document.getElementById('fact-mo-unit-'+oid);
