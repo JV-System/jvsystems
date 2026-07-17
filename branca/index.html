@@ -5179,18 +5179,20 @@ function renderFactRow(o) {
             + '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:0;">'
             + '<div style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Detalle de visitas</div>'
             + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
-            + '<tr style="background:#f9fafb;"><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Fecha</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Tiempo</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Causa / Acción</th><th style="padding:5px 10px;text-align:right;color:#9ca3af;font-weight:600;">$/hs</th><th style="padding:5px 14px;text-align:right;color:#9ca3af;font-weight:600;">Total</th></tr>'
+            + '<tr style="background:#f9fafb;"><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Fecha</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Tiempo</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Causa / Acción</th><th style="padding:5px 10px;text-align:right;color:#9ca3af;font-weight:600;">$/hs</th><th style="padding:5px 14px;text-align:right;color:#9ca3af;font-weight:600;">$ Total</th></tr>'
             + vis.map(function(v, i){
                 var hs = parsearHoras(v.tiempo);
                 var ph = preciosHora[i] || '';
-                var sub = ph ? Math.round(hs * parseFloat(ph)) : 0;
+                var totalesHora = f.totalesMO || [];
+                var totalFijo = totalesHora[i] || '';
+                var sub = totalFijo ? parseFloat(totalFijo) : (ph ? Math.round(hs * parseFloat(ph)) : 0);
                 var inpS2 = 'border:none;border-bottom:1px solid #d1d5db;padding:3px 5px;font-size:11px;text-align:right;background:transparent;font-family:inherit;width:70px;';
                 return '<tr style="border-bottom:1px solid #f3f4f6;">'
                   + '<td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td>'
                   + '<td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td>'
                   + '<td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td>'
-                  + '<td style="padding:3px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS2+'"></td>'
-                  + '<td style="padding:5px 14px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-'+i+'">$ '+sub.toLocaleString('es-AR')+'</td>'
+                  + '<td style="padding:3px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMOfromPH('+o.id+','+i+')" style="'+inpS2+'"></td>'
+                  + '<td style="padding:3px 10px;text-align:right;"><input id="fact-mo-t-'+o.id+'-'+i+'" type="number" placeholder="$ total" value="'+(sub||'')+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMOfromTotal('+o.id+','+i+')" style="'+inpS2+'font-weight:700;"></td>'
                   + '</tr>';
               }).join('')
             + '</table></div></div>' : '');
@@ -5258,21 +5260,34 @@ function recalcMO(oid) {
   var total = 0;
   var i = 0;
   while (true) {
-    var phInp = document.getElementById('fact-mo-ph-'+oid+'-'+i);
-    if (!phInp) break;
-    var hs = parseFloat(phInp.dataset.hs) || 1;
-    var ph = parseFloat(phInp.value) || 0;
-    var sub = Math.round(hs * ph);
-    var tEl = document.getElementById('fact-mo-t-'+oid+'-'+i);
-    if (tEl) tEl.textContent = '$ ' + sub.toLocaleString('es-AR');
-    total += sub;
+    var tInp = document.getElementById('fact-mo-t-'+oid+'-'+i);
+    if (!tInp) break;
+    total += parseFloat(tInp.value) || 0;
     i++;
   }
   var hidInp = document.getElementById('fact-mo-'+oid);
-  if (hidInp) { hidInp.value = total; }
+  if (hidInp) hidInp.value = total;
   var totEl = document.getElementById('fact-mo-total-'+oid);
   if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
   recalcFact(oid);
+}
+function recalcMOfromPH(oid, i) {
+  var phInp = document.getElementById('fact-mo-ph-'+oid+'-'+i);
+  var tInp  = document.getElementById('fact-mo-t-'+oid+'-'+i);
+  if (!phInp || !tInp) return;
+  var hs = parseFloat(phInp.dataset.hs) || 1;
+  var ph = parseFloat(phInp.value) || 0;
+  tInp.value = ph ? Math.round(hs * ph) : '';
+  recalcMO(oid);
+}
+function recalcMOfromTotal(oid, i) {
+  var phInp = document.getElementById('fact-mo-ph-'+oid+'-'+i);
+  var tInp  = document.getElementById('fact-mo-t-'+oid+'-'+i);
+  if (!phInp || !tInp) return;
+  var hs = parseFloat(phInp.dataset.hs) || 1;
+  var tot = parseFloat(tInp.value) || 0;
+  phInp.value = tot ? (tot / hs).toFixed(2) : '';
+  recalcMO(oid);
 }
 
 function recalcGastos(oid) {
@@ -5376,10 +5391,11 @@ function guardarFacturacion(oid) {
   const v = getFactValues(oid);
   // Guardar precios por visita
   var preciosHora = [];
+  var totalesMO = [];
   var vi = 0;
   while (document.getElementById('fact-mo-ph-'+oid+'-'+vi)) {
-    var vInp = document.getElementById('fact-mo-ph-'+oid+'-'+vi);
-    preciosHora.push(parseFloat(vInp.value) || 0);
+    preciosHora.push(parseFloat(document.getElementById('fact-mo-ph-'+oid+'-'+vi).value) || 0);
+    totalesMO.push(parseFloat(document.getElementById('fact-mo-t-'+oid+'-'+vi).value) || 0);
     vi++;
   }
   var precioHora = preciosHora[0] || 0;
@@ -5396,7 +5412,7 @@ function guardarFacturacion(oid) {
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
-    precioHora: precioHora, preciosHora: preciosHora, preciosRepuestos: preciosRep, gastosCant: gastosCant };
+    precioHora: precioHora, preciosHora: preciosHora, totalesMO: totalesMO, preciosRepuestos: preciosRep, gastosCant: gastosCant };
   o.updatedAt = Date.now();
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
