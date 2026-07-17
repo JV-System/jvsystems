@@ -4922,6 +4922,7 @@ var _factOpenId = null; // id de la carta actualmente abierta
 
 var _factFiltro = 'todos';
 var _factBusca  = '';
+var _factSort   = 'fecha-desc'; // 'fecha-desc' | 'fecha-asc' | 'orden-desc' | 'orden-asc'
 
 function _getFactLista() {
   var todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
@@ -4940,9 +4941,15 @@ function _getFactLista() {
     const fa = a.facturacion||{}, fb = b.facturacion||{};
     if (_factFiltro === 'cobrado') {
       const parseF = function(s){ if(!s) return 0; var p=s.split('/'); return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():new Date(s).getTime()||0; };
-      var dateDiff = parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
-      if (dateDiff !== 0) return dateDiff;
-      return (parseInt(fb.nroFactura) || 0) - (parseInt(fa.nroFactura) || 0);
+      if (_factSort === 'fecha-asc') {
+        var d = parseF(fa.fechaFactura) - parseF(fb.fechaFactura);
+        return d !== 0 ? d : (parseInt(fa.nroFactura)||0) - (parseInt(fb.nroFactura)||0);
+      }
+      if (_factSort === 'orden-desc') return (parseInt(b.id)||0) - (parseInt(a.id)||0);
+      if (_factSort === 'orden-asc')  return (parseInt(a.id)||0) - (parseInt(b.id)||0);
+      // default: fecha-desc
+      var d = parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
+      return d !== 0 ? d : (parseInt(fb.nroFactura)||0) - (parseInt(fa.nroFactura)||0);
     }
     const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
     return rank(a)-rank(b);
@@ -5004,6 +5011,23 @@ function renderFacturacion() {
     + tab('cobrado', '✓ Cobrado',      null,          '#10b981')
     + '</div>'
 
+    // ── Ordenar (solo en cobrado) ──
+    + (_factFiltro === 'cobrado' ? (function(){
+      var ops = [
+        { k:'fecha-desc', l:'Fecha ↓' },
+        { k:'fecha-asc',  l:'Fecha ↑' },
+        { k:'orden-desc', l:'N° orden ↓' },
+        { k:'orden-asc',  l:'N° orden ↑' },
+      ];
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap;">'
+        + '<span style="font-size:11px;color:#9ca3af;font-weight:600;">ORDENAR:</span>'
+        + ops.map(function(op){
+            var act = _factSort === op.k;
+            return '<button onclick="setFactSort(\''+op.k+'\')" style="padding:5px 10px;border-radius:6px;border:1px solid '+(act?'#1565D8':'#e5e7eb')+';background:'+(act?'#1565D8':'#fff')+';color:'+(act?'#fff':'#6b7280')+';font-size:12px;font-weight:'+(act?'700':'500')+';cursor:pointer;">'+op.l+'</button>';
+          }).join('')
+        + '</div>';
+    })() : '')
+
     // ── Buscador ──
     + '<div style="position:relative;margin-bottom:12px;">'
     + '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;">🔍</span>'
@@ -5026,6 +5050,7 @@ function renderFacturacion() {
 }
 
 function setFactFiltro(f) { _factFiltro = f; _factOpenId = null; renderFacturacion(); }
+function setFactSort(s)   { _factSort = s; renderFacturacion(); }
 function setFactBusca(v)  {
   _factBusca = v;
   _factOpenId = null;
