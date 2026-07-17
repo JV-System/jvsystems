@@ -7273,6 +7273,12 @@ function initRoleUI() {
     }
   }
   if (nameEl) nameEl.textContent = user.nombre;
+  // Ocultar controles técnicos para rol facturación
+  var esFact = user.role === 'facturacion';
+  var btnRefresh = document.getElementById('btn-refresh');
+  var badgeSistema = document.getElementById('sistema-activo-badge');
+  if (btnRefresh)   btnRefresh.style.display   = esFact ? 'none' : '';
+  if (badgeSistema) badgeSistema.style.display = esFact ? 'none' : '';
   // Mostrar/ocultar elementos según rol
   ['nav-facturacion','mob-facturacion'].forEach(function(id) {
     const el = document.getElementById(id);
