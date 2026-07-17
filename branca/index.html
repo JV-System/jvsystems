@@ -5128,7 +5128,7 @@ function renderFactRow(o) {
               + (function(){
                   var desc = v.causa || '';
                   if (!desc && i === 0) {
-                    if (o.problema) desc = 'Problema: ' + o.problema;
+                    if (o.probDetectado) desc = 'Problema: ' + o.probDetectado;
                     if (o.accionRealizada) desc += (desc ? ' / ' : '') + 'Acción: ' + o.accionRealizada;
                   } else if (!desc && i > 0) {
                     if (o.accionRealizada) desc = o.accionRealizada;
