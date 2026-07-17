@@ -7866,7 +7866,13 @@ async function confirmarEnvioXubio(oid) {
       showToast('✅ Comprobante enviado a Xubio.');
       if (!o.xubioEnvios) o.xubioEnvios = [];
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
+      if (!o.facturacion) o.facturacion = {};
+      o.facturacion.estadoPago = 'Cobrado';
+      o.updatedAt = Date.now();
+      const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
+      if (_idx >= 0) ordenes[_idx] = o;
       saveData();
+      renderOrdenes();
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
