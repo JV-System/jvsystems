@@ -2575,7 +2575,14 @@ async function loadFromCloud() {
         });
         localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
         // Usar lo que está en Firebase, descartando borradores vacíos
-        ordenes = remotas.filter(function(o) { return o && o.id && !_deletedIds.has(String(o.id)) && (!o.draft || tieneDatos(o)); });
+        const localMap = {};
+        ordenes.forEach(function(o) { if (o && o.id) localMap[String(o.id)] = o; });
+        ordenes = remotas.filter(function(o) { return o && o.id && !_deletedIds.has(String(o.id)) && (!o.draft || tieneDatos(o)); }).map(function(remote) {
+          const local = localMap[String(remote.id)];
+          // Si hay versión local más nueva (modificada en los últimos 30s), preferirla
+          if (local && local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt && (Date.now() - local.updatedAt) < 30000) return local;
+          return remote;
+        });
         // Agregar borradores locales con datos que aún no se subieron
         draftsLocales.forEach(function(d) {
           if (!ordenes.find(function(o) { return String(o.id) === String(d.id); })) ordenes.unshift(d);
@@ -5365,6 +5372,7 @@ function guardarFacturacion(oid) {
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
     precioHora: precioHora, preciosRepuestos: preciosRep, gastosCant: gastosCant };
+  o.updatedAt = Date.now();
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
   saveData();
