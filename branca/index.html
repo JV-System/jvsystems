@@ -5108,20 +5108,20 @@ function renderFactRow(o) {
         var th = function(t,r){ return '<th style="text-align:'+(r?'right':'left')+';padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">'+t+'</th>'; };
         var td = function(t,r,b){ return '<td style="padding:8px 10px;'+(r?'text-align:right;':'')+(b?'font-weight:700;':'')+'color:#111;">'+t+'</td>'; };
 
-        // Mano de obra — fila única con horas totales
+        // Mano de obra — fila única con total (inputs por visita van en detalle)
         var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
+        var preciosHora = f.preciosHora || (f.precioHora ? vis.map(function(){ return f.precioHora; }) : []);
         var totalHs = vis.reduce(function(sum,v){ return sum + parsearHoras(v.tiempo); }, 0);
-        var ph = f.precioHora || '';
-        var moTotal = ph ? Math.round(totalHs * parseFloat(ph)) : 0;
+        var moTotalSum = preciosHora.reduce(function(sum,ph,i){ var hs = i < vis.length ? parsearHoras(vis[i].tiempo) : 0; return sum + (ph ? Math.round(hs * parseFloat(ph)) : 0); }, 0);
         var hsStr = totalHs > 0 ? (totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs') : '—';
         var moDesc = (o.probDetectado ? 'Problema: '+o.probDetectado : '') + (o.accionRealizada ? (o.probDetectado?' / ':'') + 'Acción: '+o.accionRealizada : '');
         var moRow = '<tr style="border-bottom:1px solid #f3f4f6;">'
           + td('Mano de obra')
           + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(moDesc) + '</td>'
           + '<td style="padding:8px 10px;text-align:right;font-weight:600;color:#1565D8;white-space:nowrap;">' + hsStr + '</td>'
-          + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-0" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+totalHs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS+'width:80px;"></td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#aaa;font-size:11px;">ver detalle</td>'
           + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
-          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-0">$ '+moTotal.toLocaleString('es-AR')+'</td>'
+          + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-total-'+o.id+'">$ '+moTotalSum.toLocaleString('es-AR')+'</td>'
           + '</tr>';
         // Campo oculto para compatibilidad con recalcFact
         moRow += '<input type="hidden" id="fact-mo-'+o.id+'" value="'+(f.manoDeObra||0)+'">';
@@ -5179,7 +5179,20 @@ function renderFactRow(o) {
             + '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:0;">'
             + '<div style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Detalle de visitas</div>'
             + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
-            + vis.map(function(v){ return '<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td><td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td><td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td></tr>'; }).join('')
+            + '<tr style="background:#f9fafb;"><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Fecha</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Tiempo</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Causa / Acción</th><th style="padding:5px 10px;text-align:right;color:#9ca3af;font-weight:600;">$/hs</th><th style="padding:5px 14px;text-align:right;color:#9ca3af;font-weight:600;">Total</th></tr>'
+            + vis.map(function(v, i){
+                var hs = parsearHoras(v.tiempo);
+                var ph = preciosHora[i] || '';
+                var sub = ph ? Math.round(hs * parseFloat(ph)) : 0;
+                var inpS2 = 'border:none;border-bottom:1px solid #d1d5db;padding:3px 5px;font-size:11px;text-align:right;background:transparent;font-family:inherit;width:70px;';
+                return '<tr style="border-bottom:1px solid #f3f4f6;">'
+                  + '<td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td>'
+                  + '<td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td>'
+                  + '<td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td>'
+                  + '<td style="padding:3px 10px;text-align:right;"><input id="fact-mo-ph-'+o.id+'-'+i+'" type="number" placeholder="$/hs" value="'+ph+'" data-hs="'+hs+'" onclick="event.stopPropagation()" oninput="recalcMO('+o.id+')" style="'+inpS2+'"></td>'
+                  + '<td style="padding:5px 14px;text-align:right;font-weight:700;" id="fact-mo-t-'+o.id+'-'+i+'">$ '+sub.toLocaleString('es-AR')+'</td>'
+                  + '</tr>';
+              }).join('')
             + '</table></div></div>' : '');
       })()
 
@@ -5256,7 +5269,10 @@ function recalcMO(oid) {
     i++;
   }
   var hidInp = document.getElementById('fact-mo-'+oid);
-  if (hidInp) { hidInp.value = total; recalcFact(oid); }
+  if (hidInp) { hidInp.value = total; }
+  var totEl = document.getElementById('fact-mo-total-'+oid);
+  if (totEl) totEl.textContent = '$ ' + total.toLocaleString('es-AR');
+  recalcFact(oid);
 }
 
 function recalcGastos(oid) {
