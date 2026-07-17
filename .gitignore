@@ -1,0 +1,6 @@
+# Credenciales y archivos de desarrollo local — NO subir al repo
+branca/xubio_config.js
+branca/xubio_inject.js
+branca/index_xubio_dev.html
+branca/index_dev.html
+*.env

@@ -1,370 +1,263 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="theme-color" content="#0a111c" />
-  <title>Marcación Laboral — JV Systems</title>
-  <link rel="icon" type="image/png" href="jvs-icon.png" />
-  <link rel="stylesheet" href="css/style.css" />
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font-sans, system-ui, sans-serif); background: #0a111c; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#0a111c" />
+<title>Mi Actividad Laboral — JV Systems</title>
+<link rel="icon" type="image/png" href="jvs-icon.png" />
+<style>
+/* =============================================================
+   SISTEMA DE HORAS — producto standard, white-label
+   JV Systems · Soluciones Digitales
 
-    /* ── Portal layout dos paneles ─────────────────────── */
-    .portal-wrap {
-      min-height: 100vh;
-      display: flex;
-      align-items: stretch;
-      /* Fondo translúcido sobre la wave del body */
-      background: rgba(5, 10, 20, 0.75);
-      backdrop-filter: blur(2px);
-    }
+   Para adaptar a un cliente nuevo: editá el bloque CONFIG al
+   principio del <script> de abajo (empresa, logo, colores, URL
+   del Apps Script, si usa Órdenes de Trabajo o carga simple).
+   ============================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Panel izquierdo: logo + branding */
-    .portal-left {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem 2rem;
-      position: relative;
-    }
-    .portal-left::after {
-      content: '';
-      position: absolute;
-      right: 0; top: 0; bottom: 0;
-      width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(255,120,0,.2), transparent);
-    }
-    .logo-glow-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-    /* Anillos de glow animados */
-    .logo-ring {
-      position: absolute;
-      border-radius: 50%;
-      border: 1px solid;
-      animation: ringPulse 3s ease-in-out infinite;
-    }
-    .logo-ring:nth-child(1) {
-      width: 180px; height: 180px;
-      border-color: rgba(59,130,246,.25);
-      animation-delay: 0s;
-    }
-    .logo-ring:nth-child(2) {
-      width: 240px; height: 240px;
-      border-color: rgba(59,130,246,.15);
-      animation-delay: .6s;
-    }
-    .logo-ring:nth-child(3) {
-      width: 300px; height: 300px;
-      border-color: rgba(59,130,246,.08);
-      animation-delay: 1.2s;
-    }
-    .logo-ring:nth-child(4) {
-      width: 360px; height: 360px;
-      border-color: rgba(59,130,246,.04);
-      animation-delay: 1.8s;
-    }
-    @keyframes ringPulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: .4; transform: scale(1.04); }
-    }
-    /* Puntos orbitales */
-    .orbit-dot {
-      position: absolute;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #3b82f6;
-      box-shadow: 0 0 8px #3b82f6;
-    }
-    .orbit-dot:nth-child(5)  { top: -3px;  left: 50%; animation: orbitTop 4s linear infinite; }
-    .orbit-dot:nth-child(6)  { right: -3px; top: 50%; animation: orbitRight 4s linear infinite 2s; }
-    @keyframes orbitTop   { 0%{opacity:1} 50%{opacity:.2} 100%{opacity:1} }
-    @keyframes orbitRight { 0%{opacity:.2} 50%{opacity:1} 100%{opacity:.2} }
+:root {
+  /* Marca del proveedor del software (JV Systems). Para un cliente
+     nuevo alcanza con cambiar --accent/--navy si querés otra paleta. */
+  --navy:           #0D1B2E;
+  --navy-mid:       #112244;
+  --navy-light:     #1A3055;
+  --accent:         #F59E0B;
+  --accent-hover:   #D97706;
+  --accent-light:   #FFFBEB;
+  --accent-border:  #FDE68A;
 
-    .logo-img-wrap {
-      position: relative; z-index: 2;
-      width: 130px; height: 130px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(30,50,100,.8) 0%, rgba(10,20,50,.6) 100%);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow:
-        0 0 40px rgba(59,130,246,.35),
-        0 0 80px rgba(59,130,246,.15),
-        inset 0 0 30px rgba(59,130,246,.1);
-    }
-    .logo-img-wrap img { width: 90px; height: 90px; object-fit: contain; }
+  --primary:        #1565C0;
+  --primary-hover:  #1251A3;
+  --primary-light:  #E3F2FD;
+  --primary-border: #90CAF9;
 
-    .portal-brand-text {
-      text-align: center;
-      color: rgba(255,255,255,.7);
-    }
-    .portal-brand-text p {
-      font-size: .95rem; margin-bottom: .4rem;
-      color: rgba(255,255,255,.45); line-height: 1.5;
-    }
-    .portal-brand-text strong {
-      font-size: 1.1rem; font-weight: 800;
-      color: white; letter-spacing: .02em;
-    }
+  --success:        #16A34A;
+  --success-hover:  #15803D;
+  --success-light:  #F0FDF4;
+  --success-border: #BBF7D0;
 
-    /* Panel derecho: card */
-    .portal-right {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 3rem;
-      flex: 0 0 auto;
-      min-width: min(100%, 460px);
-    }
-    @media (max-width: 700px) {
-      .portal-wrap { flex-direction: column; }
-      .portal-left  { padding: 2rem 1rem 1rem; }
-      .portal-left::after { display: none; }
-      .portal-right { padding: 1rem; min-width: 0; width: 100%; }
-      .logo-ring:nth-child(3), .logo-ring:nth-child(4) { display: none; }
-      .logo-img-wrap { width: 90px; height: 90px; }
-      .logo-img-wrap img { width: 60px; height: 60px; }
-    }
-    .portal-center {
-      /* usado por compatibilidad */
-      display: contents;
-    }
+  --danger:         #DC2626;
+  --danger-hover:   #B91C1C;
+  --danger-light:   #FEF2F2;
+  --danger-border:  #FECACA;
 
-    /* ── Portal card ─────────────────────────────────────── */
-    .portal-card {
-      width: 100%; max-width: 420px;
-      background: rgba(10,17,30,.93);
-      border: 1.5px solid rgba(255,120,0,.35);
-      border-radius: 18px; padding: 2.25rem 2rem 2rem;
-      box-shadow:
-        0 0 40px rgba(255,120,0,.12),
-        0 0 0 1px rgba(255,120,0,.07),
-        0 25px 60px rgba(0,0,0,.7);
-      backdrop-filter: blur(12px);
-      animation: cardIn .4s ease;
-    }
-    @keyframes cardIn {
-      from { opacity:0; transform:translateY(20px) scale(.97); }
-      to   { opacity:1; transform:translateY(0) scale(1); }
-    }
-    .portal-brand { text-align:center; margin-bottom:1.5rem; }
-    .portal-icon {
-      width:54px; height:54px; border-radius:14px;
-      background: linear-gradient(135deg,#ff7800,#ffb800);
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.5rem; margin:0 auto .875rem;
-      box-shadow:0 4px 20px rgba(255,120,0,.4);
-    }
-    .portal-title {
-      font-size:1.75rem; font-weight:900; color:white;
-      line-height:1.1; margin-bottom:.35rem;
-    }
-    .portal-title span { color:#ff8c00; }
-    .portal-subtitle { font-size:.78rem; color:rgba(255,255,255,.38); }
+  --gray-50:  #F8FAFC; --gray-100: #F1F5F9; --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1; --gray-400: #94A3B8; --gray-500: #64748B;
+  --gray-600: #475569; --gray-700: #334155; --gray-800: #1E293B; --gray-900: #0F172A;
 
-    /* ── Avatar ─────────────────────────────────────────── */
-    .portal-avatar-wrap { display:flex; justify-content:center; margin-bottom:1.25rem; }
-    .portal-avatar {
-      width:76px; height:76px; border-radius:50%;
-      background:rgba(255,120,0,.1); border:2px solid rgba(255,120,0,.25);
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.5rem; font-weight:900; color:rgba(255,255,255,.35);
-      transition:all .35s; box-shadow:0 0 0 6px rgba(255,120,0,.05);
-    }
-    .portal-avatar.found {
-      border-color:#ff8c00; color:white;
-      box-shadow:0 0 0 6px rgba(255,120,0,.1), 0 0 24px rgba(255,120,0,.25);
-    }
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow:    0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 8px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 24px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.08);
 
-    /* ── Inputs ─────────────────────────────────────────── */
-    .portal-field { position:relative; margin-bottom:.8rem; }
-    .portal-field-icon {
-      position:absolute; left:.9rem; top:50%; transform:translateY(-50%);
-      color:rgba(255,255,255,.28); font-size:.95rem; pointer-events:none;
-    }
-    .portal-input {
-      width:100%; padding:.8rem 2.5rem .8rem 2.6rem;
-      background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.1);
-      border-radius:10px; color:white; font-size:.95rem; font-weight:600;
-      font-family:inherit; outline:none; transition:border-color .2s, background .2s;
-    }
-    .portal-input::placeholder { color:rgba(255,255,255,.22); font-weight:400; }
-    .portal-input:focus { border-color:rgba(255,140,0,.55); background:rgba(255,255,255,.08); }
-    .portal-clear {
-      position:absolute; right:.875rem; top:50%; transform:translateY(-50%);
-      color:rgba(255,255,255,.22); cursor:pointer; font-size:.85rem;
-      background:none; border:none; font-family:inherit;
-    }
-    .autocomplete-box {
-      position:absolute; top:100%; left:0; right:0; z-index:50;
-      background:#0f1e30; border:1px solid rgba(255,120,0,.22);
-      border-radius:0 0 10px 10px; max-height:190px; overflow-y:auto;
-      box-shadow:0 8px 24px rgba(0,0,0,.5);
-    }
-    .ac-item {
-      padding:.6rem .875rem; cursor:pointer;
-      color:rgba(255,255,255,.75); font-size:.88rem;
-      display:flex; align-items:center; gap:.55rem; transition:background .12s;
-    }
-    .ac-item:hover { background:rgba(255,120,0,.1); }
-    .ac-init {
-      width:28px; height:28px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      font-size:.62rem; font-weight:900; color:white; flex-shrink:0;
-    }
-    .portal-error { color:#f87171; font-size:.8rem; font-weight:600; display:none; margin-bottom:.5rem; }
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 14px; --radius-xl: 20px;
+}
 
-    #dniSection { display:none; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #0a111c;
+  background-image: url('Fondo.jpg');
+  background-size: cover; background-position: center; background-attachment: scroll;
+  color: var(--gray-900); min-height: 100vh; font-size: 16px; line-height: 1.5;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background: rgba(5,10,20,.55); pointer-events: none;
+}
+.splash, #portalWrap { position: relative; z-index: 1; }
 
-    /* ── Botón ─────────────────────────────────────────── */
-    .portal-btn {
-      width:100%; padding:.9rem;
-      background:linear-gradient(135deg,#ff7800,#ffb800);
-      border:none; border-radius:10px;
-      color:#0a111c; font-size:.95rem; font-weight:900;
-      cursor:pointer; font-family:inherit;
-      letter-spacing:.08em; text-transform:uppercase;
-      display:flex; align-items:center; justify-content:center; gap:.5rem;
-      transition:opacity .15s, transform .1s;
-      box-shadow:0 4px 20px rgba(255,120,0,.3);
-    }
-    .portal-btn:hover { opacity:.9; }
-    .portal-btn:active { transform:scale(.98); }
-    .portal-btn:disabled { opacity:.4; cursor:not-allowed; }
-    .portal-back {
-      width:100%; background:none; border:none;
-      color:rgba(255,255,255,.28); font-size:.8rem; cursor:pointer;
-      margin-top:.75rem; font-family:inherit;
-    }
+/* ══ SPLASH ══ */
+.splash {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, #112756 0%, #0A1628 60%, #070E1A 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.splash.hiding { animation: splashOut .55s ease forwards; }
+@keyframes splashOut { to { opacity: 0; transform: scale(1.04); } }
+.splash-logo-wrap { position: relative; margin-bottom: 2rem; animation: logoIn .7s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes logoIn { from { transform: scale(.55); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.splash-logo-img {
+  width: 120px; height: 120px; object-fit: contain; border-radius: 26px;
+  background: rgba(255,255,255,.04); padding: 8px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 40px rgba(21,101,192,.6), 0 0 80px rgba(21,101,192,.25);
+  animation: logoPulse 3s ease-in-out infinite, logoFloat 4s ease-in-out infinite;
+}
+@keyframes logoFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes logoPulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 0 40px rgba(21,101,192,.6), 0 0 80px rgba(21,101,192,.25); }
+  50%     { box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 0 65px rgba(21,101,192,.9), 0 0 120px rgba(21,101,192,.5); }
+}
+.splash-title {
+  font-size: clamp(1.75rem, 6vw, 2.5rem); font-weight: 800; letter-spacing: .22em;
+  color: var(--accent); text-align: center; animation: titleIn .6s ease .45s both;
+  text-shadow: 0 0 30px rgba(245,158,11,.5);
+}
+@keyframes titleIn { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.splash-brand { margin-top: .75rem; display: flex; align-items: center; gap: .5rem; animation: titleIn .5s ease .7s both; }
+.splash-brand-logo { width: 28px; height: 28px; border-radius: 6px; object-fit: contain; }
+.splash-brand-text { font-size: .85rem; color: rgba(255,255,255,.55); letter-spacing: .04em; }
+.splash-brand-text strong { color: rgba(255,255,255,.85); font-weight: 600; }
+.splash-progress {
+  position: absolute; bottom: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  animation: progressBar 2.2s ease forwards; border-radius: 0 2px 0 0;
+}
+@keyframes progressBar { from { width: 0; } to { width: 100%; } }
 
-    /* ── Marcación screen ───────────────────────────────── */
-    .marc-screen { display:none; }
-    .marc-tipo-badge {
-      display:inline-flex; align-items:center; gap:.5rem;
-      padding:.5rem 1.1rem; border-radius:99px;
-      font-size:.9rem; font-weight:800;
-    }
-    .marc-tipo-badge.entrada { background:rgba(16,185,129,.13); color:#34d399; border:1px solid rgba(16,185,129,.28); }
-    .marc-tipo-badge.salida  { background:rgba(239,68,68,.13);  color:#f87171; border:1px solid rgba(239,68,68,.28); }
-    .gps-row {
-      display:flex; align-items:center; gap:.55rem;
-      padding:.55rem .8rem; border-radius:8px;
-      background:rgba(255,255,255,.04);
-      font-size:.78rem; color:rgba(255,255,255,.4); margin-bottom:1.1rem;
-    }
-    .gps-dot-d { width:8px; height:8px; border-radius:50%; background:#6b7280; }
-    .gps-dot-d.ok { background:#34d399; }
-    .gps-dot-d.pulse { animation:gpsPulse 1.2s infinite; }
-    @keyframes gpsPulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+/* ══ PORTAL (login + marcación + carga) ══ */
+.portal-wrap { min-height: 100vh; display: flex; align-items: stretch; background: rgba(5,10,20,.75); backdrop-filter: blur(2px); }
+.portal-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; position: relative; }
+.portal-left::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent, rgba(255,120,0,.2), transparent); }
+.logo-glow-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+.logo-ring { position: absolute; border-radius: 50%; border: 1px solid; animation: ringPulse 3s ease-in-out infinite; }
+.logo-ring:nth-child(1) { width: 180px; height: 180px; border-color: rgba(59,130,246,.25); animation-delay: 0s; }
+.logo-ring:nth-child(2) { width: 240px; height: 240px; border-color: rgba(59,130,246,.15); animation-delay: .6s; }
+.logo-ring:nth-child(3) { width: 300px; height: 300px; border-color: rgba(59,130,246,.08); animation-delay: 1.2s; }
+.logo-ring:nth-child(4) { width: 360px; height: 360px; border-color: rgba(59,130,246,.04); animation-delay: 1.8s; }
+@keyframes ringPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.04); } }
+.orbit-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+.orbit-dot:nth-child(5) { top: -3px; left: 50%; animation: orbitTop 4s linear infinite; }
+.orbit-dot:nth-child(6) { right: -3px; top: 50%; animation: orbitRight 4s linear infinite 2s; }
+@keyframes orbitTop { 0%{opacity:1} 50%{opacity:.2} 100%{opacity:1} }
+@keyframes orbitRight { 0%{opacity:.2} 50%{opacity:1} 100%{opacity:.2} }
+.logo-img-wrap {
+  position: relative; z-index: 2; width: 130px; height: 130px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(30,50,100,.8) 0%, rgba(10,20,50,.6) 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(59,130,246,.35), 0 0 80px rgba(59,130,246,.15), inset 0 0 30px rgba(59,130,246,.1);
+}
+.logo-img-wrap img { width: 90px; height: 90px; object-fit: contain; }
+.portal-brand-text { text-align: center; color: rgba(255,255,255,.7); }
+.portal-brand-text p { font-size: .95rem; margin-bottom: .4rem; color: rgba(255,255,255,.45); line-height: 1.5; }
+.portal-brand-text strong { font-size: 1.1rem; font-weight: 800; color: white; letter-spacing: .02em; }
+.portal-right { display: flex; align-items: center; justify-content: center; padding: 2rem 3rem; flex: 0 0 auto; min-width: min(100%, 460px); }
+@media (max-width: 700px) {
+  .portal-wrap { flex-direction: column; }
+  .portal-left { padding: 2rem 1rem 1rem; }
+  .portal-left::after { display: none; }
+  .portal-right { padding: 1rem; min-width: 0; width: 100%; }
+  .logo-ring:nth-child(3), .logo-ring:nth-child(4) { display: none; }
+  .logo-img-wrap { width: 90px; height: 90px; }
+  .logo-img-wrap img { width: 60px; height: 60px; }
+}
+.portal-card {
+  width: 100%; max-width: 420px; background: rgba(10,17,30,.93);
+  border: 1.5px solid rgba(255,120,0,.35); border-radius: 18px; padding: 2.25rem 2rem 2rem;
+  box-shadow: 0 0 40px rgba(255,120,0,.12), 0 0 0 1px rgba(255,120,0,.07), 0 25px 60px rgba(0,0,0,.7);
+  backdrop-filter: blur(12px); animation: cardIn .4s ease;
+}
+@keyframes cardIn { from { opacity:0; transform:translateY(20px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+.portal-brand { text-align:center; margin-bottom:1.5rem; }
+.portal-icon {
+  width:54px; height:54px; border-radius:14px; background: linear-gradient(135deg,#ff7800,#ffb800);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin:0 auto .875rem;
+  box-shadow:0 4px 20px rgba(255,120,0,.4);
+}
+.portal-title { font-size:1.75rem; font-weight:900; color:white; line-height:1.1; margin-bottom:.35rem; }
+.portal-title span { color:#ff8c00; }
+.portal-subtitle { font-size:.78rem; color:rgba(255,255,255,.38); }
+.portal-avatar-wrap { display:flex; justify-content:center; margin-bottom:1.25rem; }
+.portal-avatar {
+  width:76px; height:76px; border-radius:50%; background:rgba(255,120,0,.1); border:2px solid rgba(255,120,0,.25);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; color:rgba(255,255,255,.35);
+  transition:all .35s; box-shadow:0 0 0 6px rgba(255,120,0,.05);
+}
+.portal-avatar.found { border-color:#ff8c00; color:white; box-shadow:0 0 0 6px rgba(255,120,0,.1), 0 0 24px rgba(255,120,0,.25); }
+.portal-field { position:relative; margin-bottom:.8rem; }
+.portal-field-icon { position:absolute; left:.9rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.28); font-size:.95rem; pointer-events:none; }
+.portal-input {
+  width:100%; padding:.8rem 2.5rem .8rem 2.6rem; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px; color:white; font-size:.95rem; font-weight:600; font-family:inherit; outline:none;
+  transition:border-color .2s, background .2s;
+}
+.portal-input::placeholder { color:rgba(255,255,255,.22); font-weight:400; }
+.portal-input:focus { border-color:rgba(255,140,0,.55); background:rgba(255,255,255,.08); }
+.portal-clear { position:absolute; right:.875rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.22); cursor:pointer; font-size:.85rem; background:none; border:none; font-family:inherit; }
+.autocomplete-box { position:absolute; top:100%; left:0; right:0; z-index:50; background:#0f1e30; border:1px solid rgba(255,120,0,.22); border-radius:0 0 10px 10px; max-height:190px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+.ac-item { padding:.6rem .875rem; cursor:pointer; color:rgba(255,255,255,.75); font-size:.88rem; display:flex; align-items:center; gap:.55rem; transition:background .12s; }
+.ac-item:hover { background:rgba(255,120,0,.1); }
+.ac-init { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:900; color:white; flex-shrink:0; }
+.portal-error { color:#f87171; font-size:.8rem; font-weight:600; display:none; margin-bottom:.5rem; }
+#claveSection { display:none; }
+.portal-btn {
+  width:100%; padding:.9rem; background:linear-gradient(135deg,#ff7800,#ffb800); border:none; border-radius:10px;
+  color:#0a111c; font-size:.95rem; font-weight:900; cursor:pointer; font-family:inherit; letter-spacing:.08em;
+  text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:.5rem;
+  transition:opacity .15s, transform .1s; box-shadow:0 4px 20px rgba(255,120,0,.3);
+}
+.portal-btn:hover { opacity:.9; }
+.portal-btn:active { transform:scale(.98); }
+.portal-btn:disabled { opacity:.4; cursor:not-allowed; }
+.portal-back { width:100%; background:none; border:none; color:rgba(255,255,255,.28); font-size:.8rem; cursor:pointer; margin-top:.75rem; font-family:inherit; }
+.marc-screen, .carga-screen, .success-dk, .solicitud-screen { display:none; }
+.aus-item { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:8px; padding:.65rem .8rem; margin-bottom:.5rem; }
+.aus-item-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.25rem; }
+.aus-item-tipo { font-size:.82rem; font-weight:700; color:white; }
+.aus-item-fechas { font-size:.74rem; color:rgba(255,255,255,.4); }
+.aus-badge { font-size:.68rem; font-weight:800; padding:.15rem .55rem; border-radius:99px; text-transform:uppercase; letter-spacing:.04em; }
+.aus-badge.Pendiente { background:rgba(245,158,11,.15); color:#F59E0B; }
+.aus-badge.Aprobada  { background:rgba(16,185,129,.15); color:#34D399; }
+.aus-badge.Rechazada { background:rgba(239,68,68,.15); color:#F87171; }
+.marc-tipo-badge { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem 1.1rem; border-radius:99px; font-size:.9rem; font-weight:800; }
+.marc-tipo-badge.entrada { background:rgba(16,185,129,.13); color:#34d399; border:1px solid rgba(16,185,129,.28); }
+.marc-tipo-badge.salida  { background:rgba(239,68,68,.13);  color:#f87171; border:1px solid rgba(239,68,68,.28); }
+.gps-row { display:flex; align-items:center; gap:.55rem; padding:.55rem .8rem; border-radius:8px; background:rgba(255,255,255,.04); font-size:.78rem; color:rgba(255,255,255,.4); margin-bottom:1.1rem; }
+.face-row { display:none; flex-direction:column; align-items:center; gap:.5rem; padding:.75rem; border-radius:10px; background:rgba(124,58,237,.08); border:1px solid rgba(124,58,237,.25); margin-bottom:1.1rem; }
+.face-row video { width:160px; height:120px; border-radius:8px; object-fit:cover; background:#000; transform:scaleX(-1); }
+.face-row span { font-size:.76rem; color:rgba(196,181,253,.9); font-weight:600; }
+.gps-dot-d { width:8px; height:8px; border-radius:50%; background:#6b7280; }
+.gps-dot-d.ok { background:#34d399; }
+.gps-dot-d.pulse { animation:gpsPulse 1.2s infinite; }
+@keyframes gpsPulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+.carga-linea { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:10px; padding:.9rem; margin-bottom:.65rem; }
+.carga-linea-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.65rem; }
+.carga-linea-num { font-size:.68rem; font-weight:700; color:rgba(255,120,0,.75); text-transform:uppercase; letter-spacing:.08em; }
+.carga-remove { background:none; border:1px solid rgba(239,68,68,.3); color:#f87171; border-radius:99px; padding:.12rem .5rem; font-size:.7rem; cursor:pointer; font-family:inherit; font-weight:700; }
+.carga-sel { width:100%; padding:.6rem .8rem; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:white; font-family:inherit; font-size:.88rem; outline:none; margin-bottom:.55rem; appearance:none; }
+.carga-sel:focus { border-color:rgba(255,120,0,.45); }
+.carga-sel option { background:#0f1e30; }
+.horas-row { display:flex; align-items:center; gap:.45rem; }
+.h-step { width:34px; height:34px; border-radius:7px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.11); color:white; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:700; transition:background .12s; }
+.h-step:hover { background:rgba(255,120,0,.18); }
+.h-val { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.11); border-radius:7px; color:#ff8c00; font-size:1.1rem; font-weight:900; width:58px; text-align:center; padding:.28rem; font-family:inherit; }
+.h-unit { font-size:.8rem; color:rgba(255,255,255,.35); }
+.carga-total { display:flex; justify-content:space-between; align-items:center; background:rgba(255,120,0,.08); border:1px solid rgba(255,120,0,.18); border-radius:8px; padding:.65rem .875rem; margin-bottom:.875rem; }
+.carga-total-lbl { font-size:.78rem; color:rgba(255,255,255,.45); }
+.carga-total-val { font-size:1.15rem; font-weight:900; color:#ff8c00; }
+.carga-fecha-row { margin-bottom:.875rem; }
+.carga-fecha-row label { display:block; font-size:.72rem; color:rgba(255,255,255,.4); margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.06em; }
+.carga-nota { width:100%; padding:.7rem .8rem; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:white; font-family:inherit; font-size:.85rem; outline:none; margin-top:.6rem; resize:none; }
+.suc-icon { width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.9rem; margin:0 auto 1.1rem; }
+.suc-icon.entrada { background:rgba(16,185,129,.14); }
+.suc-icon.salida  { background:rgba(255,120,0,.14); }
+.suc-row { display:flex; justify-content:space-between; align-items:center; padding:.5rem 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.86rem; }
+.suc-row .lbl { color:rgba(255,255,255,.38); }
+.suc-row .val { font-weight:700; color:rgba(255,255,255,.9); }
+.suc-row:last-child { border-bottom:none; }
+.portal-loading { position:fixed; inset:0; z-index:999; background:rgba(10,17,30,.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:1rem; }
+.portal-spinner { width:46px; height:46px; border:3px solid rgba(255,120,0,.18); border-top-color:#ff8c00; border-radius:50%; animation:spin .8s linear infinite; }
+.portal-loading-txt { color:rgba(255,255,255,.5); font-size:.88rem; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.portal-toast, .toast {
+  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:.7rem 1.4rem;
+  border-radius:99px; font-size:.86rem; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  opacity:0; transition:opacity .3s; pointer-events:none; z-index:9999;
+}
+.portal-toast.show, .toast.show { opacity:1; }
+.portal-toast.error, .toast.error { background:#991b1b; }
+.portal-toast.success, .toast.success { background:#065f46; }
 
-    /* ── Carga horas inline ─────────────────────────────── */
-    .carga-screen { display:none; }
-    .carga-linea {
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
-      border-radius:10px; padding:.9rem; margin-bottom:.65rem;
-    }
-    .carga-linea-header {
-      display:flex; justify-content:space-between; align-items:center; margin-bottom:.65rem;
-    }
-    .carga-linea-num {
-      font-size:.68rem; font-weight:700; color:rgba(255,120,0,.75);
-      text-transform:uppercase; letter-spacing:.08em;
-    }
-    .carga-remove {
-      background:none; border:1px solid rgba(239,68,68,.3); color:#f87171;
-      border-radius:99px; padding:.12rem .5rem;
-      font-size:.7rem; cursor:pointer; font-family:inherit; font-weight:700;
-    }
-    .carga-sel {
-      width:100%; padding:.6rem .8rem;
-      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
-      border-radius:8px; color:white; font-family:inherit; font-size:.88rem;
-      outline:none; margin-bottom:.55rem; appearance:none;
-    }
-    .carga-sel:focus { border-color:rgba(255,120,0,.45); }
-    .carga-sel option { background:#0f1e30; }
-    .horas-row { display:flex; align-items:center; gap:.45rem; }
-    .h-step {
-      width:34px; height:34px; border-radius:7px;
-      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.11);
-      color:white; font-size:1.1rem; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      font-weight:700; transition:background .12s;
-    }
-    .h-step:hover { background:rgba(255,120,0,.18); }
-    .h-val {
-      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.11);
-      border-radius:7px; color:#ff8c00; font-size:1.1rem; font-weight:900;
-      width:58px; text-align:center; padding:.28rem; font-family:inherit;
-    }
-    .h-unit { font-size:.8rem; color:rgba(255,255,255,.35); }
-    .carga-total {
-      display:flex; justify-content:space-between; align-items:center;
-      background:rgba(255,120,0,.08); border:1px solid rgba(255,120,0,.18);
-      border-radius:8px; padding:.65rem .875rem; margin-bottom:.875rem;
-    }
-    .carga-total-lbl { font-size:.78rem; color:rgba(255,255,255,.45); }
-    .carga-total-val { font-size:1.15rem; font-weight:900; color:#ff8c00; }
-
-    /* ── Success screen ─────────────────────────────────── */
-    .success-dk { display:none; }
-    .suc-icon {
-      width:70px; height:70px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.9rem; margin:0 auto 1.1rem;
-    }
-    .suc-icon.entrada { background:rgba(16,185,129,.14); }
-    .suc-icon.salida  { background:rgba(255,120,0,.14); }
-    .suc-row {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:.5rem 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:.86rem;
-    }
-    .suc-row .lbl { color:rgba(255,255,255,.38); }
-    .suc-row .val { font-weight:700; color:rgba(255,255,255,.9); }
-    .suc-row:last-child { border-bottom:none; }
-
-    /* Loading */
-    .portal-loading {
-      position:fixed; inset:0; z-index:999;
-      background:rgba(10,17,30,.82); backdrop-filter:blur(4px);
-      display:none; align-items:center; justify-content:center;
-      flex-direction:column; gap:1rem;
-    }
-    .portal-spinner {
-      width:46px; height:46px; border:3px solid rgba(255,120,0,.18);
-      border-top-color:#ff8c00; border-radius:50%; animation:spin .8s linear infinite;
-    }
-    .portal-loading-txt { color:rgba(255,255,255,.5); font-size:.88rem; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-
-    /* Toast */
-    .portal-toast {
-      position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
-      background:#1e293b; color:white; padding:.7rem 1.4rem;
-      border-radius:99px; font-size:.86rem; font-weight:600;
-      box-shadow:0 8px 24px rgba(0,0,0,.4);
-      opacity:0; transition:opacity .3s; pointer-events:none; z-index:9999;
-    }
-    .portal-toast.show { opacity:1; }
-    .portal-toast.error   { background:#991b1b; }
-    .portal-toast.success { background:#065f46; }
-  </style>
+</style>
 </head>
 <body>
 
 <!-- ════ SPLASH ════ -->
 <div class="splash" id="splash">
-  <div class="splash-logo-wrap">
-    <img src="jvs-icon.png" class="splash-logo-img" alt="JV Systems" />
-  </div>
+  <div class="splash-logo-wrap"><img src="jvs-icon.png" class="splash-logo-img" alt="JV Systems" /></div>
   <h1 class="splash-title">BIENVENIDO</h1>
   <div class="splash-brand">
     <img src="jvs-icon.png" class="splash-brand-logo" alt="" />
@@ -373,181 +266,771 @@
   <div class="splash-progress"></div>
 </div>
 
-<!-- ════ PORTAL ════ -->
+<!-- ════ PORTAL: login único + marcación + carga de horas ════ -->
 <div id="portalWrap" style="display:none; min-height:100vh; position:relative">
-
   <div class="portal-wrap">
-
-    <!-- Panel izquierdo: logo + branding -->
     <div class="portal-left">
       <div class="logo-glow-wrap">
-        <!-- Anillos -->
-        <div class="logo-ring"></div>
-        <div class="logo-ring"></div>
-        <div class="logo-ring"></div>
-        <div class="logo-ring"></div>
-        <!-- Puntos orbitales -->
-        <div class="orbit-dot"></div>
-        <div class="orbit-dot"></div>
-        <!-- Logo -->
-        <div class="logo-img-wrap">
-          <img src="jvs-icon.png" alt="JV Systems" />
-        </div>
+        <div class="logo-ring"></div><div class="logo-ring"></div><div class="logo-ring"></div><div class="logo-ring"></div>
+        <div class="orbit-dot"></div><div class="orbit-dot"></div>
+        <div class="logo-img-wrap"><img src="jvs-icon.png" alt="JV Systems" /></div>
       </div>
       <div class="portal-brand-text">
         <p>Soluciones digitales para tu negocio</p>
-        <strong>Juan Villanueva</strong>
+        <strong id="brandEmpresa">JV Systems</strong>
       </div>
     </div>
 
-    <!-- Panel derecho: card de login -->
     <div class="portal-right">
-      <div class="portal-center">
       <div class="portal-card">
-
-        <!-- Branding -->
         <div class="portal-brand">
           <div class="portal-icon">👷</div>
           <h1 class="portal-title">Mi Actividad <span>Laboral</span></h1>
-          <p class="portal-subtitle">Registrá tu ingreso, salida y horas en proyectos</p>
+          <p class="portal-subtitle">Ingresá para marcar tu horario</p>
         </div>
 
-        <!-- ═══ SCREEN 1: LOGIN ═══ -->
+        <!-- SCREEN 1: LOGIN (único, para empleado o admin) -->
         <div id="loginScreen">
-          <div class="portal-avatar-wrap">
-            <div class="portal-avatar" id="portalAvatar">?</div>
-          </div>
-
+          <div class="portal-avatar-wrap"><div class="portal-avatar" id="portalAvatar">?</div></div>
           <div class="portal-field" id="nameFieldWrap">
             <span class="portal-field-icon">👤</span>
-            <input type="text" class="portal-input" id="empSearch"
-                   placeholder="Buscá tu nombre..."
-                   autocomplete="off"
-                   oninput="onEmpSearch(this.value)"
-                   onfocus="showAutoList()" />
+            <input type="text" class="portal-input" id="empSearch" placeholder="Buscá tu nombre..."
+                   autocomplete="off" oninput="onEmpSearch(this.value)" onfocus="showAutoList()" />
             <button class="portal-clear" onclick="clearEmpSearch()">✕</button>
             <div class="autocomplete-box" id="autoList" style="display:none"></div>
           </div>
-
-          <div id="dniSection">
+          <div id="claveSection">
             <div class="portal-field">
               <span class="portal-field-icon">🔑</span>
-              <input type="password" class="portal-input" id="dniInput"
-                     placeholder="DNI" inputmode="numeric"
-                     onkeydown="if(event.key==='Enter')doLogin()" />
+              <input type="password" class="portal-input" id="dniInput" placeholder="Clave de acceso"
+                     inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()" />
             </div>
-            <div class="portal-error" id="loginError">DNI incorrecto</div>
+            <div class="portal-error" id="loginError">Clave incorrecta</div>
             <button class="portal-btn" onclick="doLogin()">→ INGRESAR</button>
           </div>
-
           <p id="loginHint" style="text-align:center;font-size:.75rem;color:rgba(255,255,255,.22);margin-top:.875rem">
             Buscá tu nombre para continuar
           </p>
+          <p style="text-align:center;font-size:.72rem;margin-top:.6rem">
+            <a href="../control/" style="color:rgba(255,255,255,.2);text-decoration:none">Panel de administración →</a>
+          </p>
         </div>
 
-        <!-- ═══ SCREEN 2: MARCACIÓN ═══ -->
+        <!-- SCREEN 2: MARCACIÓN -->
         <div class="marc-screen" id="marcScreen">
           <div style="text-align:center;margin-bottom:1.1rem">
-            <div class="portal-avatar found" id="marcAvatar"
-                 style="width:64px;height:64px;font-size:1.1rem;margin:0 auto .65rem"></div>
-            <div style="font-size:1.05rem;font-weight:800;color:white;margin-bottom:.5rem"
-                 id="marcNombre">—</div>
+            <div class="portal-avatar found" id="marcAvatar" style="width:64px;height:64px;font-size:1.1rem;margin:0 auto .65rem"></div>
+            <div style="font-size:1.05rem;font-weight:800;color:white;margin-bottom:.5rem" id="marcNombre">—</div>
             <span id="marcBadge" class="marc-tipo-badge entrada">🟢 Registrando Entrada</span>
           </div>
           <div class="gps-row" id="gpsRow">
             <div class="gps-dot-d pulse" id="gpsDot"></div>
             <span id="gpsText">Obteniendo ubicación...</span>
           </div>
-          <button class="portal-btn" id="marcBtn" onclick="submitMarcacion()">
-            ⏱ Registrar marcación
-          </button>
+          <div class="face-row" id="faceRow">
+            <video id="faceVideo" autoplay muted playsinline></video>
+            <span id="faceStatus">Verificando...</span>
+          </div>
+          <button class="portal-btn" id="marcBtn" onclick="submitMarcacion()">⏱ Registrar marcación</button>
+          <button class="portal-back" onclick="irASolicitud()" style="color:rgba(124,58,237,.75)">🌴 Solicitar licencia / vacaciones</button>
           <button class="portal-back" onclick="volverLogin()">← Volver</button>
         </div>
 
-        <!-- ═══ SCREEN 3: CARGA HORAS (solo si Salida) ═══ -->
+        <!-- SCREEN 3: CARGA DE HORAS (solo tras Salida) -->
         <div class="carga-screen" id="cargaScreen">
           <div style="text-align:center;margin-bottom:1.25rem">
             <div style="font-size:2rem;margin-bottom:.4rem">📋</div>
             <div style="font-size:1rem;font-weight:800;color:white">¿En qué trabajaste hoy?</div>
-            <div style="font-size:.77rem;color:rgba(255,255,255,.35);margin-top:.2rem">
-              Informá las horas por orden de trabajo
+            <div style="font-size:.77rem;color:rgba(255,255,255,.35);margin-top:.2rem" id="cargaSubtitulo">
+              Informá las horas trabajadas
             </div>
           </div>
-          <div id="cargaLineas"></div>
-          <button style="width:100%;background:rgba(255,255,255,.04);
-                         border:1px dashed rgba(255,120,0,.28); color:rgba(255,120,0,.75);
-                         border-radius:8px; padding:.6rem; cursor:pointer;
-                         font-family:inherit; font-size:.83rem; margin-bottom:.75rem"
-                  onclick="addCargaLinea()">＋ Agregar otra OT</button>
-          <!-- Horas requeridas (igual a jornada trabajada) -->
-          <div style="display:flex;justify-content:space-between;align-items:center;
-                      padding:.5rem .875rem;background:rgba(255,255,255,.04);
-                      border-radius:8px;margin-bottom:.65rem;font-size:.8rem">
+
+          <div class="carga-fecha-row">
+            <label>Fecha</label>
+            <input type="date" class="carga-sel" id="cargaFecha" style="margin-bottom:0" />
+          </div>
+
+          <!-- Variante con Orden de Trabajo (CONFIG.HABILITAR_OT = true) -->
+          <div id="cargaOT">
+            <div id="cargaLineas"></div>
+            <button style="width:100%;background:rgba(255,255,255,.04);border:1px dashed rgba(255,120,0,.28);
+                           color:rgba(255,120,0,.75);border-radius:8px;padding:.6rem;cursor:pointer;
+                           font-family:inherit;font-size:.83rem;margin-bottom:.75rem"
+                    onclick="addCargaLinea()">＋ Agregar otra OT</button>
+          </div>
+
+          <!-- Variante simple (CONFIG.HABILITAR_OT = false) -->
+          <div id="cargaSimple">
+            <div class="horas-row" style="justify-content:center;margin-bottom:.6rem">
+              <button class="h-step" onclick="stepHorasSimple(-0.5)">−</button>
+              <input class="h-val" type="number" id="horasSimpleInput" value="8" min="0.5" max="24" step="0.5" oninput="updateCargaTotalSimple()">
+              <button class="h-step" onclick="stepHorasSimple(0.5)">+</button>
+              <span class="h-unit">horas trabajadas</span>
+            </div>
+            <textarea class="carga-nota" id="notaSimpleInput" rows="2" placeholder="Nota (opcional)"></textarea>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem .875rem;
+                      background:rgba(255,255,255,.04);border-radius:8px;margin:.65rem 0;font-size:.8rem">
             <span style="color:rgba(255,255,255,.4)">⏱ Horas trabajadas hoy</span>
             <span style="font-weight:800;color:rgba(255,255,255,.7)" id="horasReqVal">—</span>
           </div>
 
-          <!-- Validación diferencia -->
-          <div id="horasValidacion"
-               style="display:none;padding:.55rem .875rem;border-radius:8px;
-                      border:1px solid;margin-bottom:.65rem;align-items:center">
-          </div>
+          <div id="horasValidacion" style="display:none;padding:.55rem .875rem;border-radius:8px;border:1px solid;margin-bottom:.65rem;align-items:center"></div>
 
           <div class="carga-total">
             <span class="carga-total-lbl">Total horas cargadas</span>
             <span class="carga-total-val" id="cargaTotalVal">0.0 h</span>
           </div>
-          <button class="portal-btn" id="cargaBtn" onclick="submitCarga()">✅ Confirmar y finalizar</button>
+          <button class="portal-btn" id="cargaBtn" onclick="submitCargaUnificada()">✅ Confirmar y finalizar</button>
           <button class="portal-back" onclick="skipCarga()">Omitir carga de horas →</button>
         </div>
 
-        <!-- ═══ SCREEN 4: SUCCESS ═══ -->
+        <!-- SCREEN 4: SUCCESS -->
         <div class="success-dk" id="successScreen">
           <div style="text-align:center;margin-bottom:1.25rem">
             <div class="suc-icon entrada" id="sucIcon">✅</div>
-            <div style="font-size:1.25rem;font-weight:900;color:white;margin-bottom:.2rem"
-                 id="sucTitle">¡Marcación registrada!</div>
-            <div style="font-size:.78rem;color:rgba(255,255,255,.35)" id="sucSub">
-              Guardado en el sistema
-            </div>
+            <div style="font-size:1.25rem;font-weight:900;color:white;margin-bottom:.2rem" id="sucTitle">¡Marcación registrada!</div>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.35)" id="sucSub">Guardado en el sistema</div>
           </div>
-          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:1rem;margin-bottom:1.25rem"
-               id="sucDetails"></div>
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:1rem;margin-bottom:1.25rem" id="sucDetails"></div>
           <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin-bottom:1.1rem">
             <img src="jvs-icon.png" style="width:18px;height:18px;border-radius:4px" alt="" />
             <span style="font-size:.68rem;color:rgba(255,255,255,.2);font-weight:600;letter-spacing:.07em">JV SYSTEMS</span>
           </div>
           <button class="portal-btn" onclick="resetPortal()">← Nueva marcación</button>
+          <button class="portal-back" onclick="irASolicitud()" style="color:rgba(124,58,237,.75)">🌴 Mis solicitudes de licencia</button>
         </div>
 
-      </div><!-- /portal-card -->
-      </div><!-- /portal-center -->
-    </div><!-- /portal-right -->
-  </div><!-- /portal-wrap -->
+        <!-- SCREEN 5: MIS SOLICITUDES (ausentismo, empleado) -->
+        <div class="solicitud-screen" id="solicitudScreen">
+          <div style="text-align:center;margin-bottom:1.1rem">
+            <div style="font-size:2rem;margin-bottom:.4rem">🌴</div>
+            <div style="font-size:1rem;font-weight:800;color:white">Mis Solicitudes</div>
+            <div style="font-size:.77rem;color:rgba(255,255,255,.35);margin-top:.2rem">Pedí una licencia o vacaciones</div>
+          </div>
 
-</div><!-- /portalWrap -->
+          <select class="carga-sel" id="ausTipoInput">
+            <option value="Vacaciones">Vacaciones</option>
+            <option value="Enfermedad">Enfermedad</option>
+            <option value="Otro">Otro</option>
+          </select>
+          <div class="carga-fecha-row"><label>Desde</label><input type="date" class="carga-sel" id="ausDesdeInput" style="margin-bottom:0" /></div>
+          <div class="carga-fecha-row" style="margin-top:.6rem"><label>Hasta</label><input type="date" class="carga-sel" id="ausHastaInput" style="margin-bottom:0" /></div>
+          <textarea class="carga-nota" id="ausMotivoInput" rows="2" placeholder="Motivo (opcional)" style="margin:.6rem 0 .875rem;width:100%"></textarea>
 
-<!-- Loading -->
-<div class="portal-loading" id="portalLoading">
-  <div class="portal-spinner"></div>
-  <div class="portal-loading-txt" id="loadingTxt">Procesando...</div>
+          <button class="portal-btn" onclick="submitSolicitudAusencia()">📩 Enviar solicitud</button>
+          <button class="portal-back" onclick="volverDesdeSolicitud()">← Volver</button>
+
+          <div style="margin-top:1.25rem">
+            <div style="font-size:.72rem;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem">Solicitudes anteriores</div>
+            <div id="misAusenciasLista"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Loading / toasts -->
+<div class="portal-loading" id="portalLoading"><div class="portal-spinner"></div><div class="portal-loading-txt" id="loadingTxt">Procesando...</div></div>
 <div class="portal-toast" id="portalToast"></div>
 
+<script src="js/face-api/face-api.min.js"></script>
 <script>
-  window.addEventListener('DOMContentLoaded', () => {
+/* =============================================================
+   CONFIG — editá esto para adaptar el sistema a otra empresa
+   ============================================================= */
+const CONFIG = {
+  EMPRESA:      'AFG Ingeniería',
+  SCRIPT_URL:   'https://script.google.com/macros/s/AKfycbzk9Sc7b6MZp0iV00O5DsSa53yAySzER8MzuMx4iouFOkL9B4nVJH3t--z1GwPTAKVd/exec',
+  HABILITAR_OT: true,   // true = carga de horas por Orden de Trabajo (AFG). false = solo horas totales por día.
+  JORNADA_NORMAL_H: 9,
+  GEOLOCALIZACION: true,
+  // Verificación extra por cámara al marcar (no bloquea si falla). Guarda un descriptor
+  // facial por empleado (dato biométrico/sensible) — antes de activarlo en un cliente
+  // nuevo, confirmá que pida el consentimiento correspondiente según su legislación local.
+  RECONOCIMIENTO_FACIAL: true,
+};
+
+/* ── Estado global ─────────────────────────────────────────── */
+let empleados       = [];
+let selectedEmp      = null;
+let session          = null;   // { nombre, pass, rol }
+let isDemo           = false;
+let gpsCoords        = null;
+let marcTipo         = null;
+let entradaHora      = null;
+let horasRequeridas  = 0;
+let marcFecha        = null;
+let marcHora         = null;
+let proyectos        = [];
+let cargaLineas      = [];
+let cargaCounter     = 0;
+let ultimoVerificado = '';
+let faceModelsLoaded = false;
+
+const DEMO_EMPLEADO = 'Demo Empleado';
+const DEMO_PASS     = '1234';
+
+const AVATAR_COLORS = ['#3B82F6','#8B5CF6','#EC4899','#10B981','#F59E0B','#EF4444','#06B6D4','#84CC16','#F97316','#6366F1'];
+const empColorMap = {};
+function empColor(name) {
+  if (!empColorMap[name]) empColorMap[name] = AVATAR_COLORS[Object.keys(empColorMap).length % AVATAR_COLORS.length];
+  return empColorMap[name];
+}
+function empInitials(name) {
+  const p = (name||'').trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : (name||'?').substring(0,2).toUpperCase();
+}
+function esc(s) { return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rnd1(n) { return Math.round(n*10)/10; }
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+function daysAgoISO(n) { const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function isoToDMY(iso) { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+
+/** Etiqueta corta de dispositivo/navegador a partir del User-Agent, para saber desde dónde se marcó. */
+function deviceLabel() {
+  const ua = navigator.userAgent || '';
+  let so = 'Desktop';
+  if (/iphone/i.test(ua)) so = 'iPhone';
+  else if (/ipad/i.test(ua)) so = 'iPad';
+  else if (/android/i.test(ua)) so = 'Android';
+  else if (/macintosh/i.test(ua)) so = 'Mac';
+  else if (/windows/i.test(ua)) so = 'Windows';
+  else if (/linux/i.test(ua)) so = 'Linux';
+  let nav = 'Navegador';
+  if (/edg\//i.test(ua)) nav = 'Edge';
+  else if (/chrome\//i.test(ua) && !/edg\//i.test(ua)) nav = 'Chrome';
+  else if (/crios\//i.test(ua)) nav = 'Chrome';
+  else if (/firefox\//i.test(ua)) nav = 'Firefox';
+  else if (/safari\//i.test(ua) && !/chrome\//i.test(ua)) nav = 'Safari';
+  return `${so} · ${nav}`;
+}
+
+/* ── Init ──────────────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('brandEmpresa').textContent = CONFIG.EMPRESA;
+  document.getElementById('cargaOT').style.display     = CONFIG.HABILITAR_OT ? '' : 'none';
+  document.getElementById('cargaSimple').style.display = CONFIG.HABILITAR_OT ? 'none' : '';
+  document.getElementById('cargaFecha').value = todayISO();
+
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    s.classList.add('hiding');
     setTimeout(() => {
-      const s = document.getElementById('splash');
-      s.classList.add('hiding');
-      setTimeout(() => {
-        s.style.display = 'none';
-        document.getElementById('portalWrap').style.display = 'block';
-      }, 600);
-    }, 2200);
+      s.style.display = 'none';
+      document.getElementById('portalWrap').style.display = 'block';
+    }, 600);
+  }, 2200);
+
+  loadEmpleados();
+  if (CONFIG.HABILITAR_OT) loadProyectos();
+  if (CONFIG.GEOLOCALIZACION) requestGPS();
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#nameFieldWrap')) document.getElementById('autoList').style.display = 'none';
   });
+});
+
+async function loadEmpleados() {
+  empleados = [DEMO_EMPLEADO];
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=empleados`);
+    const d = await r.json();
+    if (d.success) empleados = [...new Set([...empleados, ...d.empleados])];
+  } catch {}
+}
+async function loadProyectos() {
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=proyectos`);
+    const d = await r.json();
+    if (d.success) proyectos = d.proyectos;
+  } catch {}
+}
+
+/* ── GPS ───────────────────────────────────────────────────── */
+function requestGPS() {
+  setGPS('pulse','Obteniendo ubicación...');
+  if (!navigator.geolocation) { setGPS('err','GPS no disponible'); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => { gpsCoords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) }; setGPS('ok', `Ubicación obtenida (±${Math.round(pos.coords.accuracy)}m)`); },
+    () => setGPS('err','Sin GPS — se registra sin ubicación'),
+    { timeout: 15000, maximumAge: 60000, enableHighAccuracy: true }
+  );
+}
+function setGPS(state, text) {
+  const dot = document.getElementById('gpsDot'); const txt = document.getElementById('gpsText');
+  if (dot) dot.className = `gps-dot-d${state==='ok'?' ok':state==='pulse'?' pulse':''}`;
+  if (txt) txt.textContent = text;
+}
+
+/* ── Autocomplete de nombre ───────────────────────────────────*/
+function onEmpSearch(val) {
+  const q = val.trim().toLowerCase();
+  const list = document.getElementById('autoList');
+  if (!q) { list.style.display='none'; return; }
+  const matches = empleados.filter(e => e.toLowerCase().includes(q)).slice(0,7);
+  if (!matches.length) { list.style.display='none'; return; }
+  list.innerHTML = matches.map(e =>
+    `<div class="ac-item" onclick="selectEmp('${e.replace(/'/g,"\\'")}')">
+       <div class="ac-init" style="background:${empColor(e)}">${empInitials(e)}</div>${e}
+     </div>`).join('');
+  list.style.display = 'block';
+}
+function showAutoList() { onEmpSearch(document.getElementById('empSearch').value); }
+function selectEmp(name) {
+  selectedEmp = name;
+  document.getElementById('empSearch').value = name;
+  document.getElementById('autoList').style.display = 'none';
+  const av = document.getElementById('portalAvatar');
+  av.style.background = empColor(name); av.textContent = empInitials(name); av.classList.add('found');
+  document.getElementById('claveSection').style.display = 'block';
+  document.getElementById('loginHint').style.display  = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  setTimeout(() => document.getElementById('dniInput').focus(), 80);
+}
+function clearEmpSearch() {
+  document.getElementById('empSearch').value = '';
+  document.getElementById('autoList').style.display = 'none';
+  document.getElementById('claveSection').style.display = 'none';
+  document.getElementById('loginHint').style.display  = 'block';
+  selectedEmp = null;
+  const av = document.getElementById('portalAvatar');
+  av.style.background=''; av.textContent='?'; av.classList.remove('found');
+}
+
+/* ── Login unificado (empleado o admin) ──────────────────────*/
+async function doLogin() {
+  const clave = document.getElementById('dniInput').value.trim();
+  const errEl = document.getElementById('loginError');
+  if (!selectedEmp) { showPortalToast('Seleccioná tu nombre primero','error'); return; }
+  if (!clave)       { errEl.textContent='Ingresá tu clave'; errEl.style.display='block'; return; }
+  errEl.style.display = 'none';
+
+  if (selectedEmp === DEMO_EMPLEADO && clave === DEMO_PASS) {
+    isDemo = true; session = { nombre: selectedEmp, pass: clave, rol: 'Empleado' };
+    showPortalLoading('Verificando...'); await sleep(600); hidePortalLoading();
+    marcTipo = 'Entrada'; entradaHora = null;
+    goToMarcScreen();
+    return;
+  }
+
+  showPortalLoading('Verificando...');
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=login&empleado=${encodeURIComponent(selectedEmp)}&pass=${encodeURIComponent(clave)}`);
+    const d = await r.json();
+    if (!d.success) {
+      hidePortalLoading();
+      errEl.textContent = d.error || 'Clave incorrecta'; errEl.style.display='block';
+      document.getElementById('dniInput').value=''; document.getElementById('dniInput').focus();
+      return;
+    }
+    isDemo = false;
+    session = { nombre: d.nombre || selectedEmp, pass: clave, rol: d.rol || 'Empleado' };
+    const tr = await fetch(`${CONFIG.SCRIPT_URL}?action=tipoSugerido&empleado=${encodeURIComponent(selectedEmp)}`);
+    const td = await tr.json();
+    hidePortalLoading();
+    marcTipo = td.tipo || 'Entrada'; entradaHora = td.ultimaEntrada || null;
+    goToMarcScreen();
+  } catch { hidePortalLoading(); showPortalToast('Error de conexión','error'); }
+}
+
+/* ── Pantalla marcación ───────────────────────────────────────*/
+function goToMarcScreen() {
+  showScreen('marcScreen');
+  const av = document.getElementById('marcAvatar');
+  av.style.background = empColor(selectedEmp); av.textContent = empInitials(selectedEmp);
+  document.getElementById('marcNombre').textContent = selectedEmp;
+  const isEnt = marcTipo === 'Entrada';
+  const badge = document.getElementById('marcBadge');
+  badge.textContent = isEnt ? '🟢 Registrando Entrada' : '🔴 Registrando Salida';
+  badge.className   = `marc-tipo-badge ${isEnt ? 'entrada' : 'salida'}`;
+  document.getElementById('marcBtn').disabled = false;
+}
+function volverLogin() { showScreen('loginScreen'); document.getElementById('dniInput').value = ''; }
+
+/* ── Reconocimiento facial (verificación extra, nunca bloquea) ─*/
+async function ensureModelsLoaded() {
+  if (faceModelsLoaded) return;
+  const base = 'js/face-api/weights';
+  await Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri(base),
+    faceapi.nets.faceLandmark68Net.loadFromUri(base),
+    faceapi.nets.faceRecognitionNet.loadFromUri(base),
+  ]);
+  faceModelsLoaded = true;
+}
+
+async function intentarVerificacionFacial() {
+  if (!CONFIG.RECONOCIMIENTO_FACIAL) return '';
+  const faceRow = document.getElementById('faceRow');
+  const faceStatus = document.getElementById('faceStatus');
+  const video = document.getElementById('faceVideo');
+  let stream = null;
+  faceRow.style.display = 'flex';
+  faceStatus.textContent = 'Activando cámara...';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width:240, height:180 }, audio:false });
+    video.srcObject = stream;
+    await new Promise(r => { video.onloadedmetadata = r; });
+    faceStatus.textContent = 'Cargando modelo...';
+    await ensureModelsLoaded();
+    faceStatus.textContent = 'Detectando rostro...';
+    await sleep(700); // deja que la cámara enfoque
+    const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                             .withFaceLandmarks().withFaceDescriptor();
+    stream.getTracks().forEach(t => t.stop());
+    faceRow.style.display = 'none';
+    if (!det) return 'Sin rostro';
+
+    const descriptorNuevo = Array.from(det.descriptor);
+    if (isDemo) return 'Enrolado';
+
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=getRostro&empleado=${encodeURIComponent(selectedEmp)}`);
+    const d = await r.json();
+    if (!d.success || !d.descriptor) {
+      await fetch(`${CONFIG.SCRIPT_URL}?action=guardarRostro&empleado=${encodeURIComponent(selectedEmp)}&descriptor=${encodeURIComponent(JSON.stringify(descriptorNuevo))}`);
+      return 'Enrolado';
+    }
+    const distancia = faceapi.euclideanDistance(d.descriptor, descriptorNuevo);
+    return distancia <= 0.6 ? 'Verificado' : 'No coincide';
+  } catch (e) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    faceRow.style.display = 'none';
+    return 'Sin cámara';
+  }
+}
+
+async function submitMarcacion() {
+  document.getElementById('marcBtn').disabled = true;
+  ultimoVerificado = await intentarVerificacionFacial();
+  showPortalLoading('Registrando marcación...');
+
+  if (isDemo) {
+    await sleep(500); hidePortalLoading();
+    const now = new Date();
+    marcFecha = isoToDMY(todayISO());
+    marcHora  = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':00';
+    if (marcTipo === 'Salida') { calcularHorasRequeridas(marcHora); goToCargaScreen(); }
+    else goToSuccessScreen(false);
+    return;
+  }
+
+  try {
+    const res  = await fetch(`${CONFIG.SCRIPT_URL}?action=marcar&empleado=${encodeURIComponent(selectedEmp)}&tipo=${marcTipo}&lat=${gpsCoords?.lat||''}&lng=${gpsCoords?.lng||''}&verificado=${encodeURIComponent(ultimoVerificado)}&dispositivo=${encodeURIComponent(deviceLabel())}`);
+    const data = await res.json();
+    hidePortalLoading();
+    if (data.success) {
+      marcFecha = data.fecha; marcHora = data.hora;
+      if (marcTipo === 'Salida') { calcularHorasRequeridas(data.hora); goToCargaScreen(); }
+      else goToSuccessScreen(false);
+    } else {
+      showPortalToast(data.error || 'Error al registrar','error');
+      document.getElementById('marcBtn').disabled = false;
+    }
+  } catch {
+    hidePortalLoading(); showPortalToast('Error de conexión','error');
+    document.getElementById('marcBtn').disabled = false;
+  }
+}
+
+function calcularHorasRequeridas(horaSalida) {
+  if (!entradaHora) { horasRequeridas = 0; return; }
+  const toMin = t => { const p=(t||'').split(':').map(Number); return (p[0]||0)*60+(p[1]||0); };
+  const diffMin = toMin(horaSalida) - toMin(entradaHora);
+  horasRequeridas = diffMin > 0 ? Math.round(diffMin/60*2)/2 : 0;
+}
+
+/* ── Pantalla carga de horas (OT o simple, según CONFIG) ──────*/
+function goToCargaScreen() {
+  showScreen('cargaScreen');
+  document.getElementById('cargaFecha').value = todayISO();
+  const reqEl = document.getElementById('horasReqVal');
+  if (reqEl) reqEl.textContent = horasRequeridas > 0 ? `${horasRequeridas} h` : '—';
+
+  if (CONFIG.HABILITAR_OT) {
+    cargaLineas = []; cargaCounter = 0;
+    document.getElementById('cargaLineas').innerHTML = '';
+    addCargaLinea();
+    updateCargaTotal();
+  } else {
+    document.getElementById('horasSimpleInput').value = horasRequeridas > 0 ? horasRequeridas : 8;
+    document.getElementById('notaSimpleInput').value = '';
+    updateCargaTotalSimple();
+  }
+}
+
+/* — Variante OT — */
+function addCargaLinea() {
+  cargaCounter++;
+  const id = `cl${cargaCounter}`;
+  const hDef = horasRequeridas > 0 ? horasRequeridas : 8;
+  cargaLineas.push({ id, ot:'', nombreOt:'', item:'', horas: hDef });
+
+  const otOpts = proyectos.map(p =>
+    `<option value="${esc(p['Número OT'])}" data-nombre="${esc(p['Nombre'])}">OT ${esc(p['Número OT'])} — ${esc(p['Nombre'])}</option>`).join('');
+
+  const div = document.createElement('div');
+  div.className = 'carga-linea'; div.id = id;
+  div.innerHTML = `
+    <div class="carga-linea-header">
+      <span class="carga-linea-num">Línea ${cargaCounter}</span>
+      <button class="carga-remove" id="${id}_rem" onclick="removeCargaLinea('${id}')">✕</button>
+    </div>
+    <select class="carga-sel" id="${id}_ot" onchange="onOTChange('${id}')">
+      <option value="">— Seleccioná OT / Proyecto —</option>${otOpts}
+    </select>
+    <select class="carga-sel" id="${id}_item" disabled onchange="onItemChange('${id}')">
+      <option value="">Primero seleccioná una OT</option>
+    </select>
+    <div class="horas-row" style="margin-top:.5rem">
+      <button class="h-step" onclick="stepHoras('${id}',-0.5)">−</button>
+      <input class="h-val" type="number" id="${id}_hs" value="${hDef}" min="0.5" max="24" step="0.5" oninput="onHorasChange('${id}')">
+      <button class="h-step" onclick="stepHoras('${id}',0.5)">+</button>
+      <span class="h-unit">horas</span>
+    </div>`;
+  document.getElementById('cargaLineas').appendChild(div);
+  updateRemoveBtns(); updateCargaTotal();
+}
+function removeCargaLinea(id) {
+  cargaLineas = cargaLineas.filter(l => l.id !== id);
+  document.getElementById(id)?.remove();
+  updateRemoveBtns(); updateCargaTotal();
+}
+function updateRemoveBtns() {
+  document.querySelectorAll('[id$="_rem"]').forEach(b => { b.style.display = cargaLineas.length > 1 ? '' : 'none'; });
+}
+async function onOTChange(id) {
+  const sel = document.getElementById(`${id}_ot`);
+  const itemSel = document.getElementById(`${id}_item`);
+  const lin = cargaLineas.find(l => l.id === id);
+  const ot = sel.value;
+  if (!ot) { itemSel.innerHTML='<option>Primero seleccioná una OT</option>'; itemSel.disabled=true; if(lin){lin.ot='';lin.item='';} return; }
+  const nombre = sel.options[sel.selectedIndex].dataset.nombre || '';
+  if (lin) { lin.ot=ot; lin.nombreOt=nombre; lin.item=''; }
+  itemSel.innerHTML = '<option>Cargando...</option>'; itemSel.disabled = true;
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=items&ot=${encodeURIComponent(ot)}`);
+    const d = await r.json();
+    if (d.success && d.items.length > 0) {
+      itemSel.innerHTML = '<option value="">— Seleccioná una tarea —</option>' +
+        d.items.map(it => `<option value="${esc(it['Código'])}">${esc(it['Código'])} — ${esc(it['Descripción'])}</option>`).join('');
+      itemSel.disabled = false;
+    } else { itemSel.innerHTML='<option value="General">General</option>'; itemSel.disabled=false; if(lin)lin.item='General'; }
+  } catch { itemSel.innerHTML='<option value="General">General</option>'; itemSel.disabled=false; }
+}
+function onItemChange(id) { const l=cargaLineas.find(l=>l.id===id); if(l) l.item=document.getElementById(`${id}_item`).value; }
+function stepHoras(id, delta) {
+  const inp = document.getElementById(`${id}_hs`);
+  inp.value = Math.max(0.5, Math.min(24, Math.round((parseFloat(inp.value||0)+delta)*2)/2));
+  onHorasChange(id);
+}
+function onHorasChange(id) {
+  const l = cargaLineas.find(l=>l.id===id);
+  if (l) l.horas = parseFloat(document.getElementById(`${id}_hs`).value)||0;
+  updateCargaTotal();
+}
+function updateCargaTotal() {
+  const total = rnd1(cargaLineas.reduce((s,l)=>s+(l.horas||0),0));
+  document.getElementById('cargaTotalVal').textContent = total + ' h';
+  updateValidacion(total);
+}
+
+/* — Variante simple — */
+function stepHorasSimple(delta) {
+  const inp = document.getElementById('horasSimpleInput');
+  inp.value = Math.max(0.5, Math.min(24, Math.round((parseFloat(inp.value||0)+delta)*2)/2));
+  updateCargaTotalSimple();
+}
+function updateCargaTotalSimple() {
+  const total = rnd1(parseFloat(document.getElementById('horasSimpleInput').value)||0);
+  document.getElementById('cargaTotalVal').textContent = total + ' h';
+  updateValidacion(total);
+}
+
+function updateValidacion(totalCargado) {
+  const el = document.getElementById('horasValidacion');
+  if (!el || horasRequeridas <= 0) { if(el) el.style.display='none'; return; }
+  if (totalCargado === 0) { el.style.display='none'; return; }
+  const diff = Math.abs(totalCargado - horasRequeridas);
+  const ok = diff <= 0.5;
+  el.style.display = 'flex';
+  el.style.background  = ok ? 'rgba(16,185,129,.1)'  : 'rgba(239,68,68,.08)';
+  el.style.borderColor = ok ? 'rgba(16,185,129,.28)' : 'rgba(239,68,68,.25)';
+  el.innerHTML = ok
+    ? `<span style="color:#34d399;font-size:.8rem">✅ Horas correctas — coincide con las ${horasRequeridas}h trabajadas</span>`
+    : `<span style="color:#f87171;font-size:.8rem">⚠️ Diferencia de ${rnd1(Math.abs(totalCargado-horasRequeridas))}h respecto a las ${horasRequeridas}h trabajadas</span>`;
+}
+
+async function submitCargaUnificada() {
+  if (CONFIG.HABILITAR_OT) await submitCarga();
+  else await submitCargaSimple();
+}
+
+async function submitCarga() {
+  const validas = cargaLineas.filter(l => l.ot && l.horas > 0);
+  if (!validas.length) { showPortalToast('Seleccioná al menos una OT','error'); return; }
+  const total = rnd1(validas.reduce((s,l)=>s+l.horas,0));
+  if (horasRequeridas > 0 && Math.abs(total - horasRequeridas) > 0.5) {
+    if (!confirm(`Las horas cargadas (${total}h) no coinciden con las horas trabajadas (${horasRequeridas}h).\nDiferencia: ${rnd1(Math.abs(total-horasRequeridas))}h\n\n¿Enviás igual?`)) return;
+  }
+  const fecha = isoToDMY(document.getElementById('cargaFecha').value) || marcFecha;
+  if (isDemo) { showPortalLoading('Guardando horas...'); await sleep(500); hidePortalLoading(); goToSuccessScreen(true); return; }
+  showPortalLoading('Guardando horas...');
+  let allOk = true;
+  for (const lin of validas) {
+    try {
+      const p = new URLSearchParams({ empleado:selectedEmp, ot:lin.ot, nombreOt:lin.nombreOt, item:lin.item||'General', horas:lin.horas, fecha });
+      const r = await fetch(`${CONFIG.SCRIPT_URL}?action=cargarHoras&${p}`);
+      const d = await r.json();
+      if (!d.success) allOk = false;
+    } catch { allOk = false; }
+  }
+  hidePortalLoading();
+  if (allOk) goToSuccessScreen(true); else showPortalToast('Error al guardar algunas horas','error');
+}
+
+async function submitCargaSimple() {
+  const horas = parseFloat(document.getElementById('horasSimpleInput').value) || 0;
+  if (horas <= 0) { showPortalToast('Ingresá las horas trabajadas','error'); return; }
+  if (horasRequeridas > 0 && Math.abs(horas - horasRequeridas) > 0.5) {
+    if (!confirm(`Las horas cargadas (${horas}h) no coinciden con las horas trabajadas (${horasRequeridas}h).\nDiferencia: ${rnd1(Math.abs(horas-horasRequeridas))}h\n\n¿Enviás igual?`)) return;
+  }
+  const fecha = isoToDMY(document.getElementById('cargaFecha').value) || marcFecha;
+  const nota  = document.getElementById('notaSimpleInput').value.trim();
+  cargaLineas = [{ id:'simple', ot:'', nombreOt:'', item:'', horas }]; // para mostrar el total en success screen
+
+  if (isDemo) { showPortalLoading('Guardando horas...'); await sleep(500); hidePortalLoading(); goToSuccessScreen(true); return; }
+  showPortalLoading('Guardando horas...');
+  try {
+    const p = new URLSearchParams({ empleado:selectedEmp, fecha, horas, nota });
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=cargarHorasDiarias&${p}`);
+    const d = await r.json();
+    hidePortalLoading();
+    if (d.success) goToSuccessScreen(true); else showPortalToast(d.error || 'Error al guardar horas','error');
+  } catch { hidePortalLoading(); showPortalToast('Error de conexión','error'); }
+}
+
+function skipCarga() { goToSuccessScreen(false); }
+
+/* ── Success ───────────────────────────────────────────────── */
+function goToSuccessScreen(conHoras) {
+  showScreen('successScreen');
+  const isEnt = marcTipo === 'Entrada';
+  const icon = document.getElementById('sucIcon');
+  icon.textContent = isEnt ? '✅' : '👋';
+  icon.className   = `suc-icon ${isEnt ? 'entrada' : 'salida'}`;
+  document.getElementById('sucTitle').textContent = isEnt ? '¡Bienvenido! Entrada registrada' : '¡Hasta luego! Salida registrada';
+  document.getElementById('sucSub').textContent   = conHoras ? 'Marcación y horas guardadas' : 'Marcación guardada correctamente';
+  const totalCarg = rnd1(cargaLineas.reduce((s,l)=>s+(l.horas||0),0));
+  const verifLabel = {
+    'Verificado':  '✅ Verificado',
+    'No coincide': '⚠️ No coincide (a revisar)',
+    'Enrolado':    '🆕 Primera vez registrada',
+    'Sin rostro':  '➖ No se detectó rostro',
+    'Sin cámara':  '➖ Sin cámara',
+  }[ultimoVerificado];
+  document.getElementById('sucDetails').innerHTML = `
+    <div class="suc-row"><span class="lbl">Empleado</span><span class="val">${esc(selectedEmp)}</span></div>
+    <div class="suc-row"><span class="lbl">Tipo</span><span class="val">${marcTipo}</span></div>
+    <div class="suc-row"><span class="lbl">Fecha</span><span class="val">${marcFecha||'—'}</span></div>
+    <div class="suc-row"><span class="lbl">Hora</span><span class="val">${marcHora||'—'}</span></div>
+    ${verifLabel?`<div class="suc-row"><span class="lbl">Identidad</span><span class="val">${verifLabel}</span></div>`:''}
+    ${!isEnt&&totalCarg>0?`<div class="suc-row"><span class="lbl">Horas imputadas</span><span class="val" style="color:#ff8c00">${totalCarg}h</span></div>`:''}
+    ${gpsCoords?`<div class="suc-row"><span class="lbl">GPS</span><span class="val" style="font-size:.76rem">${gpsCoords.lat}, ${gpsCoords.lng}</span></div>`:''}`;
+}
+
+function resetPortal() {
+  selectedEmp=null; gpsCoords=null; marcTipo=null; entradaHora=null; session=null; isDemo=false;
+  horasRequeridas=0; marcFecha=null; marcHora=null; cargaLineas=[]; cargaCounter=0; ultimoVerificado='';
+  document.getElementById('empSearch').value=''; document.getElementById('dniInput').value='';
+  document.getElementById('claveSection').style.display='none';
+  document.getElementById('loginHint').style.display='block';
+  const av=document.getElementById('portalAvatar'); av.style.background=''; av.textContent='?'; av.classList.remove('found');
+  showScreen('loginScreen');
+  if (CONFIG.GEOLOCALIZACION) requestGPS();
+}
+
+function showScreen(id) {
+  ['loginScreen','marcScreen','cargaScreen','successScreen','solicitudScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = s===id ? 'block' : 'none';
+  });
+}
+function showPortalLoading(txt) { document.getElementById('loadingTxt').textContent=txt; document.getElementById('portalLoading').style.display='flex'; }
+
+/* ── Mis Solicitudes (empleado) ───────────────────────────────*/
+let _demoMisAusencias = null;
+function irASolicitud() {
+  showScreen('solicitudScreen');
+  document.getElementById('ausDesdeInput').value = todayISO();
+  document.getElementById('ausHastaInput').value = todayISO();
+  document.getElementById('ausMotivoInput').value = '';
+  loadMisAusencias();
+}
+function volverDesdeSolicitud() { showScreen(marcTipo ? 'marcScreen' : 'loginScreen'); }
+
+async function loadMisAusencias() {
+  const el = document.getElementById('misAusenciasLista');
+  el.innerHTML = `<div style="text-align:center;color:rgba(255,255,255,.3);font-size:.8rem;padding:.5rem">Cargando...</div>`;
+  let rows = [];
+  if (isDemo) {
+    if (!_demoMisAusencias) _demoMisAusencias = [
+      { Tipo:'Vacaciones', FechaDesde:isoToDMY(daysAgoISO(-10)), FechaHasta:isoToDMY(daysAgoISO(-5)), Estado:'Pendiente' }
+    ];
+    rows = _demoMisAusencias;
+  } else {
+    try {
+      const r = await fetch(`${CONFIG.SCRIPT_URL}?action=misAusencias&empleado=${encodeURIComponent(selectedEmp)}`);
+      const d = await r.json();
+      if (d.success) rows = d.data || [];
+    } catch {}
+  }
+  if (!rows.length) { el.innerHTML = `<div style="text-align:center;color:rgba(255,255,255,.25);font-size:.8rem;padding:.5rem">Todavía no pediste ninguna licencia</div>`; return; }
+  el.innerHTML = rows.map(r => `
+    <div class="aus-item">
+      <div class="aus-item-top">
+        <span class="aus-item-tipo">${esc(r.Tipo)}</span>
+        <span class="aus-badge ${r.Estado}">${esc(r.Estado)}</span>
+      </div>
+      <div class="aus-item-fechas">${esc(r.FechaDesde)} → ${esc(r.FechaHasta)}</div>
+    </div>`).join('');
+}
+
+async function submitSolicitudAusencia() {
+  const tipo = document.getElementById('ausTipoInput').value;
+  const desdeIso = document.getElementById('ausDesdeInput').value;
+  const hastaIso = document.getElementById('ausHastaInput').value;
+  const motivo = document.getElementById('ausMotivoInput').value.trim();
+  if (!desdeIso || !hastaIso) { showPortalToast('Completá las fechas','error'); return; }
+  const fechaDesde = isoToDMY(desdeIso), fechaHasta = isoToDMY(hastaIso);
+
+  showPortalLoading('Enviando solicitud...');
+  if (isDemo) {
+    await sleep(500); hidePortalLoading();
+    if (!_demoMisAusencias) _demoMisAusencias = [];
+    _demoMisAusencias.unshift({ Tipo:tipo, FechaDesde:fechaDesde, FechaHasta:fechaHasta, Estado:'Pendiente' });
+    showPortalToast('Solicitud enviada','success');
+    loadMisAusencias();
+    return;
+  }
+  try {
+    const p = new URLSearchParams({ empleado:selectedEmp, tipo, fechaDesde, fechaHasta, motivo });
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=solicitarAusencia&${p}`);
+    const d = await r.json();
+    hidePortalLoading();
+    if (d.success) { showPortalToast('Solicitud enviada','success'); loadMisAusencias(); }
+    else showPortalToast(d.error || 'Error al enviar la solicitud','error');
+  } catch { hidePortalLoading(); showPortalToast('Error de conexión','error'); }
+}
+function hidePortalLoading()    { document.getElementById('portalLoading').style.display='none'; }
+function showPortalToast(msg, type='') {
+  const t=document.getElementById('portalToast'); t.textContent=msg; t.className=`portal-toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
 </script>
-<script src="js/config.js?v=3"></script>
-<script src="js/form.js?v=4"></script>
 </body>
 </html>

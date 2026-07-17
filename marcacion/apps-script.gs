@@ -1,35 +1,60 @@
 /**
- * MARCACIÓN LABORAL — Google Apps Script Backend
+ * SISTEMA DE HORAS — Google Apps Script Backend
  * JV Systems · Soluciones Digitales
- * v3 — usa getDisplayValues() para evitar auto-conversión de Fecha/Hora por Sheets
+ * v7 — login único con roles (Empleado/Admin) + Horas Diarias (carga simple sin OT)
+ *      + Ausentismo (licencias/vacaciones con aprobación)
+ *      + Reconocimiento facial opcional (verificación extra, no bloqueante)
+ *
+ * Cómo adaptar este backend a un cliente nuevo:
+ *   1. Copiá este archivo al editor de Apps Script de una copia nueva del Google Sheet.
+ *   2. Cambiá ADMIN_PASSWORD (clave maestra, solo para setup/recuperación).
+ *   3. En la hoja "Empleados" cargá: Nombre | Clave | Rol ('Admin' o 'Empleado').
+ *      Si una fila no tiene Rol, se asume 'Empleado' — no hace falta migrar nada a mano.
+ *   4. Desplegá como Web App y pegá la URL en CONFIG.SCRIPT_URL del index.html.
  */
 
-const ADMIN_PASSWORD   = 'admin2024'; // ← CAMBIÁ ESTO
+const ADMIN_PASSWORD   = 'admin2024'; // ← clave maestra de recuperación, CAMBIÁ ESTO
 const JORNADA_NORMAL_H = 9;
 const JORNADA_50_H     = 2;
 
 // ─── Router ──────────────────────────────────────────────────────────────────
 
+function doPost(e) {
+  return doGet(e);
+}
+
 function doGet(e) {
   const action = (e.parameter.action || '').trim();
   try {
     switch (action) {
-      case 'version':          return jsonResponse({ version: 4, ok: true });
+      case 'version':          return jsonResponse({ version: 7, ok: true });
       case 'empleados':        return jsonResponse(getEmpleados());
-      case 'validarDNI':       return jsonResponse(validarDNI(e.parameter));
+      case 'getEmpleadosFull': return jsonResponse(getEmpleadosFull(e.parameter));
+      case 'crearEmpleado':    return jsonResponse(crearEmpleado(e.parameter));
+      case 'editarEmpleado':   return jsonResponse(editarEmpleado(e.parameter));
+      case 'eliminarEmpleado': return jsonResponse(eliminarEmpleado(e.parameter));
+      case 'login':            return jsonResponse(login(e.parameter));
       case 'tipoSugerido':     return jsonResponse(getTipoSugerido(e.parameter));
       case 'marcar':           return jsonResponse(marcar(e.parameter));
       case 'marcaciones':      return jsonResponse(getMarcaciones(e.parameter));
       case 'jornada':          return jsonResponse(getJornada(e.parameter));
-      case 'login':            return jsonResponse(login(e.parameter));
       case 'ejemplos':         return jsonResponse(insertarEjemplos(e.parameter));
       case 'proyectos':        return jsonResponse(getProyectos());
       case 'items':            return jsonResponse(getItems(e.parameter));
       case 'cargarHoras':      return jsonResponse(cargarHoras(e.parameter));
       case 'horasProyecto':    return jsonResponse(getHorasProyecto(e.parameter));
+      case 'cargarHorasDiarias': return jsonResponse(cargarHorasDiarias(e.parameter));
+      case 'horasDiarias':     return jsonResponse(getHorasDiarias(e.parameter));
       case 'marcarAdmin':      return jsonResponse(marcarAdmin(e.parameter));
       case 'editarMarcacion':  return jsonResponse(editarMarcacion(e.parameter));
       case 'borrarMarcacion':  return jsonResponse(borrarMarcacion(e.parameter));
+      case 'solicitarAusencia': return jsonResponse(solicitarAusencia(e.parameter));
+      case 'misAusencias':     return jsonResponse(misAusencias(e.parameter));
+      case 'getAusencias':     return jsonResponse(getAusencias(e.parameter));
+      case 'resolverAusencia': return jsonResponse(resolverAusencia(e.parameter));
+      case 'getRostro':        return jsonResponse(getRostro(e.parameter));
+      case 'guardarRostro':    return jsonResponse(guardarRostro(e.parameter));
+      case 'borrarRostro':     return jsonResponse(borrarRostro(e.parameter));
       default:                 return jsonResponse({ success: false, error: 'Acción no reconocida' });
     }
   } catch (err) {
@@ -37,35 +62,48 @@ function doGet(e) {
   }
 }
 
-// ─── Login ────────────────────────────────────────────────────────────────────
+// ─── Login unificado (empleado o admin, misma pantalla) ──────────────────────
 
 function login(params) {
-  return params.pass === ADMIN_PASSWORD
-    ? { success: true }
-    : { success: false, error: 'Contraseña incorrecta' };
-}
+  const emp   = decodeURIComponent(params.empleado || '').trim();
+  const clave = (params.pass || '').trim();
+  if (!emp) return { success: false, error: 'Falta seleccionar empleado' };
 
-// ─── Validar DNI empleado ─────────────────────────────────────────────────────
-
-function validarDNI(params) {
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Empleados');
   if (!sheet) return { success: false, error: 'Sin datos de empleados' };
 
   const rows = sheet.getDataRange().getValues().slice(1);
-  const emp  = decodeURIComponent(params.empleado || '').trim();
-  const dni  = (params.dni || '').trim();
-
   for (const row of rows) {
     const nombre = row[0] ? row[0].toString().trim() : '';
-    if (nombre === emp) {
-      const stored = row[1] ? row[1].toString().trim() : '';
-      if (!stored) return { success: true }; // sin DNI configurado → pasa
-      if (stored === dni) return { success: true };
-      return { success: false, error: 'DNI incorrecto' };
-    }
+    if (nombre !== emp) continue;
+    const stored = row[1] ? row[1].toString().trim() : '';
+    const rol    = row[2] ? row[2].toString().trim() : 'Empleado';
+    if (stored && stored !== clave) return { success: false, error: 'Clave incorrecta' };
+    return { success: true, rol: rol || 'Empleado', nombre };
   }
   return { success: false, error: 'Empleado no encontrado' };
+}
+
+/** Autoriza acciones de administración. Acepta la clave maestra o un empleado con Rol=Admin. */
+function isAdmin(params) {
+  if (params.pass && params.pass === ADMIN_PASSWORD) return true;
+  if (!params.empleado || !params.pass) return false;
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Empleados');
+  if (!sheet) return false;
+
+  const emp  = decodeURIComponent(params.empleado).trim();
+  const rows = sheet.getDataRange().getValues().slice(1);
+  for (const row of rows) {
+    const nombre = row[0] ? row[0].toString().trim() : '';
+    if (nombre !== emp) continue;
+    const stored = row[1] ? row[1].toString().trim() : '';
+    const rol    = row[2] ? row[2].toString().trim() : 'Empleado';
+    return stored === params.pass.toString().trim() && rol === 'Admin';
+  }
+  return false;
 }
 
 // ─── Tipo de marcación sugerido ───────────────────────────────────────────────
@@ -109,12 +147,110 @@ function getEmpleados() {
   let sheet = ss.getSheetByName('Empleados');
   if (!sheet) {
     sheet = ss.insertSheet('Empleados');
-    sheet.appendRow(['Nombre']);
-    sheet.getRange(1,1).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
-    ['Juan Pérez','María García','Carlos López'].forEach(e => sheet.appendRow([e]));
+    sheet.appendRow(['Nombre','Clave','Rol']);
+    sheet.getRange(1,1,1,3).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+    sheet.appendRow(['Juan Pérez','','Empleado']);
+    sheet.appendRow(['María García','','Empleado']);
+    sheet.appendRow(['Carlos López','','Admin']);
   }
   const empleados = sheet.getDataRange().getValues().slice(1).map(r => r[0]).filter(Boolean);
   return { success: true, empleados };
+}
+
+// ─── Gestión de empleados (alta / edición / baja desde el panel admin) ────────
+
+function getEmpleadosFull(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Empleados');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, data: [] };
+
+  const raw  = sheet.getDataRange().getValues();
+  const hdrs = raw[0];
+  const ci = hdrs.indexOf('Nombre'), cr = hdrs.indexOf('Rol'), cf = hdrs.indexOf('Foto');
+
+  const rostroSheet = ss.getSheetByName('Rostros');
+  const conRostro = new Set();
+  if (rostroSheet && rostroSheet.getLastRow() > 1) {
+    rostroSheet.getDataRange().getValues().slice(1).forEach(r => { if (r[0]) conRostro.add(r[0].toString().trim()); });
+  }
+
+  const data = raw.slice(1).filter(r => r[ci]).map(r => {
+    const nombre = r[ci].toString().trim();
+    return {
+      Nombre: nombre,
+      Rol: (r[cr] || 'Empleado').toString().trim() || 'Empleado',
+      Foto: cf !== -1 ? (r[cf] || '') : '',
+      TieneRostro: conRostro.has(nombre)
+    };
+  });
+  data.sort((a,b) => a.Nombre.localeCompare(b.Nombre));
+  return { success: true, data };
+}
+
+function crearEmpleado(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  const nombre = decodeURIComponent(params.nombre || '').trim();
+  const clave  = decodeURIComponent(params.clave || '').trim();
+  const rol    = decodeURIComponent(params.rol || 'Empleado').trim() || 'Empleado';
+  if (!nombre) return { success: false, error: 'Falta el nombre' };
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Empleados');
+  if (!sheet) return { success: false, error: 'Hoja no encontrada' };
+
+  const existentes = sheet.getDataRange().getValues().slice(1).map(r => (r[0]||'').toString().trim().toLowerCase());
+  if (existentes.includes(nombre.toLowerCase())) return { success: false, error: 'Ya existe un empleado con ese nombre' };
+
+  sheet.appendRow([nombre, clave, rol]);
+  if (params.foto) {
+    const col = ensureColumn(sheet, 'Foto');
+    sheet.getRange(sheet.getLastRow(), col).setValue(decodeURIComponent(params.foto));
+  }
+  return { success: true };
+}
+
+function editarEmpleado(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  const nombre = decodeURIComponent(params.nombre || '').trim();
+  if (!nombre) return { success: false, error: 'Falta el nombre' };
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Empleados');
+  if (!sheet) return { success: false, error: 'Hoja no encontrada' };
+
+  const data = sheet.getDataRange().getValues();
+  const hdrs = data[0];
+  const colMap = {}; hdrs.forEach((h,i) => { colMap[h] = i; });
+
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][0]||'').toString().trim() !== nombre) continue;
+    if (params.clave !== undefined) sheet.getRange(i+1, colMap['Clave']+1).setValue(decodeURIComponent(params.clave));
+    if (params.rol)                sheet.getRange(i+1, colMap['Rol']+1).setValue(decodeURIComponent(params.rol));
+    if (params.foto) {
+      const col = ensureColumn(sheet, 'Foto');
+      sheet.getRange(i+1, col).setValue(decodeURIComponent(params.foto));
+    }
+    return { success: true };
+  }
+  return { success: false, error: 'Empleado no encontrado' };
+}
+
+function eliminarEmpleado(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  const nombre = decodeURIComponent(params.nombre || '').trim();
+  if (!nombre) return { success: false, error: 'Falta el nombre' };
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Empleados');
+  if (!sheet) return { success: false, error: 'Hoja no encontrada' };
+
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][0]||'').toString().trim() === nombre) { sheet.deleteRow(i+1); return { success: true }; }
+  }
+  return { success: false, error: 'Empleado no encontrado' };
 }
 
 // ─── Registrar marcación ──────────────────────────────────────────────────────
@@ -143,13 +279,21 @@ function marcar(params) {
 
   sheet.appendRow([id, decodeURIComponent(params.empleado), params.tipo,
                    fecha, hora, params.lat||'', params.lng||'', now.toISOString()]);
+  if (params.verificado) {
+    const col = ensureColumn(sheet, 'Verificado');
+    sheet.getRange(sheet.getLastRow(), col).setValue(decodeURIComponent(params.verificado));
+  }
+  if (params.dispositivo) {
+    const col = ensureColumn(sheet, 'Dispositivo');
+    sheet.getRange(sheet.getLastRow(), col).setValue(decodeURIComponent(params.dispositivo));
+  }
   return { success: true, id, fecha, hora };
 }
 
 // ─── Marcaciones raw ──────────────────────────────────────────────────────────
 
 function getMarcaciones(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
 
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Marcaciones');
@@ -177,7 +321,7 @@ function getMarcaciones(params) {
 // ─── Jornada Laboral ──────────────────────────────────────────────────────────
 
 function getJornada(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
 
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Marcaciones');
@@ -256,7 +400,7 @@ function getJornada(params) {
 // ─── Datos de prueba ──────────────────────────────────────────────────────────
 
 function insertarEjemplos(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
 
   const tz = Session.getScriptTimeZone();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -264,16 +408,16 @@ function insertarEjemplos(params) {
   let empSheet = ss.getSheetByName('Empleados');
   if (!empSheet) {
     empSheet = ss.insertSheet('Empleados');
-    empSheet.appendRow(['Nombre','DNI']);
-    empSheet.getRange(1,1,1,2).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+    empSheet.appendRow(['Nombre','Clave','Rol']);
+    empSheet.getRange(1,1,1,3).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
   }
   const empleados = [
     'Aguiar Nicolas','Bonafini Cesar','Delgado Santiago',
     'Frattoni Elias','Galotto Agustin','Juarez Nahuel','Vázquez Franco'
   ];
   const existentes = empSheet.getDataRange().getValues().slice(1).map(r => r[0]);
-  // DNI de prueba: 123 para todos
-  empleados.forEach(e => { if (!existentes.includes(e)) empSheet.appendRow([e, '123']); });
+  // Clave de prueba: 123 para todos, rol Empleado
+  empleados.forEach(e => { if (!existentes.includes(e)) empSheet.appendRow([e, '123', 'Empleado']); });
 
   let sheet = ss.getSheetByName('Marcaciones');
   if (!sheet) {
@@ -438,7 +582,7 @@ function getItems(params) {
   return { success: true, items };
 }
 
-// ─── Cargar horas en proyecto ──────────────────────────────────────────────────
+// ─── Cargar horas en proyecto (con OT) ────────────────────────────────────────
 
 function cargarHoras(params) {
   if (!params.empleado || !params.ot || !params.horas)
@@ -468,7 +612,7 @@ function cargarHoras(params) {
 // ─── Obtener horas en proyectos ───────────────────────────────────────────────
 
 function getHorasProyecto(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
 
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Horas Proyecto');
@@ -490,10 +634,131 @@ function getHorasProyecto(params) {
   return { success: true, data: rows };
 }
 
+// ─── Cargar horas diarias (sin OT — flujo simple genérico) ───────────────────
+
+function cargarHorasDiarias(params) {
+  if (!params.empleado || !params.fecha || !params.horas)
+    return { success: false, error: 'Datos incompletos' };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Horas Diarias');
+  if (!sheet) {
+    sheet = ss.insertSheet('Horas Diarias');
+    const h = ['ID','Empleado','Fecha','Horas','Nota','Timestamp'];
+    sheet.appendRow(h);
+    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+    sheet.setFrozenRows(1);
+    sheet.getRange('C:C').setNumberFormat('@');
+  }
+  const id = Utilities.getUuid().substring(0,8).toUpperCase();
+  sheet.appendRow([id, decodeURIComponent(params.empleado), decodeURIComponent(params.fecha),
+                   parseFloat(params.horas), decodeURIComponent(params.nota || ''),
+                   new Date().toISOString()]);
+  return { success: true, id };
+}
+
+function getHorasDiarias(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Horas Diarias');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, data: [] };
+
+  const raw  = sheet.getDataRange().getDisplayValues();
+  const hdrs = raw[0];
+  let rows = raw.slice(1).filter(r => r[1]).map(row => {
+    const o = {}; hdrs.forEach((h,i) => { o[h] = row[i] || ''; }); return o;
+  });
+
+  rows = filtrarRango(rows, params);
+  if (params.empleado && params.empleado !== 'todos')
+    rows = rows.filter(r => r['Empleado'] === decodeURIComponent(params.empleado));
+  rows.sort((a,b) => fechaNum(b['Fecha']) - fechaNum(a['Fecha']));
+  return { success: true, data: rows };
+}
+
+// ─── Ausentismo (licencias / vacaciones) ──────────────────────────────────────
+
+function solicitarAusencia(params) {
+  if (!params.empleado || !params.tipo || !params.fechaDesde || !params.fechaHasta)
+    return { success: false, error: 'Datos incompletos' };
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Ausencias');
+  if (!sheet) {
+    sheet = ss.insertSheet('Ausencias');
+    const h = ['ID','Empleado','Tipo','FechaDesde','FechaHasta','Motivo','Estado','Timestamp'];
+    sheet.appendRow(h);
+    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+    sheet.setFrozenRows(1);
+    sheet.getRange('D:E').setNumberFormat('@');
+  }
+  const id = Utilities.getUuid().substring(0,8).toUpperCase();
+  sheet.appendRow([id, decodeURIComponent(params.empleado), decodeURIComponent(params.tipo),
+                   decodeURIComponent(params.fechaDesde), decodeURIComponent(params.fechaHasta),
+                   decodeURIComponent(params.motivo || ''), 'Pendiente', new Date().toISOString()]);
+  return { success: true, id };
+}
+
+function misAusencias(params) {
+  if (!params.empleado) return { success: false, error: 'Falta empleado' };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Ausencias');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, data: [] };
+
+  const raw  = sheet.getDataRange().getDisplayValues();
+  const hdrs = raw[0];
+  const emp  = decodeURIComponent(params.empleado).trim();
+  let rows = raw.slice(1).filter(r => r[1] === emp).map(row => {
+    const o = {}; hdrs.forEach((h,i) => { o[h] = row[i] || ''; }); return o;
+  });
+  rows.sort((a,b) => fechaNum(b['FechaDesde']) - fechaNum(a['FechaDesde']));
+  return { success: true, data: rows };
+}
+
+function getAusencias(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Ausencias');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, data: [] };
+
+  const raw  = sheet.getDataRange().getDisplayValues();
+  const hdrs = raw[0];
+  let rows = raw.slice(1).filter(r => r[1]).map(row => {
+    const o = {}; hdrs.forEach((h,i) => { o[h] = row[i] || ''; }); return o;
+  });
+  if (params.empleado && params.empleado !== 'todos')
+    rows = rows.filter(r => r['Empleado'] === decodeURIComponent(params.empleado));
+  if (params.estado && params.estado !== 'todos')
+    rows = rows.filter(r => r['Estado'] === decodeURIComponent(params.estado));
+  rows.sort((a,b) => fechaNum(b['FechaDesde']) - fechaNum(a['FechaDesde']));
+  return { success: true, data: rows };
+}
+
+function resolverAusencia(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  if (!params.id || !params.estado) return { success: false, error: 'Datos incompletos' };
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Ausencias');
+  if (!sheet) return { success: false, error: 'Hoja no encontrada' };
+  const data   = sheet.getDataRange().getValues();
+  const hdrs   = data[0];
+  const colMap = {};
+  hdrs.forEach((h,i) => { colMap[h] = i; });
+  const id = decodeURIComponent(params.id).trim();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][colMap['ID']].toString().trim() === id) {
+      sheet.getRange(i+1, colMap['Estado']+1).setValue(decodeURIComponent(params.estado));
+      return { success: true };
+    }
+  }
+  return { success: false, error: 'Registro no encontrado' };
+}
+
 // ─── Admin: registrar marcación manual ───────────────────────────────────────
 
 function marcarAdmin(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
   if (!params.empleado || !params.tipo || !params.fecha || !params.hora)
     return { success: false, error: 'Datos incompletos' };
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
@@ -503,13 +768,74 @@ function marcarAdmin(params) {
   sheet.appendRow([id, decodeURIComponent(params.empleado), decodeURIComponent(params.tipo),
                    decodeURIComponent(params.fecha), decodeURIComponent(params.hora),
                    params.lat||'', params.lng||'', new Date().toISOString()]);
+  if (params.verificado) {
+    const col = ensureColumn(sheet, 'Verificado');
+    sheet.getRange(sheet.getLastRow(), col).setValue(decodeURIComponent(params.verificado));
+  }
+  if (params.dispositivo) {
+    const col = ensureColumn(sheet, 'Dispositivo');
+    sheet.getRange(sheet.getLastRow(), col).setValue(decodeURIComponent(params.dispositivo));
+  }
   return { success: true, id };
+}
+
+// ─── Reconocimiento facial (verificación extra, no bloqueante) ────────────────
+
+function getRostro(params) {
+  if (!params.empleado) return { success: false, error: 'Falta empleado' };
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Rostros');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true, descriptor: null };
+
+  const emp  = decodeURIComponent(params.empleado).trim();
+  const rows = sheet.getDataRange().getValues().slice(1);
+  for (const row of rows) {
+    if ((row[0] || '').toString().trim() === emp) {
+      try { return { success: true, descriptor: JSON.parse(row[1]) }; }
+      catch (e) { return { success: true, descriptor: null }; }
+    }
+  }
+  return { success: true, descriptor: null };
+}
+
+function guardarRostro(params) {
+  if (!params.empleado || !params.descriptor) return { success: false, error: 'Datos incompletos' };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Rostros');
+  if (!sheet) {
+    sheet = ss.insertSheet('Rostros');
+    const h = ['Empleado','Descriptor','Timestamp'];
+    sheet.appendRow(h);
+    sheet.getRange(1,1,1,h.length).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+    sheet.setFrozenRows(1);
+  }
+  const emp  = decodeURIComponent(params.empleado).trim();
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][0] || '').toString().trim() === emp) return { success: true, alreadyExists: true }; // no pisa una referencia ya cargada
+  }
+  sheet.appendRow([emp, decodeURIComponent(params.descriptor), new Date().toISOString()]);
+  return { success: true };
+}
+
+function borrarRostro(params) {
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
+  if (!params.empleado) return { success: false, error: 'Falta empleado' };
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Rostros');
+  if (!sheet || sheet.getLastRow() < 2) return { success: true };
+  const emp  = decodeURIComponent(params.empleado).trim();
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][0] || '').toString().trim() === emp) { sheet.deleteRow(i + 1); return { success: true }; }
+  }
+  return { success: true };
 }
 
 // ─── Admin: editar marcación ──────────────────────────────────────────────────
 
 function editarMarcacion(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Marcaciones');
   if (!sheet) return { success: false, error: 'Hoja no encontrada' };
@@ -532,7 +858,7 @@ function editarMarcacion(params) {
 // ─── Admin: eliminar marcación ────────────────────────────────────────────────
 
 function borrarMarcacion(params) {
-  if (params.pass !== ADMIN_PASSWORD) return { success: false, error: 'No autorizado' };
+  if (!isAdmin(params)) return { success: false, error: 'No autorizado' };
   const ss    = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Marcaciones');
   if (!sheet) return { success: false, error: 'Hoja no encontrada' };
@@ -577,6 +903,17 @@ function filtrarRango(rows, params) {
     rows = rows.filter(r => fechaNum(r['Fecha']) <= tNum);
   }
   return rows;
+}
+
+/** Agrega una columna al final de la hoja solo si todavía no existe (no reordena ni pisa las existentes). */
+function ensureColumn(sheet, headerName) {
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const idx = headers.indexOf(headerName);
+  if (idx !== -1) return idx + 1;
+  const newCol = lastCol + 1;
+  sheet.getRange(1, newCol).setValue(headerName).setFontWeight('bold').setBackground('#0D1B2E').setFontColor('white');
+  return newCol;
 }
 
 function pad(n) { return String(n).padStart(2,'0'); }

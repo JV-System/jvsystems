@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="theme-color" content="#0D1B2E" />
+<title>Panel de Control — JV Systems</title>
+<link rel="icon" type="image/png" href="../marcacion/jvs-icon.png" />
+<script src="../marcacion/js/chart.min.js"></script>
+<link rel="stylesheet" href="../marcacion/js/leaflet/leaflet.css" />
+<style>
+/* =============================================================
+   PANEL DE CONTROL — admin, estilo ZKTeco+
+   JV Systems · Soluciones Digitales
+
+   Hermano de ../marcacion/ (que es solo para que el empleado
+   marque su horario). Este panel es exclusivo para usuarios con
+   Rol=Admin en la hoja "Empleados", y comparte el mismo backend
+   (CONFIG.SCRIPT_URL) y assets estáticos (../marcacion/js/...).
+   ============================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:           #0D1B2E;
+  --navy-mid:       #112244;
+  --navy-light:     #1A3055;
+  --accent:         #F59E0B;
+  --accent-hover:   #D97706;
+  --accent-light:   #FFFBEB;
+  --accent-border:  #FDE68A;
+
+  --primary:        #1565C0;
+  --primary-hover:  #1251A3;
+  --primary-light:  #E3F2FD;
+  --primary-border: #90CAF9;
+
+  --success:        #16A34A;
+  --success-hover:  #15803D;
+  --success-light:  #F0FDF4;
+  --success-border: #BBF7D0;
+
+  --danger:         #DC2626;
+  --danger-hover:   #B91C1C;
+  --danger-light:   #FEF2F2;
+  --danger-border:  #FECACA;
+
+  --gray-50:  #F8FAFC; --gray-100: #F1F5F9; --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1; --gray-400: #94A3B8; --gray-500: #64748B;
+  --gray-600: #475569; --gray-700: #334155; --gray-800: #1E293B; --gray-900: #0F172A;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+  --shadow:    0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 8px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 24px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.08);
+
+  --radius-sm: 6px; --radius: 10px; --radius-lg: 14px; --radius-xl: 20px;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #0a111c;
+  background-image: url('../marcacion/Fondo.jpg');
+  background-size: cover; background-position: center; background-attachment: scroll;
+  color: var(--gray-900); min-height: 100vh; font-size: 16px; line-height: 1.5;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background: rgba(5,10,20,.55); pointer-events: none;
+}
+#loginWrap, #dashPage { position: relative; z-index: 1; }
+.hidden { display: none !important; }
+
+/* ══ LOGIN (solo admin) ══ */
+.portal-wrap { min-height: 100vh; display: flex; align-items: stretch; background: rgba(5,10,20,.75); backdrop-filter: blur(2px); }
+.portal-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 2rem; position: relative; }
+.portal-left::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent, rgba(21,101,192,.25), transparent); }
+.logo-glow-wrap { position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+.logo-ring { position: absolute; border-radius: 50%; border: 1px solid; animation: ringPulse 3s ease-in-out infinite; }
+.logo-ring:nth-child(1) { width: 180px; height: 180px; border-color: rgba(59,130,246,.25); animation-delay: 0s; }
+.logo-ring:nth-child(2) { width: 240px; height: 240px; border-color: rgba(59,130,246,.15); animation-delay: .6s; }
+.logo-ring:nth-child(3) { width: 300px; height: 300px; border-color: rgba(59,130,246,.08); animation-delay: 1.2s; }
+.logo-ring:nth-child(4) { width: 360px; height: 360px; border-color: rgba(59,130,246,.04); animation-delay: 1.8s; }
+@keyframes ringPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.04); } }
+.orbit-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+.orbit-dot:nth-child(5) { top: -3px; left: 50%; animation: orbitTop 4s linear infinite; }
+.orbit-dot:nth-child(6) { right: -3px; top: 50%; animation: orbitRight 4s linear infinite 2s; }
+@keyframes orbitTop { 0%{opacity:1} 50%{opacity:.2} 100%{opacity:1} }
+@keyframes orbitRight { 0%{opacity:.2} 50%{opacity:1} 100%{opacity:.2} }
+.logo-img-wrap {
+  position: relative; z-index: 2; width: 130px; height: 130px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(30,50,100,.8) 0%, rgba(10,20,50,.6) 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 40px rgba(59,130,246,.35), 0 0 80px rgba(59,130,246,.15), inset 0 0 30px rgba(59,130,246,.1);
+}
+.logo-img-wrap img { width: 90px; height: 90px; object-fit: contain; }
+.portal-brand-text { text-align: center; color: rgba(255,255,255,.7); }
+.portal-brand-text p { font-size: .95rem; margin-bottom: .4rem; color: rgba(255,255,255,.45); line-height: 1.5; }
+.portal-brand-text strong { font-size: 1.1rem; font-weight: 800; color: white; letter-spacing: .02em; }
+.portal-right { display: flex; align-items: center; justify-content: center; padding: 2rem 3rem; flex: 0 0 auto; min-width: min(100%, 460px); }
+@media (max-width: 700px) {
+  .portal-wrap { flex-direction: column; }
+  .portal-left { padding: 2rem 1rem 1rem; }
+  .portal-left::after { display: none; }
+  .portal-right { padding: 1rem; min-width: 0; width: 100%; }
+  .logo-ring:nth-child(3), .logo-ring:nth-child(4) { display: none; }
+  .logo-img-wrap { width: 90px; height: 90px; }
+  .logo-img-wrap img { width: 60px; height: 60px; }
+}
+.portal-card {
+  width: 100%; max-width: 420px; background: rgba(10,17,30,.93);
+  border: 1.5px solid rgba(21,101,192,.35); border-radius: 18px; padding: 2.25rem 2rem 2rem;
+  box-shadow: 0 0 40px rgba(21,101,192,.12), 0 0 0 1px rgba(21,101,192,.07), 0 25px 60px rgba(0,0,0,.7);
+  backdrop-filter: blur(12px); animation: cardIn .4s ease;
+}
+@keyframes cardIn { from { opacity:0; transform:translateY(20px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+.portal-brand { text-align:center; margin-bottom:1.5rem; }
+.portal-icon {
+  width:54px; height:54px; border-radius:14px; background: linear-gradient(135deg,#1565C0,#3b82f6);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin:0 auto .875rem;
+  box-shadow:0 4px 20px rgba(21,101,192,.4);
+}
+.portal-title { font-size:1.75rem; font-weight:900; color:white; line-height:1.1; margin-bottom:.35rem; }
+.portal-title span { color:#3b82f6; }
+.portal-subtitle { font-size:.78rem; color:rgba(255,255,255,.38); }
+.portal-avatar-wrap { display:flex; justify-content:center; margin-bottom:1.25rem; }
+.portal-avatar {
+  width:76px; height:76px; border-radius:50%; background:rgba(21,101,192,.1); border:2px solid rgba(21,101,192,.25);
+  display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:900; color:rgba(255,255,255,.35);
+  transition:all .35s; box-shadow:0 0 0 6px rgba(21,101,192,.05);
+}
+.portal-avatar.found { border-color:#3b82f6; color:white; box-shadow:0 0 0 6px rgba(21,101,192,.1), 0 0 24px rgba(21,101,192,.25); }
+.portal-field { position:relative; margin-bottom:.8rem; }
+.portal-field-icon { position:absolute; left:.9rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.28); font-size:.95rem; pointer-events:none; }
+.portal-input {
+  width:100%; padding:.8rem 2.5rem .8rem 2.6rem; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px; color:white; font-size:.95rem; font-weight:600; font-family:inherit; outline:none;
+  transition:border-color .2s, background .2s;
+}
+.portal-input::placeholder { color:rgba(255,255,255,.22); font-weight:400; }
+.portal-input:focus { border-color:rgba(59,130,246,.55); background:rgba(255,255,255,.08); }
+.portal-clear { position:absolute; right:.875rem; top:50%; transform:translateY(-50%); color:rgba(255,255,255,.22); cursor:pointer; font-size:.85rem; background:none; border:none; font-family:inherit; }
+.autocomplete-box { position:absolute; top:100%; left:0; right:0; z-index:50; background:#0f1e30; border:1px solid rgba(21,101,192,.22); border-radius:0 0 10px 10px; max-height:190px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.5); }
+.ac-item { padding:.6rem .875rem; cursor:pointer; color:rgba(255,255,255,.75); font-size:.88rem; display:flex; align-items:center; gap:.55rem; transition:background .12s; }
+.ac-item:hover { background:rgba(21,101,192,.1); }
+.ac-init { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:900; color:white; flex-shrink:0; }
+.portal-error { color:#f87171; font-size:.8rem; font-weight:600; display:none; margin-bottom:.5rem; }
+#claveSection { display:none; }
+.portal-btn {
+  width:100%; padding:.9rem; background:linear-gradient(135deg,#1565C0,#3b82f6); border:none; border-radius:10px;
+  color:white; font-size:.95rem; font-weight:900; cursor:pointer; font-family:inherit; letter-spacing:.08em;
+  text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:.5rem;
+  transition:opacity .15s, transform .1s; box-shadow:0 4px 20px rgba(21,101,192,.3);
+}
+.portal-btn:hover { opacity:.9; }
+.portal-btn:active { transform:scale(.98); }
+.portal-btn:disabled { opacity:.4; cursor:not-allowed; }
+.portal-back { width:100%; background:none; border:none; color:rgba(255,255,255,.28); font-size:.8rem; cursor:pointer; margin-top:.75rem; font-family:inherit; }
+.portal-loading { position:fixed; inset:0; z-index:999; background:rgba(10,17,30,.82); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:1rem; }
+.portal-spinner { width:46px; height:46px; border:3px solid rgba(21,101,192,.18); border-top-color:#3b82f6; border-radius:50%; animation:spin .8s linear infinite; }
+.portal-loading-txt { color:rgba(255,255,255,.5); font-size:.88rem; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.toast {
+  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#1e293b; color:white; padding:.7rem 1.4rem;
+  border-radius:99px; font-size:.86rem; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  opacity:0; transition:opacity .3s; pointer-events:none; z-index:9999;
+}
+.toast.show { opacity:1; }
+.toast.error { background:#991b1b; }
+.toast.success { background:#065f46; }
+
+/* ══ DASHBOARD (sidebar shell) ══ */
+.app-shell { display: flex; min-height: 100vh; align-items: stretch; }
+.app-sidebar {
+  width: 230px; flex-shrink: 0; background: var(--navy);
+  display: flex; flex-direction: column; padding: 1.1rem 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-brand { display:flex; align-items:center; gap:.65rem; padding: 0 1.1rem 1.1rem; border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: .9rem; }
+.sidebar-brand img { width: 34px; height: 34px; border-radius: 8px; flex-shrink:0; }
+.sidebar-brand div { display: flex; flex-direction: column; min-width:0; }
+.sidebar-brand strong { color: white; font-size: .92rem; font-weight: 800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sidebar-brand span { color: var(--accent); font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: .2rem; padding: 0 .7rem; overflow-y: auto; }
+.sidebar-item {
+  display: flex; align-items: center; gap: .7rem; padding: .68rem .85rem; border-radius: 10px;
+  color: rgba(255,255,255,.55); font-size: .85rem; font-weight: 600; cursor: pointer; border: none;
+  background: none; text-align: left; font-family: inherit; transition: all .15s; width: 100%;
+}
+.sidebar-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+.sidebar-item.active { background: var(--accent); color: var(--navy); }
+.sidebar-footer { padding: .9rem .7rem 0; margin-top: .5rem; border-top: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; gap: .35rem; }
+.sidebar-footer button, .sidebar-footer a {
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.75);
+  font-size: .78rem; font-weight: 600; padding: .55rem .7rem; border-radius: 8px; cursor: pointer;
+  font-family: inherit; text-align: left; transition: background .15s; text-decoration: none; display: block;
+}
+.sidebar-footer button:hover, .sidebar-footer a:hover { background: rgba(255,255,255,.12); }
+.app-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.app-topbar {
+  background: rgba(255,255,255,.86); backdrop-filter: blur(10px); padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem; position: sticky; top: 0; z-index: 50;
+}
+.app-topbar h2 { font-size: 1.15rem; font-weight: 800; color: var(--gray-900); }
+.dash-main { padding: 1.5rem; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; width: 100%; }
+.resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 900px) { .resumen-grid { grid-template-columns: 1fr; } .stats-grid[style] { grid-template-columns: repeat(2,1fr) !important; } }
+.roster-list { display: flex; flex-direction: column; gap: .5rem; max-height: 240px; overflow-y: auto; }
+.roster-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .4rem .5rem; border-radius: 8px; }
+.roster-row:hover { background: var(--gray-50); }
+.calendario-nav { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: .75rem; font-size: .85rem; color: var(--gray-700); }
+.calendario-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { text-align: center; font-size: .65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; padding-bottom: .3rem; }
+.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: .78rem; font-weight: 600; color: var(--gray-500); background: var(--gray-50); cursor: default; }
+.cal-day.cal-empty { background: transparent; }
+.cal-day.cal-presente { background: var(--success-light); color: var(--success); }
+.cal-day.cal-sinsalida { background: var(--accent-light); color: #D97706; }
+.cal-day.cal-ausencia { background: #EDE9FE; color: #7C3AED; }
+.cal-day.cal-today { box-shadow: 0 0 0 2px var(--primary) inset; }
+@media (max-width: 700px) {
+  .app-shell { flex-direction: column; }
+  .app-sidebar { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: .6rem .75rem; overflow-x: auto; }
+  .sidebar-brand { border-bottom: none; margin-bottom: 0; padding: 0 .75rem 0 0; border-right: 1px solid rgba(255,255,255,.08); }
+  .sidebar-nav { flex-direction: row; padding: 0 .5rem; }
+  .sidebar-item span { display: none; }
+  .sidebar-footer { flex-direction: row; margin-top: 0; padding: 0 0 0 .5rem; border-top: none; border-left: 1px solid rgba(255,255,255,.08); }
+}
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: .875rem; font-weight: 600; color: var(--gray-700); margin-bottom: .5rem; }
+.form-select, .form-input { width: 100%; padding: .75rem 1rem; border: 1.5px solid var(--gray-300); border-radius: var(--radius); font-size: 1rem; color: var(--gray-900); background: white; appearance: none; -webkit-appearance: none; transition: border-color .15s, box-shadow .15s; outline: none; font-family: inherit; }
+.form-select:focus, .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(21,101,192,.12); }
+.select-wrapper { position: relative; }
+.select-wrapper::after { content: '▾'; font-size: .8rem; color: var(--gray-500); position: absolute; right: .875rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .75rem 1.5rem; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .15s; text-decoration: none; line-height: 1; white-space: nowrap; font-family: inherit; }
+.btn:active { transform: scale(.98); }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-outline { background: white; border: 1.5px solid var(--gray-300); color: var(--gray-700); }
+.btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+.stat-card { background: rgba(255,255,255,.82); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: 1.25rem; border: 1px solid rgba(255,255,255,.6); box-shadow: var(--shadow-sm), 0 4px 20px rgba(0,0,0,.1); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.stat-card.total::before { background: var(--primary); }
+.stat-card .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+.stat-card .stat-label { font-size: .75rem; color: var(--gray-500); margin-top: .3rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.stat-card.total .stat-value { color: var(--primary); }
+.stat-card.horas .stat-value { color: var(--accent); }
+.stat-card.horas::before { background: var(--accent); }
+.stat-card.ausentes .stat-value { color: #D97706; }
+.stat-card.ausentes::before { background: #D97706; }
+.filters-bar { background: rgba(255,255,255,.82); backdrop-filter: blur(10px); border-radius: var(--radius-lg); padding: 1.25rem; border: 1px solid rgba(255,255,255,.6); box-shadow: var(--shadow-sm), 0 4px 20px rgba(0,0,0,.08); }
+.filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (min-width: 640px) { .filters-grid { grid-template-columns: repeat(4,1fr); } }
+.filters-grid .form-group { margin-bottom: 0; }
+.table-wrapper { background: rgba(255,255,255,.82); backdrop-filter: blur(10px); border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,.6); box-shadow: var(--shadow-sm), 0 4px 20px rgba(0,0,0,.08); overflow: hidden; }
+.table-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); flex-wrap: wrap; gap: .5rem; }
+.table-header h3 { font-size: .95rem; font-weight: 700; color: var(--gray-800); }
+.table-count { font-size: .8rem; color: var(--gray-500); font-weight: 500; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.data-table th { background: var(--gray-50); padding: .75rem 1rem; text-align: left; font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); white-space: nowrap; }
+.data-table td { padding: .875rem 1rem; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--primary-light); }
+.badge { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .625rem; border-radius: 999px; font-size: .75rem; font-weight: 700; letter-spacing: .02em; }
+.badge-entrada { background: var(--success-light); color: var(--success); }
+.badge-salida  { background: var(--danger-light);  color: var(--danger); }
+.badge-admin   { background: var(--primary-light); color: var(--primary); }
+.badge-empleado{ background: var(--gray-100); color: var(--gray-600); }
+.map-link { color: var(--primary); text-decoration: none; font-size: .8rem; display: inline-flex; align-items: center; gap: .25rem; font-weight: 500; }
+.map-link:hover { text-decoration: underline; }
+.no-data { text-align: center; padding: 3rem 1.5rem; color: var(--gray-400); }
+.no-data .no-data-icon { font-size: 3rem; margin-bottom: 1rem; }
+.emp-avatar { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; color: white; flex-shrink: 0; letter-spacing: .02em; box-shadow: 0 2px 8px rgba(0,0,0,.15); object-fit: cover; }
+.emp-cell { display: flex; align-items: center; gap: .6rem; }
+.emp-name { font-weight: 700; line-height: 1.2; }
+.fecha-chip { font-size: .8rem; background: var(--gray-100); color: var(--gray-700); padding: .2rem .5rem; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+.time-in { font-size: .9rem; font-weight: 700; color: var(--success); letter-spacing:.02em; }
+.time-out { font-size: .9rem; font-weight: 700; color: var(--danger); letter-spacing:.02em; }
+.row-warning td { background:#FFFBEB !important; }
+.row-absent  td { background:#FEF2F2 !important; opacity:.8; }
+.btn-admin { background: var(--primary-light); border: 1px solid var(--primary-border); color: var(--primary); font-size: .72rem; font-weight: 700; padding: .18rem .5rem; border-radius: 99px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .12s; display: inline-flex; align-items: center; gap: .2rem; }
+.btn-admin:hover { background: #BBDEFB; }
+.btn-admin.danger { background: var(--danger-light); border-color: var(--danger-border); color: var(--danger); }
+.btn-admin.danger:hover { background: #FECACA; }
+.btn-admin.success-btn { background: var(--success-light); border-color: var(--success-border); color: var(--success); }
+.btn-admin.success-btn:hover { background: #BBF7D0; }
+.modal-overlay { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.modal-card { background: white; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 24px 60px rgba(0,0,0,.25); animation: modalIn .15s ease; max-height: 92vh; display: flex; flex-direction: column; }
+@keyframes modalIn { from { opacity:0; transform: scale(.94) translateY(-12px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem .875rem; border-bottom: 1px solid var(--gray-100); flex-shrink: 0; }
+.modal-header h3 { font-size: 1rem; font-weight: 800; color: var(--navy); }
+.modal-close { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--gray-400); width: 30px; height: 30px; border-radius: 8px; font-family: inherit; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--gray-100); color: var(--gray-700); }
+.modal-body { padding: 1.25rem; overflow-y: auto; }
+.modal-info { background: var(--gray-50); border-left: 3px solid var(--primary); border-radius: 0 6px 6px 0; padding: .55rem .875rem; margin-bottom: 1rem; font-size: .83rem; color: var(--gray-600); line-height: 1.4; }
+.modal-info strong { color: var(--navy); font-weight: 700; }
+.modal-footer { display: flex; gap: .5rem; justify-content: flex-end; padding: .875rem 1.25rem; border-top: 1px solid var(--gray-100); flex-shrink: 0; }
+.chart-card { background: white; border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.chart-card-title { font-size: .8rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 1rem; }
+.chart-canvas-wrap { position: relative; height: 220px; }
+.proy-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: 1rem; }
+@media (max-width: 640px) { .proy-kpi-row { grid-template-columns: repeat(2,1fr); } }
+.proy-kpi { background: var(--navy); color: white; border-radius: var(--radius); padding: .875rem 1rem; }
+.proy-kpi-val { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+.proy-kpi-lbl { font-size: .7rem; opacity: .6; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin-top: .15rem; }
+.pass-modal-overlay { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.pass-modal-card { background: white; border-radius: 16px; width: 100%; max-width: 340px; box-shadow: 0 24px 60px rgba(0,0,0,.3); animation: modalIn .15s ease; overflow: hidden; }
+.pass-modal-header { background: linear-gradient(135deg, var(--navy), #1a3a5c); padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: .75rem; }
+.pass-modal-header .lock-icon { font-size: 1.5rem; }
+.pass-modal-header h3 { color: white; font-size: .95rem; font-weight: 800; }
+.pass-modal-header p { color: rgba(255,255,255,.6); font-size: .75rem; }
+.pass-modal-body { padding: 1.5rem; }
+.pass-error { color: var(--danger); font-size: .8rem; margin-top: .4rem; font-weight: 600; display: none; }
+.filter-chips { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.filter-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .75rem; border-radius: 99px; border: 1.5px solid var(--gray-300); background: white; font-size: .8rem; font-weight: 600; color: var(--gray-600); cursor: pointer; transition: all .15s; font-family: inherit; }
+.filter-chip:hover { border-color: var(--gray-500); color: var(--gray-900); }
+.filter-chip.active-chip { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.filter-chip.chip-warning.active-chip { border-color: #D97706; background: var(--accent-light); color: #D97706; }
+.filter-chip.chip-danger.active-chip { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+.hs-cell { font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hs-norm { color: var(--gray-700); }
+.hs-50 { color: #D97706; }
+.hs-100 { color: var(--danger); }
+.hs-empty { color: var(--gray-300); }
+.estado-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 700; padding: .2rem .55rem; border-radius: 99px; }
+.estado-presente { background: #F0FDF4; color: #16A34A; }
+.estado-sin-salida { background: #FFFBEB; color: #D97706; }
+.estado-sin-entrada{ background: #FEF2F2; color: #DC2626; }
+.rostro-si { background: #EDE9FE; color: #7C3AED; }
+.rostro-no { background: var(--gray-100); color: var(--gray-400); }
+.foto-picker { display:flex; align-items:center; gap:.9rem; margin-bottom:1.25rem; }
+.foto-preview { width:64px; height:64px; border-radius:50%; object-fit:cover; background:var(--gray-100); border:1.5px solid var(--gray-300); display:flex; align-items:center; justify-content:center; color:var(--gray-400); font-size:1.6rem; flex-shrink:0; }
+.foto-picker-actions { display:flex; flex-direction:column; gap:.4rem; }
+.rostro-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; background:var(--gray-50); border-radius:8px; padding:.6rem .8rem; margin-bottom:1.25rem; }
+.rostro-row .rostro-txt { font-size:.82rem; color:var(--gray-600); }
+.face-row-modal { display:none; flex-direction:column; align-items:center; gap:.5rem; padding:.75rem; border-radius:10px; background:rgba(124,58,237,.06); border:1px solid rgba(124,58,237,.22); margin-bottom:1.25rem; }
+.face-row-modal video { width:160px; height:120px; border-radius:8px; object-fit:cover; background:#000; transform:scaleX(-1); }
+.face-row-modal span { font-size:.76rem; color:#7C3AED; font-weight:600; }
+@media (max-width: 640px) {
+  .dash-main { padding: 1rem; }
+  .stat-card .stat-value { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN (solo administradores) ════ -->
+<div id="loginWrap">
+  <div class="portal-wrap">
+    <div class="portal-left">
+      <div class="logo-glow-wrap">
+        <div class="logo-ring"></div><div class="logo-ring"></div><div class="logo-ring"></div><div class="logo-ring"></div>
+        <div class="orbit-dot"></div><div class="orbit-dot"></div>
+        <div class="logo-img-wrap"><img src="../marcacion/jvs-icon.png" alt="JV Systems" /></div>
+      </div>
+      <div class="portal-brand-text">
+        <p>Panel de Control — Asistencia y Accesos</p>
+        <strong id="brandEmpresa">JV Systems</strong>
+      </div>
+    </div>
+
+    <div class="portal-right">
+      <div class="portal-card">
+        <div class="portal-brand">
+          <div class="portal-icon">🛡️</div>
+          <h1 class="portal-title">Panel de <span>Control</span></h1>
+          <p class="portal-subtitle">Acceso exclusivo para administradores</p>
+        </div>
+
+        <div class="portal-avatar-wrap"><div class="portal-avatar" id="portalAvatar">?</div></div>
+        <div class="portal-field" id="nameFieldWrap">
+          <span class="portal-field-icon">👤</span>
+          <input type="text" class="portal-input" id="empSearch" placeholder="Buscá tu nombre..."
+                 autocomplete="off" oninput="onEmpSearch(this.value)" onfocus="showAutoList()" />
+          <button class="portal-clear" onclick="clearEmpSearch()">✕</button>
+          <div class="autocomplete-box" id="autoList" style="display:none"></div>
+        </div>
+        <div id="claveSection">
+          <div class="portal-field">
+            <span class="portal-field-icon">🔑</span>
+            <input type="password" class="portal-input" id="dniInput" placeholder="Clave de acceso"
+                   inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()" />
+          </div>
+          <div class="portal-error" id="loginError">Clave incorrecta</div>
+          <button class="portal-btn" onclick="doLogin()">→ INGRESAR</button>
+        </div>
+        <p id="loginHint" style="text-align:center;font-size:.75rem;color:rgba(255,255,255,.22);margin-top:.875rem">
+          Buscá tu nombre para continuar
+        </p>
+        <p style="text-align:center;font-size:.72rem;margin-top:.6rem">
+          <a href="../marcacion/" style="color:rgba(255,255,255,.2);text-decoration:none">← Marcar mi horario</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div id="dashPage" class="hidden">
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <img src="../marcacion/jvs-icon.png" alt="JV Systems" />
+        <div><strong>Panel de Control</strong><span id="dashSubEmpresa">JV Systems</span></div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" id="navResumen" onclick="switchTab('resumen')">🏠 <span>Dashboard</span></button>
+        <button class="sidebar-item" id="navJornada" onclick="switchTab('jornada')">📅 <span>Jornada Laboral</span></button>
+        <button class="sidebar-item" id="navMarcaciones" onclick="switchTab('marcaciones')">📋 <span>Marcaciones</span></button>
+        <button class="sidebar-item" id="navProyectos" onclick="switchTab('proyectos')">📊 <span>Horas en Proyectos</span></button>
+        <button class="sidebar-item" id="navAusentismo" onclick="switchTab('ausentismo')">🌴 <span>Ausentismo</span></button>
+        <button class="sidebar-item" id="navUsuarios" onclick="switchTab('usuarios')">👥 <span>Usuarios</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="btnEjemplos" onclick="cargarEjemplos()">🧪 Datos de prueba</button>
+        <a href="../marcacion/">⏱ Marcar mi horario</a>
+        <button onclick="logout()">Salir</button>
+      </div>
+    </aside>
+
+    <div class="app-content">
+      <header class="app-topbar">
+        <h2>¡Hola, <span id="topbarNombre">Admin</span>! 👋</h2>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <img src="../marcacion/jvs-icon.png" style="width:20px;height:20px;border-radius:5px" alt="" />
+          <span style="font-size:.72rem;color:var(--gray-400);font-weight:600;letter-spacing:.05em">JV SYSTEMS · SOLUCIONES DIGITALES</span>
+        </div>
+      </header>
+
+      <main class="dash-main">
+
+        <!-- ══ RESUMEN ══ -->
+        <div id="viewResumen">
+          <div class="stats-grid" id="resumenKpis" style="grid-template-columns:repeat(4,1fr)">
+            <div class="stat-card total"><div class="stat-value" id="rkJornadas">—</div><div class="stat-label">Jornadas hoy</div></div>
+            <div class="stat-card horas"><div class="stat-value" id="rkPresentes">—</div><div class="stat-label">Presentes</div></div>
+            <div class="stat-card ausentes"><div class="stat-value" id="rkAusencias">—</div><div class="stat-label">Ausencias pendientes</div></div>
+            <div class="stat-card total"><div class="stat-value" id="rkHsSemana">—</div><div class="stat-label">HS trabajadas (semana)</div></div>
+          </div>
+
+          <div class="resumen-grid">
+            <div class="chart-card">
+              <div class="chart-card-title">⏱ Horas trabajadas — últimos 7 días</div>
+              <div class="chart-canvas-wrap" style="height:200px"><canvas id="chartSemana"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-title">🧑‍🤝‍🧑 Equipo hoy</div>
+              <div id="rosterHoy" class="roster-list"></div>
+            </div>
+          </div>
+
+          <div class="resumen-grid">
+            <div class="chart-card">
+              <div class="chart-card-title">📍 Dónde están marcando — hoy</div>
+              <div id="mapaHoy" style="height:280px;border-radius:8px;overflow:hidden"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-title">📆 Calendario</div>
+              <div class="calendario-nav">
+                <button class="btn-admin" onclick="calMoverMes(-1)">←</button>
+                <strong id="calMesLabel">—</strong>
+                <button class="btn-admin" onclick="calMoverMes(1)">→</button>
+              </div>
+              <div id="calendarioGrid" class="calendario-grid"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ JORNADA / MARCACIONES / PROYECTOS (comparten filtros) ══ -->
+        <div id="viewFiltrosWrap" class="hidden">
+          <div class="filters-bar">
+            <div class="filters-grid">
+              <div class="form-group"><label class="form-label">Desde</label><input type="date" class="form-input" id="filterFrom" /></div>
+              <div class="form-group"><label class="form-label">Hasta</label><input type="date" class="form-input" id="filterTo" /></div>
+              <div class="form-group">
+                <label class="form-label">Empleado</label>
+                <div class="select-wrapper"><select class="form-select" id="filterEmpleado"><option value="todos">Todos</option></select></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tipo / Estado</label>
+                <div class="select-wrapper">
+                  <select class="form-select" id="filterTipo">
+                    <option value="todos">Todos</option>
+                    <option value="Entrada">Solo entradas</option>
+                    <option value="Salida">Solo salidas</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-top:.75rem">
+              <div class="filter-chips">
+                <span style="font-size:.75rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Filtrar:</span>
+                <button class="filter-chip chip-warning" id="chipSinSalida" onclick="toggleChip('sinSalida')">⚠️ Sin Salida</button>
+                <button class="filter-chip chip-danger" id="chipSinEntrada" onclick="toggleChip('sinEntrada')">❌ Sin Entrada</button>
+                <button class="filter-chip" id="chipPresentes" onclick="toggleChip('presentes')">✅ Presentes</button>
+              </div>
+              <div style="display:flex;gap:.5rem">
+                <button class="btn btn-primary" onclick="loadData()">🔍 Buscar</button>
+                <button class="btn btn-outline" onclick="clearFilters()">Limpiar</button>
+                <button class="btn btn-outline" onclick="exportCSV()">📥 Exportar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewJornada" class="table-wrapper hidden">
+          <div class="table-header"><h3>📅 Jornada Laboral</h3><span class="table-count" id="tableCount"></span></div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Empleado</th><th>Fecha</th><th>Estado</th><th>Ingreso</th><th>Salida</th><th>Total</th><th>Cargadas</th><th>Normales</th><th>50%</th><th>100%</th></tr></thead>
+              <tbody id="jornadaBody"><tr><td colspan="10"><div class="no-data"><div class="no-data-icon">📋</div><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="viewMarcaciones" class="table-wrapper hidden">
+          <div class="table-header"><h3>📋 Todas las marcaciones</h3><span class="table-count"></span></div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>Empleado</th><th>Tipo</th><th>Fecha</th><th>Hora</th><th>Ubicación</th><th>Dispositivo</th><th>Identidad</th><th style="text-align:center">Acciones</th></tr></thead>
+              <tbody id="marcBody"><tr><td colspan="9"><div class="no-data"><div class="no-data-icon">📋</div><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="viewProyectos" class="table-wrapper hidden">
+          <div class="table-header"><h3>📊 Horas en Proyectos</h3><span class="table-count" id="tableCountProy"></span></div>
+          <div style="padding:1rem 1rem 0;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <label style="font-size:.78rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em">Filtrar por OT:</label>
+            <div class="select-wrapper" style="min-width:200px;max-width:320px">
+              <select class="form-select" id="filterOT" onchange="onFilterOT()" style="font-size:.85rem"><option value="todos">Todas las OTs</option></select>
+            </div>
+          </div>
+          <div class="proy-kpi-row" id="proyKpis" style="padding:.875rem 1rem 0"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;padding:1rem">
+            <div class="chart-card"><div class="chart-card-title">⏱ Horas por empleado</div><div class="chart-canvas-wrap"><canvas id="chartEmpleado"></canvas></div></div>
+            <div class="chart-card"><div class="chart-card-title">📋 Distribución por OT</div><div class="chart-canvas-wrap"><canvas id="chartOT"></canvas></div></div>
+            <div class="chart-card"><div class="chart-card-title">🔧 Horas por tarea</div><div class="chart-canvas-wrap"><canvas id="chartTarea"></canvas></div></div>
+          </div>
+          <style>@media(max-width:900px){ #viewProyectos div[style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; } }</style>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Empleado</th><th>Fecha</th><th>OT</th><th>Proyecto</th><th>Ítem</th><th>Horas</th></tr></thead>
+              <tbody id="proyBody"><tr><td colspan="6"><div class="no-data"><div class="no-data-icon">📊</div><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ AUSENTISMO ══ -->
+        <div id="viewAusentismo" class="table-wrapper hidden">
+          <div class="table-header">
+            <h3>🌴 Ausentismo</h3>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <div class="select-wrapper" style="min-width:160px">
+                <select class="form-select" id="filterAusEstado" onchange="loadAusencias()" style="font-size:.82rem;padding:.45rem .8rem">
+                  <option value="todos">Todos los estados</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Aprobada">Aprobada</option>
+                  <option value="Rechazada">Rechazada</option>
+                </select>
+              </div>
+              <span class="table-count" id="tableCountAus"></span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Empleado</th><th>Tipo</th><th>Desde</th><th>Hasta</th><th>Motivo</th><th>Estado</th><th style="text-align:center">Acciones</th></tr></thead>
+              <tbody id="ausenciasBody"><tr><td colspan="7"><div class="no-data"><div class="no-data-icon">🌴</div><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══ USUARIOS ══ -->
+        <div id="viewUsuarios" class="table-wrapper hidden">
+          <div class="table-header">
+            <h3>👥 Usuarios</h3>
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <span class="table-count" id="tableCountUsuarios"></span>
+              <button class="btn btn-primary" style="padding:.5rem 1rem;font-size:.85rem" onclick="abrirModalUsuario('crear')">➕ Nuevo usuario</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th></th><th>Nombre</th><th>Rol</th><th>Rostro</th><th style="text-align:center">Acciones</th></tr></thead>
+              <tbody id="usuariosBody"><tr><td colspan="5"><div class="no-data"><div class="no-data-icon">👥</div><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDICIÓN DE MARCACIÓN -->
+<div class="modal-overlay hidden" id="editModal" onclick="closeModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3 id="modalTitle">✏️ Editar marcación</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-info" id="modalInfo"></div>
+      <div class="form-group" id="modalTipoGroup">
+        <label class="form-label">Tipo de marcación</label>
+        <div class="select-wrapper"><select class="form-select" id="modalTipo"><option value="Entrada">🟢 Entrada</option><option value="Salida">🔴 Salida</option></select></div>
+      </div>
+      <div class="form-group" id="modalFechaGroup"><label class="form-label">Fecha (dd/MM/yyyy)</label><input type="text" class="form-input" id="modalFecha" placeholder="28/05/2026" maxlength="10" /></div>
+      <div class="form-group" style="margin-bottom:0"><label class="form-label" id="modalHoraLabel">Hora</label><input type="time" class="form-input" id="modalHora" step="60" /></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" id="modalSaveBtn" onclick="guardarModal()">Guardar cambios</button></div>
+  </div>
+</div>
+
+<!-- MODAL ALTA / EDICIÓN DE USUARIO -->
+<div class="modal-overlay hidden" id="usuarioModal" onclick="closeUsuarioModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3 id="usuarioModalTitle">➕ Nuevo usuario</h3><button class="modal-close" onclick="closeUsuarioModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="foto-picker">
+        <div class="foto-preview" id="usuarioFotoPreview">👤</div>
+        <div class="foto-picker-actions">
+          <input type="file" id="usuarioFotoInput" accept="image/*" style="display:none" onchange="onUsuarioFotoChange(this)" />
+          <button class="btn-admin" onclick="document.getElementById('usuarioFotoInput').click()">📷 Elegir foto</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre</label>
+        <input type="text" class="form-input" id="usuarioNombreInput" placeholder="Nombre y apellido" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Clave de acceso</label>
+        <input type="text" class="form-input" id="usuarioClaveInput" placeholder="Clave" />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Rol</label>
+        <div class="select-wrapper"><select class="form-select" id="usuarioRolInput"><option value="Empleado">Empleado</option><option value="Admin">Admin</option></select></div>
+      </div>
+      <div class="rostro-row" id="usuarioRostroRow" style="margin-top:1.25rem">
+        <span class="rostro-txt" id="usuarioRostroTxt">Sin rostro registrado</span>
+        <button class="btn-admin" onclick="capturarRostroUsuario()">🔄 Capturar rostro</button>
+      </div>
+      <div class="face-row-modal" id="faceRowModal">
+        <video id="faceVideoModal" autoplay muted playsinline></video>
+        <span id="faceStatusModal">Verificando...</span>
+      </div>
+      <div class="pass-error" id="usuarioModalError" style="display:none"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeUsuarioModal()">Cancelar</button><button class="btn btn-primary" id="usuarioModalSaveBtn" onclick="guardarUsuario()">Guardar</button></div>
+  </div>
+</div>
+
+<!-- MODAL CONTRASEÑA ADMIN -->
+<div class="pass-modal-overlay hidden" id="passModal">
+  <div class="pass-modal-card">
+    <div class="pass-modal-header"><div class="lock-icon">🔒</div><div><h3>Confirmar acción</h3><p id="passModalSubtitle">Esta acción requiere confirmación</p></div></div>
+    <div class="pass-modal-body">
+      <div class="form-group" style="margin-bottom:.5rem">
+        <label class="form-label">Tu clave de admin</label>
+        <input type="password" class="form-input" id="passModalInput" placeholder="Confirmá tu clave" onkeydown="if(event.key==='Enter')confirmPassModal()" />
+      </div>
+      <div class="pass-error" id="passModalError">Clave incorrecta</div>
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button class="btn btn-outline" style="flex:1" onclick="cancelPassModal()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1" onclick="confirmPassModal()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading / toasts -->
+<div class="portal-loading" id="portalLoading"><div class="portal-spinner"></div><div class="portal-loading-txt" id="loadingTxt">Procesando...</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="../marcacion/js/leaflet/leaflet.js"></script>
+<script src="../marcacion/js/face-api/face-api.min.js"></script>
+<script>
+/* =============================================================
+   CONFIG — mismo backend que ../marcacion/
+   ============================================================= */
+const CONFIG = {
+  EMPRESA:    'AFG Ingeniería',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzk9Sc7b6MZp0iV00O5DsSa53yAySzER8MzuMx4iouFOkL9B4nVJH3t--z1GwPTAKVd/exec',
+  HABILITAR_OT: true,
+};
+
+/* ── Estado global ─────────────────────────────────────────── */
+let empleados  = [];
+let selectedEmp = null;
+let session     = null; // { nombre, pass, rol }
+let proyectos   = [];
+let faceModelsLoaded = false;
+
+let allData = [], allJornadas = [], allHorasProyecto = [], allHorasDiarias = [], allAusencias = [], allUsuarios = [];
+const VIEWS = ['resumen','jornada','marcaciones','proyectos','ausentismo','usuarios'];
+let currentTab = 'resumen';
+let activeChip = null;
+let calMes = new Date().getMonth(), calAnio = new Date().getFullYear();
+let _chartSemana = null, _mapaHoy = null;
+let _chartEmpleado = null, _chartOT = null, _chartTarea = null;
+
+const AVATAR_COLORS = ['#3B82F6','#8B5CF6','#EC4899','#10B981','#F59E0B','#EF4444','#06B6D4','#84CC16','#F97316','#6366F1'];
+const empColorMap = {};
+function empColor(name) {
+  if (!empColorMap[name]) empColorMap[name] = AVATAR_COLORS[Object.keys(empColorMap).length % AVATAR_COLORS.length];
+  return empColorMap[name];
+}
+function empInitials(name) {
+  const p = (name||'').trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : (name||'?').substring(0,2).toUpperCase();
+}
+function avatarHtml(name, foto, size=34) {
+  if (foto) return `<img class="emp-avatar" src="${foto}" style="width:${size}px;height:${size}px" alt="" />`;
+  return `<div class="emp-avatar" style="background:${empColor(name)};width:${size}px;height:${size}px;font-size:${size*0.28}px">${empInitials(name)}</div>`;
+}
+function esc(s) { return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rnd1(n) { return Math.round(n*10)/10; }
+function todayISO() { return new Date().toISOString().split('T')[0]; }
+function daysAgoISO(n) { const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; }
+function isoToDMY(iso) { if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('brandEmpresa').textContent = CONFIG.EMPRESA;
+  document.getElementById('dashSubEmpresa').textContent = CONFIG.EMPRESA;
+  document.getElementById('navProyectos').style.display = CONFIG.HABILITAR_OT ? '' : 'none';
+  loadEmpleados();
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#nameFieldWrap')) document.getElementById('autoList').style.display = 'none';
+  });
+});
+
+async function loadEmpleados() {
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=empleados`);
+    const d = await r.json();
+    if (d.success) empleados = d.empleados;
+  } catch {}
+}
+
+/* ── Autocomplete de nombre (login) ───────────────────────────*/
+function onEmpSearch(val) {
+  const q = val.trim().toLowerCase();
+  const list = document.getElementById('autoList');
+  if (!q) { list.style.display='none'; return; }
+  const matches = empleados.filter(e => e.toLowerCase().includes(q)).slice(0,7);
+  if (!matches.length) { list.style.display='none'; return; }
+  list.innerHTML = matches.map(e =>
+    `<div class="ac-item" onclick="selectEmp('${e.replace(/'/g,"\\'")}')">
+       <div class="ac-init" style="background:${empColor(e)}">${empInitials(e)}</div>${e}
+     </div>`).join('');
+  list.style.display = 'block';
+}
+function showAutoList() { onEmpSearch(document.getElementById('empSearch').value); }
+function selectEmp(name) {
+  selectedEmp = name;
+  document.getElementById('empSearch').value = name;
+  document.getElementById('autoList').style.display = 'none';
+  const av = document.getElementById('portalAvatar');
+  av.style.background = empColor(name); av.textContent = empInitials(name); av.classList.add('found');
+  document.getElementById('claveSection').style.display = 'block';
+  document.getElementById('loginHint').style.display  = 'none';
+  document.getElementById('loginError').style.display = 'none';
+  setTimeout(() => document.getElementById('dniInput').focus(), 80);
+}
+function clearEmpSearch() {
+  document.getElementById('empSearch').value = '';
+  document.getElementById('autoList').style.display = 'none';
+  document.getElementById('claveSection').style.display = 'none';
+  document.getElementById('loginHint').style.display  = 'block';
+  selectedEmp = null;
+  const av = document.getElementById('portalAvatar');
+  av.style.background=''; av.textContent='?'; av.classList.remove('found');
+}
+
+/* ── Login (solo admin) ───────────────────────────────────────*/
+async function doLogin() {
+  const clave = document.getElementById('dniInput').value.trim();
+  const errEl = document.getElementById('loginError');
+  if (!selectedEmp) { showToast('Seleccioná tu nombre primero','error'); return; }
+  if (!clave)       { errEl.textContent='Ingresá tu clave'; errEl.style.display='block'; return; }
+  errEl.style.display = 'none';
+  showPortalLoading('Verificando...');
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=login&empleado=${encodeURIComponent(selectedEmp)}&pass=${encodeURIComponent(clave)}`);
+    const d = await r.json();
+    hidePortalLoading();
+    if (!d.success) {
+      errEl.textContent = d.error || 'Clave incorrecta'; errEl.style.display='block';
+      document.getElementById('dniInput').value=''; document.getElementById('dniInput').focus();
+      return;
+    }
+    if ((d.rol || 'Empleado') !== 'Admin') {
+      errEl.textContent = 'Esta cuenta no tiene permisos de administrador — usá "Marcar mi horario" para fichar.';
+      errEl.style.display='block';
+      return;
+    }
+    session = { nombre: d.nombre || selectedEmp, pass: clave, rol: 'Admin' };
+    enterAdminDashboard();
+  } catch { hidePortalLoading(); showToast('Error de conexión','error'); }
+}
+function showPortalLoading(txt) { document.getElementById('loadingTxt').textContent=txt; document.getElementById('portalLoading').style.display='flex'; }
+function hidePortalLoading()    { document.getElementById('portalLoading').style.display='none'; }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ── Reconocimiento facial (para captura en alta de usuario) ──*/
+async function ensureModelsLoaded() {
+  if (faceModelsLoaded) return;
+  const base = '../marcacion/js/face-api/weights';
+  await Promise.all([
+    faceapi.nets.tinyFaceDetector.loadFromUri(base),
+    faceapi.nets.faceLandmark68Net.loadFromUri(base),
+    faceapi.nets.faceRecognitionNet.loadFromUri(base),
+  ]);
+  faceModelsLoaded = true;
+}
+
+/* =============================================================
+   DASHBOARD
+   ============================================================= */
+
+function enterAdminDashboard() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('dashPage').classList.remove('hidden');
+  document.getElementById('topbarNombre').textContent = session.nombre;
+  initDashboard();
+}
+function logout() {
+  session = null;
+  allData = []; allJornadas = []; allHorasProyecto = []; allHorasDiarias = []; allAusencias = []; allUsuarios = [];
+  destroyCharts();
+  document.getElementById('dashPage').classList.add('hidden');
+  document.getElementById('loginWrap').style.display = 'block';
+  document.getElementById('empSearch').value=''; document.getElementById('dniInput').value='';
+  clearEmpSearch();
+}
+
+async function initDashboard() {
+  document.getElementById('filterFrom').value = daysAgoISO(30);
+  document.getElementById('filterTo').value   = todayISO();
+  switchTab('resumen');
+  if (CONFIG.HABILITAR_OT) loadProyectos();
+  await Promise.all([loadEmpleadosAdmin(), loadData(), loadAusencias(), loadUsuarios()]);
+}
+
+async function loadProyectos() {
+  try {
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=proyectos`);
+    const d = await r.json();
+    if (d.success) proyectos = d.proyectos;
+  } catch {}
+}
+
+async function loadEmpleadosAdmin() {
+  try {
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=empleados`);
+    const data = await res.json();
+    if (data.success) {
+      const sel = document.getElementById('filterEmpleado');
+      while (sel.options.length > 1) sel.remove(1);
+      data.empleados.forEach(emp => {
+        empColor(emp);
+        const o = document.createElement('option'); o.value = emp; o.textContent = emp;
+        sel.appendChild(o);
+      });
+    }
+  } catch {}
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  VIEWS.forEach(t => {
+    document.getElementById('nav' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
+    document.getElementById('view' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('hidden', t !== tab);
+  });
+  document.getElementById('viewFiltrosWrap').classList.toggle('hidden', !['jornada','marcaciones','proyectos'].includes(tab));
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  if (currentTab === 'resumen') renderResumen();
+  else if (currentTab === 'jornada') renderJornada(allJornadas);
+  else if (currentTab === 'marcaciones') renderMarcaciones(allData);
+  else if (currentTab === 'proyectos') renderProyectos(allHorasProyecto);
+  else if (currentTab === 'ausentismo') renderAusentismo(allAusencias);
+  else if (currentTab === 'usuarios') renderUsuarios(allUsuarios);
+}
+
+function toggleChip(tipo) {
+  activeChip = activeChip === tipo ? null : tipo;
+  ['sinSalida','sinEntrada','presentes'].forEach(t => {
+    const id = 'chip' + t.charAt(0).toUpperCase() + t.slice(1);
+    document.getElementById(id)?.classList.toggle('active-chip', activeChip === t);
+  });
+  renderJornada(allJornadas);
+}
+
+function adminParams(extra = {}) {
+  return new URLSearchParams({ empleado: session.nombre, pass: session.pass, ...extra });
+}
+/** POST (en vez de GET) para acciones cuyo payload puede ser largo, como la foto en base64. */
+async function postAdmin(action, extra = {}) {
+  const body = new URLSearchParams({ action, empleado: session.nombre, pass: session.pass, ...extra });
+  const r = await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body });
+  return r.json();
+}
+
+async function loadData() {
+  setLoading(true);
+  const from = document.getElementById('filterFrom').value;
+  const to   = document.getElementById('filterTo').value;
+  const empleado = document.getElementById('filterEmpleado').value;
+
+  try {
+    const base = adminParams({ from, to, empleado });
+    const [rj, rm, rhp, rhd] = await Promise.all([
+      fetch(`${CONFIG.SCRIPT_URL}?action=jornada&${base}`),
+      fetch(`${CONFIG.SCRIPT_URL}?action=marcaciones&${base}`),
+      fetch(`${CONFIG.SCRIPT_URL}?action=horasProyecto&${base}`),
+      fetch(`${CONFIG.SCRIPT_URL}?action=horasDiarias&${base}`)
+    ]);
+    const [dj, dm, dhp, dhd] = await Promise.all([rj.json(), rm.json(), rhp.json(), rhd.json()]);
+    if (!dj.success) {
+      if (dj.error === 'No autorizado') { logout(); return; }
+      showToast('Error del servidor: ' + dj.error, 'error'); return;
+    }
+
+    allJornadas      = dj.data  || [];
+    allData          = dm.data  || [];
+    allHorasProyecto = dhp.data || [];
+    allHorasDiarias  = dhd.data || [];
+
+    const hpMap = {};
+    allHorasProyecto.forEach(hp => { const k = hp['Empleado']+'|'+hp['Fecha']; hpMap[k] = (hpMap[k]||0) + parseFloat(hp['Horas']||0); });
+    allHorasDiarias.forEach(hd  => { const k = hd['Empleado']+'|'+hd['Fecha']; hpMap[k] = (hpMap[k]||0) + parseFloat(hd['Horas']||0); });
+    allJornadas.forEach(j => { j['Cargadas'] = rnd1(hpMap[j.Empleado+'|'+j.Fecha] || 0); });
+
+    renderCurrentTab();
+  } catch (e) {
+    showToast('Error al conectar con el servidor', 'error');
+  } finally { setLoading(false); }
+}
+
+async function loadAusencias() {
+  try {
+    const estado = document.getElementById('filterAusEstado')?.value || 'todos';
+    const p = adminParams({ estado });
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=getAusencias&${p}`);
+    const d = await r.json();
+    if (d.success) allAusencias = d.data || [];
+    if (currentTab === 'resumen' || currentTab === 'ausentismo') renderCurrentTab();
+  } catch {}
+}
+
+async function loadUsuarios() {
+  try {
+    const p = adminParams();
+    const r = await fetch(`${CONFIG.SCRIPT_URL}?action=getEmpleadosFull&${p}`);
+    const d = await r.json();
+    if (d.success) allUsuarios = d.data || [];
+    if (currentTab === 'usuarios') renderCurrentTab();
+  } catch {}
+}
+
+function clearFilters() {
+  document.getElementById('filterFrom').value = daysAgoISO(30);
+  document.getElementById('filterTo').value   = todayISO();
+  document.getElementById('filterEmpleado').value = 'todos';
+  document.getElementById('filterTipo').value = 'todos';
+  activeChip = null;
+  ['chipSinSalida','chipSinEntrada','chipPresentes'].forEach(id => document.getElementById(id)?.classList.remove('active-chip'));
+  loadData();
+}
+
+/* — Resumen — */
+function renderResumen() {
+  const hoyDMY = isoToDMY(todayISO());
+  const jornadasHoy = allJornadas.filter(j => j.Fecha === hoyDMY);
+  const presentesHoy = jornadasHoy.filter(j => j.Estado === 'Presente' || j.Estado === 'Sin Salida').length;
+  const ausPendientes = allAusencias.filter(a => a.Estado === 'Pendiente').length;
+
+  const semanaMin = allJornadas
+    .filter(j => fechaEsDentroDeNDias(j.Fecha, 7))
+    .reduce((s,j) => s + (Number(j['Total Min'])||0), 0);
+
+  document.getElementById('rkJornadas').textContent  = jornadasHoy.length;
+  document.getElementById('rkPresentes').textContent = presentesHoy;
+  document.getElementById('rkAusencias').textContent  = ausPendientes;
+  document.getElementById('rkHsSemana').textContent   = rnd1(semanaMin/60);
+
+  renderRosterHoy(jornadasHoy);
+  renderChartSemana();
+  renderMapaHoy(hoyDMY);
+  renderCalendario();
+}
+
+function fotoDe(nombre) { const u = allUsuarios.find(u => u.Nombre === nombre); return u ? u.Foto : ''; }
+
+function fechaEsDentroDeNDias(fechaDMY, n) {
+  const [d,m,y] = (fechaDMY||'').split('/').map(Number);
+  if (!d) return false;
+  const f = new Date(y, m-1, d);
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const diff = (hoy - f) / 86400000;
+  return diff >= 0 && diff < n;
+}
+
+function renderRosterHoy(jornadasHoy) {
+  const el = document.getElementById('rosterHoy');
+  if (!jornadasHoy.length) { el.innerHTML = `<div class="no-data" style="padding:1.5rem"><p>Nadie marcó hoy todavía</p></div>`; return; }
+  el.innerHTML = jornadasHoy.map(j => {
+    const badge = j.Estado === 'Presente'
+      ? '<span class="estado-badge estado-presente">✅ Presente</span>'
+      : j.Estado === 'Sin Salida'
+        ? '<span class="estado-badge estado-sin-salida">⚠️ Sin salida</span>'
+        : '<span class="estado-badge estado-sin-entrada">❌ Sin entrada</span>';
+    return `<div class="roster-row">
+      <div class="emp-cell">${avatarHtml(j.Empleado, fotoDe(j.Empleado), 30)}<span class="emp-name" style="font-size:.85rem">${esc(j.Empleado)}</span></div>
+      ${badge}
+    </div>`;
+  }).join('');
+}
+
+function renderChartSemana() {
+  const ctx = document.getElementById('chartSemana')?.getContext('2d');
+  if (!ctx) return;
+  if (_chartSemana) { _chartSemana.destroy(); _chartSemana = null; }
+  const dias = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    dias.push({ label: d.toLocaleDateString('es-AR',{weekday:'short'}), dmy: isoToDMY(d.toISOString().split('T')[0]) });
+  }
+  const horasPorDia = dias.map(d => rnd1(allJornadas.filter(j => j.Fecha === d.dmy).reduce((s,j)=>s+(Number(j['Total Min'])||0),0)/60));
+  _chartSemana = new Chart(ctx, { type:'bar',
+    data:{ labels: dias.map(d=>d.label), datasets:[{ label:'Horas', data: horasPorDia, backgroundColor:'#1565C0BB', borderColor:'#1565C0', borderWidth:2, borderRadius:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw} h`}}},
+      scales:{ x:{grid:{display:false}}, y:{grid:{color:'#f1f5f9'}, ticks:{callback:v=>v+'h'}} } } });
+}
+
+function renderMapaHoy(hoyDMY) {
+  const el = document.getElementById('mapaHoy');
+  if (!el) return;
+  const puntos = allData.filter(r => r.Fecha === hoyDMY && r.Latitud && r.Longitud);
+  if (_mapaHoy) { _mapaHoy.remove(); _mapaHoy = null; }
+  el.innerHTML = '';
+  if (!puntos.length) { el.innerHTML = `<div class="no-data" style="padding:2rem"><div class="no-data-icon">📍</div><p>Sin marcaciones con ubicación hoy</p></div>`; return; }
+
+  L.Icon.Default.imagePath = '../marcacion/js/leaflet/images/';
+  _mapaHoy = L.map(el, { scrollWheelZoom: false }).setView([parseFloat(puntos[0].Latitud), parseFloat(puntos[0].Longitud)], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO', maxZoom: 20, subdomains: 'abcd'
+  }).addTo(_mapaHoy);
+  const bounds = [];
+  puntos.forEach(p => {
+    const lat = parseFloat(p.Latitud), lng = parseFloat(p.Longitud);
+    bounds.push([lat,lng]);
+    const disp = p.Dispositivo ? `<br><span style="color:#64748B">${esc(p.Dispositivo)}</span>` : '';
+    L.marker([lat,lng]).addTo(_mapaHoy).bindPopup(`<strong>${esc(p.Empleado)}</strong><br>${esc(p.Tipo)} · ${esc(p.Hora?.substring(0,5)||'')}${disp}`);
+  });
+  if (bounds.length > 1) _mapaHoy.fitBounds(bounds, { padding:[24,24] });
+  setTimeout(() => _mapaHoy?.invalidateSize(), 150);
+}
+
+/* — Calendario mensual — */
+function calMoverMes(delta) {
+  calMes += delta;
+  if (calMes < 0) { calMes = 11; calAnio--; }
+  if (calMes > 11) { calMes = 0; calAnio++; }
+  renderCalendario();
+}
+
+function renderCalendario() {
+  const grid = document.getElementById('calendarioGrid');
+  if (!grid) return;
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('calMesLabel').textContent = `${meses[calMes]} ${calAnio}`;
+
+  const primerDia = new Date(calAnio, calMes, 1);
+  const offset = (primerDia.getDay() + 6) % 7;
+  const diasEnMes = new Date(calAnio, calMes+1, 0).getDate();
+  const hoy = new Date();
+
+  const estadoPorDia = {};
+  allJornadas.forEach(j => {
+    const [d,m,y] = (j.Fecha||'').split('/').map(Number);
+    if (m-1 === calMes && y === calAnio) {
+      estadoPorDia[d] = j.Estado === 'Sin Salida' ? 'sinsalida' : 'presente';
+    }
+  });
+  allAusencias.filter(a => a.Estado === 'Aprobada').forEach(a => {
+    const [d1,m1,y1] = (a.FechaDesde||'').split('/').map(Number);
+    const [d2,m2,y2] = (a.FechaHasta||a.FechaDesde||'').split('/').map(Number);
+    if (!d1) return;
+    const desde = new Date(y1,m1-1,d1), hasta = new Date(y2||y1,(m2||m1)-1,d2||d1);
+    for (let dt = new Date(desde); dt <= hasta; dt.setDate(dt.getDate()+1)) {
+      if (dt.getMonth() === calMes && dt.getFullYear() === calAnio) estadoPorDia[dt.getDate()] = 'ausencia';
+    }
+  });
+
+  let html = ['L','M','X','J','V','S','D'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < offset; i++) html += `<div class="cal-day cal-empty"></div>`;
+  for (let d = 1; d <= diasEnMes; d++) {
+    const isToday = hoy.getDate()===d && hoy.getMonth()===calMes && hoy.getFullYear()===calAnio;
+    const est = estadoPorDia[d];
+    const cls = est ? `cal-${est}` : '';
+    html += `<div class="cal-day ${cls} ${isToday?'cal-today':''}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function renderJornada(jornadas) {
+  const tbody = document.getElementById('jornadaBody');
+  const countEl = document.getElementById('tableCount');
+  const tipoFil = document.getElementById('filterTipo').value;
+
+  let filtered = jornadas;
+  if (tipoFil === 'Entrada') filtered = jornadas.filter(j => j.Ingreso && !j.Salida);
+  else if (tipoFil === 'Salida') filtered = jornadas.filter(j => j.Salida);
+  if (activeChip === 'sinSalida')  filtered = filtered.filter(j => j.Estado === 'Sin Salida');
+  if (activeChip === 'sinEntrada') filtered = filtered.filter(j => j.Estado === 'Sin Entrada');
+  if (activeChip === 'presentes')  filtered = filtered.filter(j => j.Estado === 'Presente');
+
+  countEl.textContent = `${filtered.length} jornada${filtered.length !== 1 ? 's' : ''}`;
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="no-data"><div class="no-data-icon">📭</div><p>No hay jornadas para los filtros seleccionados</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(j => {
+    const min = Number(j['Total Min']) || 0;
+    const sinSal = j.Estado === 'Sin Salida';
+    const sinEnt = j.Estado === 'Sin Entrada';
+    const rowCls = sinSal ? 'row-warning' : sinEnt ? 'row-absent' : '';
+
+    let estadoBadge;
+    if (sinEnt) estadoBadge = '<span class="estado-badge estado-sin-entrada">❌ Sin entrada</span>';
+    else if (sinSal) estadoBadge = '<span class="estado-badge estado-sin-salida">⚠️ Sin salida</span>';
+    else estadoBadge = '<span class="estado-badge estado-presente">✅ Presente</span>';
+
+    const carg = j['Cargadas'] || 0;
+    let cargHtml;
+    if (carg > 0) {
+      const totalH = Number(j['Total Min']||0) / 60;
+      const ok = Math.abs(rnd1(totalH - carg)) <= 0.5;
+      cargHtml = `<span class="hs-cell" style="background:${ok?'#EFF6FF':'#FFFBEB'};color:${ok?'#1565C0':'#D97706'}">${carg}h</span>`;
+    } else cargHtml = `<span class="hs-cell hs-empty">—</span>`;
+
+    const hsN = j['HS Normales'] || 0, hs50v = j['HS 50'] || 0, hs100v = j['HS 100'] || 0;
+    const hsNormHtml = hsN > 0 ? `<span class="hs-cell hs-norm">${hsN}</span>` : `<span class="hs-cell hs-empty">—</span>`;
+    const hs50Html   = hs50v > 0 ? `<span class="hs-cell hs-50">${hs50v}</span>`   : `<span class="hs-cell hs-empty">—</span>`;
+    const hs100Html  = hs100v > 0 ? `<span class="hs-cell hs-100">${hs100v}</span>` : `<span class="hs-cell hs-empty">—</span>`;
+
+    const empName = esc(j.Empleado);
+    const salidaCell = sinSal
+      ? `<button class="btn-admin success-btn" onclick="requirePass('salida','${empName.replace(/'/g,"\\'")}','${esc(j.Fecha)}')">➕ Agregar salida</button>`
+      : `<span class="${sinEnt ? '' : 'time-out'}">${j.Salida ? j.Salida.substring(0,5) : '—'}</span>`;
+
+    return `<tr class="${rowCls}">
+      <td><div class="emp-cell">${avatarHtml(j.Empleado, fotoDe(j.Empleado))}<div><div class="emp-name">${empName}</div></div></div></td>
+      <td><span class="fecha-chip">${esc(j.Fecha)}</span></td>
+      <td>${estadoBadge}</td>
+      <td><span class="${sinEnt ? '' : 'time-in'}">${j.Ingreso ? j.Ingreso.substring(0,5) : '—'}</span></td>
+      <td>${salidaCell}</td>
+      <td>${j['Total Horas'] ? `<span class="hs-cell hs-norm">${j['Total Horas']}</span>` : `<span class="hs-cell hs-empty">—</span>`}</td>
+      <td>${cargHtml}</td>
+      <td>${hsNormHtml}</td>
+      <td>${hs50Html}</td>
+      <td>${hs100Html}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMarcaciones(rows) {
+  const tbody = document.getElementById('marcBody');
+  const tipoFil = document.getElementById('filterTipo').value;
+  const filtered = tipoFil === 'todos' ? rows : rows.filter(r => r['Tipo'] === tipoFil);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="no-data"><div class="no-data-icon">📭</div><p>Sin resultados</p></div></td></tr>`;
+    return;
+  }
+  const verifBadge = {
+    'Verificado':  '<span class="estado-badge estado-presente">✅ Verificado</span>',
+    'No coincide': '<span class="estado-badge estado-sin-salida">⚠️ No coincide</span>',
+    'Enrolado':    '<span class="estado-badge" style="background:#EDE9FE;color:#7C3AED">🆕 Enrolado</span>',
+    'Sin rostro':  '<span style="color:var(--gray-300);font-size:.78rem">➖</span>',
+    'Sin cámara':  '<span style="color:var(--gray-300);font-size:.78rem">➖</span>',
+  };
+  tbody.innerHTML = filtered.map(row => {
+    const lat = row['Latitud'], lng = row['Longitud'];
+    const gps = (lat && lng && lat !== '-') ? `<a class="map-link" href="https://maps.google.com/?q=${lat},${lng}" target="_blank">📍 Ver</a>` : `<span style="color:var(--gray-300)">—</span>`;
+    const cls = row['Tipo'] === 'Entrada' ? 'badge-entrada' : 'badge-salida';
+    const icon = row['Tipo'] === 'Entrada' ? '🟢' : '🔴';
+    const id = esc(row['ID']), tipo = esc(row['Tipo']), fech = esc(row['Fecha']), hora = esc(row['Hora']);
+    const identidad = verifBadge[row['Verificado']] || '<span style="color:var(--gray-300);font-size:.78rem">—</span>';
+    const dispositivo = row['Dispositivo'] ? esc(row['Dispositivo']) : '<span style="color:var(--gray-300)">—</span>';
+    return `<tr>
+      <td><code style="font-size:.72rem;color:var(--gray-400)">${id}</code></td>
+      <td><div class="emp-cell">${avatarHtml(row['Empleado'], fotoDe(row['Empleado']), 28)}<strong>${esc(row['Empleado'])}</strong></div></td>
+      <td><span class="badge ${cls}">${icon} ${tipo}</span></td>
+      <td>${fech}</td><td>${hora}</td><td>${gps}</td>
+      <td style="font-size:.8rem;color:var(--gray-500)">${dispositivo}</td>
+      <td>${identidad}</td>
+      <td style="white-space:nowrap;text-align:center">
+        <button class="btn-admin" onclick="requirePass('edit','${id}','${tipo}','${fech}','${hora}')">✏️ Editar</button>
+        <button class="btn-admin danger" onclick="requirePass('delete','${id}')" style="margin-left:.3rem">🗑️</button>
+        <button class="btn-admin" onclick="requirePass('rostro','${row['Empleado'].replace(/'/g,"\\'")}')" style="margin-left:.3rem">🔄 Rostro</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function destroyCharts() {
+  [['chartEmpleado'],['chartOT'],['chartTarea']].forEach(([id]) => {
+    const el = document.getElementById(id);
+    if (el && typeof Chart !== 'undefined') { const existing = Chart.getChart(el); if (existing) existing.destroy(); }
+  });
+  _chartEmpleado = null; _chartOT = null; _chartTarea = null;
+}
+function onFilterOT() { renderProyectos(allHorasProyecto); }
+
+function renderProyectos(rows) {
+  const tbody = document.getElementById('proyBody');
+  const countEl = document.getElementById('tableCountProy');
+  const filterOTEl = document.getElementById('filterOT');
+  if (filterOTEl) {
+    const otSet = new Set(rows.map(r => r['OT']));
+    const selectedOT = filterOTEl.value;
+    filterOTEl.innerHTML = '<option value="todos">Todas las OTs</option>' + [...otSet].map(ot => {
+      const nombre = rows.find(r => r['OT'] === ot)?.['Nombre OT'] || ot;
+      return `<option value="${esc(ot)}" ${selectedOT===ot?'selected':''}>OT ${esc(ot)} — ${esc(nombre)}</option>`;
+    }).join('');
+  }
+  const otFil = filterOTEl?.value || 'todos';
+  const filtered = otFil === 'todos' ? rows : rows.filter(r => r['OT'] === otFil);
+  countEl.textContent = `${filtered.length} registro${filtered.length !== 1 ? 's' : ''}`;
+
+  const totalHS = rnd1(filtered.reduce((s,r) => s + parseFloat(r['Horas']||0), 0));
+  const empSet2 = new Set(filtered.map(r => r['Empleado']));
+  const otSet2  = new Set(filtered.map(r => r['OT']));
+  const avgEmp  = empSet2.size > 0 ? rnd1(totalHS / empSet2.size) : 0;
+  const kpisEl = document.getElementById('proyKpis');
+  if (kpisEl) kpisEl.innerHTML = [
+    { val: totalHS, lbl: 'HS totales imputadas' }, { val: empSet2.size, lbl: 'Empleados activos' },
+    { val: otSet2.size, lbl: 'OTs trabajadas' }, { val: avgEmp, lbl: 'HS prom. por empleado' },
+  ].map(k => `<div class="proy-kpi"><div class="proy-kpi-val">${k.val}</div><div class="proy-kpi-lbl">${k.lbl}</div></div>`).join('');
+
+  destroyCharts();
+  const chartColors = ['#3B82F6','#8B5CF6','#10B981','#F59E0B','#EF4444','#06B6D4','#84CC16','#F97316','#EC4899'];
+
+  const empMap = {};
+  filtered.forEach(r => { empMap[r['Empleado']] = rnd1((empMap[r['Empleado']]||0) + parseFloat(r['Horas']||0)); });
+  const empLabels = Object.keys(empMap).sort((a,b) => empMap[b]-empMap[a]);
+  const ctxEmp = document.getElementById('chartEmpleado')?.getContext('2d');
+  if (ctxEmp && empLabels.length > 0) {
+    _chartEmpleado = new Chart(ctxEmp, { type:'bar',
+      data:{ labels: empLabels.map(e => e.split(' ')[0]), datasets:[{ label:'Horas', data: empLabels.map(e=>empMap[e]),
+        backgroundColor: empLabels.map(e => empColor(e)+'BB'), borderColor: empLabels.map(e => empColor(e)), borderWidth:2, borderRadius:6 }] },
+      options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw} h`}} },
+        scales:{ x:{ grid:{color:'#f1f5f9'}, ticks:{font:{size:10}, callback:v=>v+'h'} }, y:{ grid:{display:false}, ticks:{font:{size:10}} } } } });
+  }
+  const otMap = {};
+  filtered.forEach(r => { const k=`OT ${r['OT']}`; otMap[k]=rnd1((otMap[k]||0)+parseFloat(r['Horas']||0)); });
+  const otLabels = Object.keys(otMap);
+  const ctxOT = document.getElementById('chartOT')?.getContext('2d');
+  if (ctxOT && otLabels.length > 0) {
+    _chartOT = new Chart(ctxOT, { type:'doughnut',
+      data:{ labels:otLabels, datasets:[{ data:otLabels.map(k=>otMap[k]), backgroundColor:chartColors.slice(0,otLabels.length), borderWidth:3, borderColor:'white', hoverOffset:8 }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'bottom', labels:{font:{size:10},padding:10,boxWidth:11,boxHeight:11}}, tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} h`}} }, cutout:'60%' } });
+  }
+  const tareaMap = {};
+  filtered.forEach(r => { const k = r['Item'] || 'General'; tareaMap[k] = rnd1((tareaMap[k]||0) + parseFloat(r['Horas']||0)); });
+  const tareaLabels = Object.keys(tareaMap).sort((a,b) => tareaMap[b]-tareaMap[a]).slice(0,8);
+  const ctxTarea = document.getElementById('chartTarea')?.getContext('2d');
+  if (ctxTarea && tareaLabels.length > 0) {
+    _chartTarea = new Chart(ctxTarea, { type:'bar',
+      data:{ labels: tareaLabels.map(t => t.length > 12 ? t.substring(0,10)+'…' : t), datasets:[{ label:'Horas', data:tareaLabels.map(t=>tareaMap[t]),
+        backgroundColor: chartColors.map(c=>c+'99'), borderColor: chartColors, borderWidth:2, borderRadius:5 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{ label:c=>` ${c.raw} h`, title:items=>tareaLabels[items[0].dataIndex] }}},
+        scales:{ x:{grid:{display:false}, ticks:{font:{size:9}}}, y:{grid:{color:'#f1f5f9'}, ticks:{font:{size:9}, callback:v=>v+'h'}} } } });
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="no-data"><div class="no-data-icon">📊</div><p>No hay horas cargadas en proyectos para este período</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(r => {
+    const horas = parseFloat(r['Horas'] || 0);
+    return `<tr>
+      <td><div class="emp-cell">${avatarHtml(r['Empleado'], fotoDe(r['Empleado']), 28)}<strong>${esc(r['Empleado'])}</strong></div></td>
+      <td><span class="fecha-chip">${esc(r['Fecha'])}</span></td>
+      <td><span style="font-weight:700;color:var(--primary);font-size:.85rem">OT ${esc(r['OT'])}</span></td>
+      <td style="color:var(--gray-600)">${esc(r['Nombre OT'])}</td>
+      <td><span style="font-size:.8rem;color:var(--gray-500)">${esc(r['Item'])}</span></td>
+      <td><span class="hs-cell hs-norm">${horas.toFixed(1)} h</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* — Ausentismo — */
+function renderAusentismo(rows) {
+  const tbody = document.getElementById('ausenciasBody');
+  const countEl = document.getElementById('tableCountAus');
+  countEl.textContent = `${rows.length} solicitud${rows.length !== 1 ? 'es' : ''}`;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="no-data"><div class="no-data-icon">🌴</div><p>No hay solicitudes de licencia</p></div></td></tr>`;
+    return;
+  }
+  const badgeCls = { Pendiente:'estado-sin-salida', Aprobada:'estado-presente', Rechazada:'estado-sin-entrada' };
+  const badgeIcon = { Pendiente:'⏳', Aprobada:'✅', Rechazada:'❌' };
+  tbody.innerHTML = rows.map(r => {
+    const acciones = r.Estado === 'Pendiente'
+      ? `<button class="btn-admin success-btn" onclick="requirePass('ausApr','${esc(r.ID)}')">✅ Aprobar</button>
+         <button class="btn-admin danger" onclick="requirePass('ausRech','${esc(r.ID)}')" style="margin-left:.3rem">❌ Rechazar</button>`
+      : `<span style="color:var(--gray-300);font-size:.78rem">—</span>`;
+    return `<tr>
+      <td><div class="emp-cell">${avatarHtml(r.Empleado, fotoDe(r.Empleado), 28)}<strong>${esc(r.Empleado)}</strong></div></td>
+      <td>${esc(r.Tipo)}</td>
+      <td><span class="fecha-chip">${esc(r.FechaDesde)}</span></td>
+      <td><span class="fecha-chip">${esc(r.FechaHasta)}</span></td>
+      <td style="max-width:220px;color:var(--gray-600);font-size:.82rem">${esc(r.Motivo)}</td>
+      <td><span class="estado-badge ${badgeCls[r.Estado]||''}">${badgeIcon[r.Estado]||''} ${esc(r.Estado)}</span></td>
+      <td style="white-space:nowrap;text-align:center">${acciones}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function resolverAusenciaAccion(id, estado) {
+  try {
+    const p = adminParams({ id, estado });
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=resolverAusencia&${p}`);
+    const data = await res.json();
+    if (data.success) { showToast(`✅ Solicitud ${estado.toLowerCase()}`, 'success'); await loadAusencias(); }
+    else showToast(data.error || 'Error', 'error');
+  } catch { showToast('Error de conexión', 'error'); }
+}
+
+/* — Usuarios — */
+function renderUsuarios(rows) {
+  const tbody = document.getElementById('usuariosBody');
+  document.getElementById('tableCountUsuarios').textContent = `${rows.length} usuario${rows.length !== 1 ? 's' : ''}`;
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="no-data"><div class="no-data-icon">👥</div><p>No hay usuarios cargados</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(u => `
+    <tr>
+      <td>${avatarHtml(u.Nombre, u.Foto, 32)}</td>
+      <td><strong>${esc(u.Nombre)}</strong></td>
+      <td><span class="badge ${u.Rol === 'Admin' ? 'badge-admin' : 'badge-empleado'}">${u.Rol === 'Admin' ? '🛡️ Admin' : '👷 Empleado'}</span></td>
+      <td>${u.TieneRostro ? '<span class="estado-badge rostro-si">✅ Registrado</span>' : '<span class="estado-badge rostro-no">➖ Sin registrar</span>'}</td>
+      <td style="white-space:nowrap;text-align:center">
+        <button class="btn-admin" onclick="abrirModalUsuario('editar','${esc(u.Nombre).replace(/'/g,"\\'")}')">✏️ Editar</button>
+        <button class="btn-admin danger" onclick="requirePass('delUsuario','${esc(u.Nombre).replace(/'/g,"\\'")}')" style="margin-left:.3rem">🗑️ Eliminar</button>
+      </td>
+    </tr>`).join('');
+}
+
+let _usuarioModalMode = 'crear', _usuarioModalNombreOriginal = null, _usuarioFotoBase64 = null, _usuarioRostroDescriptor = null;
+
+function abrirModalUsuario(mode, nombre) {
+  _usuarioModalMode = mode; _usuarioModalNombreOriginal = nombre || null;
+  _usuarioFotoBase64 = null; _usuarioRostroDescriptor = null;
+  document.getElementById('usuarioModalError').style.display = 'none';
+  document.getElementById('usuarioFotoPreview').innerHTML = '👤';
+  document.getElementById('usuarioClaveInput').value = '';
+
+  if (mode === 'crear') {
+    document.getElementById('usuarioModalTitle').textContent = '➕ Nuevo usuario';
+    document.getElementById('usuarioNombreInput').value = '';
+    document.getElementById('usuarioNombreInput').disabled = false;
+    document.getElementById('usuarioRolInput').value = 'Empleado';
+    document.getElementById('usuarioRostroRow').style.display = 'none';
+  } else {
+    const u = allUsuarios.find(u => u.Nombre === nombre) || {};
+    document.getElementById('usuarioModalTitle').textContent = '✏️ Editar usuario';
+    document.getElementById('usuarioNombreInput').value = nombre;
+    document.getElementById('usuarioNombreInput').disabled = true;
+    document.getElementById('usuarioRolInput').value = u.Rol || 'Empleado';
+    if (u.Foto) document.getElementById('usuarioFotoPreview').innerHTML = `<img src="${u.Foto}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="" />`;
+    document.getElementById('usuarioRostroRow').style.display = 'flex';
+    document.getElementById('usuarioRostroTxt').textContent = u.TieneRostro ? '✅ Rostro ya registrado' : 'Sin rostro registrado';
+  }
+  document.getElementById('usuarioModal').classList.remove('hidden');
+}
+function closeUsuarioModal(e) {
+  if (e && e.target !== document.getElementById('usuarioModal')) return;
+  document.getElementById('usuarioModal').classList.add('hidden');
+}
+
+function onUsuarioFotoChange(input) {
+  const file = input.files[0];
+  if (!file || !file.type.startsWith('image/')) { showToast('Elegí un archivo de imagen', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _usuarioFotoBase64 = e.target.result;
+    document.getElementById('usuarioFotoPreview').innerHTML = `<img src="${_usuarioFotoBase64}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="" />`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function capturarRostroUsuario() {
+  const nombre = document.getElementById('usuarioNombreInput').value.trim();
+  if (!nombre) { showToast('Ingresá el nombre primero', 'error'); return; }
+  const faceRow = document.getElementById('faceRowModal');
+  const faceStatus = document.getElementById('faceStatusModal');
+  const video = document.getElementById('faceVideoModal');
+  let stream = null;
+  faceRow.style.display = 'flex';
+  faceStatus.textContent = 'Activando cámara...';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width:240, height:180 }, audio:false });
+    video.srcObject = stream;
+    await new Promise(r => { video.onloadedmetadata = r; });
+    faceStatus.textContent = 'Cargando modelo...';
+    await ensureModelsLoaded();
+    faceStatus.textContent = 'Detectando rostro...';
+    await new Promise(r => setTimeout(r, 700));
+    const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                             .withFaceLandmarks().withFaceDescriptor();
+    stream.getTracks().forEach(t => t.stop());
+    faceRow.style.display = 'none';
+    if (!det) { showToast('No se detectó ningún rostro, probá de nuevo', 'error'); return; }
+    _usuarioRostroDescriptor = Array.from(det.descriptor);
+    document.getElementById('usuarioRostroRow').style.display = 'flex';
+    document.getElementById('usuarioRostroTxt').textContent = '🆕 Rostro capturado (se guarda al confirmar)';
+    showToast('Rostro capturado', 'success');
+  } catch (e) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    faceRow.style.display = 'none';
+    showToast('No se pudo acceder a la cámara', 'error');
+  }
+}
+
+async function guardarUsuario() {
+  const nombre = document.getElementById('usuarioNombreInput').value.trim();
+  const clave  = document.getElementById('usuarioClaveInput').value.trim();
+  const rol    = document.getElementById('usuarioRolInput').value;
+  const errEl  = document.getElementById('usuarioModalError');
+  errEl.style.display = 'none';
+
+  if (!nombre) { errEl.textContent = 'Ingresá un nombre'; errEl.style.display = 'block'; return; }
+  if (_usuarioModalMode === 'crear' && allUsuarios.some(u => u.Nombre.toLowerCase() === nombre.toLowerCase())) {
+    errEl.textContent = 'Ya existe un usuario con ese nombre'; errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('usuarioModalSaveBtn');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const extra = { rol };
+    if (clave) extra.clave = clave;
+    if (_usuarioFotoBase64) extra.foto = _usuarioFotoBase64;
+
+    let data;
+    if (_usuarioModalMode === 'crear') {
+      data = await postAdmin('crearEmpleado', { nombre, ...extra });
+    } else {
+      data = await postAdmin('editarEmpleado', { nombre, ...extra });
+    }
+    if (!data.success) { errEl.textContent = data.error || 'Error al guardar'; errEl.style.display = 'block'; return; }
+
+    if (_usuarioRostroDescriptor) {
+      if (_usuarioModalMode === 'editar') await fetch(`${CONFIG.SCRIPT_URL}?action=borrarRostro&${adminParams({ empleado: nombre })}`);
+      await fetch(`${CONFIG.SCRIPT_URL}?action=guardarRostro&empleado=${encodeURIComponent(nombre)}&descriptor=${encodeURIComponent(JSON.stringify(_usuarioRostroDescriptor))}`);
+    }
+
+    showToast(_usuarioModalMode === 'crear' ? '✅ Usuario creado' : '✅ Usuario actualizado', 'success');
+    document.getElementById('usuarioModal').classList.add('hidden');
+    await Promise.all([loadUsuarios(), loadEmpleadosAdmin(), loadEmpleados()]);
+  } catch { errEl.textContent = 'Error de conexión'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Guardar'; }
+}
+
+async function eliminarUsuarioAccion(nombre) {
+  try {
+    const p = adminParams({ nombre });
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=eliminarEmpleado&${p}`);
+    const data = await res.json();
+    if (data.success) { showToast('🗑️ Usuario eliminado', 'success'); await loadUsuarios(); }
+    else showToast(data.error || 'Error', 'error');
+  } catch { showToast('Error de conexión', 'error'); }
+}
+
+/* — Confirmación de acciones sensibles — */
+let _passAction = null;
+function requirePass(action, ...args) {
+  _passAction = { action, args };
+  const subtitles = { salida:'Agregar salida de empleado', edit:'Editar marcación existente', delete:'Eliminar marcación permanentemente', ausApr:'Aprobar solicitud de licencia', ausRech:'Rechazar solicitud de licencia', rostro:'Reiniciar rostro de referencia', delUsuario:'Eliminar usuario permanentemente' };
+  document.getElementById('passModalSubtitle').textContent = subtitles[action] || 'Acción de administrador';
+  document.getElementById('passModalInput').value = '';
+  document.getElementById('passModalError').style.display = 'none';
+  document.getElementById('passModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('passModalInput').focus(), 100);
+}
+function cancelPassModal() { document.getElementById('passModal').classList.add('hidden'); _passAction = null; }
+function confirmPassModal() {
+  const val = document.getElementById('passModalInput').value;
+  const errEl = document.getElementById('passModalError');
+  if (val !== session.pass) {
+    errEl.style.display = 'block';
+    document.getElementById('passModalInput').value = ''; document.getElementById('passModalInput').focus();
+    return;
+  }
+  errEl.style.display = 'none';
+  document.getElementById('passModal').classList.add('hidden');
+  if (!_passAction) return;
+  const { action, args } = _passAction; _passAction = null;
+  if (action === 'salida') abrirModalSalida(...args);
+  else if (action === 'edit') abrirModalEditar(...args);
+  else if (action === 'delete') confirmarBorrar(args[0]);
+  else if (action === 'ausApr') resolverAusenciaAccion(args[0], 'Aprobada');
+  else if (action === 'ausRech') resolverAusenciaAccion(args[0], 'Rechazada');
+  else if (action === 'rostro') resetRostroAccion(args[0]);
+  else if (action === 'delUsuario') eliminarUsuarioAccion(args[0]);
+}
+
+async function resetRostroAccion(empleado) {
+  if (!confirm(`¿Reiniciar el rostro de referencia de ${empleado}?\nLa próxima vez que marque, su foto quedará como nueva referencia.`)) return;
+  try {
+    const p = adminParams({ empleado });
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=borrarRostro&${p}`);
+    const data = await res.json();
+    if (data.success) { showToast('🔄 Rostro reiniciado', 'success'); await loadUsuarios(); }
+    else showToast(data.error || 'Error', 'error');
+  } catch { showToast('Error de conexión', 'error'); }
+}
+
+let _modalMode = null, _modalData = {};
+function abrirModalSalida(empleado, fecha) {
+  _modalMode = 'addSalida'; _modalData = { empleado, fecha };
+  document.getElementById('modalTitle').textContent = '➕ Registrar salida';
+  document.getElementById('modalInfo').innerHTML = `<strong>${esc(empleado)}</strong><br>${esc(fecha)}`;
+  document.getElementById('modalTipoGroup').style.display = 'none';
+  document.getElementById('modalFechaGroup').style.display = 'none';
+  document.getElementById('modalHoraLabel').textContent = 'Hora de salida';
+  const n = new Date();
+  document.getElementById('modalHora').value = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('editModal').classList.remove('hidden');
+}
+function abrirModalEditar(id, tipo, fecha, hora) {
+  _modalMode = 'editMarc'; _modalData = { id };
+  document.getElementById('modalTitle').textContent = '✏️ Editar marcación';
+  document.getElementById('modalInfo').innerHTML = `ID: <strong>${esc(id)}</strong>`;
+  document.getElementById('modalTipoGroup').style.display = '';
+  document.getElementById('modalFechaGroup').style.display = '';
+  document.getElementById('modalHoraLabel').textContent = 'Hora';
+  document.getElementById('modalTipo').value = tipo;
+  document.getElementById('modalFecha').value = fecha;
+  document.getElementById('modalHora').value = hora ? hora.substring(0,5) : '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('editModal')) return;
+  document.getElementById('editModal').classList.add('hidden');
+}
+async function guardarModal() {
+  const btn = document.getElementById('modalSaveBtn');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    if (_modalMode === 'addSalida') {
+      const hora = document.getElementById('modalHora').value + ':00';
+      const p = adminParams({ empleado: _modalData.empleado, tipo: 'Salida', fecha: _modalData.fecha, hora });
+      const res = await fetch(`${CONFIG.SCRIPT_URL}?action=marcarAdmin&${p}`);
+      const data = await res.json();
+      if (data.success) { showToast('✅ Salida registrada correctamente', 'success'); document.getElementById('editModal').classList.add('hidden'); await loadData(); }
+      else showToast(data.error || 'Error', 'error');
+    } else if (_modalMode === 'editMarc') {
+      const hora = document.getElementById('modalHora').value + ':00';
+      const fecha = document.getElementById('modalFecha').value;
+      const tipo = document.getElementById('modalTipo').value;
+      const p = adminParams({ id: _modalData.id, tipo, fecha, hora });
+      const res = await fetch(`${CONFIG.SCRIPT_URL}?action=editarMarcacion&${p}`);
+      const data = await res.json();
+      if (data.success) { showToast('✅ Marcación actualizada', 'success'); document.getElementById('editModal').classList.add('hidden'); await loadData(); }
+      else showToast(data.error || 'Error', 'error');
+    }
+  } catch { showToast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+}
+async function confirmarBorrar(id) {
+  if (!confirm(`¿Eliminar la marcación ${id}?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    const p = adminParams({ id });
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=borrarMarcacion&${p}`);
+    const data = await res.json();
+    if (data.success) { showToast('🗑️ Registro eliminado', 'success'); await loadData(); }
+    else showToast(data.error || 'Error', 'error');
+  } catch { showToast('Error de conexión', 'error'); }
+}
+
+function exportCSV() {
+  if (currentTab === 'jornada') {
+    if (!allJornadas.length) { showToast('No hay datos', ''); return; }
+    descargar(['Empleado','Fecha','Estado','Ingreso','Salida','Total Horas','Cargadas','HS Normales','HS 50','HS 100'], allJornadas, `jornada_${todayISO()}.csv`);
+  } else if (currentTab === 'proyectos') {
+    if (!allHorasProyecto.length) { showToast('No hay datos', ''); return; }
+    descargar(['Empleado','Fecha','OT','Nombre OT','Item','Horas'], allHorasProyecto, `proyectos_${todayISO()}.csv`);
+  } else if (currentTab === 'ausentismo') {
+    if (!allAusencias.length) { showToast('No hay datos', ''); return; }
+    descargar(['Empleado','Tipo','FechaDesde','FechaHasta','Motivo','Estado'], allAusencias, `ausentismo_${todayISO()}.csv`);
+  } else {
+    if (!allData.length) { showToast('No hay datos', ''); return; }
+    descargar(['ID','Empleado','Tipo','Fecha','Hora','Latitud','Longitud','Dispositivo','Verificado'], allData, `marcaciones_${todayISO()}.csv`);
+  }
+}
+function descargar(headers, rows, nombre) {
+  const csv = [ headers.join(','), ...rows.map(r => headers.map(h => `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(',')) ].join('\n');
+  const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nombre; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Archivo descargado — abrilo con Excel', 'success');
+}
+
+async function cargarEjemplos() {
+  const btn = document.getElementById('btnEjemplos');
+  if (!confirm('¿Cargar datos de prueba?\nSe agregarán ~165 marcaciones de 7 empleados en los últimos 15 días hábiles.')) return;
+  btn.disabled = true; btn.innerHTML = '⏳ Cargando...';
+  try {
+    const p = adminParams();
+    const res = await fetch(`${CONFIG.SCRIPT_URL}?action=ejemplos&${p}`);
+    const data = await res.json();
+    if (data.success) { showToast(`✅ ${data.inserted} registros cargados`, 'success'); await loadEmpleadosAdmin(); await loadData(); }
+    else showToast(data.error || 'Error', 'error');
+  } catch { showToast('Error de conexión', 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = '🧪 Datos de prueba'; }
+}
+
+function setLoading(on) {
+  if (!on) return;
+  const spin = `<div style="margin:0 auto 1rem;width:40px;height:40px;border:3px solid var(--gray-200);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite"></div>`;
+  document.getElementById('jornadaBody').innerHTML = `<tr><td colspan="10"><div class="no-data">${spin}<p>Cargando...</p></div></td></tr>`;
+  document.getElementById('marcBody').innerHTML    = `<tr><td colspan="9"><div class="no-data">${spin}<p>Cargando...</p></div></td></tr>`;
+  document.getElementById('proyBody').innerHTML    = `<tr><td colspan="6"><div class="no-data">${spin}<p>Cargando...</p></div></td></tr>`;
+}
+</script>
+</body>
+</html>
