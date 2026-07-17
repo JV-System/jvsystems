@@ -4937,6 +4937,13 @@ function _getFactLista() {
     lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q) || ((o.facturacion||{}).nroFactura||'').toLowerCase().includes(q); });
   }
   lista.sort(function(a,b){
+    const fa = a.facturacion||{}, fb = b.facturacion||{};
+    if (_factFiltro === 'cobrado') {
+      // Ordenar por fecha de factura descendente
+      const da = fa.fechaFactura ? new Date(fa.fechaFactura) : new Date(0);
+      const db = fb.fechaFactura ? new Date(fb.fechaFactura) : new Date(0);
+      return db - da;
+    }
     const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
     return rank(a)-rank(b);
   });
