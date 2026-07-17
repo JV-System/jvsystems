@@ -5101,15 +5101,22 @@ function renderFactRow(o) {
   const badgeTxt = !f.nroFactura ? 'Sin facturar' : f.estadoPago === 'pagado' ? '✓ Cobrado' : '⏳ Pendiente cobro';
 
   // ── Fila resumen ──
+  var esCobrado = _factFiltro === 'cobrado';
   var row = '<div onclick="toggleFactCard('+o.id+')" style="padding:14px 16px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.15s;user-select:none;'+(isOpen?'background:#f0f6ff;':'background:white;')+'">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
     + '<div style="min-width:0;flex:1;">'
-    + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">'
-    + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + esc(o.numero||'—') + '</span>'
-    + (f.nroFactura ? '<span style="font-size:11px;color:#888;font-weight:600;">' + esc(f.nroFactura) + '</span>' : '')
-    + '</div>'
-    + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(o.empresa||'—') + '</div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.fecha||'') + (o.responsable?' · '+esc(o.responsable):'') + (f.fechaFactura ? ' · <span style="color:#1565D8;font-weight:600;">Fact: '+esc(f.fechaFactura)+'</span>' : '') + '</div>'
+    + (esCobrado ? (
+        '<div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:2px;">' + esc(f.nroFactura||'—') + '</div>'
+      + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(o.empresa||'—') + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.numero||'') + (f.fechaFactura ? ' · <span style="color:#1565D8;font-weight:600;">Fact: '+esc(f.fechaFactura)+'</span>' : '') + '</div>'
+    ) : (
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">'
+      + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + esc(o.numero||'—') + '</span>'
+      + (f.nroFactura ? '<span style="font-size:11px;color:#888;font-weight:600;">' + esc(f.nroFactura) + '</span>' : '')
+      + '</div>'
+      + '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(o.empresa||'—') + '</div>'
+      + '<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">' + esc(o.fecha||'') + (o.responsable?' · '+esc(o.responsable):'') + (f.fechaFactura ? ' · <span style="color:#1565D8;font-weight:600;">Fact: '+esc(f.fechaFactura)+'</span>' : '') + '</div>'
+    ))
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;">'
     + '<span style="font-size:14px;font-weight:800;color:var(--navy);">' + (f.total ? fmt(f.total) : '—') + '</span>'
