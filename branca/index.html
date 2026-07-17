@@ -4941,15 +4941,16 @@ function _getFactLista() {
     const fa = a.facturacion||{}, fb = b.facturacion||{};
     if (_factFiltro === 'cobrado') {
       const parseF = function(s){ if(!s) return 0; var p=s.split('/'); return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():new Date(s).getTime()||0; };
+      const parseNro = function(s){ var m=(s||'').match(/(\d+)$/); return m?parseInt(m[1]):0; };
       if (_factSort === 'fecha-asc') {
         var d = parseF(fa.fechaFactura) - parseF(fb.fechaFactura);
-        return d !== 0 ? d : (parseInt(fa.nroFactura)||0) - (parseInt(fb.nroFactura)||0);
+        return d !== 0 ? d : parseNro(fa.nroFactura) - parseNro(fb.nroFactura);
       }
       if (_factSort === 'orden-desc') return (parseInt(b.id)||0) - (parseInt(a.id)||0);
       if (_factSort === 'orden-asc')  return (parseInt(a.id)||0) - (parseInt(b.id)||0);
       // default: fecha-desc
       var d = parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
-      return d !== 0 ? d : (parseInt(fb.nroFactura)||0) - (parseInt(fa.nroFactura)||0);
+      return d !== 0 ? d : parseNro(fb.nroFactura) - parseNro(fa.nroFactura);
     }
     const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
     return rank(a)-rank(b);
