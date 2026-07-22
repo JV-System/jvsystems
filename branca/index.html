@@ -5305,6 +5305,9 @@ function recalcFact(oid) {
 function parsearHoras(str) {
   if (!str) return 0;
   str = String(str).toLowerCase().trim();
+  // Formato h:mm o hh:mm (ej: "2:30", "1:00")
+  var mc = str.match(/^(\d+):(\d{2})$/);
+  if (mc) return parseInt(mc[1]) + parseInt(mc[2]) / 60;
   var h = 0, m = 0;
   var mh = str.match(/(\d+(?:[.,]\d+)?)\s*h/);
   var mm = str.match(/(\d+)\s*min/);
