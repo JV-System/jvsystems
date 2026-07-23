@@ -7916,7 +7916,7 @@ async function confirmarEnvioXubio(oid) {
       if (!o.xubioEnvios) o.xubioEnvios = [];
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
-      o.facturacion.estadoPago = 'Cobrado';
+      o.facturacion.estadoPago = 'pagado';
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
@@ -7980,7 +7980,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       if (!o.xubioEnvios) o.xubioEnvios = [];
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
-      o.facturacion.estadoPago = 'Cobrado';
+      o.facturacion.estadoPago = 'pagado';
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
