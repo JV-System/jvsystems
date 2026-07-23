@@ -2298,7 +2298,13 @@ function _syncPush() {
         tecnicos: tecnicosDB,
         config:   { adminPass: getAdminPass() }
       });
-      await _fbPut('/usuarios', getUsers());
+      // Solo subir usuarios si tenemos al menos tantos como hay en Firebase
+      // (evita que un dispositivo con lista incompleta sobreescriba a todos)
+      const localUsers = getUsers();
+      const cloudCount = parseInt(localStorage.getItem('branca_users_cloud_count') || '0');
+      if (localUsers.length >= cloudCount) {
+        await _fbPut('/usuarios', localUsers);
+      }
       setSyncStatus('ok');
     } catch(e) {
       setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
@@ -2599,6 +2605,7 @@ async function loadFromCloud() {
     // USUARIOS — la nube gana siempre
     if (Array.isArray(remoteUsuarios) && remoteUsuarios.length) {
       localStorage.setItem('branca_users', JSON.stringify(remoteUsuarios));
+      localStorage.setItem('branca_users_cloud_count', String(remoteUsuarios.length));
     }
 
     // MIGRACIÓN: locked sin firma → locked_nosign (corre una vez por dispositivo)
@@ -7920,6 +7927,7 @@ async function confirmarEnvioXubio(oid) {
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
+      if (ordenActual && String(ordenActual.id) === String(oid)) { if (!ordenActual.facturacion) ordenActual.facturacion = {}; ordenActual.facturacion.estadoPago = 'pagado'; }
       saveData();
       renderFacturacion();
     } else if (data.clienteNoEncontrado) {
@@ -7984,6 +7992,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
+      if (ordenActual && String(ordenActual.id) === String(oid)) { if (!ordenActual.facturacion) ordenActual.facturacion = {}; ordenActual.facturacion.estadoPago = 'pagado'; }
       saveData();
       renderFacturacion();
     } else {
