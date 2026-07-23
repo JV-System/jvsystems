@@ -7933,9 +7933,10 @@ async function confirmarEnvioXubio(oid) {
     } else if (data.clienteNoEncontrado) {
       // Cliente no existe en Xubio → mostrar popup para pedir condición IVA
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Confirmar y enviar a Xubio'; }
-      mostrarPopupCrearCliente(data.nombre, function(condicionIVA) {
-        payload.condicionIVA = condicionIVA;
-        payload.cuit = o.cuit || '';
+      mostrarPopupCrearCliente(data.nombre, o.cuit || '', function(resultado) {
+        payload.condicionIVA = resultado.condicionIVA;
+        payload.cuit = resultado.cuit;
+        payload.empresa = resultado.nombre;
         _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn);
       });
     } else {
@@ -7951,25 +7952,31 @@ async function confirmarEnvioXubio(oid) {
   }
 }
 
-function mostrarPopupCrearCliente(nombre, onConfirm) {
+function mostrarPopupCrearCliente(nombre, cuit, onConfirm) {
   var existing = document.getElementById('popup-crear-cliente');
   if (existing) existing.remove();
+  var inp = 'width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;margin-bottom:14px;background:#fff;box-sizing:border-box;';
+  var lbl = 'display:block;font-size:12px;font-weight:700;color:#6b7280;margin-bottom:4px;';
   var pop = document.createElement('div');
   pop.id = 'popup-crear-cliente';
   pop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-  pop.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">'
-    + '<div style="font-size:16px;font-weight:800;color:#0A1628;margin-bottom:6px;">Cliente no encontrado en Xubio</div>'
-    + '<div style="font-size:13px;color:#374151;margin-bottom:16px;"><b>' + nombre + '</b> no existe en tu cuenta de Xubio.</div>'
-    + '<div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">CONDICIÓN IVA</div>'
-    + '<select id="popup-iva-sel" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;margin-bottom:20px;background:#fff;">'
+  pop.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;max-width:400px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">'
+    + '<div style="font-size:16px;font-weight:800;color:#0A1628;margin-bottom:4px;">Cliente no encontrado en Xubio</div>'
+    + '<div style="font-size:13px;color:#374151;margin-bottom:18px;">Revisá los datos y confirmá para crear el cliente y facturar.</div>'
+    + '<label style="' + lbl + '">NOMBRE DEL CLIENTE</label>'
+    + '<input id="popup-nombre-inp" value="' + nombre.replace(/"/g,'&quot;') + '" style="' + inp + '" />'
+    + '<label style="' + lbl + '">CUIT</label>'
+    + '<input id="popup-cuit-inp" value="' + (cuit||'').replace(/"/g,'&quot;') + '" placeholder="Ej: 20-12345678-9" style="' + inp + '" />'
+    + '<label style="' + lbl + '">CONDICIÓN IVA</label>'
+    + '<select id="popup-iva-sel" style="' + inp + '">'
     + '<option value="RI">Responsable Inscripto</option>'
     + '<option value="M">Monotributista</option>'
     + '<option value="CF" selected>Consumidor Final</option>'
     + '<option value="E">Exento</option>'
     + '</select>'
-    + '<div style="display:flex;gap:10px;">'
+    + '<div style="display:flex;gap:10px;margin-top:4px;">'
     + '<button onclick="document.getElementById(\'popup-crear-cliente\').remove()" style="flex:1;padding:11px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>'
-    + '<button id="popup-crear-btn" onclick="(function(){ var c=document.getElementById(\'popup-iva-sel\').value; document.getElementById(\'popup-crear-cliente\').remove(); window._popupCrearClienteCb && window._popupCrearClienteCb(c); })()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#1565D8;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Crear cliente y facturar</button>'
+    + '<button id="popup-crear-btn" onclick="(function(){ var n=document.getElementById(\'popup-nombre-inp\').value.trim(); var cu=document.getElementById(\'popup-cuit-inp\').value.trim(); var iva=document.getElementById(\'popup-iva-sel\').value; document.getElementById(\'popup-crear-cliente\').remove(); window._popupCrearClienteCb && window._popupCrearClienteCb({nombre:n,cuit:cu,condicionIVA:iva}); })()" style="flex:2;padding:11px;border:none;border-radius:8px;background:#1565D8;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Crear cliente y facturar</button>'
     + '</div>'
     + '</div>';
   window._popupCrearClienteCb = onConfirm;
