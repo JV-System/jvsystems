@@ -4307,7 +4307,7 @@ function renderTabDiagnostico() {
         ${reps.map((r, i) => `
           <div class="repuesto-row" id="rep-row-${i}">
             <input type="text" placeholder="Descripción del repuesto" value="${esc(r.desc)}" onchange="updateRepuesto(${i},'desc',this.value)" ${locked?'readonly':''}>
-            <input type="number" placeholder="Cant." value="${esc(r.cant)}" style="width:70px" onchange="updateRepuesto(${i},'cant',this.value)" ${locked?'readonly':''}>
+            <input type="number" placeholder="Cant." value="${esc(r.cant)}" style="width:70px" onchange="updateRepuesto(${i},'cant',this.value)">
             ${!locked ? `<button class="btn-icon" onclick="removeRepuesto(${i})">✕</button>` : '<span></span>'}
           </div>
         `).join('')}
