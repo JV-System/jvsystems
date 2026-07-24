@@ -4689,7 +4689,7 @@ function renderTabComprobante() {
             <div class="comp-section-title">Repuestos utilizados</div>
             <table class="comp-repuestos-table">
               <thead><tr><th style="width:85%;">Descripción</th><th style="text-align:center;">Cant.</th></tr></thead>
-              <tbody>${reps.map(r=>`<tr><td>${esc(r.desc)}</td><td style="text-align:center;font-weight:600;">${esc(String(r.cant))}</td></tr>`).join('')}</tbody>
+              <tbody>${reps.map((r,i)=>`<tr><td>${esc(r.desc)}</td><td style="text-align:center;"><input type="number" value="${esc(String(r.cant))}" onchange="updateRepuesto(${i},'cant',this.value)" style="width:60px;text-align:center;font-weight:600;border:1px solid #d1d5db;border-radius:5px;padding:3px 5px;font-size:inherit;font-family:inherit;"></td></tr>`).join('')}</tbody>
             </table>
           </div>` : ''}
 
