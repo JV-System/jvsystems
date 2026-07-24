@@ -5213,7 +5213,7 @@ function renderFactRow(o) {
             repRows += '<tr style="border-bottom:1px solid #f3f4f6;">'
               + td(i===0 ? 'Repuestos' : '')
               + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(r.desc) + '</td>'
-              + '<td style="padding:8px 10px;text-align:right;color:#555;">' + esc(String(r.cant||1)) + '</td>'
+              + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-c-'+o.id+'-'+i+'" type="number" min="1" value="'+(r.cant||1)+'" onclick="event.stopPropagation()" oninput="(function(el){updateRepuesto('+i+',\'cant\',el.value);var p=document.getElementById(\'fact-rep-p-'+o.id+'-'+i+'\');if(p){p.dataset.cant=el.value;recalcRep('+o.id+');};})(this)" style="'+inpS+'width:50px;text-align:center;"></td>'
               + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-p-'+o.id+'-'+i+'" type="number" placeholder="precio" value="'+precioGuardado+'" data-cant="'+(r.cant||1)+'" onclick="event.stopPropagation()" oninput="recalcRep('+o.id+')" style="'+inpS+'width:80px;"></td>'
               + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
               + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-rep-t-'+o.id+'-'+i+'">$ '+totalRep.toLocaleString('es-AR')+'</td>'
