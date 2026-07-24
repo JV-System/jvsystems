@@ -7912,6 +7912,8 @@ async function confirmarEnvioXubio(oid) {
     condicionPago:     document.getElementById('xb-cond')?.value   || 'Contado',
     moneda:            document.getElementById('xb-moneda')?.value || 'Pesos',
     items:             items,
+    email:             o.email    || '',
+    ubicacion:         o.ubicacion || '',
   };
   try {
     const res  = await fetch(XUBIO_CF_BASE + '/xubioCrearComprobante', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
