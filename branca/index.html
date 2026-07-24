@@ -7926,10 +7926,23 @@ async function confirmarEnvioXubio(oid) {
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
+      (function() {
+        var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
+        if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
+        var repPrices = (o.facturacion.preciosRepuestos || []).slice(), repTotal = 0, ri = 0;
+        while (document.getElementById('xb-precio-rep-' + ri)) {
+          var rp = parseFloat(document.getElementById('xb-precio-rep-' + ri).value) || 0;
+          var rc = parseFloat(document.getElementById('xb-cant-rep-' + ri) && document.getElementById('xb-cant-rep-' + ri).value) || 1;
+          repPrices[ri] = rp; repTotal += rp * rc; ri++;
+        }
+        if (ri > 0) { o.facturacion.repuestosCosto = repTotal; o.facturacion.preciosRepuestos = repPrices; }
+        var gasV = parseFloat(document.getElementById('xb-precio-gas') && document.getElementById('xb-precio-gas').value);
+        if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
+      })();
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
-      if (ordenActual && String(ordenActual.id) === String(oid)) { if (!ordenActual.facturacion) ordenActual.facturacion = {}; ordenActual.facturacion.estadoPago = 'pagado'; }
+      if (ordenActual && String(ordenActual.id) === String(oid)) { ordenActual.facturacion = Object.assign(ordenActual.facturacion || {}, o.facturacion); }
       saveData();
       renderFacturacion();
     } else if (data.clienteNoEncontrado) {
@@ -7998,10 +8011,23 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
+      (function() {
+        var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
+        if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
+        var repPrices = (o.facturacion.preciosRepuestos || []).slice(), repTotal = 0, ri = 0;
+        while (document.getElementById('xb-precio-rep-' + ri)) {
+          var rp = parseFloat(document.getElementById('xb-precio-rep-' + ri).value) || 0;
+          var rc = parseFloat(document.getElementById('xb-cant-rep-' + ri) && document.getElementById('xb-cant-rep-' + ri).value) || 1;
+          repPrices[ri] = rp; repTotal += rp * rc; ri++;
+        }
+        if (ri > 0) { o.facturacion.repuestosCosto = repTotal; o.facturacion.preciosRepuestos = repPrices; }
+        var gasV = parseFloat(document.getElementById('xb-precio-gas') && document.getElementById('xb-precio-gas').value);
+        if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
+      })();
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
       if (_idx >= 0) ordenes[_idx] = o;
-      if (ordenActual && String(ordenActual.id) === String(oid)) { if (!ordenActual.facturacion) ordenActual.facturacion = {}; ordenActual.facturacion.estadoPago = 'pagado'; }
+      if (ordenActual && String(ordenActual.id) === String(oid)) { ordenActual.facturacion = Object.assign(ordenActual.facturacion || {}, o.facturacion); }
       saveData();
       renderFacturacion();
     } else {
