@@ -6860,6 +6860,11 @@ if (new URLSearchParams(location.search).get('test') === '1') {
     _cloudReady = false;
     setSyncStatus('ok');
     renderOrderList();
+    // Auto-login como admin en modo test
+    var testSession = JSON.stringify({ id: 1, username: 'admin', role: 'admin', nombre: 'Admin Test' });
+    sessionStorage.setItem('branca_session_user', testSession);
+    sessionStorage.setItem('branca_session', 'ses-test');
+    hideLoginScreen();
   })();
 } else {
   loadFromCloud();
