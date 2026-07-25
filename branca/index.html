@@ -4825,10 +4825,26 @@ function _exportarPDFPopup(el, o) {
   win.document.close();
 }
 
+function validarDatosComprobante(o) {
+  var faltantes = [];
+  if (!o.numero) faltantes.push('Número de orden (guardá la orden primero)');
+  if (!o.empresa || o.empresa.trim() === '') faltantes.push('Empresa');
+  if (!o.contacto || o.contacto.trim() === '') faltantes.push('Contacto');
+  if ((!o.probDetectado || o.probDetectado.trim() === '') && (!o.accionRealizada || o.accionRealizada.trim() === '')) faltantes.push('Problema detectado o acción realizada');
+  if (!o.tecnicoNombre && !o.responsable) faltantes.push('Técnico responsable');
+  return faltantes;
+}
+
 function exportarPDF() {
   const el = document.getElementById('printArea');
   if (!el) { showToast('⚠ No se encontró el comprobante.'); return; }
   const o  = ordenActual;
+  var faltantes = validarDatosComprobante(o);
+  if (faltantes.length > 0) {
+    showToast('⚠ Completá los datos antes de generar el PDF:\n• ' + faltantes.join('\n• '));
+    alert('No se puede generar el comprobante.\n\nFaltan los siguientes datos:\n• ' + faltantes.join('\n• '));
+    return;
+  }
   const btn = document.getElementById('btn-pdf');
   const resetBtn = function() { if (btn) { btn.disabled = false; btn.textContent = '📄 Descargar PDF'; } };
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando...'; }
@@ -4896,6 +4912,13 @@ function compartirPDFWhatsApp(callback) {
   const el = document.getElementById('printArea');
   if (!el) { showToast('⚠ No se encontró el comprobante.'); return; }
   const o = ordenActual;
+  var faltantes = validarDatosComprobante(o);
+  if (faltantes.length > 0) {
+    showToast('⚠ Completá los datos antes de generar el PDF:\n• ' + faltantes.join('\n• '));
+    alert('No se puede generar el comprobante.\n\nFaltan los siguientes datos:\n• ' + faltantes.join('\n• '));
+    if (callback) callback(null);
+    return;
+  }
   const nombre = 'Comprobante-' + (o.numero || 'ORDEN') + '.pdf';
   var btn = document.getElementById('wa-pdf-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
@@ -7516,6 +7539,11 @@ function toggleHistorialPanel() {
 // WHATSAPP AL CERRAR ORDEN
 // ══════════════════════════════════════════════
 function mostrarNotifWhatsApp(o) {
+  var faltantes = validarDatosComprobante(o);
+  if (faltantes.length > 0) {
+    alert('No se puede enviar el comprobante.\n\nFaltan los siguientes datos:\n• ' + faltantes.join('\n• '));
+    return;
+  }
   // Si la orden no está cerrada, guardarla automáticamente antes de continuar
   if (o && o.estado !== 'locked' && o.estado !== 'locked_nosign') {
     saveData();
@@ -7678,6 +7706,11 @@ function enviarWhatsApp() {
 // ══════════════════════════════════════════════
 function mostrarModalEmail(o) {
   if (!o) return;
+  var faltantes = validarDatosComprobante(o);
+  if (faltantes.length > 0) {
+    alert('No se puede enviar el comprobante.\n\nFaltan los siguientes datos:\n• ' + faltantes.join('\n• '));
+    return;
+  }
   document.getElementById('email-modal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'email-modal';
