@@ -4829,7 +4829,6 @@ function validarDatosComprobante(o) {
   var faltantes = [];
   if (!o.numero) faltantes.push('Número de orden (guardá la orden primero)');
   if (!o.empresa || o.empresa.trim() === '') faltantes.push('Empresa');
-  if (!o.contacto || o.contacto.trim() === '') faltantes.push('Contacto');
   if ((!o.probDetectado || o.probDetectado.trim() === '') && (!o.accionRealizada || o.accionRealizada.trim() === '')) faltantes.push('Problema detectado o acción realizada');
   if (!o.tecnicoNombre && !o.responsable) faltantes.push('Técnico responsable');
   return faltantes;
