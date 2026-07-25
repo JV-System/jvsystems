@@ -6838,10 +6838,35 @@ function esc(str) {
 // ==================== INIT ====================
 localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 renderOrderList();
-loadFromCloud();
-setInterval(function() {
-  if (document.visibilityState !== 'hidden') loadFromCloud();
-}, 30000);
+
+if (new URLSearchParams(location.search).get('test') === '1') {
+  // ===== MODO TEST — sin Firebase, datos en memoria =====
+  (function() {
+    // Banner visible
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#dc2626;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:5px;letter-spacing:1px;';
+    banner.textContent = '⚠ MODO TEST — nada se guarda en Firebase';
+    document.body.appendChild(banner);
+    // Bloquear sync
+    window._fbPut = async function() {};
+    window._syncPush = function() {};
+    // Datos de prueba
+    ordenes = [
+      { id: 9001, numero: '2026-TEST1', empresa: 'Cliente Prueba SA', contacto: 'Juan Test', tel: '3413000000', cuit: '20-11111111-1', email: 'test@prueba.com', ubicacion: 'Rosario', marca: 'TEST', modelo: 'Máquina X', serie: 'SX-001', tipoServicio: 'mparada', probDetectado: 'No enciende', causaRaiz: 'Fusible quemado', accionRealizada: 'Se reemplazó fusible. Probado OK.', repuestos: [{desc:'Fusible 10A', cant:2, precio:500}], visitas: [{fecha:'2026-07-25', tiempo:'2hs', causa:'Revisión'}], estado: 'open', tecnicoNombre: 'Emanuel Test', responsable: 'Emanuel Test', creadorNombre: 'Emanuel Test', fecha: '2026-07-25', fechaCierre: '', firmaClienteNombre: '', firmaTecnico: '', historialCambios: [], historialEstados: [], facturacion: {}, updatedAt: Date.now() },
+      { id: 9002, numero: '2026-TEST2', empresa: 'Empresa Demo SRL', contacto: 'María Demo', tel: '3416000000', cuit: '30-22222222-2', email: 'demo@empresa.com', ubicacion: 'Villa Gdor. Gálvez', marca: 'DEMO', modelo: 'Router CNC', serie: 'RC-002', tipoServicio: 'preventivo', probDetectado: 'Mantenimiento preventivo', causaRaiz: '', accionRealizada: 'Limpieza y lubricación general.', repuestos: [], visitas: [{fecha:'2026-07-24', tiempo:'3hs', causa:'Preventivo'}], estado: 'locked', tecnicoNombre: 'Emanuel Test', responsable: 'Emanuel Test', creadorNombre: 'Emanuel Test', fecha: '2026-07-24', fechaCierre: '2026-07-24', firmaClienteNombre: 'María Demo', firmaTecnico: 'Emanuel', historialCambios: [], historialEstados: [{fecha:'2026-07-24', texto:'Orden cerrada'}], facturacion: {nroFactura:'F-TEST', manoDeObra:50000, repuestosCosto:0, gastos:0, descuento:0, subtotal:50000, iva:10500, total:60500, condPago:'Contado', estadoPago:'pendiente'}, updatedAt: Date.now() }
+    ];
+    clientesDB = { 'Cliente Prueba SA': {nombre:'Cliente Prueba SA', cuit:'20-11111111-1', email:'test@prueba.com'}, 'Empresa Demo SRL': {nombre:'Empresa Demo SRL', cuit:'30-22222222-2', email:'demo@empresa.com'} };
+    tecnicosDB = [{ nombre: 'Emanuel Test', rol: 'tecnico', id: 'test1' }];
+    _cloudReady = false;
+    setSyncStatus('ok');
+    renderOrderList();
+  })();
+} else {
+  loadFromCloud();
+  setInterval(function() {
+    if (document.visibilityState !== 'hidden') loadFromCloud();
+  }, 30000);
+}
 
 // ══════════════════════════════════════════════════════
 // AUTO-GUARDAR BORRADOR
