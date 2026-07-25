@@ -12,6 +12,9 @@
     gtag('config', 'G-4X148BJ408');
   </script>
   <title>JV Systems — Sistemas a Medida | Juan Villanueva</title>
+  <meta name="description" content="Desarrollo sistemas digitales a medida para empresas: gestión de órdenes, facturación, dashboards y automatización de procesos. Casos reales en producción, sin plantillas genéricas." />
+  <link rel="canonical" href="https://jvsystems.com.ar/" />
+  <meta name="theme-color" content="#07101d" />
   <link rel="icon" type="image/png" href="jvs-icon.png" />
   <!-- Open Graph (WhatsApp, Instagram, etc.) -->
   <meta property="og:title" content="JV Systems — Sistemas Digitales a Medida" />
@@ -19,8 +22,24 @@
   <meta property="og:image" content="https://jvsystems.com.ar/jvs-logo.png" />
   <meta property="og:url" content="https://jvsystems.com.ar" />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_AR" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://jvsystems.com.ar/jvs-logo.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "JV Systems",
+    "founder": { "@type": "Person", "name": "Juan Villanueva" },
+    "url": "https://jvsystems.com.ar",
+    "image": "https://jvsystems.com.ar/jvs-logo.png",
+    "description": "Desarrollo de sistemas digitales a medida: gestión de órdenes, facturación, dashboards y automatización de procesos.",
+    "areaServed": "AR",
+    "telephone": "+543434728484",
+    "email": "jvillanueva@jvsystems.com.ar",
+    "priceRange": "$$"
+  }
+  </script>
   <style>
     :root {
       --bg:       #07101d;
@@ -1405,6 +1424,24 @@
       .historia-grid { grid-template-columns: repeat(2,1fr); }
       .hpanel-final { grid-column: auto; }
     }
+
+    /* ── CASO DE ÉXITO — mockup UI ── */
+    .cm-toolbar { display:flex; align-items:center; gap:.5rem; padding:.6rem .85rem; background:#0a1628; border-bottom:1px solid rgba(255,140,0,.15); }
+    .cm-toolbar-title { font-size:.68rem; font-weight:800; color:rgba(255,255,255,.6); letter-spacing:.03em; }
+    .cm-badge-live { margin-left:auto; display:flex; align-items:center; gap:.35rem; font-size:.6rem; font-weight:700; color:#34d399; letter-spacing:.04em; }
+    .cm-badge-live::before { content:''; width:6px; height:6px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399; animation: blink 1.4s infinite; }
+    .cm-body { padding:.75rem; display:flex; flex-direction:column; gap:.5rem; background:#060e1a; }
+    .cm-row { display:flex; align-items:center; gap:.6rem; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:8px; padding:.55rem .7rem; }
+    .cm-row-id { font-size:.64rem; font-weight:800; color:rgba(255,255,255,.35); width:32px; flex-shrink:0; }
+    .cm-row-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .cm-row-info strong { font-size:.72rem; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cm-row-info span { font-size:.6rem; color:rgba(255,255,255,.4); }
+    .cm-status { font-size:.58rem; font-weight:800; padding:.22rem .55rem; border-radius:99px; text-transform:uppercase; letter-spacing:.03em; flex-shrink:0; white-space:nowrap; }
+    .cm-status.facturada { background:rgba(96,165,250,.15); color:#60a5fa; }
+    .cm-status.cerrada   { background:rgba(52,211,153,.15); color:#34d399; }
+    .cm-status.abierta   { background:rgba(245,158,11,.15); color:#f59e0b; }
+    .cm-footer { display:flex; align-items:center; gap:.5rem; padding:.65rem .85rem; background:#0a1628; border-top:1px solid rgba(255,255,255,.06); font-size:.62rem; color:rgba(255,255,255,.45); }
+    .cm-footer .ok { color:#25d366; font-weight:900; }
   </style>
 </head>
 <body>
@@ -1419,6 +1456,7 @@
   </div>
   <div class="nav-links">
     <a href="#sobre">Sobre mí</a>
+    <a href="#casos">Casos de éxito</a>
     <a href="#bi">Dashboards</a>
     <a href="#proceso">Proceso</a>
     <a href="#contacto">Contacto</a>
@@ -1432,6 +1470,7 @@
 <!-- MENÚ MÓVIL -->
 <div class="nav-mobile-menu" id="navMobileMenu">
   <a href="#sobre"    onclick="cerrarMenu()">Sobre mí</a>
+  <a href="#casos"    onclick="cerrarMenu()">Casos de éxito</a>
   <a href="#bi"       onclick="cerrarMenu()">Dashboards</a>
   <a href="#proceso"  onclick="cerrarMenu()">Proceso</a>
   <a href="#contacto" onclick="cerrarMenu()">Contacto</a>
@@ -1630,7 +1669,81 @@
   </div>
 </section>
 
-<!-- SISTEMAS -->
+<!-- CASOS DE ÉXITO -->
+<section class="sistemas-section" id="casos">
+  <div class="section-header reveal">
+    <span class="section-tag">— Casos de éxito</span>
+    <h2>Resultados reales, <em style="font-style:normal;color:var(--accent)">no promesas</em></h2>
+    <p>Así funciona un sistema JV Systems en producción. Números concretos, de un cliente real.</p>
+  </div>
+
+  <div class="reveal" style="max-width:1000px;margin:0 auto">
+    <div class="sistema-card">
+      <div class="sistema-mockup">
+        <div class="mockup-browser">
+          <div class="mockup-bar">
+            <span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span>
+            <div class="mockup-url">app.jvsystems.com.ar/branca</div>
+          </div>
+          <div class="cm-toolbar">
+            <span class="cm-toolbar-title">📋 Órdenes de Servicio</span>
+            <span class="cm-badge-live">EN VIVO</span>
+          </div>
+          <div class="cm-body">
+            <div class="cm-row">
+              <div class="cm-row-id">#184</div>
+              <div class="cm-row-info"><strong>Mantenimiento — Torno CNC</strong><span>Técnico de campo · hoy 09:14</span></div>
+              <div class="cm-status facturada">Facturada</div>
+            </div>
+            <div class="cm-row">
+              <div class="cm-row-id">#183</div>
+              <div class="cm-row-info"><strong>Reparación — Compresor</strong><span>Técnico de campo · hoy 08:40</span></div>
+              <div class="cm-status cerrada">Cerrada</div>
+            </div>
+            <div class="cm-row">
+              <div class="cm-row-id">#182</div>
+              <div class="cm-row-info"><strong>Instalación — Línea hidráulica</strong><span>Técnico de campo · ayer 17:05</span></div>
+              <div class="cm-status abierta">En campo</div>
+            </div>
+          </div>
+          <div class="cm-footer">
+            <span class="ok">✓</span> Comprobante enviado por WhatsApp · firma digital registrada
+          </div>
+        </div>
+        <div class="mockup-hint">Sistema real en producción</div>
+      </div>
+
+      <div class="sistema-info">
+        <div class="sistema-num">Cliente</div>
+        <div class="sistema-title">Ingeniería Branca SRL</div>
+        <div class="sistema-client">Maquinaria industrial · en producción desde julio 2026</div>
+
+        <div class="sistema-why">
+          <div class="sistema-why-label">El problema</div>
+          <p>Las órdenes de servicio se manejaban en papel y por WhatsApp entre técnicos. Se perdían órdenes, se facturaba tarde por falta de información y nadie tenía visibilidad real del estado de cada trabajo.</p>
+        </div>
+
+        <ul class="sistema-features">
+          <li>Técnicos cargan órdenes desde el celular en campo</li>
+          <li>Comprobante al cliente en segundos por WhatsApp</li>
+          <li>Facturación electrónica integrada con Xubio (AFIP)</li>
+          <li>Firma digital del cliente en el momento del servicio</li>
+          <li>Planificación de visitas con calendario visual</li>
+        </ul>
+
+        <div class="hp-metrics" style="margin-bottom:1.75rem">
+          <div class="hpm"><div class="hpm-val up">0</div><div class="hpm-lbl">Órdenes sin facturar</div></div>
+          <div class="hpm"><div class="hpm-val up">+10</div><div class="hpm-lbl">Usuarios activos</div></div>
+          <div class="hpm"><div class="hpm-val up">100%</div><div class="hpm-lbl">Comprobantes digitales</div></div>
+          <div class="hpm"><div class="hpm-val up">1 día</div><div class="hpm-lbl">De implementación a producción</div></div>
+        </div>
+
+        <a href="#contacto" class="sistema-link">Quiero resultados así →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- BI SECTION -->
 <section class="bi-section" id="bi">
   <div class="bi-inner">
@@ -1867,7 +1980,7 @@
 
     <div class="proceso-card reveal" style="--delay:0s">
       <div class="pc-num">1</div>
-      <div class="pc-img-wrap"><img src="proceso/1.png" alt="El Problema" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/1.png" alt="El Problema" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(248,113,113,.15);color:#f87171">⚠️ El Problema</div>
         <h3 class="pc-title">Gestión ineficiente</h3>
@@ -1877,7 +1990,7 @@
 
     <div class="proceso-card reveal" style="--delay:.1s">
       <div class="pc-num">2</div>
-      <div class="pc-img-wrap"><img src="proceso/2.png" alt="El Tiempo" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/2.png" alt="El Tiempo" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">⏰ El Tiempo</div>
         <h3 class="pc-title">El tiempo no alcanza</h3>
@@ -1887,7 +2000,7 @@
 
     <div class="proceso-card reveal" style="--delay:.2s">
       <div class="pc-num">3</div>
-      <div class="pc-img-wrap"><img src="proceso/3.png" alt="Buscan Ayuda" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/3.png" alt="Buscan Ayuda" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(167,139,250,.15);color:#a78bfa">🔍 La Búsqueda</div>
         <h3 class="pc-title">Deciden buscar ayuda</h3>
@@ -1897,7 +2010,7 @@
 
     <div class="proceso-card reveal" style="--delay:.3s">
       <div class="pc-num">4</div>
-      <div class="pc-img-wrap"><img src="proceso/4.png" alt="Charla" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/4.png" alt="Charla" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📞 El Contacto</div>
         <h3 class="pc-title">Coordinamos una charla</h3>
@@ -1907,7 +2020,7 @@
 
     <div class="proceso-card reveal" style="--delay:.4s">
       <div class="pc-num">5</div>
-      <div class="pc-img-wrap"><img src="proceso/5.png" alt="Relevamiento" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/5.png" alt="Relevamiento" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(45,212,191,.15);color:#2dd4bf">🔎 Relevamiento</div>
         <h3 class="pc-title">Analizo tu negocio a fondo</h3>
@@ -1917,7 +2030,7 @@
 
     <div class="proceso-card reveal" style="--delay:.5s">
       <div class="pc-num">6</div>
-      <div class="pc-img-wrap"><img src="proceso/6.png" alt="Diseño" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/6.png" alt="Diseño" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">🎯 Diseño</div>
         <h3 class="pc-title">Diseño la solución</h3>
@@ -1927,7 +2040,7 @@
 
     <div class="proceso-card reveal" style="--delay:.6s">
       <div class="pc-num">7</div>
-      <div class="pc-img-wrap"><img src="proceso/7.png" alt="Implementación" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/7.png" alt="Implementación" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">💻 Desarrollo</div>
         <h3 class="pc-title">Implementación y pruebas</h3>
@@ -1937,7 +2050,7 @@
 
     <div class="proceso-card reveal" style="--delay:.7s">
       <div class="pc-num">8</div>
-      <div class="pc-img-wrap"><img src="proceso/8.png" alt="Resultados" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/8.png" alt="Resultados" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📊 Resultados</div>
         <h3 class="pc-title">Resultados reales</h3>
@@ -1947,7 +2060,7 @@
 
     <div class="proceso-card reveal pc-final" style="--delay:.8s">
       <div class="pc-num">9</div>
-      <div class="pc-img-wrap"><img src="proceso/9.png" alt="Clientes Satisfechos" class="pc-img"/></div>
+      <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/9.png" alt="Clientes Satisfechos" class="pc-img"/></div>
       <div class="pc-body">
         <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">🎉 Resultado</div>
         <h3 class="pc-title">Clientes satisfechos</h3>
