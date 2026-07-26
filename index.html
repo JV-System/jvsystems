@@ -1488,25 +1488,32 @@
     .marc-app-badge { font-size: .8rem; font-weight: 700; color: #34d399; }
     .marc-app-row { font-size: .72rem; color: rgba(255,255,255,.5); }
 
-    .marc-hw-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
-    @media (max-width: 600px) { .marc-hw-grid { grid-template-columns: 1fr; } }
-    .marc-hw-card {
-      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
-      border-radius: 12px; padding: 1.25rem 1.1rem; position: relative;
+    .marc-hw-text { font-size: .85rem; color: rgba(255,255,255,.6); line-height: 1.8; }
+    .marc-hw-text strong { color: var(--white); font-weight: 800; }
+    @media (max-width: 768px) { .marcacion-section { padding: 3.5rem 1.25rem; } }
+
+    /* ── PILARES (unidades de negocio) ── */
+    .pilares {
+      display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+      max-width: 1100px; margin: 0 auto; padding: 0 2rem 3.5rem;
+      position: relative; z-index: 2;
+    }
+    .pilar {
+      flex: 1; min-width: 230px; max-width: 320px;
+      display: flex; gap: .9rem; align-items: flex-start;
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius); padding: 1.25rem 1.4rem;
+      text-decoration: none; color: inherit;
       transition: border-color .2s, transform .2s;
     }
-    .marc-hw-card:hover { border-color: rgba(255,140,0,.3); transform: translateY(-3px); }
-    .marc-hw-featured { border-color: rgba(255,140,0,.35); background: rgba(255,140,0,.05); }
-    .marc-hw-badge {
-      position: absolute; top: -11px; left: 1rem;
-      background: var(--accent); color: #07101d; font-size: .6rem; font-weight: 900;
-      padding: .25rem .6rem; border-radius: 99px; letter-spacing: .03em; text-transform: uppercase;
-      white-space: nowrap;
+    .pilar:hover { border-color: rgba(255,140,0,0.3); transform: translateY(-3px); }
+    .pilar-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .pilar-text strong { display: block; font-size: .92rem; font-weight: 800; margin-bottom: .3rem; color: var(--white); }
+    .pilar-text span { font-size: .8rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+    @media (max-width: 768px) {
+      .pilares { padding: 0 1.25rem 2.5rem; gap: 1rem; }
+      .pilar { min-width: 100%; max-width: none; }
     }
-    .marc-hw-icon { font-size: 1.6rem; margin-bottom: .5rem; }
-    .marc-hw-card h4 { font-size: .92rem; font-weight: 800; margin-bottom: .4rem; }
-    .marc-hw-card p { font-size: .78rem; color: rgba(255,255,255,.55); line-height: 1.55; margin: 0; }
-    @media (max-width: 768px) { .marcacion-section { padding: 3.5rem 1.25rem; } }
   </style>
 </head>
 <body>
@@ -1690,6 +1697,31 @@
   </div>
 </section>
 
+<!-- PILARES: UNIDADES DE NEGOCIO -->
+<div class="pilares reveal">
+  <a href="#proceso" class="pilar">
+    <div class="pilar-icon">🛠️</div>
+    <div class="pilar-text">
+      <strong data-i18n="pilar.sistemas.t">Sistemas a Medida</strong>
+      <span data-i18n="pilar.sistemas.d">Software que se adapta a tu negocio, no al revés</span>
+    </div>
+  </a>
+  <a href="#marcacion" class="pilar">
+    <div class="pilar-icon">🕐</div>
+    <div class="pilar-text">
+      <strong data-i18n="pilar.marc.t">Registro de Marcaciones</strong>
+      <span data-i18n="pilar.marc.d">Control de asistencia desde el celular o con terminal física</span>
+    </div>
+  </a>
+  <a href="#bi" class="pilar">
+    <div class="pilar-icon">📊</div>
+    <div class="pilar-text">
+      <strong data-i18n="pilar.bi.t">Dashboards a Medida</strong>
+      <span data-i18n="pilar.bi.d">Tus datos convertidos en decisiones, en tiempo real</span>
+    </div>
+  </a>
+</div>
+
 <!-- STATS -->
 <div class="stats reveal">
   <div class="stat"><div class="stat-num">3+</div><div class="stat-lbl" data-i18n="stats.s1">Sistemas en producción</div></div>
@@ -1852,24 +1884,7 @@
       <h3 data-i18n="marc.hw.h">Con terminal física en planta</h3>
       <p data-i18n="marc.hw.p">Para cuando querés un punto fijo de marcación en la entrada. Integramos el equipo con tu sistema — vos elegís qué tecnología usar.</p>
 
-      <div class="marc-hw-grid">
-        <div class="marc-hw-card marc-hw-featured">
-          <span class="marc-hw-badge" data-i18n="marc.hw.rfid.badge">Recomendado</span>
-          <div class="marc-hw-icon">💳</div>
-          <h4 data-i18n="marc.hw.rfid.h">Tarjeta / RFID</h4>
-          <p data-i18n="marc.hw.rfid.p">Rápido y resistente a manos sucias o grasosas — ideal para entornos industriales.</p>
-        </div>
-        <div class="marc-hw-card">
-          <div class="marc-hw-icon">🙂</div>
-          <h4 data-i18n="marc.hw.face.h">Reconocimiento facial</h4>
-          <p data-i18n="marc.hw.face.p">Sin contacto y sin poder marcar por un compañero. Ideal para oficinas y comercios.</p>
-        </div>
-        <div class="marc-hw-card">
-          <div class="marc-hw-icon">👆</div>
-          <h4 data-i18n="marc.hw.finger.h">Lector de huella</h4>
-          <p data-i18n="marc.hw.finger.p">La opción clásica y económica, recomendada para ambientes de oficina.</p>
-        </div>
-      </div>
+      <p class="marc-hw-text" data-i18n="marc.hw.options"><strong>Tarjeta o llavero RFID:</strong> rápido y resistente a manos sucias o grasosas, ideal para plantas industriales. <strong>Reconocimiento facial:</strong> sin contacto y sin poder marcar por un compañero, ideal para oficinas y comercios. <strong>Lector de huella:</strong> la opción clásica y económica para ambientes de oficina. Te asesoro según el entorno de trabajo de tu equipo.</p>
     </div>
   </div>
 
@@ -2509,6 +2524,10 @@ const I18N = {
     'hero.desc': `I design and build digital systems tailored exactly to how your company works. No generic templates, no features you'll never use.`,
     'hero.cta': 'Tell me your idea →',
 
+    'pilar.sistemas.t': 'Custom Systems', 'pilar.sistemas.d': 'Software that adapts to your business, not the other way around',
+    'pilar.marc.t': 'Attendance Tracking', 'pilar.marc.d': 'Clock in/out from a phone or with a physical terminal',
+    'pilar.bi.t': 'Custom Dashboards', 'pilar.bi.d': 'Your data turned into decisions, in real time',
+
     'stats.s1': 'Systems in production', 'stats.s2': 'Custom-built', 'stats.s3': 'Generic templates', 'stats.s4': 'Post-delivery support',
 
     'sobre.tag': '— About me',
@@ -2550,12 +2569,7 @@ const I18N = {
     'marc.app.cam': '📷 Camera verification',
     'marc.hw.h': 'With a physical terminal on-site',
     'marc.hw.p': `For when you want a fixed clock-in point at the entrance. We integrate the device with your system — you choose the technology.`,
-    'marc.hw.rfid.badge': 'Recommended', 'marc.hw.rfid.h': 'Card / RFID',
-    'marc.hw.rfid.p': 'Fast and resistant to dirty or greasy hands — ideal for industrial environments.',
-    'marc.hw.face.h': 'Facial recognition',
-    'marc.hw.face.p': 'Contactless, and nobody can clock in for a coworker. Ideal for offices and retail.',
-    'marc.hw.finger.h': 'Fingerprint reader',
-    'marc.hw.finger.p': 'The classic, budget-friendly option, best suited for office environments.',
+    'marc.hw.options': '<strong>Card or RFID fob:</strong> fast and resistant to dirty or greasy hands, ideal for industrial plants. <strong>Facial recognition:</strong> contactless, and nobody can clock in for a coworker — ideal for offices and retail. <strong>Fingerprint reader:</strong> the classic, budget-friendly option for office environments. I can advise based on your team\'s work environment.',
     'marc.cta': `I want to track my team's attendance →`,
 
     'bi.tag': '— Business Intelligence',
@@ -2657,6 +2671,10 @@ const I18N = {
     'hero.desc': 'Projeto e desenvolvo sistemas digitais adaptados exatamente à forma como sua empresa funciona. Sem modelos genéricos, sem funções que você não vai usar.',
     'hero.cta': 'Conte sua ideia →',
 
+    'pilar.sistemas.t': 'Sistemas sob Medida', 'pilar.sistemas.d': 'Software que se adapta ao seu negócio, não o contrário',
+    'pilar.marc.t': 'Registro de Ponto', 'pilar.marc.d': 'Controle de presença pelo celular ou com terminal físico',
+    'pilar.bi.t': 'Dashboards sob Medida', 'pilar.bi.d': 'Seus dados transformados em decisões, em tempo real',
+
     'stats.s1': 'Sistemas em produção', 'stats.s2': 'Feitos sob medida', 'stats.s3': 'Modelos genéricos', 'stats.s4': 'Suporte pós-entrega',
 
     'sobre.tag': '— Sobre mim',
@@ -2698,12 +2716,7 @@ const I18N = {
     'marc.app.cam': '📷 Verificação por câmera',
     'marc.hw.h': 'Com terminal físico na planta',
     'marc.hw.p': 'Para quando você quer um ponto fixo de marcação na entrada. Integramos o equipamento com seu sistema — você escolhe a tecnologia.',
-    'marc.hw.rfid.badge': 'Recomendado', 'marc.hw.rfid.h': 'Cartão / RFID',
-    'marc.hw.rfid.p': 'Rápido e resistente a mãos sujas ou engraxadas — ideal para ambientes industriais.',
-    'marc.hw.face.h': 'Reconhecimento facial',
-    'marc.hw.face.p': 'Sem contato e sem poder marcar por um colega. Ideal para escritórios e comércios.',
-    'marc.hw.finger.h': 'Leitor de digital',
-    'marc.hw.finger.p': 'A opção clássica e econômica, recomendada para ambientes de escritório.',
+    'marc.hw.options': '<strong>Cartão ou chaveiro RFID:</strong> rápido e resistente a mãos sujas ou engraxadas, ideal para plantas industriais. <strong>Reconhecimento facial:</strong> sem contato e sem poder marcar por um colega — ideal para escritórios e comércios. <strong>Leitor de digital:</strong> a opção clássica e econômica para ambientes de escritório. Te oriento de acordo com o ambiente de trabalho da sua equipe.',
     'marc.cta': 'Quero controlar a assiduidade da minha equipe →',
 
     'bi.tag': '— Business Intelligence',
