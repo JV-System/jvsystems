@@ -1442,6 +1442,29 @@
     .cm-status.abierta   { background:rgba(245,158,11,.15); color:#f59e0b; }
     .cm-footer { display:flex; align-items:center; gap:.5rem; padding:.65rem .85rem; background:#0a1628; border-top:1px solid rgba(255,255,255,.06); font-size:.62rem; color:rgba(255,255,255,.45); }
     .cm-footer .ok { color:#25d366; font-weight:900; }
+
+    /* ── LANGUAGE SWITCH ── */
+    .lang-switch {
+      display: flex; gap: .2rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: .2rem;
+      margin-right: .5rem;
+    }
+    .lang-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.5); font-family: var(--font);
+      font-size: .72rem; font-weight: 800; letter-spacing: .04em;
+      padding: .3rem .55rem; border-radius: 6px;
+      transition: background .15s, color .15s;
+    }
+    .lang-btn:hover { color: rgba(255,255,255,0.85); }
+    .lang-btn.active { background: var(--accent); color: #07101d; }
+    .lang-switch-mobile { display: none; justify-content: center; margin: .75rem 0 0; }
+    @media (max-width: 768px) {
+      .lang-switch:not(.lang-switch-mobile) { display: none; }
+      .lang-switch-mobile { display: flex; }
+    }
   </style>
 </head>
 <body>
@@ -1455,13 +1478,18 @@
     <div class="nav-logo-text">JV <span>SYSTEMS</span></div>
   </div>
   <div class="nav-links">
-    <a href="#sobre">Sobre mí</a>
-    <a href="#casos">Casos de éxito</a>
-    <a href="#bi">Dashboards</a>
-    <a href="#proceso">Proceso</a>
-    <a href="#contacto">Contacto</a>
+    <a href="#sobre" data-i18n="nav.sobre">Sobre mí</a>
+    <a href="#casos" data-i18n="nav.casos">Casos de éxito</a>
+    <a href="#bi" data-i18n="nav.bi">Dashboards</a>
+    <a href="#proceso" data-i18n="nav.proceso">Proceso</a>
+    <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
   </div>
-  <a href="#contacto" class="nav-cta">Consultá tu proyecto</a>
+  <div class="lang-switch" id="langSwitch" role="group" aria-label="Idioma / Language / Idioma">
+    <button type="button" class="lang-btn" data-lang="es">ES</button>
+    <button type="button" class="lang-btn" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="pt">PT</button>
+  </div>
+  <a href="#contacto" class="nav-cta" data-i18n="nav.cta">Consultá tu proyecto</a>
   <button class="nav-burger" id="navBurger" aria-label="Menú">
     <span></span><span></span><span></span>
   </button>
@@ -1469,12 +1497,17 @@
 
 <!-- MENÚ MÓVIL -->
 <div class="nav-mobile-menu" id="navMobileMenu">
-  <a href="#sobre"    onclick="cerrarMenu()">Sobre mí</a>
-  <a href="#casos"    onclick="cerrarMenu()">Casos de éxito</a>
-  <a href="#bi"       onclick="cerrarMenu()">Dashboards</a>
-  <a href="#proceso"  onclick="cerrarMenu()">Proceso</a>
-  <a href="#contacto" onclick="cerrarMenu()">Contacto</a>
-  <a href="#contacto" class="nav-mobile-cta" onclick="cerrarMenu()">Consultá tu proyecto →</a>
+  <a href="#sobre"    data-i18n="nav.sobre" onclick="cerrarMenu()">Sobre mí</a>
+  <a href="#casos"    data-i18n="nav.casos" onclick="cerrarMenu()">Casos de éxito</a>
+  <a href="#bi"       data-i18n="nav.bi" onclick="cerrarMenu()">Dashboards</a>
+  <a href="#proceso"  data-i18n="nav.proceso" onclick="cerrarMenu()">Proceso</a>
+  <a href="#contacto" data-i18n="nav.contacto" onclick="cerrarMenu()">Contacto</a>
+  <a href="#contacto" class="nav-mobile-cta" data-i18n="nav.cta2" onclick="cerrarMenu()">Consultá tu proyecto →</a>
+  <div class="lang-switch lang-switch-mobile" role="group" aria-label="Idioma / Language / Idioma">
+    <button type="button" class="lang-btn" data-lang="es">ES</button>
+    <button type="button" class="lang-btn" data-lang="en">EN</button>
+    <button type="button" class="lang-btn" data-lang="pt">PT</button>
+  </div>
 </div>
 
 <!-- HERO -->
@@ -1604,66 +1637,66 @@
       <div class="orbit o2"><span class="dot"></span></div>
       <div class="orbit o3"><span class="dot"></span></div>
     </div>
-    <div class="hero-badge">● Sistemas a medida · Soluciones Digitales</div>
-    <h1>Tu negocio necesita<br><em>su propio sistema</em></h1>
-    <p>Diseño y desarrollo sistemas digitales adaptados exactamente a como funciona tu empresa. Sin plantillas genéricas, sin funciones que no usás.</p>
+    <div class="hero-badge" data-i18n="hero.badge">● Sistemas a medida · Soluciones Digitales</div>
+    <h1 data-i18n="hero.title">Tu negocio necesita<br><em>su propio sistema</em></h1>
+    <p data-i18n="hero.desc">Diseño y desarrollo sistemas digitales adaptados exactamente a como funciona tu empresa. Sin plantillas genéricas, sin funciones que no usás.</p>
     <div class="hero-btns">
-      <a href="#contacto" class="btn-outline">Contame tu idea →</a>
+      <a href="#contacto" class="btn-outline" data-i18n="hero.cta">Contame tu idea →</a>
     </div>
   </div>
 </section>
 
 <!-- STATS -->
 <div class="stats reveal">
-  <div class="stat"><div class="stat-num">3+</div><div class="stat-lbl">Sistemas en producción</div></div>
-  <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">Hechos a medida</div></div>
-  <div class="stat"><div class="stat-num">0</div><div class="stat-lbl">Plantillas genéricas</div></div>
-  <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl">Soporte post-entrega</div></div>
+  <div class="stat"><div class="stat-num">3+</div><div class="stat-lbl" data-i18n="stats.s1">Sistemas en producción</div></div>
+  <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl" data-i18n="stats.s2">Hechos a medida</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-lbl" data-i18n="stats.s3">Plantillas genéricas</div></div>
+  <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl" data-i18n="stats.s4">Soporte post-entrega</div></div>
 </div>
 
 
 <!-- SOBRE MÍ -->
 <section class="sobre" id="sobre">
   <div class="sobre-text reveal">
-    <div class="section-tag">— Sobre mí</div>
-    <h2>Soy Juan Villanueva,<br><em>desarrollador</em> de sistemas a medida</h2>
-    <p>Me especializo en construir sistemas digitales que resuelven problemas reales de negocios. Cada proyecto nace de entender cómo opera tu empresa — los campos, los flujos, los problemas del día a día.</p>
-    <p>No vendo software de estantería. Hablo con vos, entiendo tu operatoria y construyo exactamente lo que necesitás, sin pagar por funciones que nunca vas a usar.</p>
+    <div class="section-tag" data-i18n="sobre.tag">— Sobre mí</div>
+    <h2 data-i18n="sobre.title">Soy Juan Villanueva,<br><em>desarrollador</em> de sistemas a medida</h2>
+    <p data-i18n="sobre.p1">Me especializo en construir sistemas digitales que resuelven problemas reales de negocios. Cada proyecto nace de entender cómo opera tu empresa — los campos, los flujos, los problemas del día a día.</p>
+    <p data-i18n="sobre.p2">No vendo software de estantería. Hablo con vos, entiendo tu operatoria y construyo exactamente lo que necesitás, sin pagar por funciones que nunca vas a usar.</p>
   </div>
   <div class="sobre-card reveal">
     <div class="sobre-card-row">
       <div class="sobre-icon">🎯</div>
       <div class="sobre-row-text">
-        <strong>Enfoque en tu negocio</strong>
-        <span>El sistema refleja cómo trabajás vos, no al revés</span>
+        <strong data-i18n="sobre.row1.t">Enfoque en tu negocio</strong>
+        <span data-i18n="sobre.row1.d">El sistema refleja cómo trabajás vos, no al revés</span>
       </div>
     </div>
     <div class="sobre-card-row">
       <div class="sobre-icon">⚡</div>
       <div class="sobre-row-text">
-        <strong>Entrega rápida</strong>
-        <span>Primeras versiones funcionales en días, no meses</span>
+        <strong data-i18n="sobre.row2.t">Entrega rápida</strong>
+        <span data-i18n="sobre.row2.d">Primeras versiones funcionales en días, no meses</span>
       </div>
     </div>
     <div class="sobre-card-row">
       <div class="sobre-icon">📱</div>
       <div class="sobre-row-text">
-        <strong>Funciona en cualquier dispositivo</strong>
-        <span>Celular, tablet o computadora, sin instalar nada</span>
+        <strong data-i18n="sobre.row3.t">Funciona en cualquier dispositivo</strong>
+        <span data-i18n="sobre.row3.d">Celular, tablet o computadora, sin instalar nada</span>
       </div>
     </div>
     <div class="sobre-card-row">
       <div class="sobre-icon">🔧</div>
       <div class="sobre-row-text">
-        <strong>Soporte y evolución</strong>
-        <span>El sistema crece con tu negocio</span>
+        <strong data-i18n="sobre.row4.t">Soporte y evolución</strong>
+        <span data-i18n="sobre.row4.d">El sistema crece con tu negocio</span>
       </div>
     </div>
     <div class="sobre-card-row">
       <div class="sobre-icon">📊</div>
       <div class="sobre-row-text">
-        <strong>Datos que importan</strong>
-        <span>Dashboards y reportes para tomar mejores decisiones</span>
+        <strong data-i18n="sobre.row5.t">Datos que importan</strong>
+        <span data-i18n="sobre.row5.d">Dashboards y reportes para tomar mejores decisiones</span>
       </div>
     </div>
   </div>
@@ -1672,9 +1705,9 @@
 <!-- CASOS DE ÉXITO -->
 <section class="sistemas-section" id="casos">
   <div class="section-header reveal">
-    <span class="section-tag">— Casos de éxito</span>
-    <h2>Resultados reales, <em style="font-style:normal;color:var(--accent)">no promesas</em></h2>
-    <p>Así funciona un sistema JV Systems en producción. Números concretos, de un cliente real.</p>
+    <span class="section-tag" data-i18n="casos.tag">— Casos de éxito</span>
+    <h2 data-i18n="casos.title">Resultados reales, <em style="font-style:normal;color:var(--accent)">no promesas</em></h2>
+    <p data-i18n="casos.desc">Así funciona un sistema JV Systems en producción. Números concretos, de un cliente real.</p>
   </div>
 
   <div class="reveal" style="max-width:1000px;margin:0 auto">
@@ -1686,44 +1719,44 @@
             <div class="mockup-url">app.jvsystems.com.ar/branca</div>
           </div>
           <div class="cm-toolbar">
-            <span class="cm-toolbar-title">📋 Órdenes de Servicio</span>
-            <span class="cm-badge-live">EN VIVO</span>
+            <span class="cm-toolbar-title" data-i18n="casos.toolbar">📋 Órdenes de Servicio</span>
+            <span class="cm-badge-live" data-i18n="casos.live">EN VIVO</span>
           </div>
           <div class="cm-body">
             <div class="cm-row">
               <div class="cm-row-id">#184</div>
-              <div class="cm-row-info"><strong>Mantenimiento — Torno CNC</strong><span>Técnico de campo · hoy 09:14</span></div>
-              <div class="cm-status facturada">Facturada</div>
+              <div class="cm-row-info"><strong data-i18n="casos.row1.t">Mantenimiento — Torno CNC</strong><span data-i18n="casos.row1.m">Técnico de campo · hoy 09:14</span></div>
+              <div class="cm-status facturada" data-i18n="casos.st.facturada">Facturada</div>
             </div>
             <div class="cm-row">
               <div class="cm-row-id">#183</div>
-              <div class="cm-row-info"><strong>Reparación — Compresor</strong><span>Técnico de campo · hoy 08:40</span></div>
-              <div class="cm-status cerrada">Cerrada</div>
+              <div class="cm-row-info"><strong data-i18n="casos.row2.t">Reparación — Compresor</strong><span data-i18n="casos.row2.m">Técnico de campo · hoy 08:40</span></div>
+              <div class="cm-status cerrada" data-i18n="casos.st.cerrada">Cerrada</div>
             </div>
             <div class="cm-row">
               <div class="cm-row-id">#182</div>
-              <div class="cm-row-info"><strong>Instalación — Línea hidráulica</strong><span>Técnico de campo · ayer 17:05</span></div>
-              <div class="cm-status abierta">En campo</div>
+              <div class="cm-row-info"><strong data-i18n="casos.row3.t">Instalación — Línea hidráulica</strong><span data-i18n="casos.row3.m">Técnico de campo · ayer 17:05</span></div>
+              <div class="cm-status abierta" data-i18n="casos.st.abierta">En campo</div>
             </div>
           </div>
           <div class="cm-footer">
-            <span class="ok">✓</span> Comprobante enviado por WhatsApp · firma digital registrada
+            <span class="ok">✓</span> <span data-i18n="casos.footer">Comprobante enviado por WhatsApp · firma digital registrada</span>
           </div>
         </div>
-        <div class="mockup-hint">Sistema real en producción</div>
+        <div class="mockup-hint" data-i18n="casos.hint">Sistema real en producción</div>
       </div>
 
       <div class="sistema-info">
-        <div class="sistema-num">Cliente</div>
+        <div class="sistema-num" data-i18n="casos.clientLabel">Cliente</div>
         <div class="sistema-title">Ingeniería Branca SRL</div>
-        <div class="sistema-client">Maquinaria industrial · en producción desde julio 2026</div>
+        <div class="sistema-client" data-i18n="casos.clientDesc">Maquinaria industrial · en producción desde julio 2026</div>
 
         <div class="sistema-why">
-          <div class="sistema-why-label">El problema</div>
-          <p>Las órdenes de servicio se manejaban en papel y por WhatsApp entre técnicos. Se perdían órdenes, se facturaba tarde por falta de información y nadie tenía visibilidad real del estado de cada trabajo.</p>
+          <div class="sistema-why-label" data-i18n="casos.problemLabel">El problema</div>
+          <p data-i18n="casos.problemText">Las órdenes de servicio se manejaban en papel y por WhatsApp entre técnicos. Se perdían órdenes, se facturaba tarde por falta de información y nadie tenía visibilidad real del estado de cada trabajo.</p>
         </div>
 
-        <ul class="sistema-features">
+        <ul class="sistema-features" data-i18n="casos.features">
           <li>Técnicos cargan órdenes desde el celular en campo</li>
           <li>Comprobante al cliente en segundos por WhatsApp</li>
           <li>Facturación electrónica integrada con Xubio (AFIP)</li>
@@ -1732,13 +1765,13 @@
         </ul>
 
         <div class="hp-metrics" style="margin-bottom:1.75rem">
-          <div class="hpm"><div class="hpm-val up">0</div><div class="hpm-lbl">Órdenes sin facturar</div></div>
-          <div class="hpm"><div class="hpm-val up">+10</div><div class="hpm-lbl">Usuarios activos</div></div>
-          <div class="hpm"><div class="hpm-val up">100%</div><div class="hpm-lbl">Comprobantes digitales</div></div>
-          <div class="hpm"><div class="hpm-val up">1 día</div><div class="hpm-lbl">De implementación a producción</div></div>
+          <div class="hpm"><div class="hpm-val up">0</div><div class="hpm-lbl" data-i18n="casos.m1">Órdenes sin facturar</div></div>
+          <div class="hpm"><div class="hpm-val up">+10</div><div class="hpm-lbl" data-i18n="casos.m2">Usuarios activos</div></div>
+          <div class="hpm"><div class="hpm-val up">100%</div><div class="hpm-lbl" data-i18n="casos.m3">Comprobantes digitales</div></div>
+          <div class="hpm"><div class="hpm-val up" data-i18n="casos.m4val">1 día</div><div class="hpm-lbl" data-i18n="casos.m4">De implementación a producción</div></div>
         </div>
 
-        <a href="#contacto" class="sistema-link">Quiero resultados así →</a>
+        <a href="#contacto" class="sistema-link" data-i18n="casos.cta">Quiero resultados así →</a>
       </div>
     </div>
   </div>
@@ -1750,34 +1783,34 @@
 
     <!-- Header -->
     <div class="section-header reveal">
-      <span class="section-tag">— Business Intelligence</span>
-      <h2>Convertí tus datos en <em style="font-style:normal;color:var(--accent)">decisiones</em></h2>
-      <p>Conectamos cualquier fuente de datos a tableros de control interactivos en tiempo real. Sin importar cómo trabajás hoy.</p>
+      <span class="section-tag" data-i18n="bi.tag">— Business Intelligence</span>
+      <h2 data-i18n="bi.title">Convertí tus datos en <em style="font-style:normal;color:var(--accent)">decisiones</em></h2>
+      <p data-i18n="bi.desc">Conectamos cualquier fuente de datos a tableros de control interactivos en tiempo real. Sin importar cómo trabajás hoy.</p>
     </div>
 
     <!-- Sources + features -->
     <div class="bi-grid reveal">
       <!-- Left: fuentes de datos -->
       <div class="bi-sources">
-        <div class="bi-sources-title">📂 Conectamos tus datos desde cualquier fuente</div>
+        <div class="bi-sources-title" data-i18n="bi.sourcesTitle">📂 Conectamos tus datos desde cualquier fuente</div>
         <div class="bi-sources-grid">
-          <div class="bi-source"><span class="bi-source-icon">📊</span><div><strong>Excel / Google Sheets</strong><span>Planillas existentes, sin migrar nada</span></div></div>
-          <div class="bi-source"><span class="bi-source-icon">🗄️</span><div><strong>SQL / Access / MySQL</strong><span>Bases de datos relacionales</span></div></div>
-          <div class="bi-source"><span class="bi-source-icon">🔌</span><div><strong>APIs y servicios web</strong><span>Datos en tiempo real desde sistemas externos</span></div></div>
-          <div class="bi-source"><span class="bi-source-icon">☁️</span><div><strong>Google Drive / OneDrive</strong><span>Archivos en la nube, sincronización automática</span></div></div>
-          <div class="bi-source"><span class="bi-source-icon">📋</span><div><strong>Formularios / Google Forms</strong><span>Respuestas convertidas en reportes al instante</span></div></div>
-          <div class="bi-source"><span class="bi-source-icon">⚙️</span><div><strong>Tus sistemas a medida</strong><span>Los sistemas JV Systems ya tienen integración nativa</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">📊</span><div data-i18n="bi.src1"><strong>Excel / Google Sheets</strong><span>Planillas existentes, sin migrar nada</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">🗄️</span><div data-i18n="bi.src2"><strong>SQL / Access / MySQL</strong><span>Bases de datos relacionales</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">🔌</span><div data-i18n="bi.src3"><strong>APIs y servicios web</strong><span>Datos en tiempo real desde sistemas externos</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">☁️</span><div data-i18n="bi.src4"><strong>Google Drive / OneDrive</strong><span>Archivos en la nube, sincronización automática</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">📋</span><div data-i18n="bi.src5"><strong>Formularios / Google Forms</strong><span>Respuestas convertidas en reportes al instante</span></div></div>
+          <div class="bi-source"><span class="bi-source-icon">⚙️</span><div data-i18n="bi.src6"><strong>Tus sistemas a medida</strong><span>Los sistemas JV Systems ya tienen integración nativa</span></div></div>
         </div>
       </div>
 
       <!-- Right: outputs -->
       <div class="bi-outputs">
-        <div class="bi-sources-title">📈 Y los transformamos en</div>
+        <div class="bi-sources-title" data-i18n="bi.outputsTitle">📈 Y los transformamos en</div>
         <div class="bi-feat-list">
-          <div class="bi-feat"><div class="bi-feat-num">01</div><div><strong>Dashboards Power BI</strong><p>Tableros profesionales con gráficos, mapas, KPIs y filtros interactivos. Acceso desde cualquier dispositivo.</p></div></div>
-          <div class="bi-feat"><div class="bi-feat-num">02</div><div><strong>Visualización en tiempo real</strong><p>Datos actualizados automáticamente. Sin exportar archivos ni armar reportes manuales.</p></div></div>
-          <div class="bi-feat"><div class="bi-feat-num">03</div><div><strong>Reportes automáticos</strong><p>Envío programado por email. El informe llega solo, sin que nadie tenga que armarlo.</p></div></div>
-          <div class="bi-feat"><div class="bi-feat-num">04</div><div><strong>Indicadores de gestión</strong><p>Ventas, logística, RRHH, finanzas — todo en un solo panel organizado por área.</p></div></div>
+          <div class="bi-feat"><div class="bi-feat-num">01</div><div data-i18n="bi.feat1"><strong>Dashboards Power BI</strong><p>Tableros profesionales con gráficos, mapas, KPIs y filtros interactivos. Acceso desde cualquier dispositivo.</p></div></div>
+          <div class="bi-feat"><div class="bi-feat-num">02</div><div data-i18n="bi.feat2"><strong>Visualización en tiempo real</strong><p>Datos actualizados automáticamente. Sin exportar archivos ni armar reportes manuales.</p></div></div>
+          <div class="bi-feat"><div class="bi-feat-num">03</div><div data-i18n="bi.feat3"><strong>Reportes automáticos</strong><p>Envío programado por email. El informe llega solo, sin que nadie tenga que armarlo.</p></div></div>
+          <div class="bi-feat"><div class="bi-feat-num">04</div><div data-i18n="bi.feat4"><strong>Indicadores de gestión</strong><p>Ventas, logística, RRHH, finanzas — todo en un solo panel organizado por área.</p></div></div>
         </div>
       </div>
     </div>
@@ -1785,22 +1818,22 @@
     <!-- Dashboard demo iframe -->
     <div class="bi-demo reveal">
       <div class="bi-demo-label">
-        <span class="bi-demo-badge">▶ Demo interactiva</span>
-        <span class="bi-demo-sub">Hacé clic en las pestañas para explorar cada módulo</span>
+        <span class="bi-demo-badge" data-i18n="bi.demoBadge">▶ Demo interactiva</span>
+        <span class="bi-demo-sub" data-i18n="bi.demoSub">Hacé clic en las pestañas para explorar cada módulo</span>
       </div>
       <div class="bi-browser">
         <div class="mockup-bar" style="background:#0c1020;padding:.55rem .85rem">
           <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-          <div class="mockup-url" style="font-size:.68rem;color:rgba(255,255,255,.4)">Dashboard Comercial · Análisis 360° · JV Systems</div>
-          <div style="margin-left:auto;font-size:.65rem;color:#34d399;display:flex;align-items:center;gap:.35rem"><span style="width:6px;height:6px;border-radius:50%;background:#34d399;animation:blink 1.4s infinite;display:inline-block"></span>En vivo</div>
+          <div class="mockup-url" style="font-size:.68rem;color:rgba(255,255,255,.4)" data-i18n="bi.demoUrl">Dashboard Comercial · Análisis 360° · JV Systems</div>
+          <div style="margin-left:auto;font-size:.65rem;color:#34d399;display:flex;align-items:center;gap:.35rem"><span style="width:6px;height:6px;border-radius:50%;background:#34d399;animation:blink 1.4s infinite;display:inline-block"></span><span data-i18n="bi.live">En vivo</span></div>
         </div>
         <div class="bi-iframe-wrap">
           <iframe src="sabores/dashboard-preview.html" class="bi-iframe" scrolling="no" frameborder="0"></iframe>
         </div>
       </div>
       <div class="bi-demo-cta">
-        <a href="sabores/dashboard-preview.html" target="_blank" class="btn-primary" style="font-size:.85rem;padding:.7rem 1.6rem">Abrir dashboard completo ↗</a>
-        <a href="#contacto" class="btn-outline" style="font-size:.85rem;padding:.7rem 1.6rem">Quiero uno para mi empresa →</a>
+        <a href="sabores/dashboard-preview.html" target="_blank" class="btn-primary" style="font-size:.85rem;padding:.7rem 1.6rem" data-i18n="bi.openBtn">Abrir dashboard completo ↗</a>
+        <a href="#contacto" class="btn-outline" style="font-size:.85rem;padding:.7rem 1.6rem" data-i18n="bi.ctaBtn">Quiero uno para mi empresa →</a>
       </div>
     </div>
 
@@ -1811,16 +1844,16 @@
 <!-- SOLUCIONES QUE DESARROLLAMOS -->
 <section class="soluciones">
   <div class="section-header reveal">
-    <span class="section-tag">— Lo que construimos</span>
-    <h2>Soluciones que desarrollamos</h2>
-    <p>Cada negocio tiene procesos diferentes. Por eso diseñamos herramientas adaptadas a la forma real de trabajar de cada empresa.</p>
+    <span class="section-tag" data-i18n="sol.tag">— Lo que construimos</span>
+    <h2 data-i18n="sol.title">Soluciones que desarrollamos</h2>
+    <p data-i18n="sol.desc">Cada negocio tiene procesos diferentes. Por eso diseñamos herramientas adaptadas a la forma real de trabajar de cada empresa.</p>
   </div>
   <div class="soluciones-grid">
 
     <div class="sol-card reveal">
       <div class="sol-icon">🤝</div>
-      <h3>Gestión Comercial</h3>
-      <ul>
+      <h3 data-i18n="sol.c1.h">Gestión Comercial</h3>
+      <ul data-i18n="sol.c1.li">
         <li>CRM para seguimiento de clientes</li>
         <li>Gestión de presupuestos y cotizaciones</li>
         <li>Seguimiento de ventas y cobranzas</li>
@@ -1830,8 +1863,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">🏭</div>
-      <h3>Producción e Industria</h3>
-      <ul>
+      <h3 data-i18n="sol.c2.h">Producción e Industria</h3>
+      <ul data-i18n="sol.c2.li">
         <li>Control de producción</li>
         <li>Seguimiento de órdenes de trabajo</li>
         <li>Gestión de mantenimiento</li>
@@ -1844,8 +1877,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">👥</div>
-      <h3>Recursos Humanos</h3>
-      <ul>
+      <h3 data-i18n="sol.c3.h">Recursos Humanos</h3>
+      <ul data-i18n="sol.c3.li">
         <li>Marcación laboral con GPS</li>
         <li>Control de horas trabajadas</li>
         <li>Gestión de ausencias y licencias</li>
@@ -1855,8 +1888,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">🚚</div>
-      <h3>Logística y Operaciones</h3>
-      <ul>
+      <h3 data-i18n="sol.c4.h">Logística y Operaciones</h3>
+      <ul data-i18n="sol.c4.li">
         <li>Gestión de entregas</li>
         <li>Seguimiento de vehículos</li>
         <li>Control de despachos</li>
@@ -1867,8 +1900,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">💰</div>
-      <h3>Administración y Finanzas</h3>
-      <ul>
+      <h3 data-i18n="sol.c5.h">Administración y Finanzas</h3>
+      <ul data-i18n="sol.c5.li">
         <li>Control de gastos</li>
         <li>Flujo de caja</li>
         <li>Gestión de cuentas corrientes</li>
@@ -1879,8 +1912,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">📊</div>
-      <h3>Business Intelligence</h3>
-      <ul>
+      <h3 data-i18n="sol.c6.h">Business Intelligence</h3>
+      <ul data-i18n="sol.c6.li">
         <li>Dashboards en Power BI</li>
         <li>Indicadores de gestión</li>
         <li>Reportes automáticos</li>
@@ -1891,8 +1924,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">⚙️</div>
-      <h3>Automatización de Procesos</h3>
-      <ul>
+      <h3 data-i18n="sol.c7.h">Automatización de Procesos</h3>
+      <ul data-i18n="sol.c7.li">
         <li>Integración entre sistemas</li>
         <li>Automatización de Excel y Google Sheets</li>
         <li>Generación automática de reportes</li>
@@ -1903,8 +1936,8 @@
 
     <div class="sol-card reveal">
       <div class="sol-icon">🛒</div>
-      <h3>Comercio y Punto de Venta</h3>
-      <ul>
+      <h3 data-i18n="sol.c8.h">Comercio y Punto de Venta</h3>
+      <ul data-i18n="sol.c8.li">
         <li>Sistemas POS para supermercados y kioscos</li>
         <li>Control de stock e inventario en tiempo real</li>
         <li>Gestión de caja y cierre diario</li>
@@ -1916,10 +1949,10 @@
 
     <div class="sol-cta reveal">
       <div class="sol-cta-text">
-        <h3>¿Tenés otra necesidad?</h3>
-        <p>Muchas veces los mejores sistemas son los que todavía no existen. Si hoy manejás algo con Excel, WhatsApp, formularios o papel, probablemente podamos convertirlo en una solución digital simple y eficiente.</p>
+        <h3 data-i18n="sol.ctaTitle">¿Tenés otra necesidad?</h3>
+        <p data-i18n="sol.ctaDesc">Muchas veces los mejores sistemas son los que todavía no existen. Si hoy manejás algo con Excel, WhatsApp, formularios o papel, probablemente podamos convertirlo en una solución digital simple y eficiente.</p>
       </div>
-      <a href="#contacto" class="sol-cta-btn">Contame tu caso →</a>
+      <a href="#contacto" class="sol-cta-btn" data-i18n="sol.ctaBtn">Contame tu caso →</a>
     </div>
 
   </div>
@@ -1929,40 +1962,40 @@
 <section class="porque">
   <div class="porque-inner">
     <div class="section-header reveal">
-      <span class="section-tag">— La diferencia</span>
-      <h2>¿Por qué un sistema a medida?</h2>
-      <p>Los sistemas genéricos te obligan a adaptarte a ellos. El tuyo se adapta a vos.</p>
+      <span class="section-tag" data-i18n="porque.tag">— La diferencia</span>
+      <h2 data-i18n="porque.title">¿Por qué un sistema a medida?</h2>
+      <p data-i18n="porque.desc">Los sistemas genéricos te obligan a adaptarte a ellos. El tuyo se adapta a vos.</p>
     </div>
     <div class="porque-grid">
       <div class="porque-card reveal">
         <div class="porque-icon">🎯</div>
-        <h3>Sin funciones que no usás</h3>
-        <p>Pagás solo por lo que necesitás. Sin módulos extras que ocupan pantalla y confunden a tu equipo.</p>
+        <h3 data-i18n="porque.c1.h">Sin funciones que no usás</h3>
+        <p data-i18n="porque.c1.p">Pagás solo por lo que necesitás. Sin módulos extras que ocupan pantalla y confunden a tu equipo.</p>
       </div>
       <div class="porque-card reveal">
         <div class="porque-icon">🔄</div>
-        <h3>Flujos como los tuyos</h3>
-        <p>Si en tu negocio un pedido pasa por 4 estados específicos, el sistema los tiene exactamente así. Sin workarounds.</p>
+        <h3 data-i18n="porque.c2.h">Flujos como los tuyos</h3>
+        <p data-i18n="porque.c2.p">Si en tu negocio un pedido pasa por 4 estados específicos, el sistema los tiene exactamente así. Sin workarounds.</p>
       </div>
       <div class="porque-card reveal">
         <div class="porque-icon">📱</div>
-        <h3>Sin instalaciones</h3>
-        <p>Funciona en el navegador del celular. Podés instalarlo como app sin pasar por la Play Store ni App Store.</p>
+        <h3 data-i18n="porque.c3.h">Sin instalaciones</h3>
+        <p data-i18n="porque.c3.p">Funciona en el navegador del celular. Podés instalarlo como app sin pasar por la Play Store ni App Store.</p>
       </div>
       <div class="porque-card reveal">
         <div class="porque-icon">☁️</div>
-        <h3>Datos en la nube</h3>
-        <p>Toda tu información segura y accesible desde cualquier lugar. Sin depender de una sola computadora.</p>
+        <h3 data-i18n="porque.c4.h">Datos en la nube</h3>
+        <p data-i18n="porque.c4.p">Toda tu información segura y accesible desde cualquier lugar. Sin depender de una sola computadora.</p>
       </div>
       <div class="porque-card reveal">
         <div class="porque-icon">💬</div>
-        <h3>Comunicación directa</h3>
-        <p>Trabajamos juntos durante todo el proceso. Cambios, ajustes y mejoras en tiempo real por WhatsApp.</p>
+        <h3 data-i18n="porque.c5.h">Comunicación directa</h3>
+        <p data-i18n="porque.c5.p">Trabajamos juntos durante todo el proceso. Cambios, ajustes y mejoras en tiempo real por WhatsApp.</p>
       </div>
       <div class="porque-card reveal">
         <div class="porque-icon">📈</div>
-        <h3>Crece con tu negocio</h3>
-        <p>El sistema no es un producto terminado. Evoluciona a medida que tu operación cambia y crece.</p>
+        <h3 data-i18n="porque.c6.h">Crece con tu negocio</h3>
+        <p data-i18n="porque.c6.p">El sistema no es un producto terminado. Evoluciona a medida que tu operación cambia y crece.</p>
       </div>
     </div>
   </div>
@@ -1971,9 +2004,9 @@
 <!-- PROCESO / HISTORIA -->
 <section class="historia-section" id="proceso">
   <div class="section-header reveal">
-    <span class="section-tag">— Cómo trabajo</span>
-    <h2>De tu problema al sistema que necesitás</h2>
-    <p>Una historia que se repite con cada cliente. ¿Te identificás?</p>
+    <span class="section-tag" data-i18n="proceso.tag">— Cómo trabajo</span>
+    <h2 data-i18n="proceso.title">De tu problema al sistema que necesitás</h2>
+    <p data-i18n="proceso.desc">Una historia que se repite con cada cliente. ¿Te identificás?</p>
   </div>
 
   <div class="proceso-cards-grid">
@@ -1982,9 +2015,9 @@
       <div class="pc-num">1</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/1.png" alt="El Problema" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(248,113,113,.15);color:#f87171">⚠️ El Problema</div>
-        <h3 class="pc-title">Gestión ineficiente</h3>
-        <p class="pc-desc">El negocio crece pero los procesos siguen siendo manuales. Planillas, papeles e información dispersa que cuesta dinero.</p>
+        <div class="pc-tag" style="background:rgba(248,113,113,.15);color:#f87171" data-i18n="proceso.s1.tag">⚠️ El Problema</div>
+        <h3 class="pc-title" data-i18n="proceso.s1.title">Gestión ineficiente</h3>
+        <p class="pc-desc" data-i18n="proceso.s1.desc">El negocio crece pero los procesos siguen siendo manuales. Planillas, papeles e información dispersa que cuesta dinero.</p>
       </div>
     </div>
 
@@ -1992,9 +2025,9 @@
       <div class="pc-num">2</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/2.png" alt="El Tiempo" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">⏰ El Tiempo</div>
-        <h3 class="pc-title">El tiempo no alcanza</h3>
-        <p class="pc-desc">Reportes tardíos, decisiones equivocadas. Las tareas se acumulan y el crecimiento se frena.</p>
+        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa" data-i18n="proceso.s2.tag">⏰ El Tiempo</div>
+        <h3 class="pc-title" data-i18n="proceso.s2.title">El tiempo no alcanza</h3>
+        <p class="pc-desc" data-i18n="proceso.s2.desc">Reportes tardíos, decisiones equivocadas. Las tareas se acumulan y el crecimiento se frena.</p>
       </div>
     </div>
 
@@ -2002,9 +2035,9 @@
       <div class="pc-num">3</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/3.png" alt="Buscan Ayuda" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(167,139,250,.15);color:#a78bfa">🔍 La Búsqueda</div>
-        <h3 class="pc-title">Deciden buscar ayuda</h3>
-        <p class="pc-desc">Saben que así no pueden seguir creciendo y buscan una solución real, no una planilla más.</p>
+        <div class="pc-tag" style="background:rgba(167,139,250,.15);color:#a78bfa" data-i18n="proceso.s3.tag">🔍 La Búsqueda</div>
+        <h3 class="pc-title" data-i18n="proceso.s3.title">Deciden buscar ayuda</h3>
+        <p class="pc-desc" data-i18n="proceso.s3.desc">Saben que así no pueden seguir creciendo y buscan una solución real, no una planilla más.</p>
       </div>
     </div>
 
@@ -2012,9 +2045,9 @@
       <div class="pc-num">4</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/4.png" alt="Charla" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📞 El Contacto</div>
-        <h3 class="pc-title">Coordinamos una charla</h3>
-        <p class="pc-desc">Escucho cómo funciona el negocio hoy. Sin tecnicismos — entiendo el problema antes de proponer nada.</p>
+        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b" data-i18n="proceso.s4.tag">📞 El Contacto</div>
+        <h3 class="pc-title" data-i18n="proceso.s4.title">Coordinamos una charla</h3>
+        <p class="pc-desc" data-i18n="proceso.s4.desc">Escucho cómo funciona el negocio hoy. Sin tecnicismos — entiendo el problema antes de proponer nada.</p>
       </div>
     </div>
 
@@ -2022,9 +2055,9 @@
       <div class="pc-num">5</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/5.png" alt="Relevamiento" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(45,212,191,.15);color:#2dd4bf">🔎 Relevamiento</div>
-        <h3 class="pc-title">Analizo tu negocio a fondo</h3>
-        <p class="pc-desc">Procesos, recursos, flujos y oportunidades. Datos reales para decisiones reales.</p>
+        <div class="pc-tag" style="background:rgba(45,212,191,.15);color:#2dd4bf" data-i18n="proceso.s5.tag">🔎 Relevamiento</div>
+        <h3 class="pc-title" data-i18n="proceso.s5.title">Analizo tu negocio a fondo</h3>
+        <p class="pc-desc" data-i18n="proceso.s5.desc">Procesos, recursos, flujos y oportunidades. Datos reales para decisiones reales.</p>
       </div>
     </div>
 
@@ -2032,9 +2065,9 @@
       <div class="pc-num">6</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/6.png" alt="Diseño" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa">🎯 Diseño</div>
-        <h3 class="pc-title">Diseño la solución</h3>
-        <p class="pc-desc">Sistema a medida con automatización, integración y reportes inteligentes. Te muestro el flujo antes de construirlo.</p>
+        <div class="pc-tag" style="background:rgba(96,165,250,.15);color:#60a5fa" data-i18n="proceso.s6.tag">🎯 Diseño</div>
+        <h3 class="pc-title" data-i18n="proceso.s6.title">Diseño la solución</h3>
+        <p class="pc-desc" data-i18n="proceso.s6.desc">Sistema a medida con automatización, integración y reportes inteligentes. Te muestro el flujo antes de construirlo.</p>
       </div>
     </div>
 
@@ -2042,9 +2075,9 @@
       <div class="pc-num">7</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/7.png" alt="Implementación" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">💻 Desarrollo</div>
-        <h3 class="pc-title">Implementación y pruebas</h3>
-        <p class="pc-desc">Desarrollo, pruebo, ajusto y capacito. Cada detalle bajo control antes de la puesta en marcha.</p>
+        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399" data-i18n="proceso.s7.tag">💻 Desarrollo</div>
+        <h3 class="pc-title" data-i18n="proceso.s7.title">Implementación y pruebas</h3>
+        <p class="pc-desc" data-i18n="proceso.s7.desc">Desarrollo, pruebo, ajusto y capacito. Cada detalle bajo control antes de la puesta en marcha.</p>
       </div>
     </div>
 
@@ -2052,9 +2085,9 @@
       <div class="pc-num">8</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/8.png" alt="Resultados" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b">📊 Resultados</div>
-        <h3 class="pc-title">Resultados reales</h3>
-        <p class="pc-desc">+54% ventas, +38% eficiencia, -62% tiempo administrativo. Información en tiempo real para decisiones inteligentes.</p>
+        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b" data-i18n="proceso.s8.tag">📊 Resultados</div>
+        <h3 class="pc-title" data-i18n="proceso.s8.title">Resultados reales</h3>
+        <p class="pc-desc" data-i18n="proceso.s8.desc">+54% ventas, +38% eficiencia, -62% tiempo administrativo. Información en tiempo real para decisiones inteligentes.</p>
       </div>
     </div>
 
@@ -2062,10 +2095,10 @@
       <div class="pc-num">9</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/9.png" alt="Clientes Satisfechos" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399">🎉 Resultado</div>
-        <h3 class="pc-title">Clientes satisfechos</h3>
-        <p class="pc-desc">Cuando tu negocio crece, nosotros también. Procesos ordenados, mejor gestión, crecimiento real.</p>
-        <a href="#contacto" class="hp-cta" style="display:inline-block;margin-top:.75rem">Quiero mi sistema →</a>
+        <div class="pc-tag" style="background:rgba(52,211,153,.15);color:#34d399" data-i18n="proceso.s9.tag">🎉 Resultado</div>
+        <h3 class="pc-title" data-i18n="proceso.s9.title">Clientes satisfechos</h3>
+        <p class="pc-desc" data-i18n="proceso.s9.desc">Cuando tu negocio crece, nosotros también. Procesos ordenados, mejor gestión, crecimiento real.</p>
+        <a href="#contacto" class="hp-cta" style="display:inline-block;margin-top:.75rem" data-i18n="proceso.cta">Quiero mi sistema →</a>
       </div>
     </div>
 
@@ -2075,76 +2108,76 @@
 <!-- CONTACTO -->
 <section class="contacto" id="contacto">
   <div class="section-header reveal">
-    <span class="section-tag">— Hablemos</span>
-    <h2>¿Tenés un problema que resolver?</h2>
-    <p>Contame qué hace tu negocio y cómo lo manejás hoy. Lo demás lo vemos juntos.</p>
+    <span class="section-tag" data-i18n="contacto.tag">— Hablemos</span>
+    <h2 data-i18n="contacto.title">¿Tenés un problema que resolver?</h2>
+    <p data-i18n="contacto.desc">Contame qué hace tu negocio y cómo lo manejás hoy. Lo demás lo vemos juntos.</p>
   </div>
   <div class="contacto-card reveal">
     <div class="contacto-info">
-      <span class="section-tag">Contacto directo</span>
+      <span class="section-tag" data-i18n="contacto.infoTag">Contacto directo</span>
       <h2>Juan Villanueva</h2>
-      <p>Desarrollador de sistemas a medida. Respondo rápido — generalmente el mismo día.</p>
+      <p data-i18n="contacto.infoDesc">Desarrollador de sistemas a medida. Respondo rápido — generalmente el mismo día.</p>
       <div class="contacto-datos">
         <div class="contacto-dato">
           <div class="contacto-dato-icon">📱</div>
           <div class="contacto-dato-text">
             <a href="https://wa.me/543434728484" target="_blank">3434728484</a>
-            <small>WhatsApp disponible</small>
+            <small data-i18n="contacto.wa.small">WhatsApp disponible</small>
           </div>
         </div>
         <div class="contacto-dato">
           <div class="contacto-dato-icon">✉️</div>
           <div class="contacto-dato-text">
             <a href="mailto:jvillanueva@jvsystems.com.ar">jvillanueva@jvsystems.com.ar</a>
-            <small>Respondo en el día</small>
+            <small data-i18n="contacto.mail.small">Respondo en el día</small>
           </div>
         </div>
         <div class="contacto-dato">
           <div class="contacto-dato-icon">📍</div>
           <div class="contacto-dato-text">
-            <span>Remoto · En cualquier lugar</span>
-            <small>Trabajo con clientes de cualquier parte del mundo</small>
+            <span data-i18n="contacto.loc.text">Remoto · En cualquier lugar</span>
+            <small data-i18n="contacto.loc.small">Trabajo con clientes de cualquier parte del mundo</small>
           </div>
         </div>
       </div>
     </div>
     <div class="contacto-form">
       <div>
-        <label class="form-label">Tu nombre</label>
-        <input type="text" class="form-input" placeholder="¿Cómo te llamás?" />
+        <label class="form-label" data-i18n="contacto.form.name.label">Tu nombre</label>
+        <input type="text" class="form-input" data-i18n-placeholder="contacto.form.name.ph" placeholder="¿Cómo te llamás?" />
       </div>
       <div>
-        <label class="form-label">Tu negocio / empresa</label>
-        <input type="text" class="form-input" placeholder="¿A qué se dedica?" />
+        <label class="form-label" data-i18n="contacto.form.biz.label">Tu negocio / empresa</label>
+        <input type="text" class="form-input" data-i18n-placeholder="contacto.form.biz.ph" placeholder="¿A qué se dedica?" />
       </div>
       <div>
-        <label class="form-label">WhatsApp o email</label>
-        <input type="text" class="form-input" placeholder="Para responderte" />
+        <label class="form-label" data-i18n="contacto.form.contact.label">WhatsApp o email</label>
+        <input type="text" class="form-input" data-i18n-placeholder="contacto.form.contact.ph" placeholder="Para responderte" />
       </div>
       <div>
-        <label class="form-label">¿Qué problema querés resolver?</label>
-        <textarea class="form-textarea" placeholder="Contame cómo manejás las cosas hoy y qué te gustaría mejorar. No hace falta que sea técnico."></textarea>
+        <label class="form-label" data-i18n="contacto.form.problem.label">¿Qué problema querés resolver?</label>
+        <textarea class="form-textarea" data-i18n-placeholder="contacto.form.problem.ph" placeholder="Contame cómo manejás las cosas hoy y qué te gustaría mejorar. No hace falta que sea técnico."></textarea>
       </div>
-      <button class="form-submit" onclick="enviarFormulario()">Enviar consulta →</button>
+      <button class="form-submit" onclick="enviarFormulario()" data-i18n="contacto.form.submit">Enviar consulta →</button>
     </div>
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer>
-  <p>© 2026 <span>JV Systems</span> · Juan Villanueva · Soluciones Digitales Inteligentes</p>
-  <p style="margin-top:.4rem">Todos los sistemas son desarrollos originales a medida.</p>
+  <p><span data-i18n="footer.copy">© 2026 <span>JV Systems</span> · Juan Villanueva · Soluciones Digitales Inteligentes</span></p>
+  <p style="margin-top:.4rem" data-i18n="footer.sub">Todos los sistemas son desarrollos originales a medida.</p>
 </footer>
 
 <!-- WhatsApp flotante -->
-<a href="https://wa.me/543434728484?text=Hola%20Juan%2C%20me%20gustar%C3%ADa%20conocer%20c%C3%B3mo%20una%20soluci%C3%B3n%20digital%20a%20medida%20podr%C3%ADa%20mejorar%20la%20gesti%C3%B3n%20de%20mi%20negocio." target="_blank" class="wa-float" title="Escribir por WhatsApp">💬</a>
+<a href="https://wa.me/543434728484?text=Hola%20Juan%2C%20me%20gustar%C3%ADa%20conocer%20c%C3%B3mo%20una%20soluci%C3%B3n%20digital%20a%20medida%20podr%C3%ADa%20mejorar%20la%20gesti%C3%B3n%20de%20mi%20negocio." target="_blank" class="wa-float" id="waFloat" data-i18n-title="wa.title" title="Escribir por WhatsApp">💬</a>
 
 <!-- BARRA INFERIOR MÓVIL -->
 <nav class="nav-bottom" aria-label="Navegación móvil">
   <div class="nav-bottom-inner">
-    <a href="#sobre"    class="nav-bottom-item"><span class="nb-icon">👤</span>Sobre mí</a>
-    <a href="#bi"       class="nav-bottom-item"><span class="nb-icon">📊</span>Dashboards</a>
-    <a href="#proceso"  class="nav-bottom-item"><span class="nb-icon">⚙️</span>Proceso</a>
+    <a href="#sobre"    class="nav-bottom-item"><span class="nb-icon">👤</span><span data-i18n="nav.sobre">Sobre mí</span></a>
+    <a href="#bi"       class="nav-bottom-item"><span class="nb-icon">📊</span><span data-i18n="nav.bi">Dashboards</span></a>
+    <a href="#proceso"  class="nav-bottom-item"><span class="nb-icon">⚙️</span><span data-i18n="nav.proceso">Proceso</span></a>
   </div>
 </nav>
 
@@ -2314,15 +2347,363 @@
     const negocio = inputs[1].value.trim();
     const contacto = inputs[2].value.trim();
     const problema = inputs[3].value.trim();
+    const lang = (window.currentLang || 'es');
+    const fm = FORM_MSGS[lang] || FORM_MSGS.es;
 
     if (!nombre || !problema) {
-      alert('Por favor completá tu nombre y el problema que querés resolver.');
+      alert(fm.missing);
       return;
     }
 
-    const msg = `Hola Juan, me interesa mejorar la gestión de mi negocio con una solución digital a medida.\n\n*Nombre:* ${nombre}\n*Negocio:* ${negocio || '—'}\n*Contacto:* ${contacto || '—'}\n*Consulta:* ${problema}`;
+    const msg = fm.template(nombre, negocio, contacto, problema);
     window.open(`https://wa.me/543434728484?text=${encodeURIComponent(msg)}`, '_blank');
   }
+</script>
+
+<script>
+// ── I18N: ES / EN / PT ──
+const FORM_MSGS = {
+  es: {
+    missing: 'Por favor completá tu nombre y el problema que querés resolver.',
+    template: (n, neg, c, p) => `Hola Juan, me interesa mejorar la gestión de mi negocio con una solución digital a medida.\n\n*Nombre:* ${n}\n*Negocio:* ${neg || '—'}\n*Contacto:* ${c || '—'}\n*Consulta:* ${p}`,
+  },
+  en: {
+    missing: `Please fill in your name and the problem you'd like to solve.`,
+    template: (n, neg, c, p) => `Hi Juan, I'm interested in improving my business management with a custom digital solution.\n\n*Name:* ${n}\n*Business:* ${neg || '—'}\n*Contact:* ${c || '—'}\n*Inquiry:* ${p}`,
+  },
+  pt: {
+    missing: 'Por favor, preencha seu nome e o problema que deseja resolver.',
+    template: (n, neg, c, p) => `Olá Juan, tenho interesse em melhorar a gestão do meu negócio com uma solução digital sob medida.\n\n*Nome:* ${n}\n*Negócio:* ${neg || '—'}\n*Contato:* ${c || '—'}\n*Consulta:* ${p}`,
+  },
+};
+
+const WA_MSGS = {
+  es: 'Hola Juan, me gustaría conocer cómo una solución digital a medida podría mejorar la gestión de mi negocio.',
+  en: `Hi Juan, I'd like to learn how a custom digital solution could improve my business management.`,
+  pt: 'Olá Juan, gostaria de saber como uma solução digital sob medida poderia melhorar a gestão do meu negócio.',
+};
+
+const META = {
+  es: {
+    title: 'JV Systems — Sistemas a Medida | Juan Villanueva',
+    desc: 'Desarrollo sistemas digitales a medida para empresas: gestión de órdenes, facturación, dashboards y automatización de procesos. Casos reales en producción, sin plantillas genéricas.',
+  },
+  en: {
+    title: 'JV Systems — Custom Software Systems | Juan Villanueva',
+    desc: `Custom digital systems for businesses: order management, invoicing, dashboards and process automation. Real production case studies, no generic templates.`,
+  },
+  pt: {
+    title: 'JV Systems — Sistemas sob Medida | Juan Villanueva',
+    desc: 'Desenvolvo sistemas digitais sob medida para empresas: gestão de ordens, faturamento, dashboards e automação de processos. Casos reais em produção, sem modelos genéricos.',
+  },
+};
+
+const I18N = {
+  en: {
+    'nav.sobre': 'About', 'nav.casos': 'Success stories', 'nav.bi': 'Dashboards', 'nav.proceso': 'Process', 'nav.contacto': 'Contact',
+    'nav.cta': 'Discuss your project', 'nav.cta2': 'Discuss your project →',
+
+    'hero.badge': '● Custom Systems · Digital Solutions',
+    'hero.title': `Your business needs<br><em>its own system</em>`,
+    'hero.desc': `I design and build digital systems tailored exactly to how your company works. No generic templates, no features you'll never use.`,
+    'hero.cta': 'Tell me your idea →',
+
+    'stats.s1': 'Systems in production', 'stats.s2': 'Custom-built', 'stats.s3': 'Generic templates', 'stats.s4': 'Post-delivery support',
+
+    'sobre.tag': '— About me',
+    'sobre.title': `I'm Juan Villanueva,<br><em>developer</em> of custom systems`,
+    'sobre.p1': `I specialize in building digital systems that solve real business problems. Every project starts with understanding how your company operates — the fields, the workflows, the day-to-day problems.`,
+    'sobre.p2': `I don't sell off-the-shelf software. I talk with you, understand how you operate, and build exactly what you need — without paying for features you'll never use.`,
+    'sobre.row1.t': 'Focused on your business', 'sobre.row1.d': 'The system reflects how you work, not the other way around',
+    'sobre.row2.t': 'Fast delivery', 'sobre.row2.d': 'First working versions in days, not months',
+    'sobre.row3.t': 'Works on any device', 'sobre.row3.d': 'Phone, tablet or computer, nothing to install',
+    'sobre.row4.t': 'Support & evolution', 'sobre.row4.d': 'The system grows with your business',
+    'sobre.row5.t': 'Data that matters', 'sobre.row5.d': 'Dashboards and reports for better decisions',
+
+    'casos.tag': '— Success stories',
+    'casos.title': `Real results, <em style="font-style:normal;color:var(--accent)">not promises</em>`,
+    'casos.desc': 'This is how a JV Systems build runs in production. Concrete numbers, from a real client.',
+    'casos.toolbar': '📋 Service Orders', 'casos.live': 'LIVE',
+    'casos.row1.t': 'Maintenance — CNC Lathe', 'casos.row1.m': 'Field technician · today 09:14',
+    'casos.row2.t': 'Repair — Compressor', 'casos.row2.m': 'Field technician · today 08:40',
+    'casos.row3.t': 'Installation — Hydraulic line', 'casos.row3.m': 'Field technician · yesterday 17:05',
+    'casos.st.facturada': 'Invoiced', 'casos.st.cerrada': 'Closed', 'casos.st.abierta': 'In the field',
+    'casos.footer': 'Receipt sent via WhatsApp · digital signature on record',
+    'casos.hint': 'Real system in production',
+    'casos.clientLabel': 'Client', 'casos.clientDesc': 'Industrial machinery · in production since July 2026',
+    'casos.problemLabel': 'The problem',
+    'casos.problemText': `Service orders were handled on paper and over WhatsApp between technicians. Orders got lost, invoicing was delayed for lack of information, and nobody had real visibility into the status of each job.`,
+    'casos.features': `<li>Technicians log orders from their phone in the field</li><li>Customer receipt sent via WhatsApp in seconds</li><li>Electronic invoicing integrated with Xubio (AFIP)</li><li>Customer's digital signature at the moment of service</li><li>Visit planning with a visual calendar</li>`,
+    'casos.m1': 'Orders left unbilled', 'casos.m2': 'Active users', 'casos.m3': 'Digital receipts',
+    'casos.m4val': '1 day', 'casos.m4': 'From implementation to production',
+    'casos.cta': 'I want results like this →',
+
+    'bi.tag': '— Business Intelligence',
+    'bi.title': `Turn your data into <em style="font-style:normal;color:var(--accent)">decisions</em>`,
+    'bi.desc': 'We connect any data source to interactive, real-time control dashboards. No matter how you work today.',
+    'bi.sourcesTitle': '📂 We connect your data from any source',
+    'bi.src1': '<strong>Excel / Google Sheets</strong><span>Existing spreadsheets, nothing to migrate</span>',
+    'bi.src2': '<strong>SQL / Access / MySQL</strong><span>Relational databases</span>',
+    'bi.src3': '<strong>APIs and web services</strong><span>Real-time data from external systems</span>',
+    'bi.src4': '<strong>Google Drive / OneDrive</strong><span>Cloud files, automatic sync</span>',
+    'bi.src5': '<strong>Forms / Google Forms</strong><span>Responses turned into reports instantly</span>',
+    'bi.src6': '<strong>Your custom systems</strong><span>JV Systems builds already have native integration</span>',
+    'bi.outputsTitle': '📈 And we turn them into',
+    'bi.feat1': '<strong>Power BI Dashboards</strong><p>Professional dashboards with charts, maps, KPIs and interactive filters. Access from any device.</p>',
+    'bi.feat2': '<strong>Real-time visualization</strong><p>Data updated automatically. No exporting files or building reports by hand.</p>',
+    'bi.feat3': `<strong>Automatic reports</strong><p>Scheduled email delivery. The report shows up on its own — nobody has to build it.</p>`,
+    'bi.feat4': '<strong>Management indicators</strong><p>Sales, logistics, HR, finance — all in one panel, organized by area.</p>',
+    'bi.demoBadge': '▶ Interactive demo', 'bi.demoSub': 'Click through the tabs to explore each module',
+    'bi.demoUrl': 'Commercial Dashboard · 360° Analysis · JV Systems', 'bi.live': 'Live',
+    'bi.openBtn': 'Open full dashboard ↗', 'bi.ctaBtn': 'I want one for my company →',
+
+    'sol.tag': '— What we build', 'sol.title': 'Solutions we build',
+    'sol.desc': `Every business has different processes. That's why we design tools adapted to how each company actually works.`,
+    'sol.c1.h': 'Sales Management',
+    'sol.c1.li': '<li>CRM for customer tracking</li><li>Quotes and estimates management</li><li>Sales and collections tracking</li><li>Self-service portals for clients</li>',
+    'sol.c2.h': 'Production & Industry',
+    'sol.c2.li': '<li>Production control</li><li>Work order tracking</li><li>Maintenance management</li><li>Quality control</li><li>Materials and inventory management</li><li>Production process traceability</li><li>Hours allocation to projects and work orders</li>',
+    'sol.c3.h': 'Human Resources',
+    'sol.c3.li': '<li>GPS time & attendance</li><li>Worked hours tracking</li><li>Absence and leave management</li><li>Employee portal</li>',
+    'sol.c4.h': 'Logistics & Operations',
+    'sol.c4.li': '<li>Delivery management</li><li>Vehicle tracking</li><li>Dispatch control</li><li>Technical visit logging</li><li>Mobile apps for field staff</li>',
+    'sol.c5.h': 'Administration & Finance',
+    'sol.c5.li': '<li>Expense control</li><li>Cash flow</li><li>Accounts receivable/payable management</li><li>Invoicing and payment tracking</li><li>Financial reports</li>',
+    'sol.c6.h': 'Business Intelligence',
+    'sol.c6.li': '<li>Power BI dashboards</li><li>Management indicators</li><li>Automatic reports</li><li>Productivity dashboards</li><li>Cost and profitability analysis</li>',
+    'sol.c7.h': 'Process Automation',
+    'sol.c7.li': '<li>System integration</li><li>Excel and Google Sheets automation</li><li>Automatic report generation</li><li>Digital approval workflows</li><li>Bulk data processing</li>',
+    'sol.c8.h': 'Retail & Point of Sale',
+    'sol.c8.li': '<li>POS systems for supermarkets and kiosks</li><li>Real-time stock and inventory control</li><li>Cash register and daily closing management</li><li>Product catalog with prices and variants</li><li>Counter, delivery or wholesale sales</li><li>Sales, margin and best-seller reports</li>',
+    'sol.ctaTitle': 'Have a different need?',
+    'sol.ctaDesc': `Often the best systems are the ones that don't exist yet. If you're currently handling something with Excel, WhatsApp, forms or paper, we can probably turn it into a simple, efficient digital solution.`,
+    'sol.ctaBtn': 'Tell me your case →',
+
+    'porque.tag': '— The difference', 'porque.title': 'Why a custom system?',
+    'porque.desc': 'Generic systems force you to adapt to them. Yours adapts to you.',
+    'porque.c1.h': `No features you don't use`, 'porque.c1.p': 'You only pay for what you need. No extra modules cluttering the screen and confusing your team.',
+    'porque.c2.h': 'Workflows like yours', 'porque.c2.p': 'If in your business an order goes through 4 specific stages, the system has exactly those. No workarounds.',
+    'porque.c3.h': 'Nothing to install', 'porque.c3.p': `Works right in your phone's browser. You can install it as an app without going through the Play Store or App Store.`,
+    'porque.c4.h': 'Data in the cloud', 'porque.c4.p': 'All your information safe and accessible from anywhere. No dependence on a single computer.',
+    'porque.c5.h': 'Direct communication', 'porque.c5.p': 'We work together throughout the whole process. Changes, tweaks and improvements in real time over WhatsApp.',
+    'porque.c6.h': 'Grows with your business', 'porque.c6.p': `The system isn't a finished product. It evolves as your operation changes and grows.`,
+
+    'proceso.tag': '— How I work', 'proceso.title': 'From your problem to the system you need',
+    'proceso.desc': 'A story that repeats with every client. Sound familiar?',
+    'proceso.s1.tag': '⚠️ The Problem', 'proceso.s1.title': 'Inefficient management',
+    'proceso.s1.desc': 'The business grows but processes stay manual. Spreadsheets, paper and scattered information that costs money.',
+    'proceso.s2.tag': '⏰ The Time', 'proceso.s2.title': `There's never enough time`,
+    'proceso.s2.desc': 'Late reports, wrong decisions. Tasks pile up and growth stalls.',
+    'proceso.s3.tag': '🔍 The Search', 'proceso.s3.title': 'They decide to look for help',
+    'proceso.s3.desc': `They know they can't keep growing like this, and look for a real solution, not just another spreadsheet.`,
+    'proceso.s4.tag': '📞 The Contact', 'proceso.s4.title': 'We set up a call',
+    'proceso.s4.desc': 'I listen to how the business runs today. No jargon — I understand the problem before proposing anything.',
+    'proceso.s5.tag': '🔎 Discovery', 'proceso.s5.title': 'I analyze your business in depth',
+    'proceso.s5.desc': 'Processes, resources, workflows and opportunities. Real data for real decisions.',
+    'proceso.s6.tag': '🎯 Design', 'proceso.s6.title': 'I design the solution',
+    'proceso.s6.desc': 'A custom system with automation, integration and smart reports. I show you the flow before building it.',
+    'proceso.s7.tag': '💻 Development', 'proceso.s7.title': 'Implementation and testing',
+    'proceso.s7.desc': 'I build, test, adjust and train. Every detail under control before going live.',
+    'proceso.s8.tag': '📊 Results', 'proceso.s8.title': 'Real results',
+    'proceso.s8.desc': '+54% sales, +38% efficiency, -62% admin time. Real-time information for smart decisions.',
+    'proceso.s9.tag': '🎉 Outcome', 'proceso.s9.title': 'Satisfied clients',
+    'proceso.s9.desc': 'When your business grows, we grow too. Organized processes, better management, real growth.',
+    'proceso.cta': 'I want my system →',
+
+    'contacto.tag': `— Let's talk`, 'contacto.title': 'Got a problem to solve?',
+    'contacto.desc': `Tell me what your business does and how you run it today. We'll figure out the rest together.`,
+    'contacto.infoTag': 'Direct contact',
+    'contacto.infoDesc': 'Custom systems developer. I reply fast — usually the same day.',
+    'contacto.wa.small': 'WhatsApp available', 'contacto.mail.small': 'I reply within the day',
+    'contacto.loc.text': 'Remote · Anywhere', 'contacto.loc.small': 'I work with clients from anywhere in the world',
+    'contacto.form.name.label': 'Your name', 'contacto.form.name.ph': `What's your name?`,
+    'contacto.form.biz.label': 'Your business / company', 'contacto.form.biz.ph': 'What does it do?',
+    'contacto.form.contact.label': 'WhatsApp or email', 'contacto.form.contact.ph': 'So I can reply',
+    'contacto.form.problem.label': 'What problem do you want to solve?',
+    'contacto.form.problem.ph': `Tell me how you handle things today and what you'd like to improve. No need to get technical.`,
+    'contacto.form.submit': 'Send inquiry →',
+
+    'footer.copy': '© 2026 <span>JV Systems</span> · Juan Villanueva · Intelligent Digital Solutions',
+    'footer.sub': 'All systems are original, custom-built developments.',
+
+    'wa.title': 'Message on WhatsApp',
+  },
+  pt: {
+    'nav.sobre': 'Sobre mim', 'nav.casos': 'Casos de sucesso', 'nav.bi': 'Dashboards', 'nav.proceso': 'Processo', 'nav.contacto': 'Contato',
+    'nav.cta': 'Consulte seu projeto', 'nav.cta2': 'Consulte seu projeto →',
+
+    'hero.badge': '● Sistemas sob medida · Soluções Digitais',
+    'hero.title': 'Seu negócio precisa<br><em>do seu próprio sistema</em>',
+    'hero.desc': 'Projeto e desenvolvo sistemas digitais adaptados exatamente à forma como sua empresa funciona. Sem modelos genéricos, sem funções que você não vai usar.',
+    'hero.cta': 'Conte sua ideia →',
+
+    'stats.s1': 'Sistemas em produção', 'stats.s2': 'Feitos sob medida', 'stats.s3': 'Modelos genéricos', 'stats.s4': 'Suporte pós-entrega',
+
+    'sobre.tag': '— Sobre mim',
+    'sobre.title': 'Sou Juan Villanueva,<br><em>desenvolvedor</em> de sistemas sob medida',
+    'sobre.p1': 'Sou especializado em construir sistemas digitais que resolvem problemas reais de negócios. Cada projeto nasce de entender como sua empresa opera — os campos, os fluxos, os problemas do dia a dia.',
+    'sobre.p2': 'Não vendo software de prateleira. Converso com você, entendo sua operação e construo exatamente o que você precisa, sem pagar por funções que nunca vai usar.',
+    'sobre.row1.t': 'Foco no seu negócio', 'sobre.row1.d': 'O sistema reflete como você trabalha, não o contrário',
+    'sobre.row2.t': 'Entrega rápida', 'sobre.row2.d': 'Primeiras versões funcionais em dias, não meses',
+    'sobre.row3.t': 'Funciona em qualquer dispositivo', 'sobre.row3.d': 'Celular, tablet ou computador, sem instalar nada',
+    'sobre.row4.t': 'Suporte e evolução', 'sobre.row4.d': 'O sistema cresce junto com seu negócio',
+    'sobre.row5.t': 'Dados que importam', 'sobre.row5.d': 'Dashboards e relatórios para tomar melhores decisões',
+
+    'casos.tag': '— Casos de sucesso',
+    'casos.title': 'Resultados reais, <em style="font-style:normal;color:var(--accent)">não promessas</em>',
+    'casos.desc': 'É assim que um sistema JV Systems funciona em produção. Números concretos, de um cliente real.',
+    'casos.toolbar': '📋 Ordens de Serviço', 'casos.live': 'AO VIVO',
+    'casos.row1.t': 'Manutenção — Torno CNC', 'casos.row1.m': 'Técnico de campo · hoje 09:14',
+    'casos.row2.t': 'Reparo — Compressor', 'casos.row2.m': 'Técnico de campo · hoje 08:40',
+    'casos.row3.t': 'Instalação — Linha hidráulica', 'casos.row3.m': 'Técnico de campo · ontem 17:05',
+    'casos.st.facturada': 'Faturada', 'casos.st.cerrada': 'Fechada', 'casos.st.abierta': 'Em campo',
+    'casos.footer': 'Comprovante enviado por WhatsApp · assinatura digital registrada',
+    'casos.hint': 'Sistema real em produção',
+    'casos.clientLabel': 'Cliente', 'casos.clientDesc': 'Maquinário industrial · em produção desde julho de 2026',
+    'casos.problemLabel': 'O problema',
+    'casos.problemText': 'As ordens de serviço eram controladas em papel e por WhatsApp entre técnicos. Ordens se perdiam, o faturamento atrasava por falta de informação e ninguém tinha visibilidade real do status de cada trabalho.',
+    'casos.features': '<li>Técnicos registram as ordens pelo celular em campo</li><li>Comprovante enviado ao cliente em segundos por WhatsApp</li><li>Faturamento eletrônico integrado com Xubio (AFIP)</li><li>Assinatura digital do cliente no momento do serviço</li><li>Planejamento de visitas com calendário visual</li>',
+    'casos.m1': 'Ordens sem faturar', 'casos.m2': 'Usuários ativos', 'casos.m3': 'Comprovantes digitais',
+    'casos.m4val': '1 dia', 'casos.m4': 'Da implementação à produção',
+    'casos.cta': 'Quero resultados assim →',
+
+    'bi.tag': '— Business Intelligence',
+    'bi.title': 'Transforme seus dados em <em style="font-style:normal;color:var(--accent)">decisões</em>',
+    'bi.desc': 'Conectamos qualquer fonte de dados a painéis de controle interativos em tempo real. Não importa como você trabalha hoje.',
+    'bi.sourcesTitle': '📂 Conectamos seus dados de qualquer fonte',
+    'bi.src1': '<strong>Excel / Google Sheets</strong><span>Planilhas existentes, sem migrar nada</span>',
+    'bi.src2': '<strong>SQL / Access / MySQL</strong><span>Bancos de dados relacionais</span>',
+    'bi.src3': '<strong>APIs e serviços web</strong><span>Dados em tempo real de sistemas externos</span>',
+    'bi.src4': '<strong>Google Drive / OneDrive</strong><span>Arquivos na nuvem, sincronização automática</span>',
+    'bi.src5': '<strong>Formulários / Google Forms</strong><span>Respostas convertidas em relatórios na hora</span>',
+    'bi.src6': '<strong>Seus sistemas sob medida</strong><span>Os sistemas JV Systems já têm integração nativa</span>',
+    'bi.outputsTitle': '📈 E transformamos em',
+    'bi.feat1': '<strong>Dashboards em Power BI</strong><p>Painéis profissionais com gráficos, mapas, KPIs e filtros interativos. Acesso de qualquer dispositivo.</p>',
+    'bi.feat2': '<strong>Visualização em tempo real</strong><p>Dados atualizados automaticamente. Sem exportar arquivos nem montar relatórios manuais.</p>',
+    'bi.feat3': '<strong>Relatórios automáticos</strong><p>Envio programado por e-mail. O relatório chega sozinho, sem que ninguém precise montá-lo.</p>',
+    'bi.feat4': '<strong>Indicadores de gestão</strong><p>Vendas, logística, RH, finanças — tudo em um só painel organizado por área.</p>',
+    'bi.demoBadge': '▶ Demo interativa', 'bi.demoSub': 'Clique nas abas para explorar cada módulo',
+    'bi.demoUrl': 'Dashboard Comercial · Análise 360° · JV Systems', 'bi.live': 'Ao vivo',
+    'bi.openBtn': 'Abrir dashboard completo ↗', 'bi.ctaBtn': 'Quero um para minha empresa →',
+
+    'sol.tag': '— O que construímos', 'sol.title': 'Soluções que desenvolvemos',
+    'sol.desc': 'Cada negócio tem processos diferentes. Por isso desenhamos ferramentas adaptadas à forma real de trabalho de cada empresa.',
+    'sol.c1.h': 'Gestão Comercial',
+    'sol.c1.li': '<li>CRM para acompanhamento de clientes</li><li>Gestão de orçamentos e cotações</li><li>Acompanhamento de vendas e cobranças</li><li>Portais de autoatendimento para clientes</li>',
+    'sol.c2.h': 'Produção e Indústria',
+    'sol.c2.li': '<li>Controle de produção</li><li>Acompanhamento de ordens de trabalho</li><li>Gestão de manutenção</li><li>Controle de qualidade</li><li>Gestão de materiais e estoque</li><li>Rastreabilidade de processos produtivos</li><li>Alocação de horas a projetos e OTs</li>',
+    'sol.c3.h': 'Recursos Humanos',
+    'sol.c3.li': '<li>Marcação de ponto com GPS</li><li>Controle de horas trabalhadas</li><li>Gestão de ausências e licenças</li><li>Portal do funcionário</li>',
+    'sol.c4.h': 'Logística e Operações',
+    'sol.c4.li': '<li>Gestão de entregas</li><li>Rastreamento de veículos</li><li>Controle de despachos</li><li>Registro de visitas técnicas</li><li>Apps móveis para equipe de campo</li>',
+    'sol.c5.h': 'Administração e Finanças',
+    'sol.c5.li': '<li>Controle de gastos</li><li>Fluxo de caixa</li><li>Gestão de contas correntes</li><li>Faturamento e acompanhamento de pagamentos</li><li>Relatórios financeiros</li>',
+    'sol.c6.h': 'Business Intelligence',
+    'sol.c6.li': '<li>Dashboards em Power BI</li><li>Indicadores de gestão</li><li>Relatórios automáticos</li><li>Painéis de produtividade</li><li>Análise de custos e rentabilidade</li>',
+    'sol.c7.h': 'Automação de Processos',
+    'sol.c7.li': '<li>Integração entre sistemas</li><li>Automação de Excel e Google Sheets</li><li>Geração automática de relatórios</li><li>Fluxos de aprovação digital</li><li>Processamento em massa de informações</li>',
+    'sol.c8.h': 'Comércio e Ponto de Venda',
+    'sol.c8.li': '<li>Sistemas de PDV para supermercados e quiosques</li><li>Controle de estoque em tempo real</li><li>Gestão de caixa e fechamento diário</li><li>Catálogo de produtos com preços e variantes</li><li>Vendas no balcão, delivery ou atacado</li><li>Relatórios de vendas, margens e produtos mais vendidos</li>',
+    'sol.ctaTitle': 'Tem outra necessidade?',
+    'sol.ctaDesc': 'Muitas vezes os melhores sistemas são os que ainda não existem. Se hoje você controla algo com Excel, WhatsApp, formulários ou papel, provavelmente podemos transformar isso em uma solução digital simples e eficiente.',
+    'sol.ctaBtn': 'Conte seu caso →',
+
+    'porque.tag': '— A diferença', 'porque.title': 'Por que um sistema sob medida?',
+    'porque.desc': 'Sistemas genéricos obrigam você a se adaptar a eles. O seu se adapta a você.',
+    'porque.c1.h': 'Sem funções que você não usa', 'porque.c1.p': 'Você paga só pelo que precisa. Sem módulos extras que ocupam tela e confundem sua equipe.',
+    'porque.c2.h': 'Fluxos como os seus', 'porque.c2.p': 'Se no seu negócio um pedido passa por 4 estados específicos, o sistema tem exatamente esses. Sem gambiarras.',
+    'porque.c3.h': 'Sem instalações', 'porque.c3.p': 'Funciona no navegador do celular. Você pode instalar como app sem passar pela Play Store ou App Store.',
+    'porque.c4.h': 'Dados na nuvem', 'porque.c4.p': 'Todas as suas informações seguras e acessíveis de qualquer lugar. Sem depender de um único computador.',
+    'porque.c5.h': 'Comunicação direta', 'porque.c5.p': 'Trabalhamos juntos durante todo o processo. Mudanças, ajustes e melhorias em tempo real pelo WhatsApp.',
+    'porque.c6.h': 'Cresce com seu negócio', 'porque.c6.p': 'O sistema não é um produto pronto. Ele evolui à medida que sua operação muda e cresce.',
+
+    'proceso.tag': '— Como trabalho', 'proceso.title': 'Do seu problema ao sistema que você precisa',
+    'proceso.desc': 'Uma história que se repete com cada cliente. Você se identifica?',
+    'proceso.s1.tag': '⚠️ O Problema', 'proceso.s1.title': 'Gestão ineficiente',
+    'proceso.s1.desc': 'O negócio cresce, mas os processos continuam manuais. Planilhas, papéis e informações espalhadas que custam dinheiro.',
+    'proceso.s2.tag': '⏰ O Tempo', 'proceso.s2.title': 'O tempo não é suficiente',
+    'proceso.s2.desc': 'Relatórios atrasados, decisões erradas. As tarefas se acumulam e o crescimento trava.',
+    'proceso.s3.tag': '🔍 A Busca', 'proceso.s3.title': 'Decidem buscar ajuda',
+    'proceso.s3.desc': 'Sabem que assim não conseguem continuar crescendo e buscam uma solução real, não mais uma planilha.',
+    'proceso.s4.tag': '📞 O Contato', 'proceso.s4.title': 'Marcamos uma conversa',
+    'proceso.s4.desc': 'Escuto como o negócio funciona hoje. Sem tecnicismos — entendo o problema antes de propor qualquer coisa.',
+    'proceso.s5.tag': '🔎 Levantamento', 'proceso.s5.title': 'Analiso seu negócio a fundo',
+    'proceso.s5.desc': 'Processos, recursos, fluxos e oportunidades. Dados reais para decisões reais.',
+    'proceso.s6.tag': '🎯 Design', 'proceso.s6.title': 'Desenho a solução',
+    'proceso.s6.desc': 'Sistema sob medida com automação, integração e relatórios inteligentes. Mostro o fluxo antes de construir.',
+    'proceso.s7.tag': '💻 Desenvolvimento', 'proceso.s7.title': 'Implementação e testes',
+    'proceso.s7.desc': 'Desenvolvo, testo, ajusto e capacito. Cada detalhe sob controle antes de entrar em produção.',
+    'proceso.s8.tag': '📊 Resultados', 'proceso.s8.title': 'Resultados reais',
+    'proceso.s8.desc': '+54% vendas, +38% eficiência, -62% tempo administrativo. Informação em tempo real para decisões inteligentes.',
+    'proceso.s9.tag': '🎉 Resultado', 'proceso.s9.title': 'Clientes satisfeitos',
+    'proceso.s9.desc': 'Quando seu negócio cresce, nós também crescemos. Processos organizados, melhor gestão, crescimento real.',
+    'proceso.cta': 'Quero meu sistema →',
+
+    'contacto.tag': '— Vamos conversar', 'contacto.title': 'Tem um problema para resolver?',
+    'contacto.desc': 'Me conte o que sua empresa faz e como você a gerencia hoje. O resto a gente vê juntos.',
+    'contacto.infoTag': 'Contato direto',
+    'contacto.infoDesc': 'Desenvolvedor de sistemas sob medida. Respondo rápido — geralmente no mesmo dia.',
+    'contacto.wa.small': 'WhatsApp disponível', 'contacto.mail.small': 'Respondo no mesmo dia',
+    'contacto.loc.text': 'Remoto · Em qualquer lugar', 'contacto.loc.small': 'Trabalho com clientes de qualquer lugar do mundo',
+    'contacto.form.name.label': 'Seu nome', 'contacto.form.name.ph': 'Qual é o seu nome?',
+    'contacto.form.biz.label': 'Seu negócio / empresa', 'contacto.form.biz.ph': 'O que ela faz?',
+    'contacto.form.contact.label': 'WhatsApp ou e-mail', 'contacto.form.contact.ph': 'Para eu te responder',
+    'contacto.form.problem.label': 'Que problema você quer resolver?',
+    'contacto.form.problem.ph': 'Conte como você faz as coisas hoje e o que gostaria de melhorar. Não precisa ser técnico.',
+    'contacto.form.submit': 'Enviar consulta →',
+
+    'footer.copy': '© 2026 <span>JV Systems</span> · Juan Villanueva · Soluções Digitais Inteligentes',
+    'footer.sub': 'Todos os sistemas são desenvolvimentos originais sob medida.',
+
+    'wa.title': 'Escrever no WhatsApp',
+  },
+};
+
+(function () {
+  const ES_CACHE = {};
+  const PH_CACHE = {};
+  const TITLE_CACHE = {};
+
+  document.querySelectorAll('[data-i18n]').forEach(el => { ES_CACHE[el.dataset.i18n] = ES_CACHE[el.dataset.i18n] || el.innerHTML; });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { PH_CACHE[el.dataset.i18nPlaceholder] = el.placeholder; });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { TITLE_CACHE[el.dataset.i18nTitle] = el.getAttribute('title'); });
+
+  function applyLang(lang) {
+    window.currentLang = lang;
+    document.documentElement.lang = lang === 'en' ? 'en' : (lang === 'pt' ? 'pt-BR' : 'es');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      el.innerHTML = lang === 'es' ? ES_CACHE[key] : ((I18N[lang] && I18N[lang][key]) || ES_CACHE[key]);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.dataset.i18nPlaceholder;
+      el.placeholder = lang === 'es' ? PH_CACHE[key] : ((I18N[lang] && I18N[lang][key]) || PH_CACHE[key]);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.dataset.i18nTitle;
+      el.setAttribute('title', lang === 'es' ? TITLE_CACHE[key] : ((I18N[lang] && I18N[lang][key]) || TITLE_CACHE[key]));
+    });
+
+    const waFloat = document.getElementById('waFloat');
+    if (waFloat) waFloat.href = `https://wa.me/543434728484?text=${encodeURIComponent(WA_MSGS[lang] || WA_MSGS.es)}`;
+
+    const m = META[lang] || META.es;
+    document.title = m.title;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.setAttribute('content', m.desc);
+
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    localStorage.setItem('jvsLang', lang);
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyLang(btn.dataset.lang));
+  });
+
+  const saved = localStorage.getItem('jvsLang');
+  applyLang(saved && I18N[saved] ? saved : 'es');
+})();
 </script>
 </body>
 </html>
