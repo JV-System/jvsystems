@@ -1465,6 +1465,47 @@
       .lang-switch:not(.lang-switch-mobile) { display: none; }
       .lang-switch-mobile { display: flex; }
     }
+
+    /* ── MARCACIÓN Y CONTROL DE ASISTENCIA ── */
+    .marcacion-section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .marc-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; align-items: start; }
+    @media (max-width: 900px) { .marc-modes { grid-template-columns: 1fr; } }
+    .marc-mode {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius); padding: 2rem;
+    }
+    .marc-mode-icon { font-size: 2rem; margin-bottom: .75rem; }
+    .marc-mode h3 { font-size: 1.15rem; font-weight: 900; margin-bottom: .6rem; }
+    .marc-mode > p { font-size: .88rem; color: rgba(255,255,255,.55); line-height: 1.6; margin-bottom: 1.25rem; }
+    .marc-mode-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.5rem; }
+    .marc-mode-list li { font-size: .82rem; color: rgba(255,255,255,.65); display: flex; gap: .5rem; align-items: flex-start; }
+    .marc-mode-list li::before { content: '✓'; color: var(--accent); font-weight: 800; flex-shrink: 0; }
+
+    .marc-app-mock {
+      background: #060e1a; border: 1px solid rgba(255,140,0,.15); border-radius: 12px;
+      padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .5rem;
+    }
+    .marc-app-badge { font-size: .8rem; font-weight: 700; color: #34d399; }
+    .marc-app-row { font-size: .72rem; color: rgba(255,255,255,.5); }
+
+    .marc-hw-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+    @media (max-width: 600px) { .marc-hw-grid { grid-template-columns: 1fr; } }
+    .marc-hw-card {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px; padding: 1.25rem 1.1rem; position: relative;
+      transition: border-color .2s, transform .2s;
+    }
+    .marc-hw-card:hover { border-color: rgba(255,140,0,.3); transform: translateY(-3px); }
+    .marc-hw-featured { border-color: rgba(255,140,0,.35); background: rgba(255,140,0,.05); }
+    .marc-hw-badge {
+      position: absolute; top: -11px; left: 1rem;
+      background: var(--accent); color: #07101d; font-size: .6rem; font-weight: 900;
+      padding: .25rem .6rem; border-radius: 99px; letter-spacing: .03em; text-transform: uppercase;
+    }
+    .marc-hw-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+    .marc-hw-card h4 { font-size: .92rem; font-weight: 800; margin-bottom: .4rem; }
+    .marc-hw-card p { font-size: .78rem; color: rgba(255,255,255,.55); line-height: 1.55; margin: 0; }
+    @media (max-width: 768px) { .marcacion-section { padding: 3.5rem 1.25rem; } }
   </style>
 </head>
 <body>
@@ -1480,6 +1521,7 @@
   <div class="nav-links">
     <a href="#sobre" data-i18n="nav.sobre">Sobre mí</a>
     <a href="#casos" data-i18n="nav.casos">Casos de éxito</a>
+    <a href="#marcacion" data-i18n="nav.marc">Marcación</a>
     <a href="#bi" data-i18n="nav.bi">Dashboards</a>
     <a href="#proceso" data-i18n="nav.proceso">Proceso</a>
     <a href="#contacto" data-i18n="nav.contacto">Contacto</a>
@@ -1499,6 +1541,7 @@
 <div class="nav-mobile-menu" id="navMobileMenu">
   <a href="#sobre"    data-i18n="nav.sobre" onclick="cerrarMenu()">Sobre mí</a>
   <a href="#casos"    data-i18n="nav.casos" onclick="cerrarMenu()">Casos de éxito</a>
+  <a href="#marcacion" data-i18n="nav.marc" onclick="cerrarMenu()">Marcación</a>
   <a href="#bi"       data-i18n="nav.bi" onclick="cerrarMenu()">Dashboards</a>
   <a href="#proceso"  data-i18n="nav.proceso" onclick="cerrarMenu()">Proceso</a>
   <a href="#contacto" data-i18n="nav.contacto" onclick="cerrarMenu()">Contacto</a>
@@ -1774,6 +1817,63 @@
         <a href="#contacto" class="sistema-link" data-i18n="casos.cta">Quiero resultados así →</a>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- MARCACIÓN Y CONTROL DE ASISTENCIA -->
+<section class="marcacion-section" id="marcacion">
+  <div class="section-header reveal">
+    <span class="section-tag" data-i18n="marc.tag">— Control de Asistencia</span>
+    <h2 data-i18n="marc.title">Marcación laboral, <em style="font-style:normal;color:var(--accent)">a tu manera</em></h2>
+    <p data-i18n="marc.desc">Desde el celular o con un lector en la puerta de planta. Vos elegís cómo tu equipo registra su jornada — el sistema se adapta.</p>
+  </div>
+
+  <div class="marc-modes reveal">
+    <div class="marc-mode">
+      <div class="marc-mode-icon">📱</div>
+      <h3 data-i18n="marc.app.h">Desde el celular</h3>
+      <p data-i18n="marc.app.p">Cada empleado marca su entrada y salida desde su propio teléfono, sin instalar nada — funciona como una app.</p>
+      <ul class="marc-mode-list" data-i18n="marc.app.li">
+        <li>Geolocalización en cada marcación</li>
+        <li>Verificación opcional con foto</li>
+        <li>Reportes de horas automáticos</li>
+        <li>Sin costo de hardware — funciona en cualquier celular</li>
+      </ul>
+      <div class="marc-app-mock">
+        <div class="marc-app-badge">🟢 <span data-i18n="marc.app.badge">Registrando Entrada</span></div>
+        <div class="marc-app-row" data-i18n="marc.app.gps">📍 Ubicación obtenida (±8m)</div>
+        <div class="marc-app-row" data-i18n="marc.app.cam">📷 Verificación por cámara</div>
+      </div>
+    </div>
+
+    <div class="marc-mode">
+      <div class="marc-mode-icon">🖥️</div>
+      <h3 data-i18n="marc.hw.h">Con terminal física en planta</h3>
+      <p data-i18n="marc.hw.p">Para cuando querés un punto fijo de marcación en la entrada. Integramos el equipo con tu sistema — vos elegís qué tecnología usar.</p>
+
+      <div class="marc-hw-grid">
+        <div class="marc-hw-card marc-hw-featured">
+          <span class="marc-hw-badge" data-i18n="marc.hw.rfid.badge">Recomendado para planta</span>
+          <div class="marc-hw-icon">💳</div>
+          <h4 data-i18n="marc.hw.rfid.h">Tarjeta / RFID</h4>
+          <p data-i18n="marc.hw.rfid.p">Rápido y resistente a manos sucias o grasosas — ideal para entornos industriales.</p>
+        </div>
+        <div class="marc-hw-card">
+          <div class="marc-hw-icon">🙂</div>
+          <h4 data-i18n="marc.hw.face.h">Reconocimiento facial</h4>
+          <p data-i18n="marc.hw.face.p">Sin contacto y sin poder marcar por un compañero. Ideal para oficinas y comercios.</p>
+        </div>
+        <div class="marc-hw-card">
+          <div class="marc-hw-icon">👆</div>
+          <h4 data-i18n="marc.hw.finger.h">Lector de huella</h4>
+          <p data-i18n="marc.hw.finger.p">La opción clásica y económica, recomendada para ambientes de oficina.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal" style="text-align:center;margin-top:2.5rem">
+    <a href="#contacto" class="sol-cta-btn" data-i18n="marc.cta">Quiero controlar la asistencia de mi equipo →</a>
   </div>
 </section>
 
@@ -2400,7 +2500,7 @@ const META = {
 
 const I18N = {
   en: {
-    'nav.sobre': 'About', 'nav.casos': 'Success stories', 'nav.bi': 'Dashboards', 'nav.proceso': 'Process', 'nav.contacto': 'Contact',
+    'nav.sobre': 'About', 'nav.casos': 'Success stories', 'nav.marc': 'Attendance', 'nav.bi': 'Dashboards', 'nav.proceso': 'Process', 'nav.contacto': 'Contact',
     'nav.cta': 'Discuss your project', 'nav.cta2': 'Discuss your project →',
 
     'hero.badge': '● Custom Systems · Digital Solutions',
@@ -2437,6 +2537,25 @@ const I18N = {
     'casos.m1': 'Orders left unbilled', 'casos.m2': 'Active users', 'casos.m3': 'Digital receipts',
     'casos.m4val': '1 day', 'casos.m4': 'From implementation to production',
     'casos.cta': 'I want results like this →',
+
+    'marc.tag': '— Attendance Control',
+    'marc.title': `Time & attendance, <em style="font-style:normal;color:var(--accent)">your way</em>`,
+    'marc.desc': `From a phone or with a reader at the plant door. You choose how your team clocks in — the system adapts.`,
+    'marc.app.h': 'From the phone',
+    'marc.app.p': `Each employee clocks in and out from their own phone, nothing to install — it works like an app.`,
+    'marc.app.li': '<li>Geolocation on every clock-in</li><li>Optional photo verification</li><li>Automatic hours reports</li><li>No hardware cost — works on any phone</li>',
+    'marc.app.badge': 'Clocking In',
+    'marc.app.gps': '📍 Location acquired (±8m)',
+    'marc.app.cam': '📷 Camera verification',
+    'marc.hw.h': 'With a physical terminal on-site',
+    'marc.hw.p': `For when you want a fixed clock-in point at the entrance. We integrate the device with your system — you choose the technology.`,
+    'marc.hw.rfid.badge': 'Recommended for plants', 'marc.hw.rfid.h': 'Card / RFID',
+    'marc.hw.rfid.p': 'Fast and resistant to dirty or greasy hands — ideal for industrial environments.',
+    'marc.hw.face.h': 'Facial recognition',
+    'marc.hw.face.p': 'Contactless, and nobody can clock in for a coworker. Ideal for offices and retail.',
+    'marc.hw.finger.h': 'Fingerprint reader',
+    'marc.hw.finger.p': 'The classic, budget-friendly option, best suited for office environments.',
+    'marc.cta': `I want to track my team's attendance →`,
 
     'bi.tag': '— Business Intelligence',
     'bi.title': `Turn your data into <em style="font-style:normal;color:var(--accent)">decisions</em>`,
@@ -2529,7 +2648,7 @@ const I18N = {
     'wa.title': 'Message on WhatsApp',
   },
   pt: {
-    'nav.sobre': 'Sobre mim', 'nav.casos': 'Casos de sucesso', 'nav.bi': 'Dashboards', 'nav.proceso': 'Processo', 'nav.contacto': 'Contato',
+    'nav.sobre': 'Sobre mim', 'nav.casos': 'Casos de sucesso', 'nav.marc': 'Marcação', 'nav.bi': 'Dashboards', 'nav.proceso': 'Processo', 'nav.contacto': 'Contato',
     'nav.cta': 'Consulte seu projeto', 'nav.cta2': 'Consulte seu projeto →',
 
     'hero.badge': '● Sistemas sob medida · Soluções Digitais',
@@ -2566,6 +2685,25 @@ const I18N = {
     'casos.m1': 'Ordens sem faturar', 'casos.m2': 'Usuários ativos', 'casos.m3': 'Comprovantes digitais',
     'casos.m4val': '1 dia', 'casos.m4': 'Da implementação à produção',
     'casos.cta': 'Quero resultados assim →',
+
+    'marc.tag': '— Controle de Ponto',
+    'marc.title': 'Marcação de ponto, <em style="font-style:normal;color:var(--accent)">do seu jeito</em>',
+    'marc.desc': 'Pelo celular ou com um leitor na porta da fábrica. Você escolhe como sua equipe registra o ponto — o sistema se adapta.',
+    'marc.app.h': 'Pelo celular',
+    'marc.app.p': 'Cada funcionário registra entrada e saída pelo próprio celular, sem instalar nada — funciona como um app.',
+    'marc.app.li': '<li>Geolocalização em cada marcação</li><li>Verificação opcional por foto</li><li>Relatórios de horas automáticos</li><li>Sem custo de hardware — funciona em qualquer celular</li>',
+    'marc.app.badge': 'Registrando Entrada',
+    'marc.app.gps': '📍 Localização obtida (±8m)',
+    'marc.app.cam': '📷 Verificação por câmera',
+    'marc.hw.h': 'Com terminal físico na planta',
+    'marc.hw.p': 'Para quando você quer um ponto fixo de marcação na entrada. Integramos o equipamento com seu sistema — você escolhe a tecnologia.',
+    'marc.hw.rfid.badge': 'Recomendado para fábricas', 'marc.hw.rfid.h': 'Cartão / RFID',
+    'marc.hw.rfid.p': 'Rápido e resistente a mãos sujas ou engraxadas — ideal para ambientes industriais.',
+    'marc.hw.face.h': 'Reconhecimento facial',
+    'marc.hw.face.p': 'Sem contato e sem poder marcar por um colega. Ideal para escritórios e comércios.',
+    'marc.hw.finger.h': 'Leitor de digital',
+    'marc.hw.finger.p': 'A opção clássica e econômica, recomendada para ambientes de escritório.',
+    'marc.cta': 'Quero controlar a assiduidade da minha equipe →',
 
     'bi.tag': '— Business Intelligence',
     'bi.title': 'Transforme seus dados em <em style="font-style:normal;color:var(--accent)">decisões</em>',
