@@ -119,16 +119,11 @@ exports.xubioTest = onRequest(
     if (req.method === "OPTIONS") { res.status(204).send(""); return; }
     try {
       const token = await getXubioToken();
-
-      // Buscar comprobantes de hoy y borrar el de Nibbler
-      const u2 = new URL(XUBIO_API_BASE + "/comprobanteVentaBean");
-      const r2 = await doRequest({ hostname: u2.hostname, path: u2.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
-      const hoy = new Date().toISOString().split("T")[0];
-      const deHoy = Array.isArray(r2.body) ? r2.body.filter(c => c.fecha === hoy) : [];
-      // GET comprobante específico de RAMI
-      const uRami = new URL(XUBIO_API_BASE + "/comprobanteVentaBean/75339578");
-      const rRami = await doRequest({ hostname: uRami.hostname, path: uRami.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
-      res.json({ ok: true, rami: rRami.body });
+      // GET clientes — modo seguro (solo lectura)
+      const uC = new URL(XUBIO_API_BASE + "/clienteBean");
+      const r = await doRequest({ hostname: uC.hostname, path: uC.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+      const lista = Array.isArray(r.body) ? r.body.slice(0, 5).map(c => ({ id: c.cliente_id, nombre: c.nombre })) : r.body;
+      res.json({ ok: true, status: r.status, primeros5: lista });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
     }
@@ -153,9 +148,8 @@ exports.xubioCrearComprobante = onRequest(
       const tipoMap = { "Factura A": 1, "Factura B": 1, "Factura C": 1, "Nota de Débito": 2, "Nota de Crédito": 3, "Recibo": 4 };
       const tipo = tipoMap[datos.tipoComprobante] || 1;
 
-      // condicionDePago: 1=Cuenta Corriente, 2=Contado
-      const condMap = { "Contado": 2, "30 días": 1, "60 días": 1, "Cuenta corriente": 1 };
-      const condicion = condMap[datos.condicionPago] !== undefined ? condMap[datos.condicionPago] : 2;
+      // Siempre Cuenta Corriente en Xubio — Xubio exige cobros para Contado (API change)
+      const condicion = 1;
 
       // Items → transaccionProductoItems
       let items = [];
@@ -208,65 +202,40 @@ exports.xubioCrearComprobante = onRequest(
           } else {
             console.log("Cliente no encontrado:", nombreCliente);
             if (!datos.condicionIVA) {
-              // Sin condición IVA → pedir al frontend que muestre el popup
               res.json({ clienteNoEncontrado: true, nombre: nombreCliente });
               return;
             }
-            // Con condición IVA (viene del popup) → crear cliente en Xubio
-            const ivaMap = {
-              "RI": { ID: 1, id: 1, nombre: "Responsable Inscripto", codigo: "RI" },
-              "CF": { ID: 2, id: 2, nombre: "Consumidor Final",      codigo: "CF" },
-              "M":  { ID: 3, id: 3, nombre: "Monotributista",        codigo: "M"  },
-              "E":  { ID: 5, id: 5, nombre: "Exento",                codigo: "E"  },
-            };
+            // Intentar crear cliente en Xubio
             const ivaIdMap = { "RI": 1, "M": 6, "CF": 5, "E": 4 };
             const ivaId = ivaIdMap[datos.condicionIVA] || 5;
             const nuevoCliente = { nombre: nombreCliente, condicionIVA: ivaId };
-            if (datos.cuit) nuevoCliente.cuit = String(datos.cuit).replace(/[-\s]/g, "");
+            if (datos.cuit) nuevoCliente.cuit = datos.cuit;
             const bodyCliente = JSON.stringify(nuevoCliente);
             const urlCliente = new URL(XUBIO_API_BASE + "/clienteBean");
-            const reqOpts = (method) => ({
-              hostname: urlCliente.hostname, path: urlCliente.pathname, method,
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token,
-                "Content-Length": Buffer.byteLength(bodyCliente, "utf8"),
-              },
-            });
+            const hdrCliente = { "Content-Type": "application/json", "Authorization": "Bearer " + token, "Content-Length": Buffer.byteLength(bodyCliente, "utf8") };
             console.log("Payload crear cliente:", bodyCliente);
-            let rCrear = await doRequest(reqOpts("POST"), bodyCliente);
-            console.log("Crear cliente POST status:", rCrear.status, "body:", JSON.stringify(rCrear.body).substring(0, 300));
+            let rCrear = await doRequest({ hostname: urlCliente.hostname, path: urlCliente.pathname, method: "POST", headers: hdrCliente }, bodyCliente);
             if (rCrear.status !== 200 && rCrear.status !== 201) {
-              rCrear = await doRequest(reqOpts("PUT"), bodyCliente);
-              console.log("Crear cliente PUT status:", rCrear.status, "body:", JSON.stringify(rCrear.body).substring(0, 300));
+              rCrear = await doRequest({ hostname: urlCliente.hostname, path: urlCliente.pathname, method: "PUT", headers: hdrCliente }, bodyCliente);
             }
+            console.log("Crear cliente status:", rCrear.status);
             if (rCrear.status !== 200 && rCrear.status !== 201) {
-              res.status(500).json({ ok: false, error: "Error al crear cliente en Xubio (status " + rCrear.status + "): " + JSON.stringify(rCrear.body).substring(0, 300) });
+              res.status(500).json({ ok: false, error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar." });
               return;
             }
-            // Intentar ID de la respuesta directa
             let newId = rCrear.body && (rCrear.body.cliente_id || rCrear.body.ID || rCrear.body.id);
-            // Si no vino en respuesta, buscar de nuevo en Xubio
             if (!newId) {
-              const rBuscar2 = await doRequest({
-                hostname: urlClientes.hostname, path: urlClientes.pathname, method: "GET",
-                headers: { "Authorization": "Bearer " + token },
-              });
-              if (Array.isArray(rBuscar2.body)) {
-                const creado = rBuscar2.body.find(function(c) {
-                  const nc = norm(c.nombre);
-                  return nc === normBuscar || nc.startsWith(normBuscar) || normBuscar.startsWith(nc);
-                });
+              const rB2 = await doRequest({ hostname: urlClientes.hostname, path: urlClientes.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+              if (Array.isArray(rB2.body)) {
+                const creado = rB2.body.find(function(c) { const nc = norm(c.nombre); return nc === normBuscar || nc.startsWith(normBuscar) || normBuscar.startsWith(nc); });
                 if (creado) newId = creado.cliente_id || creado.ID || creado.id;
-                console.log("Rebúsqueda post-creación:", creado ? creado.nombre + " ID:" + newId : "no encontrado");
               }
             }
             if (newId) {
               clienteObj = { ID: newId, id: newId };
-              console.log("Cliente creado, usando ID:", newId);
+              console.log("Cliente creado, ID:", newId);
             } else {
-              console.log("No se pudo obtener ID tras crear cliente");
-              res.status(500).json({ ok: false, error: "Cliente creado en Xubio pero no se pudo obtener su ID. Esperá unos segundos y reintentá — ya debería aparecer en la lista." });
+              res.status(500).json({ ok: false, error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar." });
               return;
             }
           }
