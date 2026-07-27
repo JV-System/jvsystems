@@ -119,7 +119,6 @@ exports.xubioTest = onRequest(
     if (req.method === "OPTIONS") { res.status(204).send(""); return; }
     try {
       const token = await getXubioToken();
-      // GET clientes — modo seguro (solo lectura)
       const uC = new URL(XUBIO_API_BASE + "/clienteBean");
       const r = await doRequest({ hostname: uC.hostname, path: uC.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
       const lista = Array.isArray(r.body) ? r.body.slice(0, 5).map(c => ({ id: c.cliente_id, nombre: c.nombre })) : r.body;
