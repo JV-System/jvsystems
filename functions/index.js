@@ -281,7 +281,7 @@ exports.xubioCrearComprobante = onRequest(
         fecha:            datos.fecha || new Date().toISOString().split("T")[0],
         fechaVto:         datos.vencimiento || datos.fecha || "",
         condicionDePago:  condicion,
-        descripcion:      datos.numeroComprobante || "",
+        descripcion:      "",
         puntoVenta:       { ID: 106928, id: 106928, nombre: "INGENIERIA BRANCA SRL", codigo: "INGENIERIA_BRANCA_SRL" },
         moneda:           { ID: -2, id: -2, nombre: "Pesos Argentinos", codigo: "PESOS_ARGENTINOS" },
         transaccionProductoItems: items,
