@@ -8011,13 +8011,9 @@ async function confirmarEnvioXubio(oid) {
       renderFacturacion();
     } else if (data.clienteNoEncontrado) {
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
-      if (statusEl) statusEl.innerHTML = '<div style="background:#fef3c7;color:#92400e;padding:14px;border-radius:8px;margin-bottom:12px;font-size:13px;line-height:1.5;">'
-        + '<strong>⚠️ Cliente no encontrado en Xubio</strong><br>'
-        + '<b>' + (data.nombre||'') + '</b> no existe en Xubio.<br><br>'
-        + '1. Abrí <a href="https://xubio.com" target="_blank" style="color:#1565D8;">xubio.com</a> → Contactos → Clientes → Nuevo cliente<br>'
-        + '2. Cargá el cliente con el mismo nombre exacto<br>'
-        + '3. Volvé acá y presioná Reintentar'
-        + '</div>';
+      mostrarPopupCrearCliente(data.nombre || '', payload.cuit || '', function(datos) {
+        _enviarPayloadXubio(oid, o, Object.assign({}, payload, { empresa: datos.nombre, cuit: datos.cuit, condicionIVA: datos.condicionIVA }), statusEl, sendBtn);
+      });
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
