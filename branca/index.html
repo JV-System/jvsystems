@@ -7866,7 +7866,7 @@ function abrirModalXubio(oid) {
   const mdo  = parseFloat(document.getElementById('fact-mo-'     + oid)?.value) || f.manoDeObra    || 0;
   const rep  = parseFloat(document.getElementById('fact-rep-'    + oid)?.value) || f.repuestosCosto || 0;
   const gas  = parseFloat(document.getElementById('fact-gastos-' + oid)?.value) || f.gastos         || 0;
-  const nro  = document.getElementById('fact-nro-'  + oid)?.value || f.nroFactura || '';
+  const nro  = document.getElementById('fact-nro-'  + oid)?.value || f.nroComprobanteInterno || '';
   const fecha = document.getElementById('fact-fecha-' + oid)?.value || f.fechaFactura || new Date().toISOString().split('T')[0];
   const cond  = document.getElementById('fact-cond-' + oid)?.value || f.condPago || 'Contado';
   const diasVenc = { 'Contado':0, '30 días':30, '60 días':60, 'Cuenta corriente':30 };
@@ -7989,6 +7989,7 @@ async function confirmarEnvioXubio(oid) {
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
       if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
+      if (payload.numeroComprobante) o.facturacion.nroComprobanteInterno = payload.numeroComprobante;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
@@ -8075,6 +8076,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
       if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
+      if (payload.numeroComprobante) o.facturacion.nroComprobanteInterno = payload.numeroComprobante;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;

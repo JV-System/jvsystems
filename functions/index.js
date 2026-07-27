@@ -120,22 +120,15 @@ exports.xubioTest = onRequest(
     try {
       const token = await getXubioToken();
 
-      // GET lista de comprobantes, filtrar por hoy y buscar Nibbler
+      // Buscar comprobantes de hoy y borrar el de Nibbler
       const u2 = new URL(XUBIO_API_BASE + "/comprobanteVentaBean");
       const r2 = await doRequest({ hostname: u2.hostname, path: u2.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
       const hoy = new Date().toISOString().split("T")[0];
       const deHoy = Array.isArray(r2.body) ? r2.body.filter(c => c.fecha === hoy) : [];
-      // GET detalle de cada uno de hoy
-      const detalles = [];
-      for (const c of deHoy) {
-        const uid = c.transaccionid || c.ID || c.id;
-        if (uid) {
-          const u3 = new URL(XUBIO_API_BASE + "/comprobanteVentaBean/" + uid);
-          const r3 = await doRequest({ hostname: u3.hostname, path: u3.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
-          detalles.push(r3.body);
-        }
-      }
-      res.json({ ok: true, total: Array.isArray(r2.body) ? r2.body.length : 0, de_hoy: deHoy, detalles_hoy: detalles });
+      // GET comprobante específico de RAMI
+      const uRami = new URL(XUBIO_API_BASE + "/comprobanteVentaBean/75339578");
+      const rRami = await doRequest({ hostname: uRami.hostname, path: uRami.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+      res.json({ ok: true, rami: rRami.body });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
     }
