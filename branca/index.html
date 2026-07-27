@@ -7988,6 +7988,7 @@ async function confirmarEnvioXubio(oid) {
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
+      if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
@@ -8073,6 +8074,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
+      if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
