@@ -5773,6 +5773,12 @@ async function guardarParcial() {
   saveTabCliente();
   saveTabDiagnostico();
 
+  // Validar empresa obligatoria
+  if (!(ordenActual.empresa || '').trim()) {
+    showToast('⚠ El campo Empresa es obligatorio para guardar como pendiente.');
+    return;
+  }
+
   // Persistir en el array
   const idx = ordenes.findIndex(o => o.id === ordenActual.id);
   if (idx >= 0) { ordenes[idx] = ordenActual; }
@@ -5815,6 +5821,10 @@ function setEstado(estado) {
 
 function guardarOrden() {
   if (!ordenActual) return;
+  if (!(ordenActual.empresa || '').trim()) {
+    showToast('⚠ El campo Empresa es obligatorio para guardar la orden.');
+    return;
+  }
   var _snapshot = window._snapshotOrden || {};
   saveTabCliente();
   saveTabDiagnostico();
