@@ -3584,12 +3584,12 @@ function renderHistorial() {
           <select id="hf-estado" onchange="filtrarHistorial()"
             style="padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;background:white;">
             <option value="">Todos</option>
-            ${!canFacturar() ? '<option value="open">Abierta</option>' : ''}
-            ${!canFacturar() ? '<option value="pending">Pendiente</option>' : ''}
+            <option value="open">Abierta</option>
+            <option value="pending">Pendiente</option>
             <option value="locked">Cerrada</option>
             <option value="locked_nosign">Sin firma cliente</option>
-            ${!canFacturar() ? '<option value="anulada">Anulada</option>' : ''}
-            ${!canFacturar() ? '<option value="planificada">Planificada</option>' : ''}
+            <option value="anulada">Anulada</option>
+            <option value="planificada">Planificada</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;">
