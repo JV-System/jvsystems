@@ -5779,6 +5779,7 @@ async function guardarParcial() {
   else          { ordenes.unshift(ordenActual); }
 
   // Marcar como pendiente y guardar
+  if (!ordenActual.numero) ordenActual.numero = getNextNum();
   ordenActual.estado = 'pending';
   registrarEvento(ordenActual, 'Guardada como pendiente');
   delete ordenActual.draft;
