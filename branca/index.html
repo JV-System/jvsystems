@@ -7962,22 +7962,22 @@ async function confirmarEnvioXubio(oid) {
       PorcentajeIVA:  21
     });
   };
-  // Unificar servicio técnico + gastos varios en un solo ítem
+  // Unificar todo en un solo ítem (MO + viáticos + repuestos)
   const precioMO  = parseFloat(document.getElementById('xb-precio-mo')?.value)  || 0;
   const precioGas = parseFloat(document.getElementById('xb-precio-gas')?.value) || 0;
-  const totalServicio = precioMO + precioGas;
-  if (totalServicio > 0) items.push({
-    Descripcion:    document.getElementById('xb-desc-mo')?.value || 'Servicio técnico',
-    Cantidad:       1,
-    PrecioUnitario: totalServicio,
-    PorcentajeIVA:  21
-  });
-  // Repuestos dinámicos
+  var totalRep = 0;
   var i = 0;
-  while (document.getElementById('xb-desc-rep-' + i)) {
-    addItem('xb-desc-rep-' + i, 'xb-cant-rep-' + i, 'xb-precio-rep-' + i);
+  while (document.getElementById('xb-precio-rep-' + i)) {
+    totalRep += parseFloat(document.getElementById('xb-precio-rep-' + i)?.value) || 0;
     i++;
   }
+  const totalUnificado = precioMO + precioGas + totalRep;
+  if (totalUnificado > 0) items.push({
+    Descripcion:    document.getElementById('xb-desc-mo')?.value || 'Servicio técnico',
+    Cantidad:       1,
+    PrecioUnitario: totalUnificado,
+    PorcentajeIVA:  21
+  });
   if (!items.length) {
     if (statusEl) statusEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin-bottom:10px;">⚠ Ingresá al menos un producto con precio.</div>';
     if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Confirmar y enviar a Xubio'; }
