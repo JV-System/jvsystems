@@ -7925,9 +7925,14 @@ function abrirModalXubio(oid) {
               <tr style="border-bottom:1px solid #f3f4f6;">
                 <td style="padding:8px 12px;"><input id="xb-desc-mo" value="${o.probDetectado?'Problema: '+o.probDetectado+(o.accionRealizada?' / Acción: '+o.accionRealizada:''):(o.accionRealizada?'Acción: '+o.accionRealizada:'Servicio técnico')}" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:100%;background:#fff;font-family:inherit;padding:4px 6px;"></td>
                 <td style="padding:8px 8px;text-align:right;"><input id="xb-cant-mo" type="number" value="1" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:50px;text-align:right;background:#fff;font-family:inherit;padding:4px 4px;"></td>
-                <td style="padding:8px 12px;text-align:right;"><input id="xb-precio-mo" type="number" value="${(mdo+gas)||''}" placeholder="0" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:90px;text-align:right;background:#fff;font-family:inherit;padding:4px 6px;"></td>
+                <td style="padding:8px 12px;text-align:right;"><input id="xb-precio-mo" type="number" value="${mdo||''}" placeholder="0" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:90px;text-align:right;background:#fff;font-family:inherit;padding:4px 6px;"></td>
               </tr>
               ${(o.repuestos && o.repuestos.filter(function(r){return r.desc;}).length ? o.repuestos.filter(function(r){return r.desc;}) : [{desc:'Repuestos',cant:1}]).map(function(r,i){ var precioRep = (r.precio != null && r.precio !== '') ? r.precio : ((f.preciosRepuestos && f.preciosRepuestos[i]) ? f.preciosRepuestos[i] : ''); return '<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:8px 12px;"><input id="xb-desc-rep-'+i+'" value="'+esc(r.desc)+'" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:100%;background:#fff;font-family:inherit;padding:4px 6px;"></td><td style="padding:8px 8px;text-align:right;"><input id="xb-cant-rep-'+i+'" type="number" value="'+esc(String(r.cant||1))+'" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:50px;text-align:right;background:#fff;font-family:inherit;padding:4px 4px;"></td><td style="padding:8px 12px;text-align:right;"><input id="xb-precio-rep-'+i+'" type="number" value="'+precioRep+'" placeholder="0" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:90px;text-align:right;background:#fff;font-family:inherit;padding:4px 6px;"></td></tr>'; }).join('')}
+              <tr>
+                <td style="padding:8px 12px;"><input id="xb-desc-gas" value="Gastos varios" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:100%;background:#fff;font-family:inherit;padding:4px 6px;"></td>
+                <td style="padding:8px 8px;text-align:right;"><input id="xb-cant-gas" type="number" value="1" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:50px;text-align:right;background:#fff;font-family:inherit;padding:4px 4px;"></td>
+                <td style="padding:8px 12px;text-align:right;"><input id="xb-precio-gas" type="number" value="${gas||''}" placeholder="0" style="border:1px solid #e5e7eb;border-radius:5px;font-size:12px;width:90px;text-align:right;background:#fff;font-family:inherit;padding:4px 6px;"></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -7957,14 +7962,22 @@ async function confirmarEnvioXubio(oid) {
       PorcentajeIVA:  21
     });
   };
-  addItem('xb-desc-mo', 'xb-cant-mo', 'xb-precio-mo');
+  // Unificar servicio técnico + gastos varios en un solo ítem
+  const precioMO  = parseFloat(document.getElementById('xb-precio-mo')?.value)  || 0;
+  const precioGas = parseFloat(document.getElementById('xb-precio-gas')?.value) || 0;
+  const totalServicio = precioMO + precioGas;
+  if (totalServicio > 0) items.push({
+    Descripcion:    document.getElementById('xb-desc-mo')?.value || 'Servicio técnico',
+    Cantidad:       1,
+    PrecioUnitario: totalServicio,
+    PorcentajeIVA:  21
+  });
   // Repuestos dinámicos
   var i = 0;
   while (document.getElementById('xb-desc-rep-' + i)) {
     addItem('xb-desc-rep-' + i, 'xb-cant-rep-' + i, 'xb-precio-rep-' + i);
     i++;
   }
-  // gastos ya unificados en xb-precio-mo
   if (!items.length) {
     if (statusEl) statusEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin-bottom:10px;">⚠ Ingresá al menos un producto con precio.</div>';
     if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Confirmar y enviar a Xubio'; }
