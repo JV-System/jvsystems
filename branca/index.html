@@ -2496,10 +2496,17 @@ function canCrearOrden() { const u = getCurrentUser(); return u && (u.role === '
 
 function getNextFacturaNum() {
   const nums = ordenes
-    .filter(o => o.facturacion && o.facturacion.nroFactura)
+    .filter(o => o.facturacion && /^F-\d+$/.test(o.facturacion.nroFactura || ''))
     .map(o => parseInt((o.facturacion.nroFactura || '0').replace(/\D/g, '')) || 0);
   const next = (nums.length ? Math.max(...nums) : 0) + 1;
   return 'F-' + String(next).padStart(3, '0');
+}
+function getNextXubioNro() {
+  const nums = ordenes
+    .filter(o => o.facturacion && /^A-00001-\d+$/.test(o.facturacion.nroFactura || ''))
+    .map(o => parseInt((o.facturacion.nroFactura || '').split('-').pop()) || 0);
+  const next = (nums.length ? Math.max(...nums) : 1380) + 1;
+  return 'A-00001-' + String(next).padStart(8, '0');
 }
 
 // ==================== CLOUD API ====================
@@ -7877,7 +7884,7 @@ function abrirModalXubio(oid) {
   const mdo  = parseFloat(document.getElementById('fact-mo-'     + oid)?.value) || f.manoDeObra    || 0;
   const rep  = parseFloat(document.getElementById('fact-rep-'    + oid)?.value) || f.repuestosCosto || 0;
   const gas  = parseFloat(document.getElementById('fact-gastos-' + oid)?.value) || f.gastos         || 0;
-  const nro  = document.getElementById('fact-nro-'  + oid)?.value || f.nroComprobanteInterno || '';
+  const nro  = f.nroComprobanteInterno || getNextXubioNro();
   const fecha = document.getElementById('fact-fecha-' + oid)?.value || f.fechaFactura || new Date().toISOString().split('T')[0];
   const cond  = document.getElementById('fact-cond-' + oid)?.value || f.condPago || 'Contado';
   const diasVenc = { 'Contado':0, '30 días':30, '60 días':60, 'Cuenta corriente':30 };
