@@ -8003,7 +8003,7 @@ async function confirmarEnvioXubio(oid) {
       if (statusEl) statusEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:12px;border-radius:8px;font-weight:700;margin-bottom:12px;">✅ Comprobante creado en Xubio correctamente.</div>';
       if (sendBtn) { sendBtn.textContent = '✅ Enviado'; sendBtn.style.background = '#059669'; }
       showToast('✅ Comprobante enviado a Xubio.');
-      if (!o.xubioEnvios) o.xubioEnvios = [];
+      if (!o.xubioEnvios || !Array.isArray(o.xubioEnvios)) o.xubioEnvios = Array.isArray(o.xubioEnvios) ? o.xubioEnvios : Object.values(o.xubioEnvios || {});
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
@@ -8102,7 +8102,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       if (statusEl) statusEl.innerHTML = '<div style="background:#d1fae5;color:#065f46;padding:12px;border-radius:8px;font-weight:700;margin-bottom:12px;">✅ Comprobante creado en Xubio correctamente.</div>';
       if (sendBtn) { sendBtn.textContent = '✅ Enviado'; sendBtn.style.background = '#059669'; }
       showToast('✅ Comprobante enviado a Xubio.');
-      if (!o.xubioEnvios) o.xubioEnvios = [];
+      if (!o.xubioEnvios || !Array.isArray(o.xubioEnvios)) o.xubioEnvios = Array.isArray(o.xubioEnvios) ? o.xubioEnvios : Object.values(o.xubioEnvios || {});
       o.xubioEnvios.push({ fecha: new Date().toISOString(), nro: payload.numeroComprobante, respuesta: data.data });
       if (!o.facturacion) o.facturacion = {};
       o.facturacion.estadoPago = 'pagado';
