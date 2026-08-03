@@ -8021,6 +8021,10 @@ async function confirmarEnvioXubio(oid) {
         if (ri > 0) { o.facturacion.repuestosCosto = repTotal; o.facturacion.preciosRepuestos = repPrices; }
         var gasV = parseFloat(document.getElementById('xb-precio-gas') && document.getElementById('xb-precio-gas').value);
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
+        var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
+        o.facturacion.subtotal = subtotal;
+        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
@@ -8120,6 +8124,10 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
         if (ri > 0) { o.facturacion.repuestosCosto = repTotal; o.facturacion.preciosRepuestos = repPrices; }
         var gasV = parseFloat(document.getElementById('xb-precio-gas') && document.getElementById('xb-precio-gas').value);
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
+        var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
+        o.facturacion.subtotal = subtotal;
+        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
       const _idx = ordenes.findIndex(function(x){ return String(x.id) === String(oid); });
