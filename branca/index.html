@@ -5019,9 +5019,8 @@ function renderFacturacion() {
     if (o.facturacion && o.facturacion.estadoPago === 'pagado') {
       totalCobrado += o.facturacion.total || 0; cntCobrado++;
     } else {
-      if (!o.facturacion || !o.facturacion.nroFactura) sinFact++;
-      else cntPend++;
-      totalPend += calcTotal(o);
+      if (!o.facturacion || !o.facturacion.nroFactura) { sinFact++; }
+      else { cntPend++; totalPend += calcTotal(o); }
     }
   });
 
