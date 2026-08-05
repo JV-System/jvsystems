@@ -6999,8 +6999,16 @@ document.addEventListener('change', function(e) {
 });
 
 // Continuar editando el borrador (desde el sidebar)
+// Usa el mismo filtro por usuario que la tarjeta amarilla que lo muestra
+// (renderOrderList), para garantizar que abra exactamente ese borrador
+// y no el primero que encuentre en toda la colección compartida.
 function continuarBorrador() {
-  const draft = ordenes.find(function(o) { return o.draft === true; });
+  const cu = getCurrentUser();
+  const draft = ordenes.find(function(o) {
+    if (!o.draft) return false;
+    if (o.creadorId && cu && o.creadorId !== cu.id) return false;
+    return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
+  });
   if (!draft) return;
   seleccionarOrden(draft.id);
 }
