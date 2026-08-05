@@ -2259,9 +2259,29 @@ let _calMonth = null;
 // IDs eliminados persistidos en localStorage para sobrevivir recargas
 const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]'));
 
+// Última versión de cada orden confirmada contra Firebase (clave → JSON).
+// Se usa para subir SOLO lo que este dispositivo realmente modificó, y así
+// no pisar con datos viejos los cambios que hicieron otros dispositivos/usuarios.
+let _lastSyncedSnap = {};
+function _ordenKey(o) { return (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-'); }
+
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error('Firebase error: ' + r.status);
+  return r.json();
+}
+
+// PATCH actualiza solo las claves incluidas en `data` — a diferencia de PUT,
+// no borra ni pisa las claves hermanas que no se mencionan. Se usa para las
+// órdenes: cada dispositivo sube solo lo suyo, sin arrastrar el resto de la
+// colección (que puede tener versiones más nuevas hechas por otro usuario).
+async function _fbPatch(path, data) {
+  const r = await fetch(FIREBASE_URL + path + '.json', {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
@@ -2286,18 +2306,26 @@ function _syncPush() {
   _syncTimer = setTimeout(async () => {
     setSyncStatus('syncing', '⏳ Guardando...');
     try {
-      // Guardar órdenes como objeto keyed por número de orden para mejor visibilidad en Firebase
-      const ordenesObj = {};
+      // Subir SOLO las órdenes que este dispositivo modificó de verdad (comparando
+      // contra la última versión confirmada en Firebase). Así, si este equipo tiene
+      // en memoria una copia vieja de una orden que otro usuario ya actualizó, no la
+      // vuelve a pisar — sube nada más lo que cambió acá.
+      const ordenesPatch = {};
       ordenes.forEach(function(o) {
-        const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
-        ordenesObj[key] = o;
+        if (!o || !o.id) return;
+        const key = _ordenKey(o);
+        const snap = JSON.stringify(o);
+        if (_lastSyncedSnap[key] !== snap) ordenesPatch[key] = o;
       });
-      await _fbPut('/db', {
-        ordenes:  ordenesObj,
-        clientes: clientesDB,
-        tecnicos: tecnicosDB,
-        config:   { adminPass: getAdminPass() }
-      });
+      if (Object.keys(ordenesPatch).length) {
+        await _fbPatch('/db/ordenes', ordenesPatch);
+        Object.keys(ordenesPatch).forEach(function(key) {
+          _lastSyncedSnap[key] = JSON.stringify(ordenesPatch[key]);
+        });
+      }
+      await _fbPut('/db/clientes', clientesDB);
+      await _fbPut('/db/tecnicos', tecnicosDB);
+      await _fbPut('/db/config', { adminPass: getAdminPass() });
       // Solo subir usuarios si tenemos al menos tantos como hay en Firebase
       // (evita que un dispositivo con lista incompleta sobreescriba a todos)
       const localUsers = getUsers();
@@ -2569,6 +2597,10 @@ async function loadFromCloud() {
       // La nube es la fuente de verdad — lo que no está en Firebase no existe
       var tieneDatos = function(o) { return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado); };
       const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
+      // Rebasar el snapshot de "última versión confirmada" con lo que acaba de mandar
+      // Firebase — es la referencia contra la que _syncPush() decide qué subir después.
+      _lastSyncedSnap = {};
+      remotas.forEach(function(o) { _lastSyncedSnap[_ordenKey(o)] = JSON.stringify(o); });
       if (remotas.length > 0) {
         const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
         // Si Firebase tiene una orden, sacarla de _deletedIds (por si quedó ahí por error)
@@ -2709,7 +2741,11 @@ async function renumerarOrdenes() {
     todas.forEach(function(o) {
       ordenesObj[o.numero] = o;
     });
+    // PUT (no PATCH) a propósito: acá SÍ queremos reemplazar toda la colección,
+    // porque cada orden cambia de clave (renumeración) y hay que descartar las viejas.
     await _fbPut('/db/ordenes', ordenesObj);
+    _lastSyncedSnap = {};
+    todas.forEach(function(o) { _lastSyncedSnap[_ordenKey(o)] = JSON.stringify(o); });
     // Actualizar memoria local
     ordenes = todas;
     localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
@@ -2756,8 +2792,10 @@ async function resetearTodoElSistema() {
   setSyncStatus('syncing', '⏳ Borrando...');
   try {
     const resetAt = Date.now();
+    // PUT a propósito: reseteo total intencional, se quiere borrar todo el nodo /db.
     await _fbPut('/db', { ordenes: null, clientes: null, tecnicos: null, config: {}, resetAt });
     await _fbPut('/usuarios', null);
+    _lastSyncedSnap = {};
     localStorage.setItem('branca_reset_at', String(resetAt));
   } catch(e) {}
   // Limpiar localStorage
@@ -2789,6 +2827,42 @@ function getNextNum() {
     .filter(function(n) { return !isNaN(n) && n > 0; });
   const next = nums.length ? Math.max.apply(null, nums) + 1 : 1;
   return year + '-' + String(next).padStart(3, '0');
+}
+
+// Reserva el próximo número de orden de forma atómica contra Firebase, para que dos
+// técnicos guardando casi al mismo tiempo nunca terminen con el mismo número.
+// Usa escritura condicional (ETag): si otro dispositivo se adelantó, reintenta solo.
+// Si no hay conexión, cae de vuelta al cálculo local de siempre (no bloquea al técnico).
+async function reservarNumeroOrden() {
+  const year = new Date().getFullYear();
+  const path = '/db/contadores/' + year;
+  try {
+    for (let intento = 0; intento < 6; intento++) {
+      const rGet = await fetch(FIREBASE_URL + path + '.json', { headers: { 'X-Firebase-ETag': 'true' } });
+      if (!rGet.ok) break;
+      const etag = rGet.headers.get('ETag');
+      let actual = await rGet.json();
+      if (actual == null) {
+        // Contador recién estrenado: arrancar desde el máximo número que ya existe
+        actual = ordenes
+          .map(function(o) {
+            const parts = o.numero ? o.numero.split('-') : [];
+            return parts.length === 2 && parts[0] == year ? parseInt(parts[1]) : 0;
+          })
+          .filter(function(n) { return !isNaN(n) && n > 0; })
+          .reduce(function(max, n) { return n > max ? n : max; }, 0);
+      }
+      const siguiente = actual + 1;
+      const rPut = await fetch(FIREBASE_URL + path + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'if-match': etag || '*' },
+        body: JSON.stringify(siguiente)
+      });
+      if (rPut.status === 200) return year + '-' + String(siguiente).padStart(3, '0');
+      // 412 = otro dispositivo reservó primero → reintentar con el valor actualizado
+    }
+  } catch (e) { /* sin conexión u otro error de red → sigue al fallback de abajo */ }
+  return getNextNum();
 }
 
 function ordenIncompleta() {
@@ -2879,15 +2953,14 @@ async function eliminarOrden(id) {
     showToast('⚠ Orden ' + o.numero + ' anulada.');
   }
 
-  // Sincronizar con Firebase
+  // Sincronizar con Firebase — solo la clave de esta orden puntual, sin tocar el resto
   clearTimeout(_syncTimer);
-  const ordenesObj = {};
-  ordenes.forEach(function(x) {
-    const key = String(x.id); // usar id único para evitar colisión de números
-    ordenesObj[key] = x;
-  });
+  const _key = _ordenKey(o);
+  const _valor = o.estado === 'anulada' ? o : null; // borrador: se borra la clave; anulada: se actualiza
   try {
-    await _fbPut('/db/ordenes', ordenesObj);
+    await _fbPatch('/db/ordenes', { [_key]: _valor });
+    if (_valor) { _lastSyncedSnap[_key] = JSON.stringify(_valor); }
+    else { delete _lastSyncedSnap[_key]; }
     setSyncStatus('ok');
   } catch(e) {
     setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
@@ -3156,11 +3229,11 @@ function seleccionarPlanificada(id) {
     </div>`;
 }
 
-function iniciarOrdenDesde(id) {
+async function iniciarOrdenDesde(id) {
   const o = ordenes.find(x => x.id === id);
   if (!o) return;
   o.estado = 'open';
-  o.numero = getNextNum();
+  o.numero = await reservarNumeroOrden();
   if (!o.fechaPlanificada) o.fechaPlanificada = o.fecha;
   o.fecha = new Date().toISOString().split('T')[0];
   o.updatedAt = Date.now();
@@ -5791,7 +5864,7 @@ async function guardarParcial() {
   else          { ordenes.unshift(ordenActual); }
 
   // Marcar como pendiente y guardar
-  if (!ordenActual.numero) ordenActual.numero = getNextNum();
+  if (!ordenActual.numero) ordenActual.numero = await reservarNumeroOrden();
   ordenActual.estado = 'pending';
   registrarEvento(ordenActual, 'Guardada como pendiente');
   delete ordenActual.draft;
@@ -5825,7 +5898,7 @@ function setEstado(estado) {
   renderOrderList();
 }
 
-function guardarOrden() {
+async function guardarOrden() {
   if (!ordenActual) return;
   if (!(ordenActual.empresa || '').trim()) {
     showToast('⚠ El campo Empresa es obligatorio para guardar la orden.');
@@ -5837,7 +5910,7 @@ function guardarOrden() {
   delete ordenActual.draft;
   // Asignar número al primer guardado
   if (!ordenActual.numero) {
-    ordenActual.numero = getNextNum();
+    ordenActual.numero = await reservarNumeroOrden();
     window._snapshotOrden = window._snapshotOrden || {};
     window._snapshotOrden.numero = ordenActual.numero; // no contar como cambio
   }
@@ -5902,7 +5975,7 @@ async function finalizarOrden() {
   }
 
   // Asignar número si no tiene
-  if (!ordenActual.numero) ordenActual.numero = getNextNum();
+  if (!ordenActual.numero) ordenActual.numero = await reservarNumeroOrden();
 
   delete ordenActual.draft;
   const ordenFinal = ordenActual;
@@ -6697,14 +6770,15 @@ async function confirmarNumero() {
   closeNumModal();
   renderTab();
   renderOrderList();
-  // Actualizar Firebase: borrar clave vieja y escribir con la nueva
+  // Actualizar Firebase: borrar clave vieja y escribir con la nueva — sin tocar el resto de la colección
   try {
-    const ordenesObj = {};
-    ordenes.forEach(function(o) {
-      const key = (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-');
-      ordenesObj[key] = o;
-    });
-    await _fbPut('/db/ordenes', ordenesObj);
+    const oldKey = (oldNum || String(ordenActual.id)).replace(/[.#$\[\]]/g, '-');
+    const newKey = _ordenKey(ordenActual);
+    const patch = { [newKey]: ordenActual };
+    if (oldKey !== newKey) patch[oldKey] = null;
+    await _fbPatch('/db/ordenes', patch);
+    _lastSyncedSnap[newKey] = JSON.stringify(ordenActual);
+    if (oldKey !== newKey) delete _lastSyncedSnap[oldKey];
     showToast('✅ Número actualizado a ' + newNum);
   } catch(e) {
     showToast('⚠ Guardado local. Sin conexión para sincronizar.');
