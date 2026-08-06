@@ -141,8 +141,17 @@
     /* estilo del SITIO que se está practicando — separado de los colores de la herramienta, se cambia desde "Estilo de tu sitio" */
     --site-bg:#ffffff; --site-text:#15181f; --site-accent:#2f6fed; --site-accent-ink:#ffffff;
     --site-font:system-ui,-apple-system,'Segoe UI',sans-serif; --site-radius:12px;
-    max-width:760px; width:100%; background:var(--site-bg); border-radius:14px; box-shadow:var(--shadow);
-    min-height:420px; padding:8px; border:1px solid var(--border); position:relative; transition:background .2s ease;}
+    max-width:760px; width:100%; background:var(--site-bg); border-radius:14px;
+    box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 0 0 1px rgba(255,140,0,.3) inset, 0 20px 60px rgba(0,0,0,.55);
+    min-height:420px; padding:8px; border:none; position:relative; transition:background .2s ease; overflow:hidden;}
+  /* barra tipo navegador — marca sin ambigüedad dónde empieza "la página", sea cual sea el color que elijan */
+  .browser-bar{display:flex; align-items:center; gap:6px; padding:9px 12px; margin:-8px -8px 10px;
+    background:rgba(0,0,0,.28); border-bottom:1px solid rgba(255,255,255,.08);}
+  .bdot{width:9px; height:9px; border-radius:50%; flex:none;}
+  .bdot-r{background:#ff5f56;} .bdot-y{background:#ffbd2e;} .bdot-g{background:#27c93f;}
+  .burl{margin-left:6px; font-family:var(--font-mono); font-size:.7rem; color:rgba(255,255,255,.55);
+    background:rgba(255,255,255,.08); padding:.3em .8em; border-radius:5px; flex:1; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .canvas{display:none; flex-direction:column; gap:0;}
   .canvas[data-active="true"]{display:flex;}
   .empty-hint{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
@@ -309,7 +318,12 @@
 
   <main class="canvas-wrap">
     <div class="sitebar" id="sitebar"></div>
-    <div class="page" id="pagesRoot"></div>
+    <div class="page" id="pagesRoot">
+      <div class="browser-bar">
+        <span class="bdot bdot-r"></span><span class="bdot bdot-y"></span><span class="bdot bdot-g"></span>
+        <span class="burl" id="browserUrl">tusitio.com</span>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -378,7 +392,10 @@
     pages.push(page);
 
     nameEl.addEventListener('click', function(){ if(body.getAttribute('data-mode') !== 'preview') switchPage(id); markDone('paginas'); });
-    nameEl.addEventListener('blur', function(){ page.name = nameEl.textContent.trim() || 'Página'; nameEl.textContent = page.name; });
+    nameEl.addEventListener('blur', function(){
+      page.name = nameEl.textContent.trim() || 'Página'; nameEl.textContent = page.name;
+      if(activeId === id){ document.getElementById('browserUrl').textContent = 'tusitio.com/' + slugify(page.name); }
+    });
     nameEl.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); nameEl.blur(); } });
     del.addEventListener('click', function(){
       if(pages.length <= 1) return;
@@ -390,6 +407,10 @@
     return page;
   }
 
+  function slugify(s){
+    return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'inicio';
+  }
+
   function switchPage(id){
     var isSwitch = activeId !== null && activeId !== id;
     activeId = id;
@@ -397,6 +418,11 @@
       var isActive = p.id === id;
       p.canvas.setAttribute('data-active', isActive ? 'true' : 'false');
       p.tab.setAttribute('data-active', isActive ? 'true' : 'false');
+      if(isActive){
+        var urlEl = document.getElementById('browserUrl');
+        var slug = slugify(p.name);
+        urlEl.textContent = 'tusitio.com' + (slug === 'inicio' ? '/' : '/' + slug);
+      }
     });
     if(isSwitch) markDone('paginas');
   }
