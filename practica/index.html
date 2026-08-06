@@ -121,7 +121,7 @@
       repeating-linear-gradient(90deg, var(--border) 0 1px, transparent 1px 34px), var(--paper-2);
     background-size:34px 34px; display:flex; flex-direction:column; align-items:center;}
 
-  .sitebar{max-width:760px; width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:14px;}
+  .sitebar{max-width:760px; width:100%; display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:14px; flex-shrink:0;}
   .sitebar .tab{display:flex; align-items:center; gap:6px; background:var(--panel); border:1.5px solid var(--border);
     border-radius:9px; padding:7px 6px 7px 12px;}
   .sitebar .tab[data-active="true"]{border-color:var(--coral); background:var(--coral-tint);}
@@ -143,7 +143,8 @@
     --site-font:system-ui,-apple-system,'Segoe UI',sans-serif; --site-radius:12px;
     max-width:760px; width:100%; background:var(--site-bg); border-radius:14px;
     box-shadow:0 0 0 1px rgba(255,255,255,.14), 0 0 0 1px rgba(255,140,0,.3) inset, 0 20px 60px rgba(0,0,0,.55);
-    min-height:420px; padding:8px; border:none; position:relative; transition:background .2s ease; overflow:hidden;}
+    min-height:420px; padding:8px; border:none; position:relative; transition:background .2s ease; overflow:hidden;
+    flex-shrink:0;} /* sin esto, .canvas-wrap (flex) achicaba la tarjeta y el contenido que no entraba quedaba visible afuera */
   /* barra tipo navegador — marca sin ambigüedad dónde empieza "la página", sea cual sea el color que elijan */
   .browser-bar{display:flex; align-items:center; gap:6px; padding:9px 12px; margin:-8px -8px 10px;
     background:rgba(0,0,0,.28); border-bottom:1px solid rgba(255,255,255,.08);}
