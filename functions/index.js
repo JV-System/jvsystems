@@ -217,9 +217,13 @@ exports.xubioCrearComprobante = onRequest(
             if (rCrear.status !== 200 && rCrear.status !== 201) {
               rCrear = await doRequest({ hostname: urlCliente.hostname, path: urlCliente.pathname, method: "PUT", headers: hdrCliente }, bodyCliente);
             }
-            console.log("Crear cliente status:", rCrear.status);
+            console.log("Crear cliente status:", rCrear.status, "body:", JSON.stringify(rCrear.body));
             if (rCrear.status !== 200 && rCrear.status !== 201) {
-              res.status(500).json({ ok: false, error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar." });
+              res.status(500).json({
+                ok: false,
+                error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar.",
+                debug: { payloadEnviado: nuevoCliente, xubioStatus: rCrear.status, xubioResponse: rCrear.body }
+              });
               return;
             }
             let newId = rCrear.body && (rCrear.body.cliente_id || rCrear.body.ID || rCrear.body.id);
@@ -234,7 +238,11 @@ exports.xubioCrearComprobante = onRequest(
               clienteObj = { ID: newId, id: newId };
               console.log("Cliente creado, ID:", newId);
             } else {
-              res.status(500).json({ ok: false, error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar." });
+              res.status(500).json({
+                ok: false,
+                error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar.",
+                debug: { payloadEnviado: nuevoCliente, xubioStatus: rCrear.status, xubioResponse: rCrear.body, nota: "La creacion parece haber devuelto " + rCrear.status + " pero sin ID reconocible ni match posterior por nombre." }
+              });
               return;
             }
           }

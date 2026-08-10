@@ -8144,7 +8144,7 @@ async function confirmarEnvioXubio(oid) {
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
-      var debugInfo = data.debug ? '<br><small style="color:#6b7280;">Payload: ' + JSON.stringify(data.debug.payload).substring(0,300) + '</small>' : '';
+      var debugInfo = data.debug ? '<br><small style="color:#6b7280;">Detalle: ' + JSON.stringify(data.debug).substring(0,500) + '</small>' : '';
       if (statusEl) statusEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;font-size:12px;word-break:break-all;">❌ Error Xubio: ' + errMsg + debugInfo + '</div>';
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
     }
@@ -8226,7 +8226,8 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
-      if (statusEl) statusEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;font-size:12px;word-break:break-all;">❌ Error Xubio: ' + errMsg + '</div>';
+      var debugInfo2 = data.debug ? '<br><small style="color:#6b7280;">Detalle: ' + JSON.stringify(data.debug).substring(0,500) + '</small>' : '';
+      if (statusEl) statusEl.innerHTML = '<div style="background:#fee2e2;color:#991b1b;padding:12px;border-radius:8px;margin-bottom:12px;font-size:12px;word-break:break-all;">❌ Error Xubio: ' + errMsg + debugInfo2 + '</div>';
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
     }
   } catch(e) {
