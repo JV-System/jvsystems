@@ -204,11 +204,13 @@ exports.xubioCrearComprobante = onRequest(
               res.json({ clienteNoEncontrado: true, nombre: nombreCliente });
               return;
             }
-            // Intentar crear cliente en Xubio
+            // Intentar crear cliente en Xubio — misma receta que funcionaba antes del 27/07:
+            // razon social + CUIT sin guiones/espacios + email
             const ivaIdMap = { "RI": 1, "M": 6, "CF": 5, "E": 4 };
             const ivaId = ivaIdMap[datos.condicionIVA] || 5;
             const nuevoCliente = { nombre: nombreCliente, condicionIVA: ivaId };
-            if (datos.cuit) nuevoCliente.cuit = datos.cuit;
+            if (datos.cuit) nuevoCliente.cuit = String(datos.cuit).replace(/[-\s]/g, "");
+            if (datos.email) nuevoCliente.email = datos.email;
             const bodyCliente = JSON.stringify(nuevoCliente);
             const urlCliente = new URL(XUBIO_API_BASE + "/clienteBean");
             const hdrCliente = { "Content-Type": "application/json", "Authorization": "Bearer " + token, "Content-Length": Buffer.byteLength(bodyCliente, "utf8") };
@@ -221,6 +223,8 @@ exports.xubioCrearComprobante = onRequest(
             if (rCrear.status !== 200 && rCrear.status !== 201) {
               res.status(500).json({
                 ok: false,
+                clienteNoCreado: true,
+                nombre: nombreCliente,
                 error: "El cliente '" + nombreCliente + "' no existe en Xubio y no se pudo crear por API. Crealo manualmente en Xubio (Contactos → Nuevo cliente) y volvé a intentar.",
                 debug: { payloadEnviado: nuevoCliente, xubioStatus: rCrear.status, xubioResponse: rCrear.body }
               });

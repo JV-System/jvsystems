@@ -8223,6 +8223,30 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       if (ordenActual && String(ordenActual.id) === String(oid)) { ordenActual.facturacion = Object.assign(ordenActual.facturacion || {}, o.facturacion); }
       saveData();
       renderFacturacion();
+    } else if (data.clienteNoCreado) {
+      // La creacion automatica por API fallo (Xubio caido en ese endpoint) —
+      // fallback al instructivo manual para no dejar a nadie trabado.
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
+      var nombreNF2 = data.nombre || payload.empresa || '';
+      var existing3 = document.getElementById('popup-crear-cliente'); if (existing3) existing3.remove();
+      var pop3 = document.createElement('div');
+      pop3.id = 'popup-crear-cliente';
+      pop3.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      pop3.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;max-width:400px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">'
+        + '<div style="font-size:16px;font-weight:800;color:#0A1628;margin-bottom:6px;">⚠️ No se pudo crear el cliente automáticamente</div>'
+        + '<div style="font-size:13px;color:#374151;margin-bottom:16px;line-height:1.6;">Xubio no está aceptando la creación de clientes por API en este momento (falla de su lado). <b>' + esc(nombreNF2) + '</b> no existe en Xubio.<br><br>'
+        + '1. Andá a <a href="https://xubio.com" target="_blank" style="color:#1565D8;font-weight:700;">xubio.com</a> → Contactos → Clientes → Nuevo cliente<br>'
+        + '2. Cargalo con el nombre exacto: <b>' + esc(nombreNF2) + '</b><br>'
+        + '3. Volvé acá y presioná <b>Ya lo cargué</b></div>'
+        + '<div style="display:flex;gap:10px;">'
+        + '<button onclick="document.getElementById(\'popup-crear-cliente\').remove()" style="flex:1;padding:11px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>'
+        + '<button style="flex:2;padding:11px;border:none;border-radius:8px;background:#1565D8;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ Ya lo cargué — Reintentar</button>'
+        + '</div></div>';
+      pop3.querySelector('button:last-child').addEventListener('click', function() {
+        document.getElementById('popup-crear-cliente').remove();
+        _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn);
+      });
+      document.body.appendChild(pop3);
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
