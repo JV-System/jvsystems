@@ -8133,24 +8133,14 @@ async function confirmarEnvioXubio(oid) {
     } else if (data.clienteNoEncontrado) {
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
       var nombreNF = data.nombre || '';
-      var existing2 = document.getElementById('popup-crear-cliente'); if (existing2) existing2.remove();
-      var pop2 = document.createElement('div');
-      pop2.id = 'popup-crear-cliente';
-      pop2.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
-      pop2.innerHTML = '<div style="background:#fff;border-radius:14px;padding:24px;max-width:400px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">'
-        + '<div style="font-size:16px;font-weight:800;color:#0A1628;margin-bottom:6px;">⚠️ Cliente no encontrado en Xubio</div>'
-        + '<div style="font-size:13px;color:#374151;margin-bottom:16px;line-height:1.6;"><b>' + nombreNF + '</b> no existe en Xubio.<br><br>'
-        + '1. Andá a <a href="https://xubio.com" target="_blank" style="color:#1565D8;font-weight:700;">xubio.com</a> → Contactos → Clientes → Nuevo cliente<br>'
-        + '2. Cargalo con el nombre exacto: <b>' + nombreNF + '</b><br>'
-        + '3. Volvé acá y presioná <b>Ya lo cargué</b></div>'
-        + '<div style="display:flex;gap:10px;">'
-        + '<button onclick="document.getElementById(\'popup-crear-cliente\').remove()" style="flex:1;padding:11px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:13px;font-weight:700;cursor:pointer;">Cancelar</button>'
-        + '<button onclick="document.getElementById(\'popup-crear-cliente\').remove();" style="flex:2;padding:11px;border:none;border-radius:8px;background:#1565D8;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ Ya lo cargué — Reintentar</button>'
-        + '</div></div>';
-      pop2.querySelector('button:last-child').addEventListener('click', function() {
+      // Crear el cliente directo desde la app: pedimos CUIT + condición de IVA
+      // y se los mandamos al backend, que ya sabe crearlo por API en Xubio.
+      mostrarPopupCrearCliente(nombreNF, o.cuit || '', function(datos) {
+        payload.cuit = datos.cuit || '';
+        payload.condicionIVA = datos.condicionIVA || 'CF';
+        if (datos.nombre) payload.empresa = datos.nombre;
         _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn);
       });
-      document.body.appendChild(pop2);
     } else {
       var errObj = data.error;
       var errMsg = (errObj && errObj.description) ? errObj.description : (typeof errObj === 'string' ? errObj.replace(/<[^>]*>/g,'').trim().substring(0,300) : JSON.stringify(errObj).substring(0,300));
