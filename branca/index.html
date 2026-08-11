@@ -7329,7 +7329,8 @@ function mostrarAnuncioXubio() {
   if (bienv && bienv.style.display === 'flex') { setTimeout(mostrarAnuncioXubio, 800); return; }
   const modal = document.getElementById('modal-anuncio');
   if (!modal) return;
-  document.getElementById('anuncio-nombre').textContent = '¡Hola, ' + (cu.nombre || cu.username) + '!';
+  const primerNombre = ((cu.nombre || cu.username || '').trim().split(/\s+/)[0]) || cu.username;
+  document.getElementById('anuncio-nombre').textContent = '¡Hola, ' + primerNombre + '!';
   modal.style.display = 'flex';
   try { localStorage.setItem(key, '1'); } catch(e) {}
 }
