@@ -2159,6 +2159,26 @@
   </div>
 </div>
 
+<!-- MODAL ANUNCIO XUBIO (facturacion) -->
+<div id="modal-anuncio" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-bienvenida-card" style="max-width:380px;">
+    <div style="background:linear-gradient(135deg,#0A1628 60%,#1a3a6e);padding:26px 24px 18px;text-align:center;">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;border:1.5px solid rgba(255,255,255,0.15);">🎉</div>
+      <div style="font-size:10px;font-weight:700;color:#7EB3F7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Novedades para vos</div>
+      <div id="anuncio-nombre" style="color:#fff;font-size:19px;font-weight:800;line-height:1.25;"></div>
+    </div>
+    <div style="padding:20px 22px 22px;">
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">Estuvimos trabajando en el sistema para vos. Ahora, cuando mandás una factura a Xubio y el cliente todavía no existe ahí, <b>la app lo crea sola</b> — con nombre, CUIT, email, teléfono, dirección y condición de IVA, tal como los cargaste en la orden. Ya no hace falta ir a xubio.com a cargarlo a mano.</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">Eso sí: <b>revisá siempre que los datos estén bien</b> antes de confirmar el envío.</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0 0 18px;">El sistema sigue en crecimiento — si te aparece algún error o algo raro, contame y lo vemos juntos para seguir mejorándolo. 🙌</p>
+      <button onclick="cerrarAnuncio()"
+              style="width:100%;background:#1565D8;color:#fff;font-weight:700;font-size:14px;padding:13px;border-radius:10px;border:none;cursor:pointer;">
+        Entendido, ¡vamos! →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PANEL INSTRUCTIVO -->
 <div id="panel-instructivo" style="display:none;position:fixed;inset:0;z-index:10000;background:#f2f4f8;flex-direction:column;">
   <iframe id="iframe-instructivo" src="" style="flex:1;border:none;width:100%;height:100%;"></iframe>
@@ -7294,6 +7314,28 @@ function hideLoginScreen() {
   initRoleUI();
   setTimeout(restaurarBorradorSiExiste, 800);
   mostrarBienvenida();
+  setTimeout(mostrarAnuncioXubio, 1200);
+}
+
+// Aviso de novedades (creación automática de cliente en Xubio) — una sola
+// vez por usuario, solo para el rol Facturación.
+function mostrarAnuncioXubio() {
+  const cu = getCurrentUser();
+  if (!cu || cu.role !== 'facturacion') return;
+  const key = 'branca_anuncio_xubio_cliente_' + (cu.username || cu.id || 'user');
+  try { if (localStorage.getItem(key)) return; } catch(e) { return; }
+  // Si la bienvenida sigue abierta, esperar a que la cierren para no superponer modales
+  const bienv = document.getElementById('modal-bienvenida');
+  if (bienv && bienv.style.display === 'flex') { setTimeout(mostrarAnuncioXubio, 800); return; }
+  const modal = document.getElementById('modal-anuncio');
+  if (!modal) return;
+  document.getElementById('anuncio-nombre').textContent = '¡Hola, ' + (cu.nombre || cu.username) + '!';
+  modal.style.display = 'flex';
+  try { localStorage.setItem(key, '1'); } catch(e) {}
+}
+function cerrarAnuncio() {
+  const modal = document.getElementById('modal-anuncio');
+  if (modal) modal.style.display = 'none';
 }
 
 function mostrarBienvenida() {
