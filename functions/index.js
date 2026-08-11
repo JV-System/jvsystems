@@ -122,7 +122,14 @@ exports.xubioTest = onRequest(
       const uC = new URL(XUBIO_API_BASE + "/clienteBean");
       const r = await doRequest({ hostname: uC.hostname, path: uC.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
       const lista = Array.isArray(r.body) ? r.body.slice(0, 5).map(c => ({ id: c.cliente_id, nombre: c.nombre })) : r.body;
-      res.json({ ok: true, status: r.status, primeros5: lista });
+      // DIAGNOSTICO: si viene ?detalle=<cliente_id>, traer el registro completo de ese cliente
+      let detalle = null;
+      if (req.query.detalle) {
+        const uD = new URL(XUBIO_API_BASE + "/clienteBean/" + req.query.detalle);
+        const rD = await doRequest({ hostname: uD.hostname, path: uD.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+        detalle = { status: rD.status, body: rD.body };
+      }
+      res.json({ ok: true, status: r.status, primeros5: lista, detalle: detalle });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
     }
@@ -204,12 +211,39 @@ exports.xubioCrearComprobante = onRequest(
               res.json({ clienteNoEncontrado: true, nombre: nombreCliente });
               return;
             }
-            // Intentar crear cliente en Xubio — misma receta que funcionaba antes del 27/07:
-            // razon social + CUIT sin guiones/espacios + email
-            const ivaIdMap = { "RI": 1, "M": 6, "CF": 5, "E": 4 };
-            const ivaId = ivaIdMap[datos.condicionIVA] || 5;
-            const nuevoCliente = { nombre: nombreCliente, condicionIVA: ivaId };
-            if (datos.cuit) nuevoCliente.cuit = String(datos.cuit).replace(/[-\s]/g, "");
+            // Intentar crear cliente en Xubio.
+            // El campo real no es "condicionIVA" (no existe en el esquema de Xubio) sino
+            // "categoriaFiscal", un objeto {ID,id,codigo,nombre} — confirmado inspeccionando
+            // un cliente real existente. Xubio tira 500 generico si faltan objetos que
+            // procesa sin chequeo de null (pais, identificacionTributaria, cuentas), asi
+            // que se completan con los mismos valores que trae cualquier cliente real.
+            const catFiscalMap = {
+              "RI": { ID: 1, id: 1, codigo: "RI", nombre: "Responsable Inscripto" },
+              "M":  { ID: 6, id: 6, codigo: "M",  nombre: "Monotributista" },
+              "CF": { ID: 5, id: 5, codigo: "CF", nombre: "Consumidor Final" },
+              "E":  { ID: 4, id: 4, codigo: "E",  nombre: "Exento" },
+            };
+            const categoriaFiscal = catFiscalMap[datos.condicionIVA] || catFiscalMap["CF"];
+            // Xubio espera el CUIT CON guiones (formato XX-XXXXXXXX-X, igual que en los
+            // clientes existentes) — mandarlo sin guiones es lo que rompia la creacion.
+            const cuitDigitos = datos.cuit ? String(datos.cuit).replace(/[^0-9]/g, "") : "";
+            const cuitLimpio = cuitDigitos.length === 11
+              ? cuitDigitos.slice(0,2) + "-" + cuitDigitos.slice(2,10) + "-" + cuitDigitos.slice(10)
+              : (datos.cuit || "");
+            const nuevoCliente = {
+              nombre: nombreCliente,
+              razonSocial: nombreCliente,
+              categoriaFiscal: categoriaFiscal,
+              identificacionTributaria: { ID: 9, id: 9, codigo: "CUIT", nombre: "CUIT" },
+              pais: { ID: 1, id: 1, codigo: "ARGENTINA", nombre: "Argentina" },
+              cuentaVenta_id: { ID: -3, id: -3, codigo: "DEUDORES_POR_VENTA", nombre: "Deudores por Venta" },
+              cuentaCompra_id: { ID: -7, id: -7, codigo: "PROVEEDORES", nombre: "Proveedores" },
+              esProveedor: 0,
+              esclienteextranjero: 0,
+              responsabilidadOrganizacionItem: [],
+              direccion: "", telefono: "", descripcion: "", usrCode: "",
+            };
+            if (cuitLimpio) { nuevoCliente.cuit = cuitLimpio; nuevoCliente.CUIT = cuitLimpio; }
             if (datos.email) nuevoCliente.email = datos.email;
             const bodyCliente = JSON.stringify(nuevoCliente);
             const urlCliente = new URL(XUBIO_API_BASE + "/clienteBean");
