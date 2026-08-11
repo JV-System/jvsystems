@@ -122,14 +122,7 @@ exports.xubioTest = onRequest(
       const uC = new URL(XUBIO_API_BASE + "/clienteBean");
       const r = await doRequest({ hostname: uC.hostname, path: uC.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
       const lista = Array.isArray(r.body) ? r.body.slice(0, 5).map(c => ({ id: c.cliente_id, nombre: c.nombre })) : r.body;
-      // DIAGNOSTICO: si viene ?detalle=<cliente_id>, traer el registro completo de ese cliente
-      let detalle = null;
-      if (req.query.detalle) {
-        const uD = new URL(XUBIO_API_BASE + "/clienteBean/" + req.query.detalle);
-        const rD = await doRequest({ hostname: uD.hostname, path: uD.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
-        detalle = { status: rD.status, body: rD.body };
-      }
-      res.json({ ok: true, status: r.status, primeros5: lista, detalle: detalle });
+      res.json({ ok: true, status: r.status, primeros5: lista });
     } catch(e) {
       res.status(500).json({ ok: false, error: e.message });
     }
