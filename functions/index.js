@@ -238,6 +238,8 @@ exports.xubioCrearComprobante = onRequest(
             };
             if (cuitLimpio) { nuevoCliente.cuit = cuitLimpio; nuevoCliente.CUIT = cuitLimpio; }
             if (datos.email) nuevoCliente.email = datos.email;
+            if (datos.telefono) nuevoCliente.telefono = datos.telefono;
+            if (datos.ubicacion) nuevoCliente.direccion = datos.ubicacion;
             const bodyCliente = JSON.stringify(nuevoCliente);
             const urlCliente = new URL(XUBIO_API_BASE + "/clienteBean");
             const hdrCliente = { "Content-Type": "application/json", "Authorization": "Bearer " + token, "Content-Length": Buffer.byteLength(bodyCliente, "utf8") };

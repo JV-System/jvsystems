@@ -8093,6 +8093,7 @@ async function confirmarEnvioXubio(oid) {
     items:             items,
     email:             o.email    || '',
     ubicacion:         o.ubicacion || '',
+    telefono:          o.tel      || '',
   };
   try {
     const res  = await fetch(XUBIO_CF_BASE + '/xubioCrearComprobante', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
