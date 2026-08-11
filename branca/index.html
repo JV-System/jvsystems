@@ -2283,7 +2283,11 @@ const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids')
 // Se usa para subir SOLO lo que este dispositivo realmente modificó, y así
 // no pisar con datos viejos los cambios que hicieron otros dispositivos/usuarios.
 let _lastSyncedSnap = {};
-function _ordenKey(o) { return (o.numero || String(o.id)).replace(/[.#$\[\]]/g, '-'); }
+// Clave ESTABLE: siempre el id interno, nunca el numero de orden.
+// (El numero puede asignarse/cambiar despues de creada la orden — si la
+// clave dependiera de el, cada cambio dejaria un registro viejo huerfano
+// en Firebase con la clave anterior, mostrando la misma orden duplicada.)
+function _ordenKey(o) { return String(o.id).replace(/[.#$\[\]]/g, '-'); }
 
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
