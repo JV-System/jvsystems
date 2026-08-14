@@ -8105,10 +8105,7 @@ function abrirModalXubio(oid) {
           <div><label style="${lbl}">Fecha</label><input id="xb-fecha" type="date" value="${fecha}" style="${inp}"></div>
           <div><label style="${lbl}">Vencimiento del cobro</label><input id="xb-venc" type="date" value="${fechaVencStr}" style="${inp}"></div>
         </div>
-        <div style="${r2}">
-          <div><label style="${lbl}">Moneda</label><select id="xb-moneda" style="${inp}"><option>Pesos</option><option>Dólares</option></select></div>
-          <div><label style="${lbl}">IVA</label><select id="xb-iva" style="${inp}"><option value="21">21%</option><option value="10.5">10,5%</option><option value="0">0% (Sin IVA / Exento)</option></select></div>
-        </div>
+        <div style="margin-bottom:16px;"><label style="${lbl}">Moneda</label><select id="xb-moneda" style="${inp}"><option>Pesos</option><option>Dólares</option></select></div>
         <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:16px;">
           <div style="padding:10px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Productos / Servicios</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px;">
@@ -8158,8 +8155,6 @@ async function confirmarEnvioXubio(oid) {
   const statusEl = document.getElementById('xb-status');
   const sendBtn  = document.querySelector('#xubio-modal button[onclick*="confirmar"]');
   if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳ Enviando...'; }
-  const porcentajeIVA = parseFloat(document.getElementById('xb-iva')?.value);
-  const ivaSel = isNaN(porcentajeIVA) ? 21 : porcentajeIVA;
   const items = [];
   const addItem = function(descId, cantId, precioId) {
     const precio = parseFloat(document.getElementById(precioId)?.value) || 0;
@@ -8167,7 +8162,7 @@ async function confirmarEnvioXubio(oid) {
       Descripcion:    document.getElementById(descId)?.value || '',
       Cantidad:       parseFloat(document.getElementById(cantId)?.value) || 1,
       PrecioUnitario: precio,
-      PorcentajeIVA:  ivaSel
+      PorcentajeIVA:  21
     });
   };
   // Unificar todo en un solo ítem (MO + viáticos + repuestos)
@@ -8184,7 +8179,7 @@ async function confirmarEnvioXubio(oid) {
     Descripcion:    document.getElementById('xb-desc-mo')?.value || 'Servicio técnico',
     Cantidad:       1,
     PrecioUnitario: totalUnificado,
-    PorcentajeIVA:  ivaSel
+    PorcentajeIVA:  21
   });
   if (!items.length) {
     if (statusEl) statusEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin-bottom:10px;">⚠ Ingresá al menos un producto con precio.</div>';
@@ -8232,7 +8227,7 @@ async function confirmarEnvioXubio(oid) {
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        o.facturacion.iva = Math.round(subtotal * (ivaSel/100) * 100) / 100;
+        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
@@ -8325,8 +8320,7 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        var ivaPct = (payload.items && payload.items.length && payload.items[0].PorcentajeIVA != null) ? payload.items[0].PorcentajeIVA : 21;
-        o.facturacion.iva = Math.round(subtotal * (ivaPct/100) * 100) / 100;
+        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
