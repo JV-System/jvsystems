@@ -2324,9 +2324,22 @@ async function _fbGet(path) {
   } catch(e) { clearTimeout(t); throw e; }
 }
 
+// ¿Hay alguna orden con cambios locales que todavía no confirmamos que
+// llegaron a Firebase? Se usa para el aviso al cerrar la pestaña y para
+// saber si hay que seguir reintentando la subida.
+function _haySinConfirmar() {
+  return ordenes.some(function(o) {
+    if (!o || !o.id) return false;
+    return _lastSyncedSnap[_ordenKey(o)] !== JSON.stringify(o);
+  });
+}
+
+let _syncRetryTimer = null;
+
 function _syncPush() {
   if (!_cloudReady) return; // no subir nada hasta que Firebase se haya cargado al menos una vez
   clearTimeout(_syncTimer);
+  clearTimeout(_syncRetryTimer);
   _syncTimer = setTimeout(async () => {
     setSyncStatus('syncing', '⏳ Guardando...');
     try {
@@ -2358,8 +2371,13 @@ function _syncPush() {
         await _fbPut('/usuarios', localUsers);
       }
       setSyncStatus('ok');
+      // Por las dudas de que haya quedado algo pendiente (ej: se modificó
+      // otra orden mientras esta subida estaba en curso), reintentar.
+      if (_haySinConfirmar()) _syncRetryTimer = setTimeout(_syncPush, 5000);
     } catch(e) {
-      setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
+      setSyncStatus('error', '⚠ Sin conexión — reintentando...');
+      // No esperar los 30s del próximo poll: reintentar en 5s hasta que ande.
+      _syncRetryTimer = setTimeout(_syncPush, 5000);
     }
   }, 1200);
 }
@@ -2599,6 +2617,9 @@ function mergeById(local, cloud) {
 
 async function loadFromCloud() {
   setSyncStatus('syncing', '⏳ Conectando...');
+  // Órdenes locales con cambios que todavía no confirmamos que llegaron a
+  // Firebase (se llena más abajo) — si quedan pendientes al final, reintentamos.
+  let noConfirmadas = {};
   try {
     const [remoteDb, remoteUsuarios] = await Promise.all([
       _fbGet('/db'),
@@ -2621,6 +2642,16 @@ async function loadFromCloud() {
       // La nube es la fuente de verdad — lo que no está en Firebase no existe
       var tieneDatos = function(o) { return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado); };
       const draftsLocales = ordenes.filter(function(o) { return o.draft === true && tieneDatos(o); });
+      // ANTES de pisar _lastSyncedSnap: guardamos qué órdenes locales todavía NO
+      // confirmamos que llegaron a Firebase (comparando contra el snapshot previo).
+      // Si el PATCH de _syncPush() falló, tardó, o ni se disparó (ej: se guardó
+      // antes de que _cloudReady fuera true), esa orden va a quedar marcada acá —
+      // y la vamos a proteger de que este mismo load la pise con datos viejos.
+      ordenes.forEach(function(o) {
+        if (!o || !o.id) return;
+        const key = _ordenKey(o);
+        if (_lastSyncedSnap[key] !== JSON.stringify(o)) noConfirmadas[key] = true;
+      });
       // Rebasar el snapshot de "última versión confirmada" con lo que acaba de mandar
       // Firebase — es la referencia contra la que _syncPush() decide qué subir después.
       _lastSyncedSnap = {};
@@ -2643,8 +2674,15 @@ async function loadFromCloud() {
         ordenes.forEach(function(o) { if (o && o.id) localMap[String(o.id)] = o; });
         ordenes = remotas.filter(function(o) { return o && o.id && !_deletedIds.has(String(o.id)) && (!o.draft || tieneDatos(o)); }).map(function(remote) {
           const local = localMap[String(remote.id)];
-          // Si hay versión local más nueva (modificada en los últimos 30s), preferirla
-          if (local && local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt && (Date.now() - local.updatedAt) < 30000) return local;
+          if (!local) return remote;
+          // Si esta orden tiene cambios locales que todavía no confirmamos que
+          // llegaron a Firebase, preferimos la local SIEMPRE (sin límite de tiempo)
+          // — evita perder datos (ej: facturación cargada) si el PATCH falló o
+          // no se disparó a tiempo. Se sigue reintentando más abajo hasta que
+          // Firebase realmente la confirme.
+          if (noConfirmadas[_ordenKey(local)]) return local;
+          // Si no, y hay versión local más nueva (modificada en los últimos 30s), preferirla
+          if (local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt && (Date.now() - local.updatedAt) < 30000) return local;
           return remote;
         });
         // Agregar borradores locales con datos que aún no se subieron
@@ -2695,6 +2733,11 @@ async function loadFromCloud() {
       localStorage.setItem('branca_migr_nosign2_synced', '1');
       _syncPush();
     }
+    // Si quedaron órdenes con cambios locales que todavía no se confirmaron en
+    // Firebase (el PATCH falló, tardó, o se guardó antes de que _cloudReady
+    // fuera true), reintentamos subirlas ahora en vez de esperar a que el
+    // usuario haga otra acción — evita que se pierdan en el próximo poll.
+    if (Object.keys(noConfirmadas).length) _syncPush();
   } catch(e) {
     setSyncStatus('error', '⚠ Offline — usando datos locales');
     console.warn('Firebase load failed:', e.message);
@@ -2987,7 +3030,10 @@ async function eliminarOrden(id) {
     else { delete _lastSyncedSnap[_key]; }
     setSyncStatus('ok');
   } catch(e) {
-    setSyncStatus('error', '⚠ Sin conexión — guardado localmente');
+    setSyncStatus('error', '⚠ Sin conexión — reintentando...');
+    // No dejarlo colgado hasta el próximo poll de 30s: engancharlo al
+    // mecanismo normal de reintento rápido (5s) de _syncPush().
+    _syncPush();
   }
 }
 
@@ -7005,6 +7051,18 @@ document.addEventListener('visibilitychange', function() {
 window.addEventListener('pagehide', autoGuardarBorrador);
 window.addEventListener('beforeunload', autoGuardarBorrador);
 
+// Avisar (con el diálogo nativo del navegador) si hay cambios guardados
+// localmente que TODAVÍA no confirmamos que llegaron a Firebase — para que
+// nadie cierre la pestaña pensando que ya quedó guardado cuando en realidad
+// sigue en camino (o reintentando por una conexión mala).
+window.addEventListener('beforeunload', function(e) {
+  if (typeof _haySinConfirmar === 'function' && _haySinConfirmar()) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
 // Auto-guardar mientras escribe (debounce 2 segundos)
 var _draftTimer = null;
 document.addEventListener('input', function(e) {
@@ -8047,7 +8105,10 @@ function abrirModalXubio(oid) {
           <div><label style="${lbl}">Fecha</label><input id="xb-fecha" type="date" value="${fecha}" style="${inp}"></div>
           <div><label style="${lbl}">Vencimiento del cobro</label><input id="xb-venc" type="date" value="${fechaVencStr}" style="${inp}"></div>
         </div>
-        <div style="margin-bottom:16px;"><label style="${lbl}">Moneda</label><select id="xb-moneda" style="${inp}"><option>Pesos</option><option>Dólares</option></select></div>
+        <div style="${r2}">
+          <div><label style="${lbl}">Moneda</label><select id="xb-moneda" style="${inp}"><option>Pesos</option><option>Dólares</option></select></div>
+          <div><label style="${lbl}">IVA</label><select id="xb-iva" style="${inp}"><option value="21">21%</option><option value="10.5">10,5%</option><option value="0">0% (Sin IVA / Exento)</option></select></div>
+        </div>
         <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:16px;">
           <div style="padding:10px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Productos / Servicios</div>
           <table style="width:100%;border-collapse:collapse;font-size:12px;">
@@ -8097,6 +8158,8 @@ async function confirmarEnvioXubio(oid) {
   const statusEl = document.getElementById('xb-status');
   const sendBtn  = document.querySelector('#xubio-modal button[onclick*="confirmar"]');
   if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳ Enviando...'; }
+  const porcentajeIVA = parseFloat(document.getElementById('xb-iva')?.value);
+  const ivaSel = isNaN(porcentajeIVA) ? 21 : porcentajeIVA;
   const items = [];
   const addItem = function(descId, cantId, precioId) {
     const precio = parseFloat(document.getElementById(precioId)?.value) || 0;
@@ -8104,7 +8167,7 @@ async function confirmarEnvioXubio(oid) {
       Descripcion:    document.getElementById(descId)?.value || '',
       Cantidad:       parseFloat(document.getElementById(cantId)?.value) || 1,
       PrecioUnitario: precio,
-      PorcentajeIVA:  21
+      PorcentajeIVA:  ivaSel
     });
   };
   // Unificar todo en un solo ítem (MO + viáticos + repuestos)
@@ -8121,7 +8184,7 @@ async function confirmarEnvioXubio(oid) {
     Descripcion:    document.getElementById('xb-desc-mo')?.value || 'Servicio técnico',
     Cantidad:       1,
     PrecioUnitario: totalUnificado,
-    PorcentajeIVA:  21
+    PorcentajeIVA:  ivaSel
   });
   if (!items.length) {
     if (statusEl) statusEl.innerHTML = '<div style="color:#dc2626;font-size:13px;margin-bottom:10px;">⚠ Ingresá al menos un producto con precio.</div>';
@@ -8169,7 +8232,7 @@ async function confirmarEnvioXubio(oid) {
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        o.facturacion.iva = Math.round(subtotal * (ivaSel/100) * 100) / 100;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
@@ -8262,7 +8325,8 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        var ivaPct = (payload.items && payload.items.length && payload.items[0].PorcentajeIVA != null) ? payload.items[0].PorcentajeIVA : 21;
+        o.facturacion.iva = Math.round(subtotal * (ivaPct/100) * 100) / 100;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
