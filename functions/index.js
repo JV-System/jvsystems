@@ -130,6 +130,39 @@ exports.xubioTest = onRequest(
 );
 
 // ══════════════════════════════════════════════
+// FUNCIÓN: numero de comprobante consultado a Xubio en vivo
+// ══════════════════════════════════════════════
+// El "N° Comprobante" que se sugiere en la app es solo una referencia
+// interna (Xubio asigna su propio numero real al crear la factura, este
+// campo no se le manda). Calcularlo con datos locales (facturacion.nroFactura
+// guardada en cada orden) se desincroniza facil -- por eso se le pregunta
+// a Xubio directamente cual es el ultimo numero real de ese talonario.
+exports.xubioUltimoNumero = onRequest(
+  { secrets: ["XUBIO_CLIENT_ID", "XUBIO_SECRET_ID"] },
+  async (req, res) => {
+    Object.entries(CORS_HEADERS).forEach(([k, v]) => res.set(k, v));
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    try {
+      const prefijo = (req.query.prefijo || "A-00001-");
+      const token = await getXubioToken();
+      const u = new URL(XUBIO_API_BASE + "/comprobanteVentaBean");
+      const r = await doRequest({ hostname: u.hostname, path: u.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+      const lista = Array.isArray(r.body) ? r.body : [];
+      const nums = lista
+        .map(c => c.numeroDocumento || "")
+        .filter(n => n.startsWith(prefijo))
+        .map(n => parseInt(n.slice(prefijo.length), 10))
+        .filter(n => !isNaN(n));
+      const max = nums.length ? Math.max(...nums) : null;
+      const proximo = prefijo + String((max || 0) + 1).padStart(8, "0");
+      res.json({ ok: true, ultimo: max ? prefijo + String(max).padStart(8, "0") : null, proximo });
+    } catch(e) {
+      res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+);
+
+// ══════════════════════════════════════════════
 // FUNCIÓN 2: Crear comprobante en Xubio
 // ══════════════════════════════════════════════
 exports.xubioCrearComprobante = onRequest(

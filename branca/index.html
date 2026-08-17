@@ -8157,6 +8157,19 @@ function abrirModalXubio(oid) {
       </div>
     </div>`;
   document.body.appendChild(modal);
+
+  // El numero sugerido arriba es una estimacion local (puede haberse desincronizado
+  // de lo que Xubio realmente tiene). Si esta orden todavia no tiene un numero ya
+  // confirmado por un envio anterior, le preguntamos a Xubio el numero real y
+  // actualizamos el campo — solo si el usuario no lo toco mientras tanto.
+  if (!f.nroComprobanteInterno) {
+    fetch(XUBIO_CF_BASE + '/xubioUltimoNumero').then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok && d.proximo) {
+        var inp = document.getElementById('xb-nro');
+        if (inp && inp.value === nro) inp.value = d.proximo;
+      }
+    }).catch(function(){ /* sin conexion: se queda con la estimacion local */ });
+  }
 }
 
 async function confirmarEnvioXubio(oid) {
