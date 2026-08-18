@@ -5358,10 +5358,14 @@ function renderFactRow(o) {
         // nunca llenaba, y siempre terminaba mostrando $0.
         var moInitTotal = f.manoDeObra || 0;
         var selStyle = 'font-size:10px;border:1px solid #d1d5db;border-radius:4px;padding:2px 4px;margin-top:3px;background:#fff;color:#374151;cursor:pointer;';
-        var selectorHTML = vis.length ? ('<br><select id="fact-mo-modo-'+o.id+'" onclick="event.stopPropagation()" onchange="toggleModoMO('+o.id+',this.value)" style="'+selStyle+'">'
+        // El selector siempre disponible — antes solo aparecia si habia horas
+        // cargadas en alguna visita, dejando trabado en modo "$/hs" (sin poder
+        // pasar a "Por trabajo") a cualquier orden donde el tecnico no haya
+        // registrado el tiempo.
+        var selectorHTML = '<br><select id="fact-mo-modo-'+o.id+'" onclick="event.stopPropagation()" onchange="toggleModoMO('+o.id+',this.value)" style="'+selStyle+'">'
           + '<option value="hora"'+(modoMO==='hora'?' selected':'')+'>$/hs por visita</option>'
           + '<option value="total"'+(modoMO==='total'?' selected':'')+'>Por trabajo</option>'
-          + '</select>') : '';
+          + '</select>';
         // En modo hora el input muestra $/hs; en modo total muestra $ total
         var unitValMO = modoMO === 'hora' ? (f.precioHoraUnit || (totalHs > 0 && f.manoDeObra ? Math.round(f.manoDeObra / totalHs) : '')) : (f.manoDeObra || '');
         var unitPlaceholder = modoMO === 'hora' ? '$/hs' : '$ total';
