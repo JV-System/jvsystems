@@ -5536,8 +5536,13 @@ function toggleModoMO(oid, modo) {
   if (modo === 'total') {
     if (cantEl) cantEl.textContent = '—';
   } else {
+    // Volver a "$/hs por visita" tiene que reconstruir el <input> editable de horas
+    // (antes solo ponia texto plano, y quedaba trabado sin poder tipear la cantidad).
     var hs = cantEl ? (parseFloat(cantEl.dataset.hs) || 0) : 0;
-    if (cantEl) cantEl.textContent = hs > 0 ? (hs % 1 === 0 ? hs+' hs' : hs.toFixed(1)+' hs') : '—';
+    if (cantEl) {
+      var inpS = 'border:none;border-bottom:1px solid #d1d5db;padding:4px 6px;font-size:12px;text-align:right;background:transparent;font-family:inherit;';
+      cantEl.innerHTML = '<input type="number" min="0" step="0.5" value="'+hs+'" onclick="event.stopPropagation()" oninput="(function(el){var td=el.closest(\'td\')||el.parentElement;td.dataset.hs=el.value;recalcMOtotal(\''+oid+'\');})(this)" style="'+inpS+'width:60px;text-align:center;font-weight:600;color:#1565D8;"> hs';
+    }
   }
   recalcMOtotal(oid);
 }
