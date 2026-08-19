@@ -8270,6 +8270,13 @@ async function confirmarEnvioXubio(oid) {
       o.facturacion.estadoPago = 'pagado';
       if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
       if (payload.numeroComprobante) o.facturacion.nroComprobanteInterno = payload.numeroComprobante;
+      // Guardar tambien condicion de pago y fecha tal como quedaron en la tarjeta
+      // de facturacion — antes solo se guardaban al apretar "Guardar" a mano; si
+      // se iba directo a "Enviar a Xubio" sin guardar antes, el cambio se perdia
+      // y volvia a mostrar el valor anterior (ej: "Contado" en vez de "30 dias").
+      if (payload.condicionPago) o.facturacion.condPago = payload.condicionPago;
+      var fechaFactInp = document.getElementById('fact-fecha-' + oid);
+      if (fechaFactInp && fechaFactInp.value) o.facturacion.fechaFactura = fechaFactInp.value;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
@@ -8363,6 +8370,13 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       o.facturacion.estadoPago = 'pagado';
       if (data.data && data.data.numeroDocumento) o.facturacion.nroFactura = data.data.numeroDocumento;
       if (payload.numeroComprobante) o.facturacion.nroComprobanteInterno = payload.numeroComprobante;
+      // Guardar tambien condicion de pago y fecha tal como quedaron en la tarjeta
+      // de facturacion — antes solo se guardaban al apretar "Guardar" a mano; si
+      // se iba directo a "Enviar a Xubio" sin guardar antes, el cambio se perdia
+      // y volvia a mostrar el valor anterior (ej: "Contado" en vez de "30 dias").
+      if (payload.condicionPago) o.facturacion.condPago = payload.condicionPago;
+      var fechaFactInp = document.getElementById('fact-fecha-' + oid);
+      if (fechaFactInp && fechaFactInp.value) o.facturacion.fechaFactura = fechaFactInp.value;
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
