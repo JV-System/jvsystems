@@ -2283,6 +2283,12 @@ const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids')
 // Se usa para subir SOLO lo que este dispositivo realmente modificó, y así
 // no pisar con datos viejos los cambios que hicieron otros dispositivos/usuarios.
 let _lastSyncedSnap = {};
+// true recién despues de la primera vez que este dispositivo trajo datos
+// reales de Firebase en esta sesión. Antes de eso, _lastSyncedSnap esta
+// vacio (se reinicia en cada carga de pagina) — comparar contra el todavia
+// no significa nada, y NO hay que tratar el cache local (por viejo que sea)
+// como si fueran "cambios sin confirmar" a proteger.
+let _yaSincronizoUnaVez = false;
 // Clave ESTABLE: siempre el id interno, nunca el numero de orden.
 // (El numero puede asignarse/cambiar despues de creada la orden — si la
 // clave dependiera de el, cada cambio dejaria un registro viejo huerfano
@@ -2647,15 +2653,23 @@ async function loadFromCloud() {
       // Si el PATCH de _syncPush() falló, tardó, o ni se disparó (ej: se guardó
       // antes de que _cloudReady fuera true), esa orden va a quedar marcada acá —
       // y la vamos a proteger de que este mismo load la pise con datos viejos.
-      ordenes.forEach(function(o) {
-        if (!o || !o.id) return;
-        const key = _ordenKey(o);
-        if (_lastSyncedSnap[key] !== JSON.stringify(o)) noConfirmadas[key] = true;
-      });
+      // OJO: esto solo tiene sentido si ya sincronizamos al menos una vez en esta
+      // sesión. En la primerísima carga de la página, _lastSyncedSnap todavía está
+      // vacío (se reinicia con cada F5) — comparar contra "vacío" marcaría TODO el
+      // cache local como "sin confirmar" y haría que ganara siempre el dato local
+      // viejo por sobre el real de Firebase, sin importar cuán desactualizado esté.
+      if (_yaSincronizoUnaVez) {
+        ordenes.forEach(function(o) {
+          if (!o || !o.id) return;
+          const key = _ordenKey(o);
+          if (_lastSyncedSnap[key] !== JSON.stringify(o)) noConfirmadas[key] = true;
+        });
+      }
       // Rebasar el snapshot de "última versión confirmada" con lo que acaba de mandar
       // Firebase — es la referencia contra la que _syncPush() decide qué subir después.
       _lastSyncedSnap = {};
       remotas.forEach(function(o) { _lastSyncedSnap[_ordenKey(o)] = JSON.stringify(o); });
+      _yaSincronizoUnaVez = true;
       if (remotas.length > 0) {
         const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
         // Si Firebase tiene una orden, sacarla de _deletedIds (por si quedó ahí por error)
