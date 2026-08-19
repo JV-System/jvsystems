@@ -5247,9 +5247,10 @@ function renderFacturacion() {
     + '</div></div>';
 }
 
-function setFactFiltro(f) { _factFiltro = f; _factOpenId = null; renderFacturacion(); }
-function setFactSort(s)   { _factSort = s; renderFacturacion(); }
+function setFactFiltro(f) { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factFiltro = f; _factOpenId = null; renderFacturacion(); }
+function setFactSort(s)   { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factSort = s; renderFacturacion(); }
 function setFactBusca(v)  {
+  if (_factOpenId != null) guardarFacturacion(_factOpenId, true);
   _factBusca = v;
   _factOpenId = null;
   // Solo re-renderizar la lista, no el buscador (evita pérdida de foco)
@@ -5613,6 +5614,10 @@ function recalcRep(oid) {
 }
 
 function toggleFactCard(oid) {
+  // Autoguardar en silencio la tarjeta que se estaba editando antes de cerrarla o
+  // cambiar a otra — un click accidental en el encabezado (o en cualquier otro
+  // lado) ya no debe descartar valores tipeados que todavia no se guardaron.
+  if (_factOpenId != null) guardarFacturacion(_factOpenId, true);
   _factOpenId = (_factOpenId === oid) ? null : oid;
   renderFacturacion();
   // Scroll al panel abierto
@@ -5677,9 +5682,13 @@ function renderFactTotalesHTML(o, oid) {
     + '<div class="ft-row total"><span>TOTAL</span><span>' + fmt(v.total) + '</span></div>';
 }
 
-function guardarFacturacion(oid) {
+function guardarFacturacion(oid, silencioso) {
   const o = ordenes.find(function(x){ return String(x.id) === String(oid); });
   if (!o) return;
+  // Si esta tarjeta no esta realmente abierta en pantalla no hay nada que leer de
+  // sus inputs (fueron destruidos al renderizar otra) — evita guardar valores
+  // vacios/en 0 por error al autoguardar antes de cerrar/cambiar de tarjeta.
+  if (!document.getElementById('fact-mo-'+oid)) return;
   const v = getFactValues(oid);
   // Guardar modo y precios de mano de obra
   var modoEl = document.getElementById('fact-mo-modo-'+oid);
@@ -5720,8 +5729,10 @@ function guardarFacturacion(oid) {
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
   saveData();
-  showToast('✅ Factura guardada.');
-  setTimeout(renderFacturacion, 300);
+  if (!silencioso) {
+    showToast('✅ Factura guardada.');
+    setTimeout(renderFacturacion, 300);
+  }
 }
 
 function generarFacturaPDF(oid) {
