@@ -60,7 +60,7 @@
 
   /* HEADER */
   .app-header {
-    background: linear-gradient(135deg, #060E1F 0%, #0A1628 50%, #0D2044 100%);
+    background: linear-gradient(120deg, #060E1F 0%, #0A1628 45%, #12295C 85%, #16326E 100%);
     padding: 0;
     padding-top: env(safe-area-inset-top, 0px);
     display: flex;
@@ -68,7 +68,8 @@
     border-bottom: 2px solid var(--jv-blue);
     position: relative;
     flex-shrink: 0;
-    box-shadow: 0 4px 16px rgba(6,14,31,0.28);
+    z-index: 10;
+    box-shadow: 0 8px 10px -4px rgba(6,14,31,0.35), 0 4px 24px rgba(6,14,31,0.30);
   }
   .app-header::after {
     content: '';
