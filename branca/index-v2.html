@@ -52,7 +52,11 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
-  body { font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  body {
+    font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(1200px 500px at 50% -80px, #e7edf7 0%, var(--bg) 55%);
+    color: var(--text); display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+  }
 
   /* HEADER */
   .app-header {
@@ -212,18 +216,22 @@
     flex-shrink: 0;
   }
   .sidebar-header {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
+    padding: 18px 16px 14px;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .sidebar-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .btn-new {
-    background: var(--jv-blue); color: white; border: none;
-    padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 700;
-    cursor: pointer; display: flex; align-items: center; gap: 5px;
-    transition: background 0.2s; font-family: 'Exo 2', sans-serif; letter-spacing: 0.3px;
+  .sidebar-title {
+    font-size: 20px; font-weight: 800; color: var(--navy); letter-spacing: 0.2px;
+    position: relative; padding-left: 3px;
   }
-  .btn-new:hover { background: var(--jv-blue-light); }
+  .btn-new {
+    background: linear-gradient(135deg, var(--jv-blue), #3B7BE0); color: white; border: none;
+    padding: 9px 16px; border-radius: 22px; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: transform 0.15s, box-shadow 0.15s; font-family: 'Exo 2', sans-serif; letter-spacing: 0.3px;
+    box-shadow: 0 3px 10px rgba(21,101,216,0.35);
+  }
+  .btn-new:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(21,101,216,0.42); }
+  .btn-new:active { transform: translateY(0); }
   .sidebar-search { padding: 10px 14px 6px; position: relative; }
   .sidebar-search::before {
     content: '🔍'; position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
@@ -1304,13 +1312,14 @@
       background: none; border: none; cursor: pointer; gap: 2px;
     }
     .mob-fab-inner {
-      width: 46px; height: 46px;
-      background: var(--jv-blue);
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--jv-blue), #3B7BE0);
+      border: 2.5px solid rgba(255,255,255,0.9);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 26px; color: white; font-weight: 300;
-      box-shadow: 0 4px 14px rgba(21,101,216,0.45);
-      margin-top: -16px;
+      box-shadow: 0 5px 16px rgba(21,101,216,0.5);
+      margin-top: -18px;
       transition: transform 0.15s, box-shadow 0.15s;
     }
     .mob-fab-inner:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(21,101,216,0.3); }
@@ -2009,8 +2018,8 @@
     <div class="sidebar-search">
       <input type="text" placeholder="Buscar empresa..." id="searchInput" oninput="filtrarOrdenes(this.value)">
     </div>
-    <div style="display:flex;gap:6px;padding:6px 10px 4px;border-bottom:1px solid var(--border);">
-      <select id="filtroEstado" onchange="renderOrderList()" style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:white;color:var(--text);">
+    <div style="display:flex;gap:8px;padding:4px 14px 10px;">
+      <select id="filtroEstado" onchange="renderOrderList()" style="flex:1;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-weight:600;background:var(--white);color:var(--text);box-shadow:var(--shadow-card);">
         <option value="">Todos los estados</option>
         <option value="open">Abiertas</option>
         <option value="pending">Pendientes</option>
@@ -2019,7 +2028,7 @@
         <option value="anulada">Anuladas</option>
         <option value="planificada">Planificadas</option>
       </select>
-      <button onclick="toggleOrdenLista()" id="btn-orden-lista" title="Ordenar" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;cursor:pointer;">↓</button>
+      <button onclick="toggleOrdenLista()" id="btn-orden-lista" title="Ordenar" style="width:36px;flex-shrink:0;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;background:var(--white);color:var(--jv-blue);cursor:pointer;box-shadow:var(--shadow-card);">↓</button>
     </div>
     <div class="order-list" id="orderList"></div>
   </div>
@@ -3212,7 +3221,7 @@ function renderOrderList() {
         </div>
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
-      <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
+      <div class="order-meta">📅 ${fmtFecha(o.fecha)} &nbsp;·&nbsp; 👤 ${o.responsable || '—'}</div>
       ${!esAnulada ? `<div class="order-item-actions"><button class="btn-icon-ghost" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${o.numero ? '🚫 Anular' : '🗑 Eliminar'}</button></div>` : ''}
     </div>`;
   }).join('');
@@ -3868,7 +3877,7 @@ function filtrarHistorial() {
         </div>
       </div>
       <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${o.empresa||'(Sin empresa)'}</div>
-      <div style="font-size:11px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
+      <div style="font-size:11px;color:var(--text-muted);">📅 ${fmtFecha(o.fecha)} &nbsp;·&nbsp; 👤 ${o.responsable||'—'}</div>
       ${o.marca ? '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
   `; }).join('');
