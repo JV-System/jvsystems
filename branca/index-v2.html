@@ -47,6 +47,8 @@
     --white: #fff;
     --radius: 8px;
     --radius-lg: 12px;
+    --shadow-card: 0 1px 2px rgba(10,22,40,0.06), 0 1px 6px rgba(10,22,40,0.06);
+    --shadow-card-hover: 0 2px 4px rgba(10,22,40,0.08), 0 4px 14px rgba(10,22,40,0.10);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
@@ -221,37 +223,59 @@
     transition: background 0.2s; font-family: 'Exo 2', sans-serif; letter-spacing: 0.3px;
   }
   .btn-new:hover { background: var(--jv-blue-light); }
-  .sidebar-search { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .sidebar-search { padding: 10px 14px 6px; position: relative; }
+  .sidebar-search::before {
+    content: '🔍'; position: absolute; left: 26px; top: 50%; transform: translateY(-50%);
+    font-size: 13px; opacity: 0.55; pointer-events: none;
+  }
   .sidebar-search input {
-    width: 100%; padding: 8px 12px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    font-size: 13px; background: var(--bg);
+    width: 100%; padding: 9px 12px 9px 34px;
+    border: 1px solid #e5e7eb; border-radius: 10px;
+    font-size: 13px; background: var(--white);
+    box-shadow: var(--shadow-card);
   }
-  .order-list { overflow-y: auto; flex: 1; }
+  .sidebar-search input:focus { outline: none; border-color: var(--jv-blue); box-shadow: 0 0 0 3px rgba(21,101,216,0.12); }
+  .order-list { overflow-y: auto; flex: 1; padding: 10px 10px 4px; }
   .order-item {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 13px 14px 13px 16px;
+    margin-bottom: 9px;
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid #edf0f5;
+    box-shadow: var(--shadow-card);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: box-shadow 0.15s, transform 0.15s;
     position: relative;
+    border-left: 3px solid var(--teal);
   }
-  .order-item:hover { background: var(--bg); }
-  .order-item.active { background: #EBF8FF; border-left: 3px solid var(--teal); }
+  .order-item:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .order-item.active { background: #EBF8FF; border-left: 3px solid var(--teal); box-shadow: var(--shadow-card-hover); }
   .order-item.pending { border-left: 3px solid var(--pending); }
-  .order-item.locked { opacity: 0.85; }
+  .order-item.locked { border-left: 3px solid #b8bec9; }
+  .order-item.anulada { border-left: 3px solid var(--red); }
   .order-num { font-size: 13px; font-weight: 800; color: var(--navy); letter-spacing: 0.3px; }
-  .order-empresa { font-size: 12px; font-weight: 600; margin: 1px 0; color: var(--text); }
+  .order-empresa { font-size: 13px; font-weight: 700; margin: 3px 0 2px; color: var(--text); }
   .order-meta { font-size: 11px; color: var(--text-muted); }
   .order-status {
-    position: absolute; top: 50%; right: 12px; transform: translateY(-50%);
-    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
-    text-transform: uppercase; letter-spacing: 0.5px;
+    position: static;
+    font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+    display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;
   }
   .status-open { background: var(--teal-light); color: var(--teal); }
   .status-pending { background: var(--pending-light); color: var(--pending); }
-  .status-locked { background: #f0f0f0; color: #777; }
+  .status-locked { background: #eef0f4; color: #5b6472; }
   .status-planificada { background: #ede9fe; color: #5b21b6; }
   .order-item.planificada { border-left: 3px solid #7c3aed; }
+  .order-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .order-item-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .btn-icon-ghost {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: transparent; border: 1px solid #f0d5d2; color: var(--red);
+    font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .btn-icon-ghost:hover { background: var(--red-light); }
 
   /* CALENDARIO PLANIFICACIÓN */
   .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; }
@@ -597,12 +621,14 @@
   .historial-content { padding: 24px; overflow-y: auto; height: 100%; }
   .historial-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
   .hist-card {
-    background: white; border: 1px solid var(--border); border-radius: var(--radius-lg);
-    padding: 16px; cursor: pointer; transition: all 0.2s;
+    background: white; border: 1px solid #edf0f5; border-radius: var(--radius-lg);
+    padding: 16px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s;
+    box-shadow: var(--shadow-card); border-left: 3px solid var(--teal);
   }
-  .hist-card:hover { border-color: var(--navy); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-  .hist-card.pending { border-left: 4px solid var(--pending); }
-  .hist-card.locked { border-left: 4px solid var(--teal); }
+  .hist-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .hist-card.pending { border-left: 3px solid var(--pending); }
+  .hist-card.locked { border-left: 3px solid #b8bec9; }
+  .hist-card.anulada { border-left: 3px solid var(--red); opacity: 0.7; }
   .hist-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
   .hist-num { font-size: 14px; font-weight: 700; color: var(--navy); }
 
@@ -1252,8 +1278,9 @@
       font-family: 'Exo 2', sans-serif; transition: color 0.18s;
       padding: 0; position: relative;
     }
-    .mob-nav-btn .mob-icon { font-size: 19px; line-height: 1; }
+    .mob-nav-btn .mob-icon { font-size: 18px; line-height: 1; padding: 4px 14px; border-radius: 14px; transition: background 0.18s; }
     .mob-nav-btn.active { color: var(--accent); }
+    .mob-nav-btn.active .mob-icon { background: rgba(245,166,35,0.16); }
     .mob-nav-btn.active::before {
       content: '';
       position: absolute; top: 0; left: 20%; right: 20%;
@@ -3162,20 +3189,20 @@ function renderOrderList() {
     if (esAnulada)  itemClass += ' anulada';
     if (ordenActual && ordenActual.id === o.id) itemClass += ' active';
     var badgeStyle = esPend ? 'status-pending' : (esCerrada || esSinFirma) ? 'status-locked' : esAnulada ? '' : 'status-open';
-    var badgeLabel = esPend ? 'Pendiente' : (esCerrada || esSinFirma) ? 'Cerrada' : esAnulada ? '🚫 Anulada' : 'Abierta';
-    var badgeExtra = esAnulada ? 'style="background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:700;"' : '';
+    var badgeLabel = esPend ? '⏸ Pendiente' : (esCerrada || esSinFirma) ? '🔒 Cerrada' : esAnulada ? '🚫 Anulada' : '● Abierta';
+    var badgeExtra = esAnulada ? 'style="background:#fee2e2;color:#991b1b;"' : '';
     return `
-    <div class="${itemClass}" onclick="seleccionarOrden(${o.id})" style="${esAnulada ? 'opacity:0.6;' : ''}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <div class="${itemClass}" onclick="seleccionarOrden(${o.id})" style="${esAnulada ? 'opacity:0.65;' : ''}">
+      <div class="order-item-top">
         <div class="order-num">${o.numero || '—'}</div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-          <div class="order-status ${badgeStyle}" ${badgeExtra} style="position:static;transform:none;">${badgeLabel}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+          <div class="order-status ${badgeStyle}" ${badgeExtra}>${badgeLabel}</div>
           ${esSinFirma ? '<span style="font-size:10px;color:#1565D8;font-weight:600;">sin firma cliente</span>' : ''}
         </div>
       </div>
       <div class="order-empresa">${o.empresa || '(Sin empresa)'}</div>
       <div class="order-meta">${fmtFecha(o.fecha)} · ${o.responsable || '—'}</div>
-      ${!esAnulada ? `<button class="btn-delete" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${o.numero ? '🚫 Anular' : '🗑 Eliminar'}</button>` : ''}
+      ${!esAnulada ? `<div class="order-item-actions"><button class="btn-icon-ghost" onclick="event.stopPropagation(); eliminarOrden(${o.id})">${o.numero ? '🚫 Anular' : '🗑 Eliminar'}</button></div>` : ''}
     </div>`;
   }).join('');
 }
@@ -3721,11 +3748,11 @@ function renderHistorial() {
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;">🔍</span>
         <input id="hf-busca" type="text" placeholder="Buscar por empresa, N° orden o N° factura..."
           oninput="filtrarHistorial()"
-          style="width:100%;padding:10px 12px 10px 36px;border:1px solid #e5e7eb;border-radius:9px;font-size:13px;background:#fff;box-sizing:border-box;">
+          style="width:100%;padding:10px 12px 10px 36px;border:1px solid #e5e7eb;border-radius:10px;font-size:13px;background:#fff;box-sizing:border-box;box-shadow:var(--shadow-card);">
       </div>
 
       <!-- FILTROS -->
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:#f8f9fb;border-radius:10px;border:1px solid var(--border);">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:var(--white);border-radius:12px;border:1px solid #edf0f5;box-shadow:var(--shadow-card);">
         <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px;">
           <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Cliente</label>
           <select id="hf-cliente" onchange="filtrarHistorial()"
@@ -3811,10 +3838,10 @@ function filtrarHistorial() {
 
   const estadoLabel = { open:'● Abierta', pending:'⏸ Pendiente', locked:'🔒 Cerrada', locked_nosign:'🔒 Cerrada', anulada:'🚫 Anulada' };
   const estadoStyle = {
-    open:         'background:#f0f0f0;color:#555;',
-    pending:      'background:#fef3c7;color:#92400e;',
-    locked:       'background:#d1fae5;color:#065f46;',
-    locked_nosign:'background:#d1fae5;color:#065f46;',
+    open:         'background:#E1F5EE;color:#1D9E75;',
+    pending:      'background:#EDE9FE;color:#8B5CF6;',
+    locked:       'background:#eef0f4;color:#5b6472;',
+    locked_nosign:'background:#eef0f4;color:#5b6472;',
     anulada:      'background:#fee2e2;color:#991b1b;'
   };
 
@@ -3822,8 +3849,8 @@ function filtrarHistorial() {
     <div class="hist-card ${o.estado}" onclick="abrirDesdeHist(${o.id})">
       <div class="hist-top">
         <span class="hist-num">${o.numero}</span>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-          <span class="badge" style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;${estadoStyle[o.estado]||''}">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+          <span class="badge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;${estadoStyle[o.estado]||''}">
             ${estadoLabel[o.estado]||o.estado}
           </span>
           ${o.estado === 'locked_nosign' ? '<span style="font-size:10px;color:#1565D8;font-weight:600;">sin firma cliente</span>' : ''}
