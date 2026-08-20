@@ -47,8 +47,8 @@
     --white: #fff;
     --radius: 8px;
     --radius-lg: 12px;
-    --shadow-card: 0 1px 2px rgba(10,22,40,0.06), 0 1px 6px rgba(10,22,40,0.06);
-    --shadow-card-hover: 0 2px 4px rgba(10,22,40,0.08), 0 4px 14px rgba(10,22,40,0.10);
+    --shadow-card: 0 1px 3px rgba(10,22,40,0.10), 0 3px 10px rgba(10,22,40,0.09);
+    --shadow-card-hover: 0 3px 6px rgba(10,22,40,0.12), 0 6px 18px rgba(10,22,40,0.14);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
@@ -64,6 +64,7 @@
     border-bottom: 2px solid var(--jv-blue);
     position: relative;
     flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(6,14,31,0.28);
   }
   .app-header::after {
     content: '';
@@ -943,10 +944,11 @@
   /* Avatar en header */
   .header-avatar {
     width:28px; height:28px; border-radius:50%; object-fit:cover;
-    border:1.5px solid rgba(255,255,255,0.3); cursor:pointer;
-    background:#1a3060; font-size:12px; color:white;
+    border:1.5px solid rgba(255,255,255,0.35); cursor:pointer;
+    background:linear-gradient(135deg, var(--jv-blue), #6C4CE0); font-size:12px; color:white;
     display:flex; align-items:center; justify-content:center;
     flex-shrink:0; overflow:hidden;
+    box-shadow: 0 0 0 3px rgba(21,101,216,0.18);
   }
   .header-avatar:hover { border-color:rgba(255,255,255,0.7); }
 
@@ -1216,8 +1218,12 @@
 
     /* HISTORIAL */
     .historial-content { padding: 12px; padding-bottom: 100px; overflow-y: auto; }
-    .historial-grid { grid-template-columns: 1fr !important; gap: 10px; }
+    .historial-grid { grid-template-columns: 1fr !important; gap: 9px; }
     .hist-btn { padding: 9px 8px; font-size: 12px; }
+    /* Tarjetas mas compactas en celular */
+    .hist-card { padding: 11px 13px; }
+    .hist-top { margin-bottom: 5px; }
+    .hist-num { font-size: 13px; }
 
     /* CONFIG */
     .config-content { padding: 12px; padding-bottom: 100px; }
@@ -3856,9 +3862,9 @@ function filtrarHistorial() {
           ${o.estado === 'locked_nosign' ? '<span style="font-size:10px;color:#1565D8;font-weight:600;">sin firma cliente</span>' : ''}
         </div>
       </div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px;">${o.empresa||'(Sin empresa)'}</div>
-      <div style="font-size:12px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
-      ${o.marca ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
+      <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${o.empresa||'(Sin empresa)'}</div>
+      <div style="font-size:11px;color:var(--text-muted);">${fmtFecha(o.fecha)} · ${o.responsable||'—'}</div>
+      ${o.marca ? '<div style="font-size:11px;color:var(--text-muted);margin-top:3px;">🔧 '+o.marca+' '+o.modelo+'</div>' : ''}
     </div>
   `; }).join('');
 }
