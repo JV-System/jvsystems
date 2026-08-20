@@ -1082,7 +1082,12 @@
     .header-user-name-text { display: none !important; }
     .btn-logout { display: none !important; }
     #sync-status { display: none !important; }
-    #btn-refresh { font-size: 16px; padding: 6px 8px; }
+    #btn-refresh {
+      font-size: 14px; width: 30px; height: 30px; padding: 0;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center;
+    }
+    #btn-refresh:active { background: rgba(255,255,255,0.18); }
 
     /* MAIN — vertical */
     .main { flex-direction: column; height: calc(100dvh - 52px - 58px); overflow: hidden; }
@@ -1217,7 +1222,7 @@
     .form-content { padding-bottom: 140px !important; }
 
     /* HISTORIAL */
-    .historial-content { padding: 12px; padding-bottom: 100px; overflow-y: auto; }
+    .historial-content { padding: 18px 12px 100px; overflow-y: auto; }
     .historial-grid { grid-template-columns: 1fr !important; gap: 9px; }
     .hist-btn { padding: 9px 8px; font-size: 12px; }
     /* Tarjetas mas compactas en celular */
@@ -1973,7 +1978,7 @@
     <span id="sync-status" title="Estado de sincronización Firebase"
           style="font-size:11px;font-weight:600;transition:color 0.3s;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s;"
           onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"></span>
-    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos" style="display:none"></button>
+    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos" style="display:none">🔄</button>
     <div id="sistema-activo-badge" style="display:none"></div>
     <div id="header-user-display" onclick="abrirPerfil()" title="Mi perfil"
          style="margin-left:10px;display:flex;align-items:center;gap:7px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background 0.18s;"
