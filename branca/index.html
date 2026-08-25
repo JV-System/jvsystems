@@ -1162,12 +1162,17 @@
     .form-actions .ml-auto { display: none; }
 
     /* HISTORIAL */
-    .historial-content { padding: 12px; padding-bottom: 100px; overflow-y: auto; }
+    /* La barra inferior mide 58px + el safe-area del celular (~34px en
+       iPhones sin boton fisico) — antes solo se dejaban 100px fijos, sin
+       sumar el safe-area, y quedaba muy justo. En Safari sin instalar
+       como app (sin PWA) el navegador ocupa espacio extra propio, y esa
+       diferencia alcanzaba para tapar la ultima tarjeta de la lista. */
+    .historial-content { padding: 12px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
     .historial-grid { grid-template-columns: 1fr !important; gap: 10px; }
     .hist-btn { padding: 9px 8px; font-size: 12px; }
 
     /* CONFIG */
-    .config-content { padding: 12px; padding-bottom: 100px; }
+    .config-content { padding: 12px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
     .config-grid { grid-template-columns: 1fr !important; }
     .config-full { grid-column: 1 !important; }
     .config-add-form { flex-direction: column; }
@@ -1175,7 +1180,7 @@
     .config-add-form > div { width: 100%; }
 
     /* COMPROBANTE */
-    .comprobante-wrap { padding: 12px; padding-bottom: 100px; }
+    .comprobante-wrap { padding: 12px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
     .comp-header { flex-direction: column; gap: 10px; padding: 16px; }
     .comp-num { text-align: left !important; }
     .comp-body { padding: 14px 16px; }
