@@ -5731,6 +5731,15 @@ function guardarFacturacion(oid, silencioso) {
   // vacios/en 0 por error al autoguardar antes de cerrar/cambiar de tarjeta.
   if (!document.getElementById('fact-mo-'+oid)) return;
   const v = getFactValues(oid);
+  // Si no hay ningun monto real cargado (ni antes ni ahora), no asignar numero
+  // de factura ni fecha aunque los campos muestren un valor sugerido por
+  // defecto (el proximo numero, la fecha de hoy) — antes esto generaba
+  // facturas fantasma con numero y fecha de hoy con solo apretar "Guardar" a
+  // mano sin cargar nada, ademas del caso ya cubierto de cierre automatico.
+  if (!(o.facturacion && o.facturacion.nroFactura) && !v.mo && !v.rep && !v.gas) {
+    v.nroFactura = '';
+    v.fechaFactura = '';
+  }
   // Autoguardado silencioso (al cerrar/cambiar de tarjeta): si la orden nunca
   // tuvo facturacion cargada y no hay ningun monto real tipeado, no crear un
   // registro de la nada solo por haber abierto la tarjeta para mirarla — antes
