@@ -5365,10 +5365,18 @@ function renderFactRow(o) {
       + '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
       + fld('Fecha', '<input id="fact-fecha-'+o.id+'" type="date" value="'+fechaVal+'" onclick="event.stopPropagation()" style="'+inp+'">')
       + fld('Condición de pago', '<select id="fact-cond-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'+['Contado','30 días','60 días','Cuenta corriente'].map(function(c){ return '<option'+(f.condPago===c?' selected':'')+'>'+c+'</option>'; }).join('')+'</select>')
-      + fld('Estado', '<select id="fact-estado-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'
-          + '<option value="pendiente"'+(!f.estadoPago||f.estadoPago==='pendiente'?' selected':'')+'>Pendiente de cobro</option>'
-          + '<option value="pagado"'+(f.estadoPago==='pagado'?' selected':'')+'>✓ Cobrado</option>'
-          + '</select>')
+      + fld('Estado', (o.xubioEnvios && o.xubioEnvios.length)
+          // Una vez que se confirmó el envío real a Xubio, el estado queda fijo en
+          // "Cobrado" — ya no se puede tocar a mano. Antes se podía revertir el
+          // desplegable manualmente aunque la factura ya estuviera enviada, y eso
+          // generaba casos donde figuraba "pendiente" pese a existir un envío real.
+          ? '<select id="fact-estado-'+o.id+'" disabled style="'+inp+';background:#f1f5f9;color:#065f46;font-weight:700;cursor:not-allowed;">'
+              + '<option value="pagado" selected>✓ Cobrado</option>'
+            + '</select>'
+          : '<select id="fact-estado-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'
+              + '<option value="pendiente"'+(!f.estadoPago||f.estadoPago==='pendiente'?' selected':'')+'>Pendiente de cobro</option>'
+              + '<option value="pagado"'+(f.estadoPago==='pagado'?' selected':'')+'>✓ Cobrado</option>'
+            + '</select>')
       + '</div>'
       + '</div>'
       + '</div>'
@@ -5729,6 +5737,9 @@ function guardarFacturacion(oid, silencioso) {
   // esto generaba facturas fantasma en $0 con numero falso en cualquier orden
   // que alguien abriera sin querer cargar nada.
   if (silencioso && !o.facturacion && !v.mo && !v.rep && !v.gas) return;
+  // Una vez enviada de verdad a Xubio, el estado no puede volver a "pendiente"
+  // por ningún camino (el select queda deshabilitado, pero esto lo blinda igual).
+  if (o.xubioEnvios && o.xubioEnvios.length) v.estadoPago = 'pagado';
   // Guardar modo y precios de mano de obra
   var modoEl = document.getElementById('fact-mo-modo-'+oid);
   var modoMO = modoEl ? modoEl.value : 'hora';
