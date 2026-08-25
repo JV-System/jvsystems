@@ -1055,7 +1055,13 @@
     .form-tab { padding: 12px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 
     /* FORM CONTENT */
-    .form-content { padding: 12px !important; max-width: 100% !important; padding-bottom: 100px !important; }
+    /* padding-bottom se define una sola vez, mas abajo (160px) — antes habia
+       tres reglas distintas (100/140/130px) para este mismo breakpoint y,
+       por orden de cascada, siempre terminaba ganando la mas chica (130px)
+       sin importar que la barra de botones ocupara una o dos filas. Eso
+       tapaba la ultima seccion del formulario (Condicion del servicio) en
+       las pantallas donde la barra usa dos filas. */
+    .form-content { padding: 12px !important; max-width: 100% !important; }
     .form-section { padding: 14px; margin-bottom: 10px; }
     .section-title { font-size: 11px; }
 
@@ -1131,10 +1137,11 @@
   font-weight: 700;
 }
 
-/* espacio abajo para que no tape el contenido */
-.form-content {
-  padding-bottom: 160px !important;
-}
+/* El padding-bottom real para mobile se define una sola vez, mas abajo
+   en este mismo @media ("Padding inferior del formulario") — tener otra
+   regla acá era justamente lo que generaba el problema: con varias
+   reglas !important para lo mismo, terminaba ganando cualquiera menos
+   la pensada para la barra de dos filas. */
     /* Fila 1: Atrás + Siguiente */
     .mob-nav-row {
       display: flex;
@@ -1153,8 +1160,6 @@
     .mob-action-row .btn { flex: 1; justify-content: center; font-size: 12px; padding: 9px 6px; }
     /* ml-auto no funciona en wrap, lo manejamos con las rows */
     .form-actions .ml-auto { display: none; }
-    /* extra padding al contenido para no quedar tapado */
-    .form-content { padding-bottom: 140px !important; }
 
     /* HISTORIAL */
     .historial-content { padding: 12px; padding-bottom: 100px; overflow-y: auto; }
@@ -1461,9 +1466,12 @@
       padding: 7px 8px !important;
     }
 
-    /* Padding inferior del formulario */
+    /* Padding inferior del formulario — cubre el caso de la barra de
+       botones en dos filas (mob-nav-row + mob-action-row) mas el area
+       segura del celular, para que la ultima seccion (Condicion del
+       servicio: Garantia/Cortesia/A facturar) nunca quede tapada. */
     .form-content {
-      padding-bottom: 130px !important;
+      padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)) !important;
     }
   }
 
