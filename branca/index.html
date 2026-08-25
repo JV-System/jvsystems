@@ -5506,6 +5506,12 @@ function renderFactRow(o) {
     + (getCurrentUser()?.role === 'facturacion' ? (o.xubioEnvios && o.xubioEnvios.length ? '<button onclick="event.stopPropagation();abrirModalXubio('+o.id+')" style="flex:1;background:#059669;color:#fff;border:none;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">✅ Enviado a Xubio</button>' : '<button onclick="event.stopPropagation();abrirModalXubio('+o.id+')" style="flex:1;background:#1565D8;color:#fff;border:none;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚡ Enviar a Xubio</button>') : '')
     + (f.nroFactura ? '<button onclick="event.stopPropagation();enviarMailFactura('+o.id+')" style="flex:1;background:#fff;color:#1a56db;border:1px solid #d1d5db;border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;">✉ Enviar por mail</button>' : '')
     + '</div>'
+    + (function() {
+        var hist = (o.historialCambios || []).filter(function(h){ return (h.descripcion||'').indexOf('Facturación guardada') === 0; });
+        if (!hist.length) return '';
+        var last = hist[hist.length - 1];
+        return '<div style="padding:6px 16px;background:#f8fafc;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;">🕒 Último guardado: ' + esc(last.fecha) + ' por <b>' + esc(last.usuario) + '</b></div>';
+      })()
     + (o.xubioEnvios && o.xubioEnvios.length ? '<div style="padding:8px 16px 12px;background:#f0fdf4;border-top:1px solid #d1fae5;">' + o.xubioEnvios.map(function(e){ return '<div style="font-size:11px;color:#065f46;">✅ Enviado a Xubio el ' + new Date(e.fecha).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) + (e.nro ? ' · Comprobante N° ' + e.nro : '') + '</div>'; }).join('') + '</div>' : '');
   }
   row += '</div>';
@@ -5779,6 +5785,21 @@ function guardarFacturacion(oid, silencioso) {
   var cantInpMO = document.getElementById('fact-mo-cant-'+oid);
   var cantElMO = cantInpMO ? cantInpMO.querySelector('input') : null;
   var horasManual = (modoMO === 'hora' && cantElMO && cantElMO.value !== '') ? parseFloat(cantElMO.value) : null;
+  // Registrar quién guardó y cuándo — visible en el timeline de la orden y en
+  // la propia tarjeta de facturación (pedido explícito: poder rastrear quién
+  // tocó "Guardar" o cambió el estado, sobre todo para casos como el de la
+  // 050/069 donde alguien guardó sin darse cuenta).
+  (function() {
+    var cu = getCurrentUser();
+    if (!o.historialCambios) o.historialCambios = [];
+    o.historialCambios.push({
+      fecha: new Date().toLocaleDateString('es-AR') + ' ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit'}),
+      usuario: cu ? cu.nombre : 'Sistema',
+      rol: cu ? cu.role : '',
+      descripcion: 'Facturación guardada' + (silencioso ? ' (automático al cerrar)' : '') + ' — Estado: ' + (v.estadoPago === 'pagado' ? 'Cobrado' : 'Pendiente') + ', Total: $' + v.total,
+      detalles: []
+    });
+  })();
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
     descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
