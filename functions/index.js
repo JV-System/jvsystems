@@ -282,6 +282,21 @@ exports.xubioCrearComprobante = onRequest(
               rCrear = await doRequest({ hostname: urlCliente.hostname, path: urlCliente.pathname, method: "PUT", headers: hdrCliente }, bodyCliente);
             }
             console.log("Crear cliente status:", rCrear.status, "body:", JSON.stringify(rCrear.body));
+            if ((rCrear.status !== 200 && rCrear.status !== 201) && cuitLimpio) {
+              // Confirmado (25/08): mandar CUIT hace que Xubio devuelva 500 al crear
+              // un cliente nuevo, de forma reproducible, sin importar el formato del
+              // valor -- probablemente su validacion contra AFIP fallando de su lado.
+              // Reintentar sin CUIT para no dejar a nadie trabado; se puede completar
+              // el CUIT despues a mano en Xubio si hace falta.
+              console.log("Creacion con CUIT fallo, reintentando sin CUIT...");
+              const clienteSinCuit = Object.assign({}, nuevoCliente);
+              delete clienteSinCuit.cuit;
+              delete clienteSinCuit.CUIT;
+              const bodySinCuit = JSON.stringify(clienteSinCuit);
+              const hdrSinCuit = { "Content-Type": "application/json", "Authorization": "Bearer " + token, "Content-Length": Buffer.byteLength(bodySinCuit, "utf8") };
+              rCrear = await doRequest({ hostname: urlCliente.hostname, path: urlCliente.pathname, method: "POST", headers: hdrSinCuit }, bodySinCuit);
+              console.log("Reintento sin CUIT status:", rCrear.status, "body:", JSON.stringify(rCrear.body));
+            }
             if (rCrear.status !== 200 && rCrear.status !== 201) {
               res.status(500).json({
                 ok: false,
