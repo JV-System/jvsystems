@@ -5723,6 +5723,12 @@ function guardarFacturacion(oid, silencioso) {
   // vacios/en 0 por error al autoguardar antes de cerrar/cambiar de tarjeta.
   if (!document.getElementById('fact-mo-'+oid)) return;
   const v = getFactValues(oid);
+  // Autoguardado silencioso (al cerrar/cambiar de tarjeta): si la orden nunca
+  // tuvo facturacion cargada y no hay ningun monto real tipeado, no crear un
+  // registro de la nada solo por haber abierto la tarjeta para mirarla — antes
+  // esto generaba facturas fantasma en $0 con numero falso en cualquier orden
+  // que alguien abriera sin querer cargar nada.
+  if (silencioso && !o.facturacion && !v.mo && !v.rep && !v.gas) return;
   // Guardar modo y precios de mano de obra
   var modoEl = document.getElementById('fact-mo-modo-'+oid);
   var modoMO = modoEl ? modoEl.value : 'hora';
