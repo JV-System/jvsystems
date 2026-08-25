@@ -1054,6 +1054,12 @@
     .form-tabs::-webkit-scrollbar { display: none; }
     .form-tab { padding: 12px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 
+    /* LISTA DE ORDENES — nunca tenia margen para la barra inferior fija;
+       la ultima tarjeta quedaba tapada (mas notorio cuando se cierra el
+       banner de "Instalar Branca App", que ocupa espacio propio arriba
+       de la barra mientras esta visible). */
+    .order-list { padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); }
+
     /* FORM CONTENT */
     /* padding-bottom se define una sola vez, mas abajo (160px) — antes habia
        tres reglas distintas (100/140/130px) para este mismo breakpoint y,
