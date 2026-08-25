@@ -8421,8 +8421,8 @@ function mostrarPopupCrearCliente(nombre, cuit, onConfirm) {
   document.body.appendChild(pop);
 }
 
-async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
-  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳ Enviando...'; }
+async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, _esReintentoAuto) {
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = _esReintentoAuto ? '⏳ Reintentando...' : '⏳ Enviando...'; }
   try {
     const res  = await fetch(XUBIO_CF_BASE + '/xubioCrearComprobante', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
     const data = await res.json();
@@ -8467,8 +8467,16 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn) {
       saveData();
       renderFacturacion();
     } else if (data.clienteNoCreado) {
-      // La creacion automatica por API fallo (Xubio caido en ese endpoint) —
-      // fallback al instructivo manual para no dejar a nadie trabado.
+      // La creacion automatica por API a veces falla por un bache momentaneo
+      // de Xubio (confirmado: el mismo pedido, unos segundos despues, anda
+      // bien) — antes de pedirle a Ornela que lo cargue a mano, reintentar
+      // solo una vez automaticamente. Si tambien falla, ahi si mostrar el
+      // instructivo manual.
+      if (!_esReintentoAuto) {
+        if (statusEl) statusEl.innerHTML = '<div style="background:#fef3c7;color:#92400e;padding:12px;border-radius:8px;margin-bottom:12px;">⏳ Xubio tardó en crear el cliente, reintentando automáticamente...</div>';
+        setTimeout(function() { _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, true); }, 3000);
+        return;
+      }
       if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '⚡ Reintentar'; }
       var nombreNF2 = data.nombre || payload.empresa || '';
       var existing3 = document.getElementById('popup-crear-cliente'); if (existing3) existing3.remove();
