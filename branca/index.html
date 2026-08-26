@@ -3103,9 +3103,17 @@ function renderOrderList() {
   const cu = getCurrentUser();
 
   // Borrador al tope del sidebar — solo si tiene algún dato cargado
+  // Ojo: comparar SOLO por creadorId es fragil -- si en algun momento se
+  // renumeran los usuarios (paso de verdad: usuarios con id viejo tipo
+  // timestamp pasaron a id chico 1-9), el creadorId de ordenes viejas (o
+  // incluso recientes, si se crearon antes del cambio) deja de coincidir
+  // con cu.id y el borrador se vuelve invisible aunque sea del mismo
+  // tecnico -- exactamente el bug que reportó Emilio ("no encuentra la
+  // abierta, crea otra"). Se agrega el mismo resguardo por nombre que ya
+  // usa el filtro de la lista general (linea ~3137).
   const draft = ordenes.find(function(o) {
     if (!o.draft) return false;
-    if (o.creadorId && cu && o.creadorId !== cu.id) return false;
+    if (o.creadorId && cu && o.creadorId !== cu.id && o.creadorNombre !== cu.nombre) return false;
     return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
   });
   const draftHtml = (draft && cu && cu.role !== 'facturacion') ? `
