@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 8;
+const APP_BUILD = 9;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5289,9 +5289,14 @@ function renderFacturacion() {
   const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}); };
   const tab = function(key,label,count,col){
     const active = _factFiltro === key;
-    return '<button onclick="setFactFiltro(\''+key+'\')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all 0.15s;'
-      + (active ? 'background:'+col+';color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);' : 'background:#f1f5f9;color:#64748b;')
-      + '">' + label + (count !== null ? ' <span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 7px;font-size:11px;">'+count+'</span>' : '') + '</button>';
+    const shSuave = active ? '0 3px 10px rgba(0,0,0,.18)' : '0 1px 4px rgba(0,0,0,.07)';
+    const shHover = active ? '0 6px 16px rgba(0,0,0,.22)' : '0 4px 12px rgba(0,0,0,.12)';
+    return '<button onclick="setFactFiltro(\''+key+'\')" '
+      + 'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\''+shHover+'\';" '
+      + 'onmouseleave="this.style.transform=\'translateY(0)\';this.style.boxShadow=\''+shSuave+'\';" '
+      + 'style="display:flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:transform .15s,box-shadow .15s;box-shadow:'+shSuave+';'
+      + (active ? 'background:'+col+';color:#fff;' : 'background:#fff;color:#64748b;')
+      + '">' + label + (count !== null ? ' <span style="background:'+(active?'rgba(255,255,255,.25)':'#f1f5f9')+';border-radius:20px;padding:1px 7px;font-size:11px;">'+count+'</span>' : '') + '</button>';
   };
 
   mc.innerHTML = '<div style="overflow-y:auto;flex:1;height:100%;padding:16px 20px 40px;">'
@@ -5346,7 +5351,7 @@ function renderFacturacion() {
         + '<input type="date" value="'+esc(_factDesde)+'" onchange="setFactDesde(this.value)" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:#fff;">'
         + '<span style="font-size:11px;color:#9ca3af;font-weight:600;">HASTA</span>'
         + '<input type="date" value="'+esc(_factHasta)+'" onchange="setFactHasta(this.value)" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:#fff;">'
-        + ((_factDesde || _factHasta) ? '<button onclick="limpiarFactFechas()" style="padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:600;cursor:pointer;">✕ Limpiar</button>' : '')
+        + ((_factDesde || _factHasta || _factBusca || _factSort !== 'fecha-desc') ? '<button onclick="limpiarFactFiltros()" style="padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:600;cursor:pointer;">✕ Limpiar filtros</button>' : '')
         + '</div>';
     })()
 
@@ -5384,7 +5389,7 @@ function setFactFiltro(f) { if (_factOpenId != null) guardarFacturacion(_factOpe
 function setFactSort(s)   { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factSort = s; renderFacturacion(); }
 function setFactDesde(v)  { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factDesde = v; _factOpenId = null; renderFacturacion(); }
 function setFactHasta(v)  { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factHasta = v; _factOpenId = null; renderFacturacion(); }
-function limpiarFactFechas() { _factDesde = ''; _factHasta = ''; renderFacturacion(); }
+function limpiarFactFiltros() { _factBusca = ''; _factDesde = ''; _factHasta = ''; _factSort = 'fecha-desc'; renderFacturacion(); }
 function setFactBusca(v)  {
   if (_factOpenId != null) guardarFacturacion(_factOpenId, true);
   _factBusca = v;
