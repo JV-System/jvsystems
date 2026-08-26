@@ -7204,9 +7204,13 @@ document.addEventListener('change', function(e) {
 // y no el primero que encuentre en toda la colección compartida.
 function continuarBorrador() {
   const cu = getCurrentUser();
+  // Mismo resguardo que en renderOrderList() -- si comparamos solo por
+  // creadorId, un desajuste de IDs (ej: usuarios renumerados) hace que esto
+  // no encuentre nada y el clic en "Seguir editando" no haga nada, aunque el
+  // cartel sí se haya mostrado.
   const draft = ordenes.find(function(o) {
     if (!o.draft) return false;
-    if (o.creadorId && cu && o.creadorId !== cu.id) return false;
+    if (o.creadorId && cu && o.creadorId !== cu.id && o.creadorNombre !== cu.nombre) return false;
     return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
   });
   if (!draft) return;
