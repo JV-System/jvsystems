@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 6;
+const APP_BUILD = 7;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8334,12 +8334,20 @@ async function confirmarEnvioXubio(oid) {
     });
   };
   // Unificar todo en un solo ítem (MO + viáticos + repuestos)
-  const precioMO  = parseFloat(document.getElementById('xb-precio-mo')?.value)  || 0;
-  const precioGas = parseFloat(document.getElementById('xb-precio-gas')?.value) || 0;
+  // OJO: cada renglón es Cantidad × Precio, no solo Precio -- antes esto sumaba
+  // los precios sueltos sin multiplicar por la cantidad, asi que un repuesto con
+  // cantidad > 1 (ej: 15 unidades a $50) se mandaba a Xubio como si fuera 1 sola
+  // unidad, facturando de menos sin ningun aviso.
+  const cantMO    = parseFloat(document.getElementById('xb-cant-mo')?.value)  || 1;
+  const precioMO  = (parseFloat(document.getElementById('xb-precio-mo')?.value)  || 0) * cantMO;
+  const cantGas   = parseFloat(document.getElementById('xb-cant-gas')?.value) || 1;
+  const precioGas = (parseFloat(document.getElementById('xb-precio-gas')?.value) || 0) * cantGas;
   var totalRep = 0;
   var i = 0;
   while (document.getElementById('xb-precio-rep-' + i)) {
-    totalRep += parseFloat(document.getElementById('xb-precio-rep-' + i)?.value) || 0;
+    const pRep = parseFloat(document.getElementById('xb-precio-rep-' + i)?.value) || 0;
+    const cRep = parseFloat(document.getElementById('xb-cant-rep-' + i)?.value) || 1;
+    totalRep += pRep * cRep;
     i++;
   }
   const totalUnificado = precioMO + precioGas + totalRep;
