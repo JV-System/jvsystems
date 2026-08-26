@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 9;
+const APP_BUILD = 10;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5289,8 +5289,10 @@ function renderFacturacion() {
   const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:0}); };
   const tab = function(key,label,count,col){
     const active = _factFiltro === key;
-    const shSuave = active ? '0 3px 10px rgba(0,0,0,.18)' : '0 1px 4px rgba(0,0,0,.07)';
-    const shHover = active ? '0 6px 16px rgba(0,0,0,.22)' : '0 4px 12px rgba(0,0,0,.12)';
+    // Sombra bien visible en reposo (no solo al pasar el mouse -- en celular
+    // no hay hover, y es ahí donde más se usa esto).
+    const shSuave = active ? '0 6px 14px rgba(0,0,0,.28)' : '0 3px 10px rgba(0,0,0,.14)';
+    const shHover = active ? '0 9px 20px rgba(0,0,0,.32)' : '0 6px 16px rgba(0,0,0,.18)';
     return '<button onclick="setFactFiltro(\''+key+'\')" '
       + 'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\''+shHover+'\';" '
       + 'onmouseleave="this.style.transform=\'translateY(0)\';this.style.boxShadow=\''+shSuave+'\';" '
