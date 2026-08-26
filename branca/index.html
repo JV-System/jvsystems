@@ -2566,6 +2566,19 @@ let syncStatus = 'idle';
 let tecnicosDB = JSON.parse(localStorage.getItem('branca_tecnicos') || 'null') || [];
 let clientesDB = JSON.parse(localStorage.getItem('branca_clientes') || 'null') || [];
 let configUnlocked = false;
+// Purga forzada de una sola vez por dispositivo: descarta el cache local de
+// ordenes para que arranque de cero desde Firebase. Se usa cuando algo queda
+// "fantasma" trabado en el cache de un celular puntual (ej: un borrador ya
+// borrado en Firebase, pero que ese dispositivo seguia re-subiendo porque
+// nunca llegaba a sincronizar bien) y no alcanza con esperar a que sincronice
+// solo. Subir FORCE_RESYNC_VERSION obliga a todos los dispositivos a purgar
+// de nuevo la proxima vez que abran la app.
+const FORCE_RESYNC_VERSION = 1;
+if (localStorage.getItem('branca_resync_version') !== String(FORCE_RESYNC_VERSION)) {
+  localStorage.removeItem('branca_ordenes');
+  localStorage.removeItem('branca_ignore_ids');
+  localStorage.setItem('branca_resync_version', String(FORCE_RESYNC_VERSION));
+}
 let ordenes = JSON.parse(localStorage.getItem('branca_ordenes') || '[]');
 let ordenActual = null;
 let currentTab = 0;
