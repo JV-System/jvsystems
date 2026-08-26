@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 12;
+const APP_BUILD = 13;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5219,7 +5219,10 @@ function _getFactLista() {
   var todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
   var lista = todas.filter(function(o) {
     const f = o.facturacion || {};
-    if (_factFiltro === 'sin')     return !f.nroFactura;
+    // "Cobrado" manda siempre -- una orden marcada como pagada a mano (sin
+    // número de factura real, ej: sin enviar a Xubio) no debe seguir contando
+    // como "Sin facturar" solo porque le falta el número.
+    if (_factFiltro === 'sin')     return !f.nroFactura && f.estadoPago !== 'pagado';
     if (_factFiltro === 'pend')    return f.nroFactura && f.estadoPago !== 'pagado';
     if (_factFiltro === 'cobrado') return f.estadoPago === 'pagado';
     return true;
@@ -5423,12 +5426,14 @@ function renderFactRow(o) {
   const fmt = function(n){ return '$ ' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); };
   const isOpen = (_factOpenId === o.id);
 
-  const badgeSt = !f.nroFactura
-    ? 'background:#fef3c7;color:#92400e'
-    : f.estadoPago === 'pagado'
-      ? 'background:#d1fae5;color:#065f46'
+  // "Cobrado" manda siempre, aunque falte el número de factura (ej: marcada
+  // pagada a mano, sin pasar por Xubio) -- ver mismo criterio en _getFactLista().
+  const badgeSt = f.estadoPago === 'pagado'
+    ? 'background:#d1fae5;color:#065f46'
+    : !f.nroFactura
+      ? 'background:#fef3c7;color:#92400e'
       : 'background:#dbeafe;color:#1e40af';
-  const badgeTxt = !f.nroFactura ? 'Sin facturar' : f.estadoPago === 'pagado' ? '✓ Cobrado' : '⏳ Pendiente cobro';
+  const badgeTxt = f.estadoPago === 'pagado' ? '✓ Cobrado' : !f.nroFactura ? 'Sin facturar' : '⏳ Pendiente cobro';
 
   // ── Fila resumen ──
   var esCobrado = _factFiltro === 'cobrado';
