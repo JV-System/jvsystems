@@ -1,6 +1,10 @@
 // Service Worker desactivado — la app requiere conexión a internet
-// v3 — forzar actualización en todos los dispositivos
-const SW_VERSION = 3;
+// v4 — "siempre red" no alcanzaba: fetch(event.request) sin mas sigue sujeto
+// al cache HTTP normal del navegador (Cache-Control del servidor), asi que
+// un dispositivo podia seguir viendo una version vieja de la app aunque el
+// service worker "no cacheara nada" del lado de la Cache Storage API. Hace
+// falta "no-store" explicito para forzar red de verdad en cada pedido.
+const SW_VERSION = 4;
 
 self.addEventListener('install', function(event) {
   // Tomar control inmediatamente sin esperar a que se cierren las tabs
@@ -26,6 +30,6 @@ self.addEventListener('activate', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-  // Sin caché — siempre red
-  event.respondWith(fetch(event.request));
+  // Sin caché — siempre red, ignorando el cache HTTP del navegador
+  event.respondWith(fetch(event.request, { cache: 'no-store' }));
 });
