@@ -26,7 +26,7 @@ body{margin:0;background:var(--niebla);color:var(--tinta);
 .wrap{max-width:1200px;margin:0 auto;padding:18px 16px 70px}
 /* ---- portada ---- */
 .portada{position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:0;overflow:hidden;
+  align-items:center;justify-content:center;gap:0;overflow:auto;padding:26px 0;
   background:radial-gradient(120% 100% at 50% 25%,#6B58C0 0%,#4C3D93 48%,#2F2560 100%);
   transition:opacity .4s ease, visibility .4s}
 .portada.fuera{opacity:0;visibility:hidden}
@@ -51,12 +51,21 @@ body{margin:0;background:var(--niebla);color:var(--tinta);
 .portada-titulo{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:900;color:#fff;
   font-size:clamp(30px,8vw,52px);line-height:1;letter-spacing:-.015em}
 .portada-franja{width:112px;margin:18px auto 0}
-.portada-firma{position:absolute;bottom:62px;margin:0;font-size:11px;letter-spacing:.1em;
-  color:rgba(255,255,255,.55);text-align:center}
-.portada-firma b{color:var(--oro-cl);font-weight:600;letter-spacing:.02em}
+.portada-firma{margin:26px 0 0;font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);text-align:center;line-height:2}
+.portada-firma b{display:block;font-family:"Fraunces",Georgia,serif;font-size:17px;font-weight:600;
+  letter-spacing:.01em;text-transform:none;color:#fff;margin-top:2px}
+.portada-firma i{display:block;font-style:normal;font-family:"IBM Plex Mono",monospace;
+  font-size:10px;letter-spacing:.26em;color:var(--oro-cl)}
+.portada-btn{margin-top:26px;padding:13px 40px;border:0;border-radius:99px;cursor:pointer;
+  font-family:"Outfit",sans-serif;font-size:15px;font-weight:600;letter-spacing:.04em;
+  color:#3B2F76;background:linear-gradient(180deg,#F3E3B4,var(--oro-cl));
+  box-shadow:0 10px 26px -12px rgba(0,0,0,.7);transition:.15s}
+.portada-btn:hover{filter:brightness(1.05)}
+.portada-btn:active{transform:scale(.97)}
+.portada-btn:focus-visible{outline:2px solid #fff;outline-offset:3px}
 .portada-pie{position:absolute;bottom:34px;margin:0;font-size:12px;letter-spacing:.16em;
   text-transform:uppercase;color:rgba(255,255,255,.55);animation:latir 2.2s ease-in-out infinite}
-@keyframes latir{0%,100%{opacity:.35}50%{opacity:.85}}
 @media (prefers-reduced-motion:reduce){
   .rayos,.portada-pie{animation:none}
   .portada-centro{animation:none}
@@ -274,6 +283,7 @@ h2.sec{font-family:"Fraunces",serif;font-size:16px;margin:24px 0 10px;font-weigh
 .marcador{padding:16px 16px 4px}
 .cifra.ok b{color:var(--verde)}
 .pill.grande{padding:9px 16px;font-size:13px;min-width:132px}
+.pill.quieto{cursor:default;opacity:.9}
 tbody tr.dentro{background:#F1FAF3}
 tbody tr.dentro:hover{background:#E8F6EC}
 tbody tr.dentro .nombre{color:var(--verde)}
@@ -418,9 +428,9 @@ form.nueva .btn{padding:7px 13px;font-size:13.5px}
     <p class="portada-eyebrow">Fiesta patronal</p>
     <h2 class="portada-titulo">Virgen de Urkupiña</h2>
     <span class="franja portada-franja"></span>
+    <p class="portada-firma">Desarrollado por<b>Juan Villanueva</b><i>JV Systems</i></p>
+    <button class="portada-btn" id="portada-btn" type="button">Continuar</button>
   </div>
-  <p class="portada-firma">Desarrollado por <b>Juan Villanueva</b> · JV Systems</p>
-  <p class="portada-pie">Tocá para continuar</p>
 </div>
 
 <div class="wrap">
@@ -834,10 +844,25 @@ function vistaLista(p, lista){
   sel.onchange = e => { estado = e.target.value; refrescar(); };
   barra.append(sel);
 
-  const bAdd = el("button","btn btn-oro","Agregar devoto"); bAdd.type="button";
-  bAdd.onclick = () => { altaAbierta = !altaAbierta; pintar(); if(altaAbierta) $("#a-nombre").focus(); };
-  barra.append(bAdd);
+  const est = el("span","llave" + (editora ? " abierta" : ""), editora ? "Mary" : "Solo lectura");
+  barra.append(est);
+  if(editora){
+    const bAdd = el("button","btn btn-oro","Agregar devoto"); bAdd.type="button";
+    bAdd.onclick = () => { altaAbierta = !altaAbierta; pintar(); if(altaAbierta) $("#a-nombre").focus(); };
+    const bOut = el("button","btn","Salir"); bOut.type="button";
+    bOut.onclick = () => { editora = false; altaAbierta = false; pintar(); };
+    barra.append(bAdd, bOut);
+  } else {
+    const bIn = el("button","btn btn-oro","Editar"); bIn.type="button";
+    bIn.onclick = () => {
+      const f2 = p.querySelector("#acceso");
+      f2.classList.toggle("abierta");
+      if(f2.classList.contains("abierta")) f2.querySelector("#u").focus();
+    };
+    barra.append(bIn);
+  }
   p.append(barra);
+  if(!editora) panelAcceso(p, "mary", "macmony", () => { editora = true; pintar(); });
 
   // alta
   const f = el("form","alta"+(altaAbierta?" abierta":""));
@@ -899,6 +924,7 @@ function vistaLista(p, lista){
     const campoNum = (d, campo, etiqueta, alto) => {
       const i = document.createElement("input");
       i.type="number"; i.min="0"; i.className="num"; i.value = d[campo]||0;
+      i.readOnly = !editora; i.tabIndex = editora ? 0 : -1;
       i.setAttribute("aria-label", etiqueta+" de "+d.nombre);
       if(alto && +d[campo]>0) i.classList.add("debe-alto");
       i.onchange = () => {
@@ -910,9 +936,10 @@ function vistaLista(p, lista){
     };
     const botonPago = (d, alRefrescar) => {
       const b = el("button"); b.type="button";
-      const marcar = () => { b.className = "pill grande "+(d.pagado==="SI"?"si":"no");
+      const marcar = () => { b.className = "pill grande "+(d.pagado==="SI"?"si":"no") + (editora?"":" quieto");
         b.textContent = d.pagado==="SI"?"Pagado":"Pendiente"; };
       marcar();
+      if(!editora){ b.disabled = true; return b; }
       b.onclick = () => { d.pagado = d.pagado==="SI"?"NO":"SI"; marcar(); pintarTotales(); guardarDev(d);
         if(estado!=="todos" && alRefrescar) refrescar(); };
       return b;
@@ -935,7 +962,7 @@ function vistaLista(p, lista){
 
       const td1 = el("td","celda-nombre");
       const iN = document.createElement("input");
-      iN.className="txt"; iN.value = d.nombre; iN.readOnly = !abierto;
+      iN.className="txt"; iN.value = d.nombre; iN.readOnly = true;
       iN.setAttribute("aria-label","Nombre");
       iN.onchange = () => { d.nombre = iN.value.trim().toUpperCase() || d.nombre; guardarDev(d); ordenar(); pintar(); };
       td1.append(iN);
@@ -960,16 +987,25 @@ function vistaLista(p, lista){
           const c = el("label","campo-f ancho");
           c.append(el("span","lab-f","Devoción"));
           const iT = document.createElement("input");
-          iT.className = "dato-f"; iT.value = d.detalle || "";
+          iT.className = "dato-f"; iT.value = d.detalle || ""; iT.readOnly = !editora;
           iT.onchange = () => { d.detalle = iT.value.trim(); guardarDev(d); };
           c.append(iT); rej.append(c);
         }
         const cA = el("label","campo-f");
         const iA = document.createElement("input");
-        iA.type="number"; iA.min="1"; iA.className="num"; iA.value = adultos(d);
+        iA.type="number"; iA.min="1"; iA.className="num"; iA.value = adultos(d); iA.readOnly = !editora;
         iA.setAttribute("aria-label","Adultos de "+d.nombre);
         iA.onchange = () => { d.adultos = Math.max(1, +iA.value||1); iA.value = d.adultos; pintarTotales(); guardarDev(d); };
         cA.append(el("span","lab-f","Adultos"), iA);
+        if(editora){
+          const cN = el("label","campo-f ancho");
+          const iNom = document.createElement("input");
+          iNom.className = "dato-f"; iNom.value = d.nombre;
+          iNom.onchange = () => { d.nombre = iNom.value.trim().toUpperCase() || d.nombre;
+            guardarDev(d); ordenar(); pintar(); };
+          cN.append(el("span","lab-f","Nombre y apellido"), iNom);
+          rej.append(cN);
+        }
         const cM = el("label","campo-f");
         cM.append(el("span","lab-f","Menores"), campoNum(d,"menores","Menores",false));
         const cD = el("label","campo-f");
@@ -1432,6 +1468,7 @@ function pintar(){
 (() => {
   const tapa = document.getElementById("portada");
   if(!tapa) return;
+  const boton = document.getElementById("portada-btn");
   let ido = false;
   const salir = () => {
     if(ido) return;
@@ -1439,8 +1476,7 @@ function pintar(){
     tapa.classList.add("fuera");
     setTimeout(() => tapa.remove(), 520);
   };
-  tapa.addEventListener("click", salir);
-  setTimeout(salir, 1900);
+  if(boton){ boton.addEventListener("click", salir); boton.focus(); }
 })();
 </script>
 </body>
