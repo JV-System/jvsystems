@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 1;
+const APP_BUILD = 2;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2806,10 +2806,22 @@ async function loadFromCloud() {
 // ==================== SAVE CON SYNC ====================
 function saveData() {
   if (ordenActual) {
-    ordenActual.updatedAt = Date.now();
-    const idx = ordenes.findIndex(o => o.id === ordenActual.id);
-    if (idx >= 0) ordenes[idx] = ordenActual;
-    else ordenes.unshift(ordenActual);
+    // Si esta orden fue borrada explicitamente (ej: un borrador eliminado
+    // desde la lista) pero ordenActual todavia la referenciaba -- porque
+    // quedo abierta en el formulario en ese momento -- NO hay que resucitarla
+    // solo porque se dispara un autoguardado despues (cambiar de pestaña,
+    // la app pasa a segundo plano, etc). Antes esto la volvia a crear desde
+    // cero con "ordenes.unshift(ordenActual)" y la resincronizaba a Firebase,
+    // que era justo lo que hacia que un borrador ya borrado volviera a
+    // aparecer solo, sin que nadie lo tocara de nuevo.
+    if (_deletedIds.has(String(ordenActual.id))) {
+      ordenActual = null;
+    } else {
+      ordenActual.updatedAt = Date.now();
+      const idx = ordenes.findIndex(o => o.id === ordenActual.id);
+      if (idx >= 0) ordenes[idx] = ordenActual;
+      else ordenes.unshift(ordenActual);
+    }
   }
   localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
   _syncPush();
