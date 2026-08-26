@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 10;
+const APP_BUILD = 11;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5475,6 +5475,12 @@ function renderFactRow(o) {
       + '<div style="display:flex;flex-wrap:wrap;gap:10px;">'
       + fld('Fecha', '<input id="fact-fecha-'+o.id+'" type="date" value="'+fechaVal+'" onclick="event.stopPropagation()" style="'+inp+'">')
       + fld('Condición de pago', '<select id="fact-cond-'+o.id+'" onclick="event.stopPropagation()" style="'+inp+'">'+['Contado','30 días','60 días','Cuenta corriente'].map(function(c){ return '<option'+(f.condPago===c?' selected':'')+'>'+c+'</option>'; }).join('')+'</select>')
+      // Para facturas "en negro" (sin IVA) -- por defecto siempre Con IVA,
+      // igual que el comportamiento de siempre.
+      + fld('IVA', '<select id="fact-iva-'+o.id+'" onclick="event.stopPropagation()" onchange="calcFactura(this,\''+o.id+'\')" style="'+inp+'">'
+          + '<option value="con"'+(f.conIva!==false?' selected':'')+'>Con IVA (21%)</option>'
+          + '<option value="sin"'+(f.conIva===false?' selected':'')+'>Sin IVA</option>'
+        + '</select>')
       + fld('Estado', (o.xubioEnvios && o.xubioEnvios.length)
           // Una vez que se confirmó el envío real a Xubio, el estado queda fijo en
           // "Cobrado" — ya no se puede tocar a mano. Antes se podía revertir el
@@ -5496,6 +5502,7 @@ function renderFactRow(o) {
         var inpS = 'border:none;border-bottom:1px solid #d1d5db;padding:4px 6px;font-size:12px;text-align:right;background:transparent;font-family:inherit;';
         var th = function(t,r){ return '<th style="text-align:'+(r?'right':'left')+';padding:8px 10px;color:#6b7280;font-weight:700;border-bottom:2px solid #e5e7eb;">'+t+'</th>'; };
         var td = function(t,r,b){ return '<td style="padding:8px 10px;'+(r?'text-align:right;':'')+(b?'font-weight:700;':'')+'color:#111;">'+t+'</td>'; };
+        var ivaLabel = (f.conIva !== false) ? '21%' : '0%';
 
         // Mano de obra — con selector: $/hs por visita o total fijo
         var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
@@ -5526,7 +5533,7 @@ function renderFactRow(o) {
           + '<td style="padding:6px 8px;font-size:11px;color:#555;">' + esc(moDesc) + '</td>'
           + '<td id="fact-mo-cant-'+o.id+'" data-hs="'+totalHs+'" style="padding:4px 10px;text-align:right;white-space:nowrap;">'+(modoMO==='hora'?'<input type="number" min="0" step="0.5" value="'+totalHs+'" onclick="event.stopPropagation()" oninput="(function(el){var td=el.closest(\'td\')||el.parentElement;td.dataset.hs=el.value;recalcMOtotal(\''+o.id+'\');})(this)" style="'+inpS+'width:60px;text-align:center;font-weight:600;color:#1565D8;"> hs':'—')+'</td>'
           + '<td style="padding:4px 10px;text-align:right;"><input id="fact-mo-unit-'+o.id+'" type="number" placeholder="'+unitPlaceholder+'" value="'+unitValMO+'" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" oninput="recalcMOtotal('+o.id+')" style="'+inpS+'width:80px;"></td>'
-          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#555;">'+ivaLabel+'</td>'
           + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-mo-total-'+o.id+'">$ '+moInitTotal.toLocaleString('es-AR')+'</td>'
           + '</tr>';
         // Campo oculto para compatibilidad con recalcFact
@@ -5545,7 +5552,7 @@ function renderFactRow(o) {
               + '<td style="padding:8px 6px;color:#555;font-size:11px;">' + esc(r.desc) + '</td>'
               + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-c-'+o.id+'-'+i+'" type="number" min="1" value="'+(r.cant||1)+'" onclick="event.stopPropagation()" oninput="(function(el){updateRepuesto('+i+',\'cant\',el.value);var p=document.getElementById(\'fact-rep-p-'+o.id+'-'+i+'\');if(p){p.dataset.cant=el.value;recalcRep('+o.id+');};})(this)" style="'+inpS+'width:50px;text-align:center;"></td>'
               + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-p-'+o.id+'-'+i+'" type="number" placeholder="precio" value="'+precioGuardado+'" data-cant="'+(r.cant||1)+'" onclick="event.stopPropagation()" oninput="recalcRep('+o.id+')" style="'+inpS+'width:80px;"></td>'
-              + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+              + '<td style="padding:8px 10px;text-align:right;color:#555;">'+ivaLabel+'</td>'
               + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-rep-t-'+o.id+'-'+i+'">$ '+totalRep.toLocaleString('es-AR')+'</td>'
               + '</tr>';
           });
@@ -5554,7 +5561,7 @@ function renderFactRow(o) {
             + td('Repuestos') + '<td style="padding:8px 6px;color:#aaa;font-size:11px;font-style:italic;">Sin repuestos cargados</td>'
             + '<td style="padding:8px 10px;text-align:right;">—</td>'
             + '<td style="padding:4px 10px;text-align:right;"><input id="fact-rep-'+o.id+'" type="number" placeholder="0" value="'+(f.repuestosCosto||0)+'" onclick="event.stopPropagation()" oninput="recalcFact('+o.id+')" style="'+inpS+'width:80px;"></td>'
-            + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+            + '<td style="padding:8px 10px;text-align:right;color:#555;">'+ivaLabel+'</td>'
             + '<td style="padding:8px 10px;text-align:right;font-weight:700;">$ '+(f.repuestosCosto||0).toLocaleString('es-AR')+'</td>'
             + '</tr>';
         }
@@ -5568,7 +5575,7 @@ function renderFactRow(o) {
           + td('Viáticos') + '<td style="padding:8px 6px;"></td>'
           + '<td style="padding:4px 6px;text-align:right;"><input id="fact-gastos-cant-'+o.id+'" type="number" min="1" value="'+viatCant+'" onclick="event.stopPropagation()" oninput="recalcGastos('+o.id+')" style="'+inpS+'width:45px;text-align:center;"></td>'
           + '<td style="padding:4px 10px;text-align:right;"><input id="fact-gastos-ph-'+o.id+'" type="number" placeholder="0" value="'+viatPH+'" onclick="event.stopPropagation()" oninput="recalcGastos('+o.id+')" style="'+inpS+'width:80px;"></td>'
-          + '<td style="padding:8px 10px;text-align:right;color:#555;">21%</td>'
+          + '<td style="padding:8px 10px;text-align:right;color:#555;">'+ivaLabel+'</td>'
           + '<td style="padding:8px 10px;text-align:right;font-weight:700;" id="fact-gastos-total-'+o.id+'">$ '+viaticos.toLocaleString('es-AR')+'</td>'
           + '</tr>';
         viatRow += '<input type="hidden" id="fact-gastos-'+o.id+'" value="'+viaticos+'">';
@@ -5813,9 +5820,11 @@ function getFactValues(oid) {
   const gas  = g('fact-gastos');
   const desc = g('fact-desc');
   const sub  = mo + rep + gas - desc;
-  const iva  = Math.round(sub * 0.21 * 100) / 100;
+  const ivaSel = document.getElementById('fact-iva-'+oid);
+  const conIva = !ivaSel || ivaSel.value !== 'sin'; // por defecto Con IVA (comportamiento de siempre)
+  const iva  = conIva ? Math.round(sub * 0.21 * 100) / 100 : 0;
   const total = Math.round((sub + iva) * 100) / 100;
-  return { mo, rep, gas, desc, sub, iva, total,
+  return { mo, rep, gas, desc, sub, iva, total, conIva,
     nroFactura: gs('fact-nro'), condPago: gs('fact-cond'), fechaFactura: gs('fact-fecha'), estadoPago: gs('fact-estado') };
 }
 
@@ -5826,8 +5835,9 @@ function renderFactTotalesHTML(o, oid) {
   } else {
     const f = o.facturacion || {};
     const sub = (f.manoDeObra||0) + (f.repuestosCosto||0) + (f.gastos||0) - (f.descuento||0);
-    const iva = Math.round(sub * 0.21 * 100) / 100;
-    v = { mo: f.manoDeObra||0, rep: f.repuestosCosto||0, gas: f.gastos||0, desc: f.descuento||0, sub, iva, total: Math.round((sub+iva)*100)/100 };
+    const conIva = f.conIva !== false;
+    const iva = conIva ? Math.round(sub * 0.21 * 100) / 100 : 0;
+    v = { mo: f.manoDeObra||0, rep: f.repuestosCosto||0, gas: f.gastos||0, desc: f.descuento||0, sub, iva, conIva, total: Math.round((sub+iva)*100)/100 };
   }
   const fmt = function(n){ return '$ ' + n.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); };
   return '<div class="ft-row"><span>Mano de obra</span><span>' + fmt(v.mo) + '</span></div>'
@@ -5835,7 +5845,7 @@ function renderFactTotalesHTML(o, oid) {
     + (v.gas ? '<div class="ft-row"><span>Gastos varios</span><span>' + fmt(v.gas) + '</span></div>' : '')
     + (v.desc ? '<div class="ft-row"><span>Descuento</span><span>-' + fmt(v.desc) + '</span></div>' : '')
     + '<div class="ft-row iva"><span>Subtotal neto</span><span>' + fmt(v.sub) + '</span></div>'
-    + '<div class="ft-row iva"><span>IVA 21%</span><span>' + fmt(v.iva) + '</span></div>'
+    + '<div class="ft-row iva"><span>' + (v.conIva ? 'IVA 21%' : 'IVA (sin cargar)') + '</span><span>' + fmt(v.iva) + '</span></div>'
     + '<div class="ft-row total"><span>TOTAL</span><span>' + fmt(v.total) + '</span></div>';
 }
 
@@ -5911,7 +5921,7 @@ function guardarFacturacion(oid, silencioso) {
     });
   })();
   o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
-    descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total,
+    descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total, conIva: v.conIva,
     condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
     precioHora: precioHora, precioHoraUnit: precioHoraUnit, preciosHora: preciosHora, totalesMO: totalesMO, modoMO: modoMO,
     horasManual: horasManual, preciosRepuestos: preciosRep, gastosCant: gastosCant };
@@ -5977,7 +5987,7 @@ function generarFacturaPDF(oid) {
     // Totales
     + '<div style="background:#f8f9fa;border-radius:8px;padding:14px 16px;">'
     + '<div class="fact-row"><span>Subtotal neto<\/span><span>' + fmt(f.subtotal||0) + '<\/span><\/div>'
-    + '<div class="fact-row" style="color:#888;font-size:12px;"><span>IVA 21%<\/span><span>' + fmt(f.iva||0) + '<\/span><\/div>'
+    + '<div class="fact-row" style="color:#888;font-size:12px;"><span>' + (f.conIva!==false?'IVA 21%':'IVA (sin cargar)') + '<\/span><span>' + fmt(f.iva||0) + '<\/span><\/div>'
     + '<div class="fact-total-row"><span>TOTAL<\/span><span>' + fmt(f.total||0) + '<\/span><\/div>'
     + '<div style="font-size:12px;color:#888;margin-top:8px;">Condición: ' + esc(f.condPago||'Contado') + ' · Estado: ' + (f.estadoPago==='pagado'?'<span style="color:#2d7a31;font-weight:700;">Pagado ✓<\/span>':'<span style="color:#8a6000;">Pendiente de cobro<\/span>') + '<\/div>'
     + '<\/div>'
@@ -6012,7 +6022,7 @@ function enviarMailFactura(oid) {
     + (f.repuestosCosto ? '  Repuestos:     ' + fmt(f.repuestosCosto) + '\n' : '')
     + (f.gastos ? '  Gastos:        ' + fmt(f.gastos) + '\n' : '')
     + (f.descuento ? '  Descuento:    -' + fmt(f.descuento) + '\n' : '')
-    + '  IVA 21%:       ' + fmt(f.iva||0) + '\n'
+    + '  ' + (f.conIva!==false ? 'IVA 21%:       ' : 'IVA (sin cargar):') + ' ' + fmt(f.iva||0) + '\n'
     + '  ─────────────────────────────\n'
     + '  TOTAL:         ' + fmt(f.total||0) + '\n\n'
     + '  Condición de pago: ' + (f.condPago||'Contado') + '\n\n'
@@ -8476,7 +8486,11 @@ async function confirmarEnvioXubio(oid) {
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        // Respetar el selector "Con IVA / Sin IVA" -- antes esto recalculaba
+        // siempre al 21% acá mismo al confirmar el envío, pisando la elección
+        // hecha en la tarjeta de facturación.
+        var conIvaXb = o.facturacion.conIva !== false;
+        o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
@@ -8576,7 +8590,11 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, _esReinte
         if (!isNaN(gasV) && gasV >= 0) o.facturacion.gastos = gasV;
         var subtotal = (o.facturacion.manoDeObra||0) + (o.facturacion.repuestosCosto||0) + (o.facturacion.gastos||0) - (o.facturacion.descuento||0);
         o.facturacion.subtotal = subtotal;
-        o.facturacion.iva = Math.round(subtotal * 0.21 * 100) / 100;
+        // Respetar el selector "Con IVA / Sin IVA" -- antes esto recalculaba
+        // siempre al 21% acá mismo al confirmar el envío, pisando la elección
+        // hecha en la tarjeta de facturación.
+        var conIvaXb = o.facturacion.conIva !== false;
+        o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
       o.updatedAt = Date.now();
