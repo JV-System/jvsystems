@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 7;
+const APP_BUILD = 8;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5188,6 +5188,24 @@ var _factOpenId = null; // id de la carta actualmente abierta
 var _factFiltro = 'todos';
 var _factBusca  = '';
 var _factSort   = 'fecha-desc'; // 'fecha-desc' | 'fecha-asc' | 'orden-desc' | 'orden-asc'
+var _factDesde  = '';
+var _factHasta  = '';
+var _factGruposColapsados = new Set();
+
+// Fecha de referencia de una orden para agrupar/ordenar/filtrar en Facturación:
+// la de la factura si ya tiene una cargada, si no la de la orden en sí (para
+// que las "Sin facturar" y "Pendiente" también se puedan agrupar por fecha).
+function _factFechaOrden(o) {
+  const f = o.facturacion || {};
+  return f.fechaFactura || o.fecha || '';
+}
+
+const MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function fmtFechaLarga(f) {
+  if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return f || 'Sin fecha';
+  const [y,m,d] = f.split('-');
+  return parseInt(d) + ' de ' + MESES_LARGO[parseInt(m)-1] + ' de ' + y;
+}
 
 function _getFactLista() {
   var todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
@@ -5202,25 +5220,47 @@ function _getFactLista() {
     const q = _factBusca.toLowerCase();
     lista = lista.filter(function(o){ return (o.empresa||'').toLowerCase().includes(q) || (o.numero||'').toLowerCase().includes(q) || ((o.facturacion||{}).nroFactura||'').toLowerCase().includes(q); });
   }
+  if (_factDesde) lista = lista.filter(function(o){ return _factFechaOrden(o) >= _factDesde; });
+  if (_factHasta) lista = lista.filter(function(o){ return _factFechaOrden(o) <= _factHasta; });
+
+  const parseNro = function(s){ var m=(s||'').match(/(\d+)$/); return m?parseInt(m[1]):0; };
   lista.sort(function(a,b){
-    const fa = a.facturacion||{}, fb = b.facturacion||{};
-    if (_factFiltro === 'cobrado') {
-      const parseF = function(s){ if(!s) return 0; var p=s.split('/'); return p.length===3?new Date(p[2],p[1]-1,p[0]).getTime():new Date(s).getTime()||0; };
-      const parseNro = function(s){ var m=(s||'').match(/(\d+)$/); return m?parseInt(m[1]):0; };
-      if (_factSort === 'fecha-asc') {
-        var d = parseF(fa.fechaFactura) - parseF(fb.fechaFactura);
-        return d !== 0 ? d : parseNro(fa.nroFactura) - parseNro(fb.nroFactura);
-      }
-      if (_factSort === 'orden-desc') return (parseInt(b.id)||0) - (parseInt(a.id)||0);
-      if (_factSort === 'orden-asc')  return (parseInt(a.id)||0) - (parseInt(b.id)||0);
-      // default: fecha-desc
-      var d = parseF(fb.fechaFactura) - parseF(fa.fechaFactura);
-      return d !== 0 ? d : parseNro(fb.nroFactura) - parseNro(fa.nroFactura);
+    if (_factSort === 'orden-desc') return (parseInt(b.id)||0) - (parseInt(a.id)||0);
+    if (_factSort === 'orden-asc')  return (parseInt(a.id)||0) - (parseInt(b.id)||0);
+    // Las fechas vienen en formato ISO (YYYY-MM-DD) -- comparar como texto ya
+    // da el orden cronológico correcto, sin necesidad de parsear a Date.
+    const da = _factFechaOrden(a), db = _factFechaOrden(b);
+    const cmp = da < db ? -1 : da > db ? 1 : 0;
+    if (_factSort === 'fecha-asc') {
+      return cmp !== 0 ? cmp : parseNro((a.facturacion||{}).nroFactura) - parseNro((b.facturacion||{}).nroFactura);
     }
-    const rank = function(o){ const f=o.facturacion||{}; return !f.nroFactura?0:f.estadoPago==='pagado'?2:1; };
-    return rank(a)-rank(b);
+    // default: fecha-desc
+    return cmp !== 0 ? -cmp : parseNro((b.facturacion||{}).nroFactura) - parseNro((a.facturacion||{}).nroFactura);
   });
   return lista;
+}
+
+// Agrupa una lista ya ordenada por fecha en bloques consecutivos del mismo
+// día -- como la lista viene ordenada, alcanza con ir juntando mientras la
+// fecha no cambie.
+function _agruparPorFecha(lista) {
+  var grupos = [];
+  var actual = null;
+  lista.forEach(function(o) {
+    var fecha = _factFechaOrden(o) || '(sin fecha)';
+    if (!actual || actual.fecha !== fecha) {
+      actual = { fecha: fecha, items: [] };
+      grupos.push(actual);
+    }
+    actual.items.push(o);
+  });
+  return grupos;
+}
+
+function toggleFactGrupo(fecha) {
+  if (_factGruposColapsados.has(fecha)) _factGruposColapsados.delete(fecha);
+  else _factGruposColapsados.add(fecha);
+  renderFacturacion();
 }
 
 function renderFacturacion() {
@@ -5286,8 +5326,8 @@ function renderFacturacion() {
     + tab('cobrado', '✓ Cobrado',      cntCobrado,    '#10b981')
     + '</div>'
 
-    // ── Ordenar (solo en cobrado) ──
-    + (_factFiltro === 'cobrado' ? (function(){
+    // ── Ordenar + rango de fechas (en todas las pestañas) ──
+    + (function(){
       var ops = [
         { k:'fecha-desc', l:'Fecha ↓' },
         { k:'fecha-asc',  l:'Fecha ↑' },
@@ -5300,8 +5340,15 @@ function renderFacturacion() {
             var act = _factSort === op.k;
             return '<button onclick="setFactSort(\''+op.k+'\')" style="padding:5px 10px;border-radius:6px;border:1px solid '+(act?'#1565D8':'#e5e7eb')+';background:'+(act?'#1565D8':'#fff')+';color:'+(act?'#fff':'#6b7280')+';font-size:12px;font-weight:'+(act?'700':'500')+';cursor:pointer;">'+op.l+'</button>';
           }).join('')
+        + '</div>'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">'
+        + '<span style="font-size:11px;color:#9ca3af;font-weight:600;">DESDE</span>'
+        + '<input type="date" value="'+esc(_factDesde)+'" onchange="setFactDesde(this.value)" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:#fff;">'
+        + '<span style="font-size:11px;color:#9ca3af;font-weight:600;">HASTA</span>'
+        + '<input type="date" value="'+esc(_factHasta)+'" onchange="setFactHasta(this.value)" style="padding:6px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;background:#fff;">'
+        + ((_factDesde || _factHasta) ? '<button onclick="limpiarFactFechas()" style="padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;color:#6b7280;font-size:12px;font-weight:600;cursor:pointer;">✕ Limpiar</button>' : '')
         + '</div>';
-    })() : '')
+    })()
 
     // ── Buscador ──
     + '<div style="position:relative;margin-bottom:12px;">'
@@ -5312,13 +5359,22 @@ function renderFacturacion() {
     + '</div>'
     + '</div>'
 
-    // ── Lista ──
+    // ── Lista, agrupada por fecha ──
     + '<div id="fact-lista-container">'
     + (lista.length === 0
-      ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin resultados</h3><p>Probá cambiando el filtro o la búsqueda</p></div>'
-      : '<div style="background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">'
-        + lista.map(renderFactRow).join('')
-        + '</div>')
+      ? '<div class="empty-state"><div class="icon">💰</div><h3>Sin resultados</h3><p>Probá cambiando el filtro, la búsqueda o el rango de fechas</p></div>'
+      : _agruparPorFecha(lista).map(function(g){
+          var colapsado = _factGruposColapsados.has(g.fecha);
+          return '<div style="background:white;border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:10px;">'
+            + '<div onclick="toggleFactGrupo(\''+g.fecha+'\')" style="display:flex;align-items:center;gap:8px;padding:11px 16px;background:#f8fafc;cursor:pointer;user-select:none;'+(colapsado?'':'border-bottom:1px solid #e5e7eb;')+'">'
+              + '<span style="font-size:13px;">📅</span>'
+              + '<span style="font-size:13px;font-weight:700;color:#334155;flex:1;">'+fmtFechaLarga(g.fecha)+'</span>'
+              + '<span style="background:#e2e8f0;color:#475569;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700;">'+g.items.length+'</span>'
+              + '<span style="font-size:10px;color:#94a3b8;display:inline-block;transition:transform .15s;transform:rotate('+(colapsado?'-90deg':'0deg')+');">▼</span>'
+            + '</div>'
+            + (colapsado ? '' : g.items.map(renderFactRow).join(''))
+            + '</div>';
+        }).join(''))
     + '</div>'
 
     + '</div></div>';
@@ -5326,6 +5382,9 @@ function renderFacturacion() {
 
 function setFactFiltro(f) { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factFiltro = f; _factOpenId = null; renderFacturacion(); }
 function setFactSort(s)   { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factSort = s; renderFacturacion(); }
+function setFactDesde(v)  { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factDesde = v; _factOpenId = null; renderFacturacion(); }
+function setFactHasta(v)  { if (_factOpenId != null) guardarFacturacion(_factOpenId, true); _factHasta = v; _factOpenId = null; renderFacturacion(); }
+function limpiarFactFechas() { _factDesde = ''; _factHasta = ''; renderFacturacion(); }
 function setFactBusca(v)  {
   if (_factOpenId != null) guardarFacturacion(_factOpenId, true);
   _factBusca = v;
