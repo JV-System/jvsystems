@@ -2565,7 +2565,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 11;
+const APP_BUILD = 12;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2739,8 +2739,16 @@ async function loadFromCloud() {
           // no se disparó a tiempo. Se sigue reintentando más abajo hasta que
           // Firebase realmente la confirme.
           if (noConfirmadas[_ordenKey(local)]) return local;
-          // Si no, y hay versión local más nueva (modificada en los últimos 30s), preferirla
-          if (local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt && (Date.now() - local.updatedAt) < 30000) return local;
+          // Si no, y hay versión local más nueva que la remota, preferirla — SIN
+          // límite de 30s. Confirmado (26/08): con wifi inestable, un guardado
+          // podía tardar más de 30s en confirmarse contra Firebase; si en ese
+          // medio se cerraba y volvía a abrir la app, la primera sincronización
+          // de la sesión nueva no tiene "noConfirmadas" (recién se calcula desde
+          // la segunda carga en adelante) y caía en este límite de tiempo,
+          // pisando datos recién cargados (ej: una factura completa) con la
+          // version vieja del servidor. Mientras el local sea mas nuevo que lo
+          // que ya confirmó el servidor, hay que confiar en el local siempre.
+          if (local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt) return local;
           return remote;
         });
         // Agregar borradores locales con datos que aún no se subieron
