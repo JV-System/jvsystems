@@ -145,6 +145,7 @@ input[type=search],select,.btn{font:inherit;font-size:14px;border-radius:10px;
 input[type=search]{flex:1 1 200px;min-width:150px}
 .btn{cursor:pointer;transition:.15s}.btn:hover{border-color:var(--manto-cl)}
 .btn-oro{background:var(--manto);border-color:var(--manto);color:#fff;font-weight:500}
+.btn-print{white-space:nowrap}
 .btn-oro:hover{background:#4B3B96;border-color:#4B3B96}
 :focus-visible{outline:2px solid var(--manto-cl);outline-offset:2px}
 
@@ -277,6 +278,9 @@ tr.dentro td.total{color:var(--verde)}
 .fill{height:100%;background:linear-gradient(90deg,var(--verde),var(--amarillo));transition:width .5s}
 .avance p{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--tinta-suave);margin:7px 0 0}
 h2.sec{font-family:"Fraunces",serif;font-size:16px;margin:24px 0 10px;font-weight:600}
+.sec-cab{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sec-cab h2.sec{margin-bottom:10px}
+.btn-print.chico{padding:6px 12px;font-size:12.5px;border-radius:9px}
 .mini{width:100%;border-collapse:collapse;font-size:14px}
 .mini th,.mini td{border:1px solid var(--manto-pale)}
 .mini th{background:#F8F6FD;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
@@ -435,6 +439,37 @@ form.nueva .btn{padding:7px 13px;font-size:13.5px}
   .hoja{font-size:13px;padding:8px 12px 7px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---- impresión ---- */
+.impresion{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff!important}
+  body > *{display:none!important}
+  body > .impresion{display:block!important}
+  .impresion{font-family:Arial,Helvetica,sans-serif;color:#1b1b1b;font-size:11px}
+  .imp-cab{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+    border-bottom:3px solid #4A2E6B;padding-bottom:8px;margin-bottom:12px}
+  .imp-cab h1{font-family:Georgia,serif;font-size:19px;margin:0;color:#4A2E6B}
+  .imp-sub{font-size:11px;color:#555;margin:3px 0 0}
+  .imp-fecha{font-size:10px;color:#666;text-align:right;white-space:nowrap}
+  .imp-franja{height:4px;width:70px;margin-top:5px;
+    background:linear-gradient(90deg,#C0392B 0 33.33%,#E4B429 33.33% 66.66%,#1E7B45 66.66%)}
+  .imp-tabla{width:100%;border-collapse:collapse}
+  .imp-tabla th{background:#EDE7F3;color:#3d2a5c;font-size:9.5px;letter-spacing:.06em;
+    text-transform:uppercase;text-align:left;padding:6px 7px;border:1px solid #b9aecd}
+  .imp-tabla td{padding:5px 7px;border:1px solid #cfc7dd}
+  .imp-tabla tr:nth-child(even) td{background:#f7f5fb}
+  .imp-tabla .n{text-align:right;white-space:nowrap}
+  .imp-tabla .debe{color:#B3261E;font-weight:bold}
+  .imp-tabla .ok{color:#1E7B45}
+  .imp-tabla .pend{color:#8A6A0B}
+  .imp-tabla thead{display:table-header-group}
+  .imp-tabla tr{page-break-inside:avoid}
+  .imp-total{margin:0;padding:7px 9px;background:#FBF3D9;border:1px solid #C9A227;
+    border-top:2px solid #C9A227;font-weight:bold;font-size:11px}
+  .imp-pie{margin:8px 0 0;font-size:9px;color:#777;text-align:right}
+}
 </style>
 </head>
 <body>
@@ -472,6 +507,8 @@ form.nueva .btn{padding:7px 13px;font-size:13.5px}
     <div class="guardado" id="guardado">Cargando…</div>
   </footer>
 </div>
+
+<div class="impresion" id="impresion" aria-hidden="true"></div>
 
 <script>
 const BASE = [{"id": "d001", "nombre": "ARMELIO GILBERTO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d002", "nombre": "DELGADILLO GUIMER Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d003", "nombre": "JALDIN RONAL Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d004", "nombre": "MIRANDA MACARIO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d005", "nombre": "CARDOSO LISANDRO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d006", "nombre": "BARRIENTOS JUAN CARLOS Y ZURITA ANA", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d007", "nombre": "PANOSO MARCOS", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d008", "nombre": "GENOVEVA MONICA E HIJAS", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d009", "nombre": "TEJERINA OCTAVIO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d010", "nombre": "SILES CARLOS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d011", "nombre": "MENDOZA JORGE Y BARRANCO SANDRA", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d012", "nombre": "TORRES ROSENDO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d013", "nombre": "TORRES JUAN CARLOS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d014", "nombre": "GARNICA CRISTIAN", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d015", "nombre": "RODRIGUEZ MARCELO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d016", "nombre": "LUGANO GONZALO", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d017", "nombre": "LOPEZ CRISTINA", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d018", "nombre": "ATENCIO JORGE Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d019", "nombre": "RIVERA GARCIA SERAFIN Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d020", "nombre": "TEJERINA JUAN CARLOS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d021", "nombre": "CARTAJENA LOURDES Y GUALD MIRAD", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "$75 tachado: saldado"}, {"id": "d022", "nombre": "ROSARIO AGUSTIN Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d023", "nombre": "SUBELSA MARIO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d024", "nombre": "CRUZ ADRIAN Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d025", "nombre": "YUFRA EDUARDO", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d026", "nombre": "GUZMAN MIRIAM", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d027", "nombre": "CALISAYA ROMINA", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d028", "nombre": "CRUZ SHARON", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d029", "nombre": "PEREZ PEDRO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d030", "nombre": "CABALLERO CARLOS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d031", "nombre": "RUIZ DIAS SILVERIO", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 75000, "pagado": "NO", "obs": ""}, {"id": "d032", "nombre": "SILES EXEQUIEL Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 130000, "pagado": "NO", "obs": ""}, {"id": "d033", "nombre": "LEMOS CARLOS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 140000, "pagado": "NO", "obs": ""}, {"id": "d034", "nombre": "ALMANZA RODRIGUEZ Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d035", "nombre": "CHAVEZ ENCARNO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d036", "nombre": "GARNICA ___ Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": "Nombre de pila incompleto"}, {"id": "d037", "nombre": "ESCALERA ALEXIS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d038", "nombre": "GOMEZ SEGUNDINO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 5, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d039", "nombre": "UREÑA BRIAN Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": "$70 saldado"}, {"id": "d040", "nombre": "TEMPERINI JAVIER Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d041", "nombre": "CALLE ALEXIS Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 100000, "pagado": "NO", "obs": ""}, {"id": "d042", "nombre": "LIBERTORE SOLEDAD", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d043", "nombre": "DERLIS ROA Y MARLEN", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d044", "nombre": "ROMA SOSMERY Y CASTILLO NANCI", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "$25 tachado: saldado"}, {"id": "d045", "nombre": "JURADO MARTA", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d046", "nombre": "PALMICH WALTER Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d047", "nombre": "MACMONY MARY E HIJO", "lista": "SALON", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d048", "nombre": "GIMENEZ DARIO Y SRA.", "lista": "SALON", "detalle": "", "adultos": 2, "menores": 2, "debe": 150000, "pagado": "NO", "obs": "Agregado a mano"}, {"id": "d049", "nombre": "YUFRA VERONICA Y ERAZO BRIAN", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d050", "nombre": "ORTIZ GONZALO Y SARA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d051", "nombre": "GARNICA SUSANA", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d052", "nombre": "LOPEZ MARCELO Y SRA.", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d053", "nombre": "MARTINEZ HORTENCIA E HIJA", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d054", "nombre": "YUFRA NORBERTO Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d055", "nombre": "ESCALANTE FRANCISCO Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d056", "nombre": "TORRES ELIAS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d057", "nombre": "MURILLO MARIOS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d058", "nombre": "PANOSO ROSA", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d059", "nombre": "ILLANES REMBERTO Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d060", "nombre": "GARNICA LUIS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 75000, "pagado": "NO", "obs": ""}, {"id": "d061", "nombre": "BRAVO TAI", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d062", "nombre": "CALLE ENZO Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 1, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d063", "nombre": "CACERES GABRIEL Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 105000, "pagado": "NO", "obs": ""}, {"id": "d064", "nombre": "DELGADO JULIAN Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d065", "nombre": "TORRES DALMIRO Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d066", "nombre": "VILA FERNANDEZ DANIEL Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 75000, "pagado": "NO", "obs": ""}, {"id": "d067", "nombre": "SANCHEZ JOSE LUIS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": "$100 tachado: saldado"}, {"id": "d068", "nombre": "TERCEROS JUAN CARLOS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": "$100 tachado: saldado"}, {"id": "d069", "nombre": "CHUI ALEX Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "$100 tachado: saldado"}, {"id": "d070", "nombre": "TORRICO RUBEN Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d071", "nombre": "JAIME ELIAS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d072", "nombre": "ESPINOSA MIGUEL Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d073", "nombre": "RIOS LUCIO", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d074", "nombre": "MONTAÑO HUGO E HIJA (ROCIO)", "lista": "BANDA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d075", "nombre": "LUCIA LOPEZ, JOSE Y DAVID", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "Agregado a mano"}, {"id": "d076", "nombre": "QUIROZ JONATHAN Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": "Agregado a mano"}, {"id": "d077", "nombre": "RODRIGUEZ MATIAS Y SRA", "lista": "BANDA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "Agregado a mano"}, {"id": "d078", "nombre": "SILES SALOMON Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 3, "debe": 0, "pagado": "SI", "obs": "Monto tachado: saldado"}, {"id": "d079", "nombre": "SILES ORLANDO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d080", "nombre": "ORTIZ WILDER Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 3, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d081", "nombre": "BARRIENTOS ROLY Y AYELEN", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d082", "nombre": "PARDO ARIEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d083", "nombre": "GOMEZ JULIO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d084", "nombre": "GOMEZ SEGUNDINO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 5, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d085", "nombre": "JUAREZ VITALIANO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d086", "nombre": "ALCOCER MIGUEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d087", "nombre": "CHACON VICTOR HUGO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d088", "nombre": "CHACON RICARDO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d089", "nombre": "CHACON CARLOS Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d090", "nombre": "CHACON VICTOR Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d091", "nombre": "MONTAÑO DANIEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d092", "nombre": "ESCALERA MARCELO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d093", "nombre": "DELGADO GUSTAVO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d094", "nombre": "MORALES MIGUEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d095", "nombre": "BARRIENTOS PATRICIO", "lista": "ORQUESTA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d096", "nombre": "SILES OSCAR Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d097", "nombre": "GIMENEZ DIEGO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d098", "nombre": "CRUZ NICANOR Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d099", "nombre": "PRADERO ALMANZA Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d100", "nombre": "QUISPE FREDY Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d101", "nombre": "MERCADO MARIA Y ESCALENA WALTER", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d102", "nombre": "GONZALEZ MAURICIO Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d103", "nombre": "PARDO MARTIN Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d104", "nombre": "GAUNA CARLOS Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d105", "nombre": "CHACON HERNAN Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": "$75 tachado: saldado"}, {"id": "d106", "nombre": "CHACON MARTIN Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d107", "nombre": "MEDRANO ARIEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 1, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d108", "nombre": "BARRIENTOS JUAN GABRIEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d109", "nombre": "ZELAYA JOEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d110", "nombre": "QUIROZ OSVALDO Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d111", "nombre": "RIOS DANIEL Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "SI", "obs": "Monto tachado: saldado"}, {"id": "d112", "nombre": "LINARES JESUS Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d113", "nombre": "MEDRANO MATIAS Y SRA.", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d114", "nombre": "INTURIAS ADRIAN Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d115", "nombre": "TORRES GABRIEL", "lista": "ORQUESTA", "detalle": "", "adultos": 1, "menores": 0, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d116", "nombre": "ESCALERA BRIAN Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 2, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d117", "nombre": "JOVE FELIZ Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d118", "nombre": "MEDRANO JOSE LUIS Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d119", "nombre": "PARDO ISAIAS", "lista": "ORQUESTA", "detalle": "", "adultos": 1, "menores": 0, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d120", "nombre": "CHACON LIZANDRO", "lista": "ORQUESTA", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d121", "nombre": "CESPEDES ARIEL Y SRA", "lista": "ORQUESTA", "detalle": "", "adultos": 2, "menores": 3, "debe": 150000, "pagado": "NO", "obs": ""}, {"id": "d122", "nombre": "VILLANUEVA JUAN Y MA. DE LOS ANGELES MACMONY", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d123", "nombre": "ZURITA JOSE LUIS Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d124", "nombre": "CARTAJENA PABLO", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d125", "nombre": "TOLEDO NICOLAS", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d126", "nombre": "GONZALES L. INOCENCIO Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d127", "nombre": "GOMEZ MARCELINO Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d128", "nombre": "ZURITA SANDRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d129", "nombre": "FERNANDEZ JOSE Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 3, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d130", "nombre": "CHACON ARISTIDEES", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d131", "nombre": "GOMEZ CIRIACO Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 1, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d132", "nombre": "CONDORI EDWIN Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d133", "nombre": "BARRIENTOS GUSTAVO", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d134", "nombre": "MOLINA VICTORIA E HIJOS", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 2, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d135", "nombre": "ZURITA JONATAN Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 2, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d136", "nombre": "BARRIENTOS LUIS Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d137", "nombre": "QUISPE DENISS Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 100000, "pagado": "NO", "obs": ""}, {"id": "d138", "nombre": "MAMANI OMAR Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "$50 tachado: saldado"}, {"id": "d139", "nombre": "ORTIZ GERMAN E HIJOS", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 1, "menores": 2, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d140", "nombre": "DICE CARLOS Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d141", "nombre": "TEJERINA MARINO Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d142", "nombre": "ZURITA FERNANDO Y SRA.", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 100000, "pagado": "NO", "obs": ""}, {"id": "d143", "nombre": "ARMELLA EDGAR Y SRA", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d144", "nombre": "ALMANZA MICAELA Y MANUEL D. DIONICIO", "lista": "FUEGOS ARTIFICIALES", "detalle": "", "adultos": 2, "menores": 0, "debe": 50000, "pagado": "NO", "obs": ""}, {"id": "d145", "nombre": "TREJO MARIANELA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d146", "nombre": "TOLABA PAMELA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d147", "nombre": "CASTAÑO DEBORA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d148", "nombre": "LAMAS ELIAS", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d149", "nombre": "VELAZQUES NORMA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d150", "nombre": "YUFRA VERONICA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d151", "nombre": "YUFRA CATALINA", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 0, "menores": 1, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d152", "nombre": "ALARBONO LUZ", "lista": "BAILARINES", "detalle": "Tradicion De Mi Tierra", "adultos": 0, "menores": 1, "debe": 0, "pagado": "NO", "obs": "Apellido dudoso"}, {"id": "d153", "nombre": "FLORENCIA RIVAS", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d154", "nombre": "ERAZO BRIAN", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d155", "nombre": "RODRIGUEZ LUCIA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d156", "nombre": "RODRIGUEZ AHMED", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 0, "menores": 1, "debe": 0, "pagado": "NO", "obs": "Monto tachado"}, {"id": "d157", "nombre": "LUDMILA ALARCON", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d158", "nombre": "RIVERO ALONDRA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 0, "menores": 1, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d159", "nombre": "ORTIZ ARIEL", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d160", "nombre": "INTURIAS MILAGROS", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": "Monto tachado"}, {"id": "d161", "nombre": "MONTAÑO ANGELO", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d162", "nombre": "RODRIGUEZ MATIAS", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": "Anotacion tachada"}, {"id": "d163", "nombre": "TOLEDO NICOLA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d164", "nombre": "LAIME DANIELA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d165", "nombre": "ALEJANDRO RIOS", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d166", "nombre": "CAMPERO MARIA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d167", "nombre": "DELGADO EVELYN", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d168", "nombre": "DEGNICULO FAUSTINA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": "Apellido dudoso"}, {"id": "d169", "nombre": "CHAVEZ FABIOLA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 20000, "pagado": "NO", "obs": ""}, {"id": "d170", "nombre": "ORTIZ LAUTARO", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 0, "menores": 1, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d171", "nombre": "PARDO PIQUIN", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d172", "nombre": "ACOSTA ANDREINA", "lista": "BAILARINES", "detalle": "Tobas Guerrero", "adultos": 1, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}, {"id": "d173", "nombre": "MACMONY MARY Y STHEFANY", "lista": "OTRAS DEVOCIONES", "detalle": "Altar - Salon", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d174", "nombre": "MACMONY STHEFANY Y EVELYN", "lista": "OTRAS DEVOCIONES", "detalle": "Altar - Iglesia", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d175", "nombre": "MARY MACMONY E HIJOS", "lista": "OTRAS DEVOCIONES", "detalle": "Ropa De La Virgen", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d176", "nombre": "CALLE JORGE Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Velones", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d177", "nombre": "GONZALES LOPEZ Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Velones", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d178", "nombre": "SILES CARLOS Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Velones", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d179", "nombre": "SILES KAREN, LIZBETH Y NELSON", "lista": "OTRAS DEVOCIONES", "detalle": "Velones", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d180", "nombre": "GUTIERREZ EVARISTO Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Velones", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d181", "nombre": "ROSALES MACMONY Y NAHUEL", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d182", "nombre": "MACMONY ARACELI E HIJOS", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d183", "nombre": "ALEKSANDR MACMONY Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "Reemplaza a CHACON LISANDRO / GUZMAN (tachado)"}, {"id": "d184", "nombre": "INTURIAS EDWIN Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d185", "nombre": "INTURIAS NOELIA E HIJA", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d186", "nombre": "GUTIERREZ EVARISTO Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Chuspitas", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d187", "nombre": "MACMONY EVELYN", "lista": "OTRAS DEVOCIONES", "detalle": "Cargamento", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": "(1) - Responsable: Mary"}, {"id": "d188", "nombre": "GOMEZ TOMAS", "lista": "OTRAS DEVOCIONES", "detalle": "Cargamento", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": "(2) Para la Virgen"}, {"id": "d189", "nombre": "LUZMILA CHACON", "lista": "OTRAS DEVOCIONES", "detalle": "Cargamento", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": "(3)"}, {"id": "d190", "nombre": "RAMON RAMOS Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Centros De Mesa", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d191", "nombre": "GONZALES VANESA", "lista": "OTRAS DEVOCIONES", "detalle": "Arco", "adultos": 1, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d192", "nombre": "MACMONY STHEFANY Y WALTER Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Arco", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": "Anotado a mano"}, {"id": "d193", "nombre": "RIGOT Y GUMBERS RUBEN Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Disc Jockey", "adultos": 2, "menores": 0, "debe": 0, "pagado": "SI", "obs": ""}, {"id": "d194", "nombre": "EDWIN PARDO Y SRA.", "lista": "OTRAS DEVOCIONES", "detalle": "Disc Jockey", "adultos": 2, "menores": 0, "debe": 0, "pagado": "NO", "obs": ""}];
@@ -672,6 +709,14 @@ function pintarHojas(){
   armar("RECEPCION","Recepción", nombres().length, "recep");
 }
 
+function tituloSec(cont, txt, alImprimir){
+  const h = el("div","sec-cab");
+  h.append(el("h2","sec",txt));
+  const b = el("button","btn btn-print chico","Imprimir / PDF");
+  b.type = "button"; b.onclick = alImprimir;
+  h.append(b);
+  cont.append(h);
+}
 /* ---------- tablero ---------- */
 function vistaTablero(p){
   const cont = el("div","tablero");
@@ -733,7 +778,24 @@ function vistaTablero(p){
   riel.append(fill); av.append(riel, el("p","",pagadas+" de "+datos.length+" devociones pagadas · "+pct+"%"));
   cont.append(av);
 
-  cont.append(Object.assign(el("h2","sec","Cómo viene cada lista"),{}));
+  tituloSec(cont, "Cómo viene cada lista", () => {
+    const cab = [{t:"Lista"},{t:"Por cobrar",num:true},{t:"% del total",num:true},
+      {t:"Devociones",num:true},{t:"Personas",num:true},{t:"Menores",num:true},
+      {t:"Pagadas",num:true},{t:"Pendientes",num:true},{t:"Sin monto",num:true}];
+    const filas = LISTAS.map(l => {
+      const f2 = datos.filter(d=>d.lista===l);
+      const pg2 = f2.filter(d=>d.pagado==="SI").length;
+      const dd2 = f2.reduce((a,d)=>a+(+d.debe||0),0);
+      const sm = f2.filter(x => x.pagado !== "SI" && !(+x.debe > 0)).length;
+      return [ROTULO[l], {v: dd2 > 0 ? plata(dd2) : "—", cls: dd2>0?"debe":""},
+        debe ? Math.round(dd2/debe*100) + "%" : "—",
+        f2.length, f2.reduce((a,d)=>a+adultos(d)+(+d.menores||0),0),
+        f2.reduce((a,d)=>a+(+d.menores||0),0), pg2, f2.length-pg2, sm || ""];
+    });
+    hojaImpresa("Cómo viene cada lista", "Estado general de cada devoción", cab, filas,
+      datos.length + " devociones · " + personas + " devotos · " + personasTot
+      + " personas · por cobrar " + plata(debe));
+  });
   const t = el("table","mini");
   t.innerHTML = '<thead><tr><th>Lista</th><th class="h-monto">Por cobrar</th><th>Devoc.</th>'
     + '<th>Personas</th><th>Menores</th><th>Pagadas</th><th>Pendientes</th></tr></thead>';
@@ -784,7 +846,13 @@ function vistaTablero(p){
   }
 
   const deudores = datos.filter(d=>+d.debe>0).sort((a,b)=>b.debe-a.debe);
-  cont.append(el("h2","sec","Deudas a cobrar ("+deudores.length+")"));
+  tituloSec(cont, "Deudas a cobrar (" + deudores.length + ")", () => {
+    const cab = [{t:"N°",num:true},{t:"Debe",num:true},{t:"Devoto"},{t:"Lista"},{t:"Cobrado"}];
+    const filas = deudores.map((d,i) => [i+1, {v:plata(d.debe), cls:"debe"},
+      d.nombre, ROTULO[d.lista]||d.lista, "☐"]);
+    hojaImpresa("Deudas a cobrar", "Listado para salir a cobrar, de mayor a menor", cab, filas,
+      deudores.length + " deudas · total a cobrar " + plata(debe));
+  });
   if(!deudores.length){
     const v = el("div","vacio"); v.append(el("b","","No queda nada por cobrar"),document.createTextNode("Todas las devociones están saldadas."));
     cont.append(v);
@@ -812,7 +880,18 @@ function vistaTablero(p){
   const varios = Object.entries(porNombre).filter(([,f]) => f.length > 1)
     .sort((a,b) => b[1].length - a[1].length || a[0].localeCompare(b[0],"es"));
   if(varios.length){
-    cont.append(el("h2","sec","Sostienen más de una devoción (" + varios.length + ")"));
+    tituloSec(cont, "Sostienen más de una devoción (" + varios.length + ")", () => {
+      const cab = [{t:"N°",num:true},{t:"Devoto"},{t:"Devociones",num:true},
+        {t:"Cuáles"},{t:"Debe",num:true}];
+      const filas = varios.map(([nom, fs], i) => {
+        const dd2 = fs.reduce((a,x)=>a+(+x.debe||0),0);
+        return [i+1, nom, fs.length, fs.map(etiqueta).join(" · "),
+          {v: dd2 > 0 ? plata(dd2) : "", cls:"debe"}];
+      });
+      hojaImpresa("Sostienen más de una devoción",
+        "Devotos que aparecen en más de una lista", cab, filas,
+        varios.length + " devotos con más de una devoción");
+    });
     const caja = el("div","pilares");
     varios.forEach(([nom, fs]) => {
       const env = el("div","pilar-env");
@@ -865,6 +944,9 @@ function vistaLista(p, lista){
 
   const est = el("span","llave" + (editora ? " abierta" : ""), editora ? "Mary" : "Solo lectura");
   barra.append(est);
+  const bPr = el("button","btn btn-print","Imprimir / PDF"); bPr.type = "button";
+  bPr.onclick = () => imprimirHoja(lista);
+  barra.append(bPr);
   if(editora){
     const bAdd = el("button","btn btn-oro","Agregar devoto"); bAdd.type="button";
     bAdd.onclick = () => { altaAbierta = !altaAbierta; pintar(); if(altaAbierta) $("#a-nombre").focus(); };
@@ -1087,6 +1169,9 @@ function vistaResumen(p){
   const tit = el("div","titulo-hoja");
   tit.append("Resumen por persona", el("small","","Qué cumple cada devoto, cuánto debe y si está al día"));
   barra.append(tit);
+  const bPr = el("button","btn btn-print","Imprimir / PDF"); bPr.type = "button";
+  bPr.onclick = () => imprimirResumen();
+  barra.append(bPr);
   const busc = document.createElement("input");
   busc.type="search"; busc.placeholder="Buscar devoto…"; busc.value = texto;
   busc.oninput = e => { texto = e.target.value; caja.innerHTML=""; tabla(); };
@@ -1334,6 +1419,9 @@ function vistaRecepcion(p){
   const bSalir = el("button","btn","Salir"); bSalir.type="button";
   bSalir.onclick = () => { recepcionista = false; pintar(); };
   barra.append(bSalir);
+  const bPr = el("button","btn btn-print","Imprimir / PDF"); bPr.type = "button";
+  bPr.onclick = () => imprimirRecepcion(gente);
+  barra.append(bPr);
   const bReset = el("button","btn","Reiniciar ingresos"); bReset.type="button";
   bReset.onclick = () => {
     if(!confirm("¿Borrar todos los ingresos marcados y empezar de cero?")) return;
@@ -1468,6 +1556,89 @@ function vistaRecepcion(p){
     tb.append(body);
     const sc = el("div","scroll"); sc.append(tb); caja.append(sc);
   }
+}
+
+/* ---------- imprimir ---------- */
+function hojaImpresa(titulo, subtitulo, cabeceras, filas, pie){
+  const hoy = new Date().toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"});
+  const esc = t => String(t == null ? "" : t)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const th = cabeceras.map(c => '<th' + (c.num ? ' class="n"' : '') + '>' + esc(c.t) + '</th>').join("");
+  const tr = filas.map(f => '<tr>' + f.map((c,i) =>
+      '<td' + (cabeceras[i].num ? ' class="n"' : '') + (c && c.cls ? ' class="' + c.cls + '"' : '') + '>'
+      + esc(c && c.v !== undefined ? c.v : c) + '</td>').join("") + '</tr>').join("");
+  const caja = document.getElementById("impresion");
+  caja.innerHTML = '<header class="imp-cab"><div><h1>' + esc(titulo) + '</h1>'
+    + '<p class="imp-sub">' + esc(subtitulo) + '</p><div class="imp-franja"></div></div>'
+    + '<div class="imp-fecha">Fiesta de la Virgen de Urkupiña<br>Impreso el ' + hoy + '</div></header>'
+    + '<table class="imp-tabla"><thead><tr>' + th + '</tr></thead><tbody>' + tr + '</tbody></table>'
+    + (pie ? '<p class="imp-total">' + esc(pie) + '</p>' : '')
+    + '<p class="imp-pie">' + esc(titulo) + ' · Desarrollado por Juan Villanueva · JV Systems</p>';
+  const tituloAntes = document.title;
+  document.title = titulo;
+  const limpiar = () => { document.title = tituloAntes; caja.innerHTML = ""; };
+  window.addEventListener("afterprint", limpiar, {once:true});
+  setTimeout(() => window.print(), 60);
+  setTimeout(limpiar, 60000);
+}
+
+function imprimirHoja(lista){
+  const f = datos.filter(d => d.lista === lista);
+  const conD = conDetalle(lista);
+  const cab = [{t:"N°",num:true}];
+  if(conD) cab.push({t:"Devoción"});
+  cab.push({t:"Nombre y apellido"}, {t:"Adultos",num:true}, {t:"Menores",num:true},
+           {t:"Debe",num:true}, {t:"Estado"});
+  const filas = f.map((d,i) => {
+    const fila = [i+1];
+    if(conD) fila.push(d.detalle || "");
+    fila.push(d.nombre, adultos(d), d.menores || "",
+      {v: +d.debe > 0 ? plata(d.debe) : "", cls:"debe"},
+      {v: d.pagado === "SI" ? "Pagado" : (+d.debe > 0 ? "Debe" : "Falta pagar"),
+       cls: d.pagado === "SI" ? "ok" : (+d.debe > 0 ? "debe" : "pend")});
+    return fila;
+  });
+  const deb = f.reduce((a,d)=>a+(+d.debe||0),0);
+  const pg = f.filter(d=>d.pagado==="SI").length;
+  const per = f.reduce((a,d)=>a+adultos(d)+(+d.menores||0),0);
+  hojaImpresa("Devoción " + ROTULO[lista], SUB[lista], cab, filas,
+    f.length + " devotos · " + per + " personas · " + pg + " pagados · "
+    + (f.length-pg) + " pendientes · por cobrar " + plata(deb));
+}
+
+function imprimirResumen(){
+  const m = {};
+  datos.forEach(d => (m[d.nombre] = m[d.nombre] || []).push(d));
+  const nombres2 = Object.keys(m).sort((a,b)=>a.localeCompare(b,"es"));
+  const cab = [{t:"N°",num:true},{t:"Devoto"},{t:"Devociones que cumple"},
+               {t:"Menores",num:true},{t:"Debe",num:true},{t:"Estado"}];
+  const filas = nombres2.map((n,i) => {
+    const fs = m[n];
+    const deb = fs.reduce((a,x)=>a+(+x.debe||0),0);
+    const men = fs.reduce((a,x)=>a+(+x.menores||0),0);
+    const pend = fs.filter(x=>x.pagado!=="SI").length;
+    const alDia = deb === 0 && pend === 0;
+    return [i+1, n, fs.map(etiqueta).join(" · "), men || "",
+      {v: deb > 0 ? plata(deb) : "", cls:"debe"},
+      {v: alDia ? "Al día" : "Pendiente", cls: alDia ? "ok" : "debe"}];
+  });
+  const deb = datos.reduce((a,d)=>a+(+d.debe||0),0);
+  hojaImpresa("Resumen por persona", "Qué cumple cada devoto y cuánto debe", cab, filas,
+    nombres2.length + " devotos · por cobrar " + plata(deb));
+}
+
+function imprimirRecepcion(gente){
+  const cab = [{t:"Ingresó"},{t:"N°",num:true},{t:"Devoto"},{t:"Devoción"},
+               {t:"Adultos",num:true},{t:"Menores",num:true},{t:"Personas",num:true},{t:"Cobrar",num:true}];
+  const filas = gente.map((g,i) => [
+    {v:"☐"}, i+1, g.nombre, [...g.listas].join(", "),
+    g.adultos, g.menores || "", g.adultos + g.menores,
+    {v: g.debe > 0 ? plata(g.debe) : "", cls:"debe"}
+  ]);
+  const per = gente.reduce((a,g)=>a+g.adultos+g.menores,0);
+  const deu = gente.reduce((a,g)=>a+g.debe,0);
+  hojaImpresa("Recepción del evento", "Lista para marcar los ingresos en la puerta", cab, filas,
+    gente.length + " devotos · " + per + " personas esperadas · por cobrar " + plata(deu));
 }
 
 /* ---------- render ---------- */
