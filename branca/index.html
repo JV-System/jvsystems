@@ -2303,6 +2303,12 @@ const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids')
 // Se usa para subir SOLO lo que este dispositivo realmente modificó, y así
 // no pisar con datos viejos los cambios que hicieron otros dispositivos/usuarios.
 let _lastSyncedSnap = {};
+// Mismo mecanismo que _lastSyncedSnap, pero para clientes -- antes se subía
+// la lista de clientes ENTERA con PUT (reemplazando todo lo que hubiera en
+// Firebase), en vez de solo lo que cambió como con las órdenes. Eso hacía
+// que un cliente cargado en otro dispositivo casi al mismo tiempo se pudiera
+// perder sin querer.
+let _lastSyncedClientesSnap = {};
 // true recién despues de la primera vez que este dispositivo trajo datos
 // reales de Firebase en esta sesión. Antes de eso, _lastSyncedSnap esta
 // vacio (se reinicia en cada carga de pagina) — comparar contra el todavia
@@ -2314,6 +2320,7 @@ let _yaSincronizoUnaVez = false;
 // clave dependiera de el, cada cambio dejaria un registro viejo huerfano
 // en Firebase con la clave anterior, mostrando la misma orden duplicada.)
 function _ordenKey(o) { return String(o.id).replace(/[.#$\[\]]/g, '-'); }
+function _clienteKey(c) { return String(c.id).replace(/[.#$\[\]]/g, '-'); }
 
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
@@ -2386,7 +2393,24 @@ function _syncPush() {
           _lastSyncedSnap[key] = JSON.stringify(ordenesPatch[key]);
         });
       }
-      await _fbPut('/db/clientes', clientesDB);
+      // Igual que las órdenes: subir SOLO los clientes que cambiaron acá,
+      // no la lista entera reemplazando lo que haya en Firebase. Antes, con
+      // PUT de la lista completa, si dos personas cargaban clientes distintos
+      // casi al mismo tiempo desde equipos distintos, el segundo PUT podía
+      // borrar sin querer el cliente que acababa de cargar el primero.
+      const clientesPatch = {};
+      clientesDB.forEach(function(c) {
+        if (!c || !c.id) return;
+        const key = _clienteKey(c);
+        const snap = JSON.stringify(c);
+        if (_lastSyncedClientesSnap[key] !== snap) clientesPatch[key] = c;
+      });
+      if (Object.keys(clientesPatch).length) {
+        await _fbPatch('/db/clientes', clientesPatch);
+        Object.keys(clientesPatch).forEach(function(key) {
+          _lastSyncedClientesSnap[key] = JSON.stringify(clientesPatch[key]);
+        });
+      }
       await _fbPut('/db/tecnicos', tecnicosDB);
       await _fbPut('/db/config', { adminPass: getAdminPass() });
       // Solo subir usuarios si tenemos al menos tantos como hay en Firebase
@@ -2565,7 +2589,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 13;
+const APP_BUILD = 14;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2760,8 +2784,19 @@ async function loadFromCloud() {
       }
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 
-      // CLIENTES — la nube gana siempre
-      clientesDB = Array.isArray(remoteDb.clientes) ? remoteDb.clientes : [];
+      // CLIENTES — la nube manda, pero sin perder uno recién creado acá que
+      // todavía no llegó a confirmarse (ver _syncPush: ahora sube por clave,
+      // no toda la lista de una). Acepta tanto el formato viejo (array, de
+      // cuando se subía con PUT) como el nuevo (objeto por clave, con PATCH).
+      const _cli = remoteDb.clientes;
+      const clientesRemotos = (Array.isArray(_cli) ? _cli
+        : (_cli && typeof _cli === 'object') ? Object.values(_cli)
+        : []).filter(function(c){ return c && c.id; });
+      _lastSyncedClientesSnap = {};
+      clientesRemotos.forEach(function(c) { _lastSyncedClientesSnap[_clienteKey(c)] = JSON.stringify(c); });
+      const clientesRemotosIds = new Set(clientesRemotos.map(function(c){ return String(c.id); }));
+      const clientesLocalesSinConfirmar = clientesDB.filter(function(c) { return c && c.id && !clientesRemotosIds.has(String(c.id)); });
+      clientesDB = clientesRemotos.concat(clientesLocalesSinConfirmar);
       localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
 
       // TÉCNICOS — la nube gana siempre
@@ -4489,17 +4524,30 @@ function cancelarNuevoClienteInline() {
 function confirmarNuevoClienteInline() {
   const empresa = (document.getElementById('nc-inline-empresa')||{}).value?.trim();
   if (!empresa) { showToast('⚠ El nombre de la empresa es obligatorio.'); return; }
-  const newC = {
-    id: Date.now(),
-    empresa,
-    contacto: (document.getElementById('nc-inline-contacto')||{}).value?.trim() || '',
-    tel: (document.getElementById('nc-inline-tel')||{}).value?.trim() || '',
-    cuit: (document.getElementById('nc-inline-cuit')||{}).value?.trim() || '',
-    ubicacion: (document.getElementById('nc-inline-ubicacion')||{}).value?.trim() || '',
-    email: (document.getElementById('nc-inline-email')||{}).value?.trim() || '',
-  };
-  clientesDB.push(newC);
-  saveClientes();
+  // Evitar duplicados: si ya existe una empresa con este nombre (sin importar
+  // mayúsculas), usar ese registro en vez de crear uno nuevo. Antes, como no
+  // había ninguna confirmación visible al guardar, el técnico no sabía si
+  // había funcionado y volvía a cargar la misma empresa varias veces —
+  // quedaban clientes duplicados.
+  const existente = clientesDB.find(function(c){ return (c.empresa||'').trim().toLowerCase() === empresa.toLowerCase(); });
+  var newC;
+  if (existente) {
+    newC = existente;
+    showToast('ℹ️ "' + empresa + '" ya estaba cargada, se usó la existente.');
+  } else {
+    newC = {
+      id: Date.now(),
+      empresa,
+      contacto: (document.getElementById('nc-inline-contacto')||{}).value?.trim() || '',
+      tel: (document.getElementById('nc-inline-tel')||{}).value?.trim() || '',
+      cuit: (document.getElementById('nc-inline-cuit')||{}).value?.trim() || '',
+      ubicacion: (document.getElementById('nc-inline-ubicacion')||{}).value?.trim() || '',
+      email: (document.getElementById('nc-inline-email')||{}).value?.trim() || '',
+    };
+    clientesDB.push(newC);
+    saveClientes();
+    showToast('✅ Cliente "' + empresa + '" guardado.');
+  }
   // Load into order
   Object.assign(ordenActual, { empresa: newC.empresa, contacto: newC.contacto, tel: newC.tel, cuit: newC.cuit, ubicacion: newC.ubicacion, email: newC.email });
   saveData();
@@ -6592,6 +6640,8 @@ async function borrarFirmaTecnicoConfig(id) {
 function agregarCliente() {
   const empresa = document.getElementById('nc-empresa').value.trim();
   if (!empresa) { showToast('⚠ El nombre de la empresa es obligatorio.'); return; }
+  const existente = clientesDB.find(function(c){ return (c.empresa||'').trim().toLowerCase() === empresa.toLowerCase(); });
+  if (existente) { showToast('⚠ Ya existe una empresa con ese nombre.'); return; }
   const id = Date.now();
   clientesDB.push({
     id,
@@ -6603,6 +6653,7 @@ function agregarCliente() {
     email: document.getElementById('nc-email').value.trim(),
   });
   saveClientes();
+  showToast('✅ Cliente "' + empresa + '" guardado.');
   ['nc-empresa','nc-contacto','nc-tel','nc-cuit','nc-ubicacion','nc-email'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
   renderConfig();
   initFirmasPads();
@@ -6610,8 +6661,17 @@ function agregarCliente() {
 
 async function eliminarCliente(id) {
   if (!await showConfirm('Eliminar empresa', '¿Querés eliminar esta empresa del listado?')) return;
+  const c = clientesDB.find(function(x){ return x.id === id; });
   clientesDB = clientesDB.filter(c => c.id !== id);
-  saveClientes();
+  localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
+  // El guardado normal (_syncPush) ya no manda la lista entera -- solo sube
+  // lo que sigue estando en clientesDB, así que un borrado no se entera solo.
+  // Avisarle a Firebase explícitamente que se saque esta clave.
+  if (c) {
+    const key = _clienteKey(c);
+    try { await _fbPatch('/db/clientes', { [key]: null }); delete _lastSyncedClientesSnap[key]; }
+    catch(e) { /* si falla, queda para el próximo intento normal */ }
+  }
   renderConfig();
   initFirmasPads();
 }
