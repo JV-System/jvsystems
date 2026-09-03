@@ -2309,6 +2309,11 @@ let _lastSyncedSnap = {};
 // que un cliente cargado en otro dispositivo casi al mismo tiempo se pudiera
 // perder sin querer.
 let _lastSyncedClientesSnap = {};
+// Mismo mecanismo para técnicos -- los técnicos firman constantemente (cada
+// orden cerrada), y esa firma se guarda también en su perfil. Con el PUT
+// completo de antes, dos técnicos firmando casi al mismo tiempo desde
+// equipos distintos podían llegar a pisarse la firma actualizada uno al otro.
+let _lastSyncedTecnicosSnap = {};
 // true recién despues de la primera vez que este dispositivo trajo datos
 // reales de Firebase en esta sesión. Antes de eso, _lastSyncedSnap esta
 // vacio (se reinicia en cada carga de pagina) — comparar contra el todavia
@@ -2321,6 +2326,7 @@ let _yaSincronizoUnaVez = false;
 // en Firebase con la clave anterior, mostrando la misma orden duplicada.)
 function _ordenKey(o) { return String(o.id).replace(/[.#$\[\]]/g, '-'); }
 function _clienteKey(c) { return String(c.id).replace(/[.#$\[\]]/g, '-'); }
+function _tecnicoKey(t) { return String(t.id).replace(/[.#$\[\]]/g, '-'); }
 
 async function _fbPut(path, data) {
   const r = await fetch(FIREBASE_URL + path + '.json', {
@@ -2411,7 +2417,21 @@ function _syncPush() {
           _lastSyncedClientesSnap[key] = JSON.stringify(clientesPatch[key]);
         });
       }
-      await _fbPut('/db/tecnicos', tecnicosDB);
+      // Igual que clientes: subir solo el técnico que cambió (ej: firma nueva),
+      // no la lista entera pisando lo que haya en Firebase.
+      const tecnicosPatch = {};
+      tecnicosDB.forEach(function(t) {
+        if (!t || !t.id) return;
+        const key = _tecnicoKey(t);
+        const snap = JSON.stringify(t);
+        if (_lastSyncedTecnicosSnap[key] !== snap) tecnicosPatch[key] = t;
+      });
+      if (Object.keys(tecnicosPatch).length) {
+        await _fbPatch('/db/tecnicos', tecnicosPatch);
+        Object.keys(tecnicosPatch).forEach(function(key) {
+          _lastSyncedTecnicosSnap[key] = JSON.stringify(tecnicosPatch[key]);
+        });
+      }
       await _fbPut('/db/config', { adminPass: getAdminPass() });
       // Solo subir usuarios si tenemos al menos tantos como hay en Firebase
       // (evita que un dispositivo con lista incompleta sobreescriba a todos)
@@ -2589,7 +2609,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 14;
+const APP_BUILD = 15;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2784,23 +2804,67 @@ async function loadFromCloud() {
       }
       localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
 
-      // CLIENTES — la nube manda, pero sin perder uno recién creado acá que
-      // todavía no llegó a confirmarse (ver _syncPush: ahora sube por clave,
-      // no toda la lista de una). Acepta tanto el formato viejo (array, de
-      // cuando se subía con PUT) como el nuevo (objeto por clave, con PATCH).
+      // CLIENTES — mismo criterio que órdenes: si hay un cambio local (ej: un
+      // cliente recién creado, o uno editado) que todavía no confirmamos
+      // contra Firebase, se protege sin límite de tiempo. Si no, gana la nube.
+      // Acepta formato viejo (array, de cuando se subía con PUT) y nuevo
+      // (objeto por clave, con PATCH).
+      let noConfirmadasClientes = {};
+      if (_yaSincronizoUnaVez) {
+        clientesDB.forEach(function(c) {
+          if (!c || !c.id) return;
+          const key = _clienteKey(c);
+          if (_lastSyncedClientesSnap[key] !== JSON.stringify(c)) noConfirmadasClientes[key] = true;
+        });
+      }
       const _cli = remoteDb.clientes;
       const clientesRemotos = (Array.isArray(_cli) ? _cli
         : (_cli && typeof _cli === 'object') ? Object.values(_cli)
         : []).filter(function(c){ return c && c.id; });
       _lastSyncedClientesSnap = {};
       clientesRemotos.forEach(function(c) { _lastSyncedClientesSnap[_clienteKey(c)] = JSON.stringify(c); });
-      const clientesRemotosIds = new Set(clientesRemotos.map(function(c){ return String(c.id); }));
-      const clientesLocalesSinConfirmar = clientesDB.filter(function(c) { return c && c.id && !clientesRemotosIds.has(String(c.id)); });
-      clientesDB = clientesRemotos.concat(clientesLocalesSinConfirmar);
+      const clientesLocalMap = {};
+      clientesDB.forEach(function(c) { if (c && c.id) clientesLocalMap[String(c.id)] = c; });
+      clientesDB = clientesRemotos.map(function(remote) {
+        const local = clientesLocalMap[String(remote.id)];
+        if (!local) return remote;
+        if (noConfirmadasClientes[_clienteKey(local)]) return local;
+        return remote;
+      });
+      // Agregar clientes locales nuevos que todavía no llegaron a Firebase
+      Object.keys(clientesLocalMap).forEach(function(id) {
+        if (!clientesRemotos.find(function(c){ return String(c.id) === id; })) clientesDB.push(clientesLocalMap[id]);
+      });
       localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
 
-      // TÉCNICOS — la nube gana siempre
-      tecnicosDB = Array.isArray(remoteDb.tecnicos) ? remoteDb.tecnicos : [];
+      // TÉCNICOS — mismo criterio (una firma recién guardada que todavía no
+      // confirmó no se pierde, sin importar cuánto tiempo pasó).
+      let noConfirmadasTecnicos = {};
+      if (_yaSincronizoUnaVez) {
+        tecnicosDB.forEach(function(t) {
+          if (!t || !t.id) return;
+          const key = _tecnicoKey(t);
+          if (_lastSyncedTecnicosSnap[key] !== JSON.stringify(t)) noConfirmadasTecnicos[key] = true;
+        });
+      }
+      const _tec = remoteDb.tecnicos;
+      const tecnicosRemotos = (Array.isArray(_tec) ? _tec
+        : (_tec && typeof _tec === 'object') ? Object.values(_tec)
+        : []).filter(function(t){ return t && t.id; });
+      _lastSyncedTecnicosSnap = {};
+      tecnicosRemotos.forEach(function(t) { _lastSyncedTecnicosSnap[_tecnicoKey(t)] = JSON.stringify(t); });
+      const tecnicosLocalMap = {};
+      tecnicosDB.forEach(function(t) { if (t && t.id) tecnicosLocalMap[String(t.id)] = t; });
+      tecnicosDB = tecnicosRemotos.map(function(remote) {
+        const local = tecnicosLocalMap[String(remote.id)];
+        if (!local) return remote;
+        if (noConfirmadasTecnicos[_tecnicoKey(local)]) return local;
+        return remote;
+      });
+      // Agregar técnicos locales nuevos que todavía no llegaron a Firebase
+      Object.keys(tecnicosLocalMap).forEach(function(id) {
+        if (!tecnicosRemotos.find(function(t){ return String(t.id) === id; })) tecnicosDB.push(tecnicosLocalMap[id]);
+      });
       localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
     }
 
@@ -4783,7 +4847,12 @@ function guardarFirmaTecnico() {
     const idx = users.findIndex(function(u){ return u.id === cu.id; });
     if (idx >= 0) { users[idx].firma = ordenActual.firmaTecnico; saveUsers(users); }
     const tIdx = tecnicosDB.findIndex(function(t){ return t.nombre === cu.nombre; });
-    if (tIdx >= 0) { tecnicosDB[tIdx].firma = ordenActual.firmaTecnico; saveTecnicos(); }
+    if (tIdx >= 0) { tecnicosDB[tIdx].firma = ordenActual.firmaTecnico; }
+    // Si el técnico todavía no tenía perfil en tecnicosDB, crearlo con esta
+    // firma -- así, la próxima vez que firme, ya se la sugiere sola en vez
+    // de tener que dibujarla de nuevo.
+    else { tecnicosDB.push({ id: cu.id, nombre: cu.nombre, firma: ordenActual.firmaTecnico }); }
+    saveTecnicos();
   }
   saveData(); renderTab();
 }
@@ -6616,8 +6685,16 @@ function agregarTecnico() {
 
 async function eliminarTecnico(id) {
   if (!await showConfirm('Eliminar técnico', '¿Querés eliminar este técnico?')) return;
+  const t = tecnicosDB.find(function(x){ return x.id === id; });
   tecnicosDB = tecnicosDB.filter(t => t.id !== id);
-  saveTecnicos();
+  localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
+  // El guardado normal ya no manda la lista entera -- avisarle a Firebase
+  // explícitamente que se saque esta clave (igual que con clientes).
+  if (t) {
+    const key = _tecnicoKey(t);
+    try { await _fbPatch('/db/tecnicos', { [key]: null }); delete _lastSyncedTecnicosSnap[key]; }
+    catch(e) { /* si falla, queda para el próximo intento normal */ }
+  }
   renderConfig();
   initFirmasPads();
 }
