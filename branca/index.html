@@ -2609,7 +2609,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 17;
+const APP_BUILD = 18;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8689,7 +8689,13 @@ async function confirmarEnvioXubio(oid) {
         // Respetar el selector "Con IVA / Sin IVA" -- antes esto recalculaba
         // siempre al 21% acá mismo al confirmar el envío, pisando la elección
         // hecha en la tarjeta de facturación.
-        var conIvaXb = o.facturacion.conIva !== false;
+        // Punto de Venta manual (00002/00003) usa en Xubio el producto
+        // "Presupuesto de servicio" (0% IVA) para no chocar con la validacion
+        // de categoria fiscal -- por eso ahi el IVA es siempre 0, sin importar
+        // el selector Con IVA/Sin IVA (no es una eleccion, es consecuencia de
+        // como esta armado ese punto de venta en Xubio).
+        var esPVAutomatico = !payload.puntoVenta || payload.puntoVenta === '00001';
+        var conIvaXb = esPVAutomatico && o.facturacion.conIva !== false;
         o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
@@ -8793,7 +8799,13 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, _esReinte
         // Respetar el selector "Con IVA / Sin IVA" -- antes esto recalculaba
         // siempre al 21% acá mismo al confirmar el envío, pisando la elección
         // hecha en la tarjeta de facturación.
-        var conIvaXb = o.facturacion.conIva !== false;
+        // Punto de Venta manual (00002/00003) usa en Xubio el producto
+        // "Presupuesto de servicio" (0% IVA) para no chocar con la validacion
+        // de categoria fiscal -- por eso ahi el IVA es siempre 0, sin importar
+        // el selector Con IVA/Sin IVA (no es una eleccion, es consecuencia de
+        // como esta armado ese punto de venta en Xubio).
+        var esPVAutomatico = !payload.puntoVenta || payload.puntoVenta === '00001';
+        var conIvaXb = esPVAutomatico && o.facturacion.conIva !== false;
         o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
       })();
