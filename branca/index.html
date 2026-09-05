@@ -2609,7 +2609,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 16;
+const APP_BUILD = 17;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8520,7 +8520,11 @@ function abrirModalXubio(oid) {
       </div>
       <div style="padding:20px 24px;">
         <div style="${r2}">
-          <div><label style="${lbl}">Punto de venta</label><input id="xb-pv" value="0001" style="${inp}"></div>
+          <div><label style="${lbl}">Punto de venta</label><select id="xb-pv" style="${inp}">
+            <option value="00001">00001 · Ingeniería Branca SRL</option>
+            <option value="00002">00002 · No default</option>
+            <option value="00003">00003 · Real</option>
+          </select></div>
           <div><label style="${lbl}">Tipo de comprobante</label><select id="xb-tipo" style="${inp}"><option>Factura A</option><option>Factura B</option><option>Factura C</option></select></div>
         </div>
         <div style="margin-bottom:12px;"><label style="${lbl}">Cliente (nombre exacto en Xubio)</label><input id="xb-cliente" value="${esc(o.empresa||'')}" style="${inp}"></div>
@@ -8636,7 +8640,7 @@ async function confirmarEnvioXubio(oid) {
   }
   const payload = {
     empresa:           document.getElementById('xb-cliente')?.value || o.empresa || '',
-    puntoDeVenta:      document.getElementById('xb-pv')?.value     || '0001',
+    puntoVenta:        document.getElementById('xb-pv')?.value     || '00001',
     tipoComprobante:   document.getElementById('xb-tipo')?.value   || 'Factura B',
     numeroComprobante: document.getElementById('xb-nro')?.value    || '',
     fecha:             document.getElementById('xb-fecha')?.value  || '',
