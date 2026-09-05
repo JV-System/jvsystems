@@ -2609,7 +2609,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 18;
+const APP_BUILD = 19;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8695,6 +8695,12 @@ async function confirmarEnvioXubio(oid) {
         // el selector Con IVA/Sin IVA (no es una eleccion, es consecuencia de
         // como esta armado ese punto de venta en Xubio).
         var esPVAutomatico = !payload.puntoVenta || payload.puntoVenta === '00001';
+        // No alcanza con calcular iva=0 acá: el selector "Con IVA/Sin IVA" y
+        // cualquier recálculo posterior (guardar la tarjeta, reabrirla, PDF,
+        // email) leen o.facturacion.conIva como única fuente de verdad -- si
+        // no se deja este flag en false tambien, el próximo guardado (aunque
+        // sea automático al cerrar la tarjeta) vuelve a poner 21% encima.
+        if (!esPVAutomatico) o.facturacion.conIva = false;
         var conIvaXb = esPVAutomatico && o.facturacion.conIva !== false;
         o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
@@ -8805,6 +8811,12 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, _esReinte
         // el selector Con IVA/Sin IVA (no es una eleccion, es consecuencia de
         // como esta armado ese punto de venta en Xubio).
         var esPVAutomatico = !payload.puntoVenta || payload.puntoVenta === '00001';
+        // No alcanza con calcular iva=0 acá: el selector "Con IVA/Sin IVA" y
+        // cualquier recálculo posterior (guardar la tarjeta, reabrirla, PDF,
+        // email) leen o.facturacion.conIva como única fuente de verdad -- si
+        // no se deja este flag en false tambien, el próximo guardado (aunque
+        // sea automático al cerrar la tarjeta) vuelve a poner 21% encima.
+        if (!esPVAutomatico) o.facturacion.conIva = false;
         var conIvaXb = esPVAutomatico && o.facturacion.conIva !== false;
         o.facturacion.iva = conIvaXb ? Math.round(subtotal * 0.21 * 100) / 100 : 0;
         o.facturacion.total = Math.round((subtotal + o.facturacion.iva) * 100) / 100;
