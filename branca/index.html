@@ -2609,7 +2609,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 15;
+const APP_BUILD = 16;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5336,6 +5336,16 @@ function _getFactLista() {
   var todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
   var lista = todas.filter(function(o) {
     const f = o.facturacion || {};
+    const enGarantia = (o.condicion||[]).includes('Garantía');
+    // "Garantía" manda por sobre todo lo demás -- una orden en garantía no se
+    // factura, así que no tiene sentido que además cuente como Sin facturar,
+    // Pendiente o Cobrado.
+    if (_factFiltro === 'garantia') return enGarantia;
+    // Las demás pestañas (sin/pend/cobrado) no muestran las de garantía --
+    // pero "Todas" sí, para que su contador (que cuenta TODO) coincida con
+    // lo que realmente lista.
+    if (_factFiltro === 'todos') return true;
+    if (enGarantia) return false;
     // "Cobrado" manda siempre -- una orden marcada como pagada a mano (sin
     // número de factura real, ej: sin enviar a Xubio) no debe seguir contando
     // como "Sin facturar" solo porque le falta el número.
@@ -5396,7 +5406,7 @@ function renderFacturacion() {
   if (!mc) return;
   const todas = ordenes.filter(function(o) { return o.estado === 'locked' || o.estado === 'locked_nosign'; });
 
-  var totalCobrado = 0, totalPend = 0, sinFact = 0, cntPend = 0, cntCobrado = 0;
+  var totalCobrado = 0, totalPend = 0, sinFact = 0, cntPend = 0, cntCobrado = 0, cntGarantia = 0;
   var calcTotal = function(o) {
     var f = o.facturacion || {};
     if (f.total) return f.total;
@@ -5404,6 +5414,7 @@ function renderFacturacion() {
     return Math.round(sub * 1.21 * 100) / 100;
   };
   todas.forEach(function(o) {
+    if ((o.condicion||[]).includes('Garantía')) { cntGarantia++; return; }
     if (o.facturacion && o.facturacion.estadoPago === 'pagado') {
       totalCobrado += o.facturacion.total || 0; cntCobrado++;
     } else {
@@ -5459,6 +5470,7 @@ function renderFacturacion() {
     + tab('sin',     '⚠ Sin facturar', sinFact,       '#f59e0b')
     + tab('pend',    '⏳ Pendiente',    cntPend,       '#3b82f6')
     + tab('cobrado', '✓ Cobrado',      cntCobrado,    '#10b981')
+    + tab('garantia','🛡 Garantía',    cntGarantia,   '#7c3aed')
     + '</div>'
 
     // ── Ordenar + rango de fechas (en todas las pestañas) ──
@@ -5543,14 +5555,18 @@ function renderFactRow(o) {
   const fmt = function(n){ return '$ ' + (n||0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}); };
   const isOpen = (_factOpenId === o.id);
 
-  // "Cobrado" manda siempre, aunque falte el número de factura (ej: marcada
-  // pagada a mano, sin pasar por Xubio) -- ver mismo criterio en _getFactLista().
-  const badgeSt = f.estadoPago === 'pagado'
-    ? 'background:#d1fae5;color:#065f46'
-    : !f.nroFactura
-      ? 'background:#fef3c7;color:#92400e'
-      : 'background:#dbeafe;color:#1e40af';
-  const badgeTxt = f.estadoPago === 'pagado' ? '✓ Cobrado' : !f.nroFactura ? 'Sin facturar' : '⏳ Pendiente cobro';
+  // "Garantía" manda por sobre todo, y "Cobrado" manda siempre por sobre el
+  // resto, aunque falte el número de factura (ej: marcada pagada a mano, sin
+  // pasar por Xubio) -- ver mismo criterio en _getFactLista().
+  const enGarantiaRow = (o.condicion||[]).includes('Garantía');
+  const badgeSt = enGarantiaRow
+    ? 'background:#ede9fe;color:#5b21b6'
+    : f.estadoPago === 'pagado'
+      ? 'background:#d1fae5;color:#065f46'
+      : !f.nroFactura
+        ? 'background:#fef3c7;color:#92400e'
+        : 'background:#dbeafe;color:#1e40af';
+  const badgeTxt = enGarantiaRow ? '🛡 Garantía' : f.estadoPago === 'pagado' ? '✓ Cobrado' : !f.nroFactura ? 'Sin facturar' : '⏳ Pendiente cobro';
 
   // ── Fila resumen ──
   var esCobrado = _factFiltro === 'cobrado';
@@ -5623,6 +5639,15 @@ function renderFactRow(o) {
               + '<option value="pendiente"'+(!f.estadoPago||f.estadoPago==='pendiente'?' selected':'')+'>Pendiente de cobro</option>'
               + '<option value="pagado"'+(f.estadoPago==='pagado'?' selected':'')+'>✓ Cobrado</option>'
             + '</select>')
+      + '</div>'
+      // Se puede tildar/destildar desde acá aunque la orden esté cerrada -- a
+      // veces el técnico no sabe en el momento que la máquina está en
+      // garantía, así que Facturación tiene que poder marcarla después.
+      + '<div style="margin-top:10px;">'
+      + '<label style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:'+((o.condicion||[]).includes('Garantía')?'#f5f3ff':'#f9fafb')+';border:1px solid '+((o.condicion||[]).includes('Garantía')?'#c4b5fd':'#e5e7eb')+';border-radius:8px;font-size:13px;font-weight:600;color:#5b21b6;cursor:pointer;width:fit-content;" onclick="event.stopPropagation()">'
+        + '<input type="checkbox" '+((o.condicion||[]).includes('Garantía')?'checked':'')+' onchange="toggleGarantiaFact('+o.id+',this.checked)">'
+        + '🛡 En garantía (no se factura)'
+      + '</label>'
       + '</div>'
       + '</div>'
       + '</div>'
@@ -5940,6 +5965,27 @@ function calcFactura(el, oid) {
   if (!o) return;
   const totDiv = document.getElementById('fact-totales-' + oId);
   if (totDiv) totDiv.innerHTML = renderFactTotalesHTML(o, oId);
+}
+
+// Tilda/destilda "Garantía" (campo o.condicion) directamente desde la
+// tarjeta de Facturación -- a propósito NO pasa por esLocked(): a veces el
+// técnico cierra la orden sin saber todavía que la máquina está en
+// garantía, y Facturación tiene que poder marcarlo después igual.
+function toggleGarantiaFact(oid, checked) {
+  const o = ordenes.find(function(x){ return String(x.id) === String(oid); });
+  if (!o) return;
+  o.condicion = o.condicion || [];
+  if (checked) {
+    if (!o.condicion.includes('Garantía')) o.condicion.push('Garantía');
+  } else {
+    o.condicion = o.condicion.filter(function(c){ return c !== 'Garantía'; });
+  }
+  o.updatedAt = Date.now();
+  const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
+  if (idx >= 0) ordenes[idx] = o;
+  localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
+  _syncPush();
+  renderFacturacion();
 }
 
 function getFactValues(oid) {
