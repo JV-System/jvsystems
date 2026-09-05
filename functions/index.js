@@ -183,6 +183,23 @@ exports.xubioCrearComprobante = onRequest(
       // Siempre Cuenta Corriente en Xubio — Xubio exige cobros para Contado (API change)
       const condicion = 1;
 
+      // Puntos de venta reales de Xubio (consultados en vivo el 05/09).
+      // "00001" es de numeración automática -- Xubio le pone el número solo,
+      // y por eso usa el endpoint /facturar de siempre, sin tocar nada de lo
+      // que ya venía andando. "00002"/"00003" son de numeración manual: ese
+      // endpoint las rechaza directamente ("solo admite... automático"), así
+      // que van por un camino aparte (más abajo) usando /comprobanteVentaBean
+      // con el número siguiente real y el producto "Presupuesto de servicio"
+      // (0% IVA -- confirmado con un comprobante real ya cargado ahí, evita
+      // el rechazo de Xubio por letra de factura vs. condición fiscal del
+      // cliente que da el producto con IVA).
+      const esAutomatico = !datos.puntoVenta || datos.puntoVenta === "00001";
+      const PUNTOS_VENTA_MANUALES = {
+        "00002": { puntoVenta: { ID: 112024, id: 112024, nombre: "0002 No default", codigo: "0002_NO_DEFAULT" }, circuitoContable: { ID: -2, id: -2, nombre: "default", codigo: "DEFAULT" } },
+        "00003": { puntoVenta: { ID: 113922, id: 113922, nombre: "0003 Real", codigo: "0003_REAL" }, circuitoContable: { ID: 757, id: 757, nombre: "Real", codigo: "REAL" } },
+      };
+      const productoId = esAutomatico ? 1001130 : 1038975;
+
       // Items → transaccionProductoItems
       let items = [];
       if (Array.isArray(datos.items) && datos.items.length) {
@@ -196,12 +213,12 @@ exports.xubioCrearComprobante = onRequest(
               descripcion: it.Descripcion || "",
               cantidad:    cant,
               precio:      precio,
-              producto:    { ID: 1001130, id: 1001130 },
+              producto:    { ID: productoId, id: productoId },
             };
           });
       } else {
         const mkItem = function(desc, precio) {
-          return { descripcion: desc, cantidad: 1, precio: precio, producto: { ID: 1001130, id: 1001130 } };
+          return { descripcion: desc, cantidad: 1, precio: precio, producto: { ID: productoId, id: productoId } };
         };
         if (datos.manoDeObra > 0) items.push(mkItem(datos.obsManoDeObra || "Mano de obra", datos.manoDeObra));
         if (datos.repuestos > 0)  items.push(mkItem(datos.obsRepuestos   || "Repuestos",   datos.repuestos));
@@ -339,15 +356,36 @@ exports.xubioCrearComprobante = onRequest(
         fechaVto:         datos.vencimiento || datos.fecha || "",
         condicionDePago:  condicion,
         descripcion:      "",
-        puntoVenta:       { ID: 106928, id: 106928, nombre: "INGENIERIA BRANCA SRL", codigo: "INGENIERIA_BRANCA_SRL" },
+        puntoVenta:       esAutomatico ? { ID: 106928, id: 106928, nombre: "INGENIERIA BRANCA SRL", codigo: "INGENIERIA_BRANCA_SRL" } : PUNTOS_VENTA_MANUALES[datos.puntoVenta].puntoVenta,
         moneda:           { ID: -2, id: -2, nombre: "Pesos Argentinos", codigo: "PESOS_ARGENTINOS" },
         transaccionProductoItems: items,
         transaccionCobranzaItems: [],
       };
+
+      let endpoint = "/facturar";
+      if (!esAutomatico) {
+        xubioBody.circuitoContable = PUNTOS_VENTA_MANUALES[datos.puntoVenta].circuitoContable;
+        // Numeración manual: hay que decirle a Xubio el número siguiente
+        // real de ESE punto de venta puntual (lo consulta él mismo, igual
+        // que ya se hace para sugerir el número del 00001 en la app).
+        const prefijoManual = "A-" + datos.puntoVenta + "-";
+        const uCVn = new URL(XUBIO_API_BASE + "/comprobanteVentaBean");
+        const rCVn = await doRequest({ hostname: uCVn.hostname, path: uCVn.pathname, method: "GET", headers: { "Authorization": "Bearer " + token } });
+        const listaCVn = Array.isArray(rCVn.body) ? rCVn.body : [];
+        const numsCVn = listaCVn
+          .map(function(c){ return c.numeroDocumento || ""; })
+          .filter(function(n){ return n.startsWith(prefijoManual); })
+          .map(function(n){ return parseInt(n.slice(prefijoManual.length), 10); })
+          .filter(function(n){ return !isNaN(n); });
+        const maxCVn = numsCVn.length ? Math.max.apply(null, numsCVn) : 0;
+        xubioBody.numeroDocumento = prefijoManual + String(maxCVn + 1).padStart(8, "0");
+        endpoint = "/comprobanteVentaBean";
+      }
+
       console.log("Xubio payload:", JSON.stringify(xubioBody));
       const payload = JSON.stringify(xubioBody);
 
-      const url = new URL(XUBIO_API_BASE + "/facturar");
+      const url = new URL(XUBIO_API_BASE + endpoint);
       const result = await doRequest({
         hostname: url.hostname,
         path: url.pathname,
