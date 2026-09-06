@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 23;
+const APP_BUILD = 24;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -3221,6 +3221,10 @@ async function eliminarOrden(id) {
     const confirmar = await showConfirm('Anular orden', '¿Anular la orden ' + o.numero + '? Quedará registrada como anulada y no se perderá el número.');
     if (!confirmar) return;
     o.estado = 'anulada';
+    // Por las dudas le haya quedado pegada la marca de "borrador" de antes
+    // de tener número -- una orden anulada no debe seguir ofreciéndose para
+    // "seguir editando" en el cartel de arriba.
+    o.draft = false;
     o.updatedAt = Date.now();
     if (!o.historialCambios) o.historialCambios = [];
     const cu = getCurrentUser();
@@ -3297,6 +3301,11 @@ function renderOrderList() {
   // usa el filtro de la lista general (linea ~3137).
   const draft = ordenes.find(function(o) {
     if (!o.draft) return false;
+    // Una orden que ya se anuló, cerró o quedó pendiente dejó de ser un
+    // borrador para "seguir editando" -- si por algún motivo le quedó la
+    // marca "draft" pegada de antes (bug viejo: anular no la limpiaba),
+    // no debe aparecer arriba invitando a continuarla como si nada.
+    if (o.estado && o.estado !== 'open') return false;
     if (o.creadorId && cu && o.creadorId !== cu.id && o.creadorNombre !== cu.nombre) return false;
     return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
   });
@@ -7568,6 +7577,11 @@ function continuarBorrador() {
   // cartel sí se haya mostrado.
   const draft = ordenes.find(function(o) {
     if (!o.draft) return false;
+    // Una orden que ya se anuló, cerró o quedó pendiente dejó de ser un
+    // borrador para "seguir editando" -- si por algún motivo le quedó la
+    // marca "draft" pegada de antes (bug viejo: anular no la limpiaba),
+    // no debe aparecer arriba invitando a continuarla como si nada.
+    if (o.estado && o.estado !== 'open') return false;
     if (o.creadorId && cu && o.creadorId !== cu.id && o.creadorNombre !== cu.nombre) return false;
     return !!(o.empresa || o.marca || o.contacto || o.modelo || o.probDetectado);
   });
