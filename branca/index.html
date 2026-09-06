@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 22;
+const APP_BUILD = 23;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2852,9 +2852,23 @@ async function loadFromCloud() {
         if (noConfirmadasClientes[_clienteKey(local)]) return local;
         return remote;
       });
-      // Agregar clientes locales nuevos que todavía no llegaron a Firebase
+      // Agregar clientes locales nuevos que todavía no llegaron a Firebase.
+      // OJO: si un cliente local no está en la nube, antes esto asumía SIEMPRE
+      // "recién creado, todavía no subió" y lo volvía a agregar (y a subir) —
+      // pero un cliente borrado a propósito (ej: un duplicado eliminado a mano
+      // desde Firebase) tampoco está en la nube, y con esa lógica cualquier
+      // dispositivo con el dato viejo en caché lo resucitaba solo, sin fin,
+      // cada vez que sincronizaba (bug real: duplicados que "vuelven" después
+      // de borrarlos). Se distingue por antigüedad: el id es un timestamp de
+      // creación, así que solo se protege si es de las últimas 48hs (recién
+      // creado, con tiempo de sobra para cubrir un dispositivo offline un
+      // buen rato); uno más viejo que ya no está en la nube se interpreta
+      // como borrado a propósito, no como pendiente de subir.
+      var _hace48hs = Date.now() - 48*60*60*1000;
       Object.keys(clientesLocalMap).forEach(function(id) {
-        if (!clientesRemotos.find(function(c){ return String(c.id) === id; })) clientesDB.push(clientesLocalMap[id]);
+        if (!clientesRemotos.find(function(c){ return String(c.id) === id; }) && Number(id) > _hace48hs) {
+          clientesDB.push(clientesLocalMap[id]);
+        }
       });
       localStorage.setItem('branca_clientes', JSON.stringify(clientesDB));
 
@@ -2882,9 +2896,15 @@ async function loadFromCloud() {
         if (noConfirmadasTecnicos[_tecnicoKey(local)]) return local;
         return remote;
       });
-      // Agregar técnicos locales nuevos que todavía no llegaron a Firebase
+      // Agregar técnicos locales nuevos que todavía no llegaron a Firebase.
+      // Mismo resguardo que en clientes (ver comentario ahí): solo se
+      // resucita un técnico local ausente en la nube si es de las últimas
+      // 48hs; uno más viejo que ya no está se interpreta como borrado a
+      // propósito, no como pendiente de subir.
       Object.keys(tecnicosLocalMap).forEach(function(id) {
-        if (!tecnicosRemotos.find(function(t){ return String(t.id) === id; })) tecnicosDB.push(tecnicosLocalMap[id]);
+        if (!tecnicosRemotos.find(function(t){ return String(t.id) === id; }) && Number(id) > _hace48hs) {
+          tecnicosDB.push(tecnicosLocalMap[id]);
+        }
       });
       localStorage.setItem('branca_tecnicos', JSON.stringify(tecnicosDB));
     }
