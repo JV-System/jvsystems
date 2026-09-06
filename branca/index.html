@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 24;
+const APP_BUILD = 25;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2816,9 +2816,19 @@ async function loadFromCloud() {
           if (local.updatedAt && remote.updatedAt && local.updatedAt > remote.updatedAt) return local;
           return remote;
         });
-        // Agregar borradores locales con datos que aún no se subieron
+        // Agregar borradores locales con datos que aún no se subieron.
+        // OJO: mismo resguardo que se aplicó a clientes/técnicos (ver ahí el
+        // comentario largo) -- un borrador local ausente en la nube no
+        // siempre es "recién creado, todavía no subió": si se borró a
+        // propósito desde Firebase (ej: limpieza de borradores abandonados),
+        // sin esto cualquier dispositivo con esa copia vieja en caché lo
+        // resucitaba solo, sin fin, cada vez que sincronizaba. Solo se
+        // protege si es de las últimas 48hs.
+        var _ordenHace48hs = Date.now() - 48*60*60*1000;
         draftsLocales.forEach(function(d) {
-          if (!ordenes.find(function(o) { return String(o.id) === String(d.id); })) ordenes.unshift(d);
+          if (!ordenes.find(function(o) { return String(o.id) === String(d.id); }) && Number(d.id) > _ordenHace48hs) {
+            ordenes.unshift(d);
+          }
         });
       } else {
         ordenes = draftsLocales;
