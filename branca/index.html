@@ -2199,6 +2199,27 @@
   </div>
 </div>
 
+<!-- MODAL ANUNCIO GARANTIA + PUNTO DE VENTA (facturacion) -->
+<div id="modal-anuncio2" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-bienvenida-card" style="max-width:400px;">
+    <div style="background:linear-gradient(135deg,#0A1628 60%,#1a3a6e);padding:26px 24px 18px;text-align:center;">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;border:1.5px solid rgba(255,255,255,0.15);">🛡</div>
+      <div style="font-size:10px;font-weight:700;color:#7EB3F7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Novedades para vos</div>
+      <div id="anuncio2-nombre" style="color:#fff;font-size:19px;font-weight:800;line-height:1.25;"></div>
+    </div>
+    <div style="padding:20px 22px 22px;">
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">Sumamos dos cosas que nos pediste:</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 10px;">🛡 <b>Garantía:</b> ahora podés tildar "En garantía (no se factura)" en cualquier orden, aunque ya esté cerrada — por si el técnico no lo marcó al cerrarla. Esas órdenes tienen su propia pestaña <b>🛡 Garantía</b>, separada de Sin facturar / Pendiente / Cobrado.</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">⚡ <b>Punto de Venta al enviar a Xubio:</b> ahora podés elegir el punto de venta (por ejemplo <b>00003 · Real</b> para casos como Imbasa). El IVA se ajusta solo, no hace falta que toques nada más.</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0 0 18px;">Tenés el paso a paso actualizado en tu instructivo (📖 arriba). Cualquier cosa rara que veas, avisame y lo vemos. 🙌</p>
+      <button onclick="cerrarAnuncio2()"
+              style="width:100%;background:#1565D8;color:#fff;font-weight:700;font-size:14px;padding:13px;border-radius:10px;border:none;cursor:pointer;">
+        Entendido, ¡vamos! →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PANEL INSTRUCTIVO -->
 <div id="panel-instructivo" style="display:none;position:fixed;inset:0;z-index:10000;background:#f2f4f8;flex-direction:column;">
   <iframe id="iframe-instructivo" src="" style="flex:1;border:none;width:100%;height:100%;"></iframe>
@@ -2609,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 19;
+const APP_BUILD = 20;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -7804,6 +7825,7 @@ function hideLoginScreen() {
   setTimeout(restaurarBorradorSiExiste, 800);
   mostrarBienvenida();
   setTimeout(mostrarAnuncioXubio, 1200);
+  setTimeout(mostrarAnuncioGarantiaPV, 1600);
 }
 
 // Aviso de novedades (creación automática de cliente en Xubio) — una sola
@@ -7825,6 +7847,32 @@ function mostrarAnuncioXubio() {
 }
 function cerrarAnuncio() {
   const modal = document.getElementById('modal-anuncio');
+  if (modal) modal.style.display = 'none';
+}
+
+// Aviso de novedades (Garantía + Punto de Venta manual en Xubio) — una sola
+// vez por usuario, solo para el rol Facturación. Encadenado despues de
+// bienvenida y del anuncio anterior para no superponer modales.
+function mostrarAnuncioGarantiaPV() {
+  const cu = getCurrentUser();
+  if (!cu || cu.role !== 'facturacion') return;
+  const key = 'branca_anuncio_garantia_pv_' + (cu.username || cu.id || 'user');
+  try { if (localStorage.getItem(key)) return; } catch(e) { return; }
+  const bienv = document.getElementById('modal-bienvenida');
+  const anuncio1 = document.getElementById('modal-anuncio');
+  if ((bienv && bienv.style.display === 'flex') || (anuncio1 && anuncio1.style.display === 'flex')) {
+    setTimeout(mostrarAnuncioGarantiaPV, 800);
+    return;
+  }
+  const modal = document.getElementById('modal-anuncio2');
+  if (!modal) return;
+  const primerNombre = ((cu.nombre || cu.username || '').trim().split(/\s+/)[0]) || cu.username;
+  document.getElementById('anuncio2-nombre').textContent = '¡Hola, ' + primerNombre + '!';
+  modal.style.display = 'flex';
+  try { localStorage.setItem(key, '1'); } catch(e) {}
+}
+function cerrarAnuncio2() {
+  const modal = document.getElementById('modal-anuncio2');
   if (modal) modal.style.display = 'none';
 }
 
