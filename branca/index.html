@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 21;
+const APP_BUILD = 22;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -6102,6 +6102,19 @@ function guardarFacturacion(oid, silencioso) {
   var cantInpMO = document.getElementById('fact-mo-cant-'+oid);
   var cantElMO = cantInpMO ? cantInpMO.querySelector('input') : null;
   var horasManual = (modoMO === 'hora' && cantElMO && cantElMO.value !== '') ? parseFloat(cantElMO.value) : null;
+  var nuevaFact = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
+    descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total, conIva: v.conIva,
+    condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
+    precioHora: precioHora, precioHoraUnit: precioHoraUnit, preciosHora: preciosHora, totalesMO: totalesMO, modoMO: modoMO,
+    horasManual: horasManual, preciosRepuestos: preciosRep, gastosCant: gastosCant };
+  // Autoguardado silencioso (al cerrar/cambiar de tarjeta): si no cambió
+  // nada de verdad respecto a lo que ya estaba guardado, no volver a escribir
+  // -- antes esto agregaba una entrada nueva al historial de cambios (y una
+  // escritura a Firebase) solo por abrir una orden ya facturada y cerrarla
+  // sin tocar nada, generando "guardados automáticos" fantasma en el
+  // historial (reportado: "entré como administrador y no lo guardé yo, solo
+  // lo abrí y se actualizó eso").
+  if (silencioso && o.facturacion && JSON.stringify(o.facturacion) === JSON.stringify(nuevaFact)) return;
   // Registrar quién guardó y cuándo — visible en el timeline de la orden y en
   // la propia tarjeta de facturación (pedido explícito: poder rastrear quién
   // tocó "Guardar" o cambió el estado, sobre todo para casos como el de la
@@ -6117,11 +6130,7 @@ function guardarFacturacion(oid, silencioso) {
       detalles: []
     });
   })();
-  o.facturacion = { nroFactura: v.nroFactura, manoDeObra: v.mo, repuestosCosto: v.rep, gastos: v.gas,
-    descuento: v.desc, subtotal: v.sub, iva: v.iva, total: v.total, conIva: v.conIva,
-    condPago: v.condPago, fechaFactura: v.fechaFactura, estadoPago: v.estadoPago,
-    precioHora: precioHora, precioHoraUnit: precioHoraUnit, preciosHora: preciosHora, totalesMO: totalesMO, modoMO: modoMO,
-    horasManual: horasManual, preciosRepuestos: preciosRep, gastosCant: gastosCant };
+  o.facturacion = nuevaFact;
   o.updatedAt = Date.now();
   const idx = ordenes.findIndex(function(x){ return x.id === o.id; });
   if (idx >= 0) ordenes[idx] = o;
