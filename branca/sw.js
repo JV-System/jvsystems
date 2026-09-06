@@ -4,7 +4,7 @@
 // un dispositivo podia seguir viendo una version vieja de la app aunque el
 // service worker "no cacheara nada" del lado de la Cache Storage API. Hace
 // falta "no-store" explicito para forzar red de verdad en cada pedido.
-const SW_VERSION = 4;
+const SW_VERSION = 5;
 
 self.addEventListener('install', function(event) {
   // Tomar control inmediatamente sin esperar a que se cierren las tabs
