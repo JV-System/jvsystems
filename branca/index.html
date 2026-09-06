@@ -1902,7 +1902,7 @@
     <span id="sync-status" title="Estado de sincronización Firebase"
           style="font-size:11px;font-weight:600;transition:color 0.3s;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s;"
           onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'"></span>
-    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos" style="display:none"></button>
+    <button id="btn-refresh" onclick="actualizarDatos()" title="Actualizar datos" style="display:none">🔄</button>
     <button id="btn-instructivo" onclick="abrirInstructivo()" title="Ver instructivo de uso"
             style="background:rgba(255,255,255,0.12);border:none;color:white;font-size:13px;font-weight:700;cursor:pointer;padding:5px 11px;border-radius:7px;transition:background 0.15s;line-height:1;"
             onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">📖 Instructivo</button>
@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 25;
+const APP_BUILD = 26;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
