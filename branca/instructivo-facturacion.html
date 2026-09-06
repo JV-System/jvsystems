@@ -129,7 +129,7 @@
         </div>
       </div>
 
-      <div class="info" style="margin-top:10px;"><strong>ℹ</strong> El total de <strong>Pendiente cobro</strong> incluye todas las órdenes que todavía no fueron cobradas — tanto las sin facturar como las pendientes de cobro.</div>
+      <div class="info" style="margin-top:10px;"><strong>ℹ</strong> El total de <strong>Pendiente cobro</strong> incluye todas las órdenes que todavía no fueron cobradas — tanto las sin facturar como las pendientes de cobro. Las órdenes en <strong>🛡 Garantía</strong> no entran en ninguno de estos 3 números — tienen su espacio aparte (ver más abajo).</div>
 
       <div class="paso" style="margin-top:14px;">
         <div class="paso-num">2</div>
@@ -140,6 +140,7 @@
         <span style="padding:7px 14px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:700;">⚠ Sin facturar <span style="background:rgba(0,0,0,0.1);border-radius:20px;padding:1px 7px;font-size:11px;">20</span></span>
         <span style="padding:7px 14px;border-radius:8px;background:#f1f5f9;color:#64748b;font-size:13px;font-weight:700;">⏳ Pendiente <span style="background:rgba(0,0,0,0.1);border-radius:20px;padding:1px 7px;font-size:11px;">2</span></span>
         <span style="padding:7px 14px;border-radius:8px;background:#10b981;color:#fff;font-size:13px;font-weight:700;">✓ Cobrado <span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 7px;font-size:11px;">15</span></span>
+        <span style="padding:7px 14px;border-radius:8px;background:#7c3aed;color:#fff;font-size:13px;font-weight:700;">🛡 Garantía <span style="background:rgba(255,255,255,0.25);border-radius:20px;padding:1px 7px;font-size:11px;">4</span></span>
       </div>
 
       <div class="paso">
@@ -272,6 +273,39 @@
     </div>
   </div>
 
+  <!-- GARANTÍA -->
+  <div class="seccion">
+    <div class="seccion-header"><span class="icon">🛡</span><h2>Garantía — máquinas que no se facturan</h2></div>
+    <div class="seccion-body">
+      <div class="paso">
+        <div class="paso-num">1</div>
+        <div class="paso-txt">Las órdenes marcadas como <strong>en garantía</strong> tienen su propio espacio separado: la pestaña <span style="padding:5px 12px;border-radius:8px;background:#7c3aed;color:#fff;font-size:12px;font-weight:700;">🛡 Garantía</span>. Nunca se mezclan con Sin facturar, Pendiente ni Cobrado.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">2</div>
+        <div class="paso-txt">Lo normal es que el <strong>técnico</strong> ya la marque al cerrar la orden. Pero si no lo hizo (a veces no se sabe todavía si la máquina está en garantía), <strong>vos también podés tildarla o destildarla</strong> directamente desde acá.</div>
+      </div>
+
+      <div style="border:1px solid #c4b5fd;border-radius:8px;padding:10px 14px;margin:10px 0;background:#f5f3ff;display:flex;align-items:center;gap:10px;width:fit-content;">
+        <div style="width:16px;height:16px;border:2px solid #7c3aed;border-radius:4px;background:#7c3aed;position:relative;flex-shrink:0;">
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">✓</span>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:#5b21b6;">🛡 En garantía (no se factura)</span>
+      </div>
+
+      <div class="paso">
+        <div class="paso-num">3</div>
+        <div class="paso-txt">Este checkbox aparece dentro de cada orden, dentro del propio comprobante. <strong>Funciona aunque la orden ya esté cerrada</strong> — no hace falta reabrirla ni pedirle nada al técnico.</div>
+      </div>
+      <div class="paso">
+        <div class="paso-num">4</div>
+        <div class="paso-txt">Si la destildás, la orden vuelve automáticamente a aparecer en Sin facturar / Pendiente / Cobrado según corresponda.</div>
+      </div>
+
+      <div class="tip"><strong>💡 Tip:</strong> Usalo cada vez que te enterás de que una máquina está bajo garantía y no corresponde facturarla — así queda ordenado y no se pierde de vista, sin necesidad de facturarla ni de anular la orden.</div>
+    </div>
+  </div>
+
   <!-- XUBIO -->
   <div class="seccion">
     <div class="seccion-header"><span class="icon">⚡</span><h2>Enviar comprobante a Xubio</h2></div>
@@ -284,13 +318,21 @@
         <div class="paso-num">2</div>
         <div class="paso-txt">Se abre un panel con todos los datos del comprobante para revisar antes de enviar. Podés ajustar tipo de comprobante, fecha, vencimiento, etc.</div>
       </div>
+
       <div class="paso">
         <div class="paso-num">3</div>
+        <div class="paso-txt">En <strong>Punto de Venta</strong> elegí cuál usar:</div>
+      </div>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:6px 0 10px;background:#fff;font-size:13px;color:#111;width:fit-content;">00003 · Real ▾</div>
+      <div class="info"><strong>ℹ</strong> <strong>00001</strong> es el que se usa siempre para la facturación normal — no lo cambies salvo que sepas que corresponde otro. <strong>00003 · Real</strong> es el punto de venta para facturas "en negro" (por ejemplo, casos como Imbasa). Al usar un punto de venta distinto de 00001, el sistema arma la factura sin IVA automáticamente (el campo IVA se ajusta solo, no hace falta tocar nada más) y numera el comprobante en base al último real de Xubio para ese punto de venta.</div>
+
+      <div class="paso">
+        <div class="paso-num">4</div>
         <div class="paso-txt">Tocá <strong>⚡ Confirmar y enviar a Xubio</strong>. El sistema busca el cliente en Xubio automáticamente por nombre de empresa.</div>
       </div>
 
       <div class="paso">
-        <div class="paso-num">4</div>
+        <div class="paso-num">5</div>
         <div class="paso-txt"><strong>Si el cliente no existe en Xubio</strong> aparece este aviso:</div>
       </div>
       <div style="border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin:8px 0 14px;background:#f8fafc;">
@@ -304,11 +346,11 @@
         </div>
       </div>
       <div class="paso">
-        <div class="paso-num">5</div>
+        <div class="paso-num">6</div>
         <div class="paso-txt">Elegí la <strong>condición IVA</strong> del cliente (Responsable Inscripto, Monotributista, Consumidor Final, Exento) y tocá <strong>Crear cliente y facturar</strong>. El sistema crea el cliente en Xubio y manda la factura en un solo paso.</div>
       </div>
       <div class="paso">
-        <div class="paso-num">6</div>
+        <div class="paso-num">7</div>
         <div class="paso-txt">Si el envío fue exitoso aparece <strong style="color:#065f46;">✅ Comprobante creado en Xubio correctamente</strong> y la orden pasa automáticamente a estado <span class="tag tag-verde">✓ Cobrado</span>.</div>
       </div>
       <div class="alerta"><strong>⚠ Importante:</strong> Cada vez que tocás "Confirmar y enviar" se crea un comprobante nuevo en Xubio. No lo toques dos veces para la misma orden.</div>
@@ -356,7 +398,7 @@
   </div>
 
   <div class="footer">
-    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.1 Julio 2026
+    App Branca — Ingeniería Branca SRL · Desarrollado por Juan Villanueva · v1.2 Septiembre 2026
   </div>
 
 </div>
