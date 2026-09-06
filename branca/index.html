@@ -2630,7 +2630,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 26;
+const APP_BUILD = 27;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -7821,15 +7821,27 @@ window.addEventListener('appinstalled', () => {
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
   const isStandalone = window.navigator.standalone === true;
-  const yaVisto = localStorage.getItem('ios_banner_visto');
+  // Clave con versión nueva (v2): a algunos usuarios (ej: Franco) el cartel
+  // nunca les había llegado a aparecer bien -- esto hace que se muestre de
+  // nuevo para todos, ignorando cualquier "ya visto" viejo.
+  const yaVisto = localStorage.getItem('ios_banner_visto_v2');
 
   if (isIOS && isSafari && !isStandalone && !yaVisto) {
     setTimeout(() => {
       const b = document.getElementById('ios-banner');
-      if (b) b.style.display = 'block';
+      if (b) {
+        b.style.display = 'block';
+        // Igual que el banner de Android: correr la barra de navegación
+        // inferior para que el cartel no la tape (antes se superponían).
+        const mob = document.getElementById('mobNav');
+        if (mob) mob.style.bottom = b.offsetHeight + 'px';
+      }
     }, 3000);
     document.getElementById('ios-banner').querySelector('button').addEventListener('click', () => {
-      localStorage.setItem('ios_banner_visto', '1');
+      localStorage.setItem('ios_banner_visto_v2', '1');
+      document.getElementById('ios-banner').style.display = 'none';
+      const mob = document.getElementById('mobNav');
+      if (mob) mob.style.bottom = '';
     });
   }
 })();
@@ -8079,10 +8091,16 @@ function initRoleUI() {
   if (nameEl) nameEl.textContent = user.nombre;
   // Ocultar controles técnicos para rol facturación
   var esFact = user.role === 'facturacion';
+  var esTecnico = user.role === 'tecnico';
   var btnRefresh = document.getElementById('btn-refresh');
   var badgeSistema = document.getElementById('sistema-activo-badge');
-  if (btnRefresh)   btnRefresh.style.display   = esFact ? 'none' : '';
+  if (btnRefresh)   btnRefresh.style.display   = (esFact || esTecnico) ? 'none' : '';
   if (badgeSistema) badgeSistema.style.display = esFact ? 'none' : '';
+  // El técnico ya tiene "Ayuda" (mismo instructivo) en la barra inferior del
+  // celular -- el botón de arriba le queda de más, ocupando espacio en el
+  // header sin agregar nada nuevo.
+  var btnInstructivoHeader = document.getElementById('btn-instructivo');
+  if (btnInstructivoHeader) btnInstructivoHeader.style.display = esTecnico ? 'none' : '';
   // Mostrar/ocultar elementos según rol
   ['nav-facturacion','mob-facturacion'].forEach(function(id) {
     const el = document.getElementById(id);
