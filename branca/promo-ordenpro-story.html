@@ -1,0 +1,354 @@
+<title>OrdenPro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta JV Systems — jvsystems.com.ar / presentacion-jvsystems.html */
+    --navy:#07101d;
+    --navy-2:#0d1b2e;
+    --panel:#122240;
+    --line:#1c2b44;
+    --line-warm:rgba(255,140,0,.26);
+    --ink:#FFFFFF;
+    --muted:rgba(255,255,255,.62);
+    --faint:rgba(255,255,255,.30);
+    --accent:#ff8c00;
+    --accent-soft:#ffb800;
+    --grad:linear-gradient(135deg,#ff9500,#ffcc00);
+    --blue:#64b4ff;
+    --green:#34d399;
+    --frame-ms:6500ms;   /* tiempo por pantalla — 7 pantallas ≈ 45 s */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#05080f;
+    color:var(--ink);
+    font-family:'Exo 2','Segoe UI',system-ui,sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+
+  /* ---- lienzo vertical 9:16 ---- */
+  .stage{
+    position:relative;
+    width:min(100vw, calc(100dvh * 9 / 16));
+    height:min(100dvh, calc(100vw * 16 / 9));
+    background:
+      radial-gradient(120% 56% at 50% -12%, rgba(255,140,0,.10) 0%, rgba(255,140,0,0) 60%),
+      radial-gradient(92% 46% at 50% 116%, rgba(26,58,110,.38) 0%, rgba(26,58,110,0) 58%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    container-type:size;
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .stage::after{  /* viñeta oscura para que el texto resalte sobre el fondo animado */
+    content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(125% 72% at 50% 44%, rgba(5,8,15,0) 38%, rgba(5,8,15,.60) 100%);
+  }
+  .stage::before{  /* grilla técnica tenue */
+    content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(100,180,255,.05) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(100,180,255,.05) 1px,transparent 1px);
+    background-size:7cqmin 7cqmin;
+    -webkit-mask-image:radial-gradient(130% 88% at 50% 40%, #000 55%, transparent 100%);
+            mask-image:radial-gradient(130% 88% at 50% 40%, #000 55%, transparent 100%);
+  }
+  .code{  /* palabras de código de fondo, muy sutiles */
+    position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+    font-family:'JetBrains Mono',monospace;font-size:3cqh;color:#fff;opacity:.022;font-weight:700;
+  }
+  .code span{position:absolute;white-space:nowrap}
+  .code span:nth-child(1){top:11%;left:8%}
+  .code span:nth-child(2){top:29%;right:9%}
+  .code span:nth-child(3){bottom:27%;left:6%}
+  .code span:nth-child(4){bottom:11%;right:12%}
+
+  /* ---- ondas animadas de fondo ---- */
+  .waves{
+    position:absolute;left:0;right:0;bottom:0;z-index:1;
+    width:100%;height:44cqh;pointer-events:none;opacity:.5;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 66%);
+            mask-image:linear-gradient(180deg,transparent 0%,#000 66%);
+  }
+  .waves path{will-change:transform}
+
+  /* ---- línea que barre en vertical ---- */
+  .scan{
+    position:absolute;left:0;right:0;height:2px;z-index:1;pointer-events:none;
+    background:linear-gradient(90deg,transparent,rgba(255,140,0,.35),transparent);
+    filter:blur(1px);
+    animation:scan 14s ease-in-out infinite;
+  }
+  @keyframes scan{
+    0%{top:18%;opacity:0}
+    14%{opacity:.22}
+    50%{top:82%;opacity:.22}
+    66%{opacity:0}
+    100%{top:18%;opacity:0}
+  }
+
+  /* ---- barra de progreso tipo historia ---- */
+  .bars{
+    position:absolute;top:2.6cqh;left:5cqw;right:5cqw;z-index:6;
+    display:flex;gap:1.3cqw;
+  }
+  .bars i{flex:1;height:.55cqh;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.16)}
+  .bars i b{display:block;height:100%;width:0;background:var(--accent-soft);border-radius:inherit}
+  .bars i.done b{width:100%}
+  .bars i.now  b{width:100%;transition:width var(--frame-ms) linear}
+
+  /* ---- pantallas ---- */
+  .frame{
+    position:absolute;inset:0;z-index:3;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:center;
+    gap:3cqh;
+    padding:13cqh 8cqw 12cqh;
+    opacity:0;visibility:hidden;
+    transform:translateY(2.4cqh) scale(.992);
+    transition:opacity .95s ease, transform 1.15s cubic-bezier(.2,.7,.2,1), visibility .95s;
+  }
+  .frame.on{opacity:1;visibility:visible;transform:none}
+  .frame.on > *{animation:rise .9s both}
+  .frame.on > *:nth-child(2){animation-delay:.16s}
+  .frame.on > *:nth-child(3){animation-delay:.30s}
+  .frame.on > *:nth-child(4){animation-delay:.44s}
+  .frame.on > *:nth-child(5){animation-delay:.58s}
+  @keyframes rise{from{opacity:0;transform:translateY(2.6cqh)}to{opacity:1;transform:none}}
+
+  /* ---- tipografía ---- */
+  .eyebrow{
+    align-self:flex-start;
+    display:inline-flex;align-items:center;gap:2cqw;
+    font-family:'JetBrains Mono',ui-monospace,monospace;
+    font-weight:700;font-size:1.95cqh;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent);
+    padding:1.2cqh 4cqw;border-radius:99px;
+    border:1px solid var(--line-warm);background:rgba(255,140,0,.07);
+  }
+  .eyebrow::before{content:"•••";letter-spacing:.12em;font-size:2.1cqh;line-height:0;color:var(--accent);opacity:.75}
+
+  h1{font-weight:900;font-size:7.5cqh;line-height:1.05;letter-spacing:-.018em;text-wrap:balance}
+  h1 .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{
+    font-size:3.4cqh;line-height:1.46;font-weight:600;color:var(--muted);
+    text-wrap:balance;max-width:94%;
+  }
+  .lead b{color:var(--ink);font-weight:700}
+
+  /* pantalla "lo que cuesta" */
+  .stack{display:flex;flex-direction:column;gap:2.4cqh}
+  .stack p{
+    font-size:3.8cqh;font-weight:700;line-height:1.22;
+    padding-left:4.6cqw;border-left:.9cqw solid var(--accent);
+    text-wrap:balance;
+  }
+  .stack p:nth-child(2){border-color:var(--blue)}
+  .stack p:nth-child(3){border-color:var(--green)}
+
+  /* logotipo */
+  .wordmark .mk{font-weight:900;font-size:11.2cqh;letter-spacing:-.03em;line-height:.9}
+  .wordmark .mk span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .badge{
+    align-self:flex-start;
+    font-family:'JetBrains Mono',monospace;font-weight:700;line-height:1.4;
+    font-size:2.1cqh;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--accent-soft);border:1px solid var(--line-warm);border-radius:1.8cqh;
+    padding:1.5cqh 4cqw;background:rgba(255,140,0,.08);
+  }
+
+  /* pasos */
+  .steps{display:flex;flex-direction:column;gap:2.5cqh}
+  .step{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4.2cqw}
+  .step .n{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:2.8cqh;
+    width:8.4cqw;height:8.4cqw;display:flex;align-items:center;justify-content:center;
+    border-radius:26%;background:var(--panel);border:1px solid var(--line);
+    color:var(--accent-soft);
+  }
+  .step .t{font-size:3.4cqh;font-weight:700;line-height:1.2;text-wrap:balance}
+  .step .t small{display:block;font-size:2.45cqh;font-weight:600;color:var(--muted);margin-top:.5cqh}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:2.2cqw}
+  .chip{
+    font-size:2.65cqh;font-weight:700;padding:1.4cqh 3.8cqw;border-radius:99px;
+    background:var(--panel);border:1px solid var(--line);
+  }
+  .chip.a{color:var(--accent-soft);border-color:#5a4526}
+  .chip.b{color:var(--blue);border-color:#234a80}
+  .chip.c{color:var(--green);border-color:#1f5a45}
+
+  .sync{
+    display:flex;align-items:center;gap:3cqw;
+    font-family:'JetBrains Mono',monospace;font-size:2.55cqh;color:var(--muted);
+  }
+  .dot{
+    width:2.4cqh;height:2.4cqh;border-radius:50%;background:var(--green);flex:none;
+    box-shadow:0 0 0 0 rgba(52,211,153,.55);
+    animation:pulse 2s ease-out infinite;
+  }
+  @keyframes pulse{70%{box-shadow:0 0 0 3.4cqh rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+
+  .cta{font-size:3.3cqh;font-weight:700;line-height:1.36;color:var(--muted);text-wrap:balance}
+  .cta b{color:var(--ink)}
+
+  /* tarjeta de contacto */
+  .name{font-weight:900;font-size:7.6cqh;line-height:1;letter-spacing:-.02em}
+  .rows{display:flex;flex-direction:column;gap:2.6cqh;margin-top:.8cqh}
+  .row{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4.2cqw}
+  .row .ic{
+    width:10.4cqw;height:10.4cqw;border-radius:24%;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--panel);border:1px solid var(--line-warm);color:var(--accent);
+  }
+  .row .ic svg{width:5cqw;height:5cqw}
+  .row .rc{min-width:0}
+  .row .rc b{display:block;font-size:2.95cqh;font-weight:800;line-height:1.18;overflow-wrap:anywhere}
+  .row .rc small{display:block;font-size:2.35cqh;font-weight:600;color:var(--muted);margin-top:.45cqh}
+  .row.mail .rc b{font-size:2.45cqh}
+
+  @media (prefers-reduced-motion:reduce){
+    .frame{transition:opacity .35s ease, visibility .35s}
+    .frame.on > *{animation:none}
+    .dot,.scan{animation:none}
+    .scan{opacity:0}
+  }
+</style>
+
+<div class="stage" role="img" aria-label="OrdenPro — app de órdenes de servicio técnico industrial, del celular a la factura. Un producto terminado de JV Systems, Juan Villanueva. Contacto: WhatsApp 343 472-8484, jvillanueva@jvsystems.com.ar, jvsystems.com.ar.">
+
+  <div class="code" aria-hidden="true"><span>return true;</span><span>let orden = new OT();</span><span>if (firma) cerrar();</span><span>await sync();</span></div>
+
+  <svg class="waves" viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="wgA" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#c96f00" stop-opacity=".14"/>
+        <stop offset="1" stop-color="#c96f00" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="wgB" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3f7fbf" stop-opacity=".12"/>
+        <stop offset="1" stop-color="#3f7fbf" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path fill="url(#wgB)" d="M-480 210 q120 40 240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 L2400 320 L-480 320 Z">
+      <animateTransform attributeName="transform" type="translate" from="0 0" to="-480 0" dur="34s" repeatCount="indefinite"/>
+    </path>
+    <path fill="url(#wgA)" d="M-480 200 q120 -46 240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 L2400 320 L-480 320 Z">
+      <animateTransform attributeName="transform" type="translate" from="-480 0" to="0 0" dur="22s" repeatCount="indefinite"/>
+    </path>
+    <path fill="none" stroke="#d99400" stroke-width="2" stroke-opacity=".18" d="M-480 176 q120 -34 240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0 t240 0">
+      <animateTransform attributeName="transform" type="translate" from="0 0" to="-480 0" dur="15s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+  <div class="scan"></div>
+
+  <div class="bars"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+
+  <!-- 1 · Gancho -->
+  <section class="frame">
+    <p class="eyebrow">Servicio técnico</p>
+    <h1>¿Las órdenes de trabajo todavía te van <span class="hl">en papel</span>?</h1>
+    <p class="lead">Remitos que se traspapelan, firmas que no llegan, y la factura siempre para la semana que viene.</p>
+  </section>
+
+  <!-- 2 · El costo -->
+  <section class="frame">
+    <p class="eyebrow">Lo que eso cuesta</p>
+    <div class="stack">
+      <p>Trabajos que se facturan tarde — o no se facturan.</p>
+      <p>Nadie sabe en qué quedó cada máquina.</p>
+      <p>El técnico en planta y la oficina, desconectados.</p>
+    </div>
+  </section>
+
+  <!-- 3 · La solución -->
+  <section class="frame">
+    <p class="eyebrow">La resolví</p>
+    <div class="wordmark"><span class="mk">Orden<span>Pro</span></span></div>
+    <p class="lead"><b>La orden de trabajo, del celular a la factura.</b> Una sola app para el técnico, facturación y administración.</p>
+    <span class="badge">Un producto terminado · no un proyecto a medida</span>
+  </section>
+
+  <!-- 4 · Cómo funciona -->
+  <section class="frame">
+    <p class="eyebrow">Cómo funciona</p>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><span class="t">Cargás la orden en planta<small>Cliente, máquina, diagnóstico, repuestos y horas</small></span></div>
+      <div class="step"><span class="n">2</span><span class="t">El cliente firma en la pantalla<small>El trabajo se cierra en el momento</small></span></div>
+      <div class="step"><span class="n">3</span><span class="t">Mandás el PDF por WhatsApp<small>Comprobante armado automáticamente</small></span></div>
+      <div class="step"><span class="n">4</span><span class="t">Facturación emite en Xubio, 1 clic<small>Y la orden queda como cobrada</small></span></div>
+    </div>
+  </section>
+
+  <!-- 5 · En vivo -->
+  <section class="frame">
+    <p class="eyebrow">Todo junto</p>
+    <h1>Sincronizado entre técnicos y oficina, <span class="hl">en vivo</span>.</h1>
+    <div class="sync"><span class="dot"></span> actualizando en todos los dispositivos…</div>
+    <div class="chips">
+      <span class="chip a">N° de orden automático</span>
+      <span class="chip b">Historial completo</span>
+      <span class="chip c">Planificación de visitas</span>
+    </div>
+  </section>
+
+  <!-- 6 · Para tu empresa -->
+  <section class="frame">
+    <p class="eyebrow">Para tu empresa</p>
+    <h1>¿Hacés <span class="hl">servicio técnico industrial</span>?</h1>
+    <p class="cta">Te la dejo andando con <b>tu marca, tus usuarios y tu facturación</b>. Sin plantillas genéricas, sin funciones que no usás.</p>
+  </section>
+
+  <!-- 7 · Contacto -->
+  <section class="frame">
+    <p class="eyebrow">Contacto directo</p>
+    <h2 class="name">Juan Villanueva</h2>
+    <p class="lead">Desarrollo de sistemas a medida. Respondo rápido — generalmente el mismo día.</p>
+    <div class="rows">
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.12 1.2.4 2.4.82 3.5a2 2 0 0 1-.45 2.1L8.1 10.6a16 16 0 0 0 6 6l1.3-1.27a2 2 0 0 1 2.1-.45c1.1.42 2.3.7 3.5.82A2 2 0 0 1 22 16.9Z"/></svg></span>
+        <span class="rc"><b>343&nbsp;472&#8209;8484</b><small>WhatsApp disponible</small></span>
+      </div>
+      <div class="row mail">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg></span>
+        <span class="rc"><b>jvillanueva@jvsystems.com.ar</b><small>Respondo en el día</small></span>
+      </div>
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+        <span class="rc"><b>Remoto · en cualquier lugar</b><small>jvsystems.com.ar</small></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  (function(){
+    var frames = Array.prototype.slice.call(document.querySelectorAll('.frame'));
+    var bars   = Array.prototype.slice.call(document.querySelectorAll('.bars i'));
+    var ms = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--frame-ms'), 10) || 6500;
+    var n = frames.length, i = -1;
+    function tick(){
+      i = (i + 1) % n;
+      frames.forEach(function(f, k){ f.classList.toggle('on', k === i); });
+      bars.forEach(function(b, k){
+        b.classList.remove('now', 'done');
+        if (k < i){ b.classList.add('done'); }
+        else if (k === i){ void b.offsetWidth; b.classList.add('now'); }
+      });
+    }
+    tick();
+    setInterval(tick, ms);
+
+    // Respetar "reducir movimiento": congelar las ondas SMIL
+    try{
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){
+        var svg = document.querySelector('svg.waves');
+        if (svg && svg.pauseAnimations) svg.pauseAnimations();
+      }
+    }catch(e){}
+  })();
+</script>
