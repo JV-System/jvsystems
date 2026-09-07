@@ -58,6 +58,11 @@
      "rebote" elástico de toda la pantalla no queda bloqueado solo con
      overflow:hidden -- se ve la app corrida (tapa el header arriba, recorta
      el borde izquierdo) justo cuando pega ese rebote al abrir. */
+  /* Fondo navy en html (no en body -- body ya tiene el fondo claro de la
+     app) como respaldo: en iOS instalada como ícono, si el header no llega
+     a cubrir del todo la franja de arriba (hora/batería), que se vea navy
+     detrás y no un resto del fondo claro de la página. */
+  html { background: #0A1628; }
   html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   body { font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; height: 100dvh; overscroll-behavior: none; }
 
@@ -1243,7 +1248,10 @@
       background: none; border: none; cursor: pointer;
       color: rgba(255,255,255,0.38); font-size: 10px; font-weight: 600;
       font-family: 'Exo 2', sans-serif; transition: color 0.18s;
-      padding: 0; position: relative;
+      /* padding-top: deja aire entre la línea del estado activo (arriba
+         del todo, top:0) y el ícono -- sin esto, en iOS el ícono quedaba
+         pegado contra la línea y hasta se veían cruzados. */
+      padding: 4px 0 0; position: relative;
     }
     /* color:initial + display:inline-block -- en iOS, el emoji del reloj
        (🕐 de Historial) se pintaba mal (se veía en blanco y negro, estirado)
@@ -2645,7 +2653,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 31;
+const APP_BUILD = 32;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
