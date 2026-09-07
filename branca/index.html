@@ -1521,6 +1521,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    /* Reserva de espacio abajo -- en pantallas mas bajas, el contenido
+       centrado (logo + Bienvenido + puntos) podia terminar demasiado cerca
+       o metido en la zona de las olas animadas. Corriendo el centro hacia
+       arriba con este padding se garantiza el mismo aire siempre. */
+    padding-bottom: min(140px, 18vh);
     overflow: hidden;
     transition: opacity 0.8s cubic-bezier(.4,0,.2,1);
   }
@@ -1788,7 +1793,7 @@
   <div id="splash-logo-wrap">
     <img
       id="splash-logo"
-      src="branca-logo.png"
+      src="branca-logo-transparent.png"
       alt="Ingeniería Branca SRL"
       style="width:240px;height:auto;border-radius:0;box-shadow:none;position:relative;z-index:2;"
       onerror="this.style.display='none';document.getElementById('splash-logo-fb').style.display='flex'">
@@ -2653,7 +2658,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 32;
+const APP_BUILD = 33;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
