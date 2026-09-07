@@ -2645,7 +2645,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 30;
+const APP_BUILD = 31;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -7647,7 +7647,7 @@ function restaurarBorradorSiExiste() {
     <span class="mob-fab-label">Nueva</span>
   </button>
   <button class="mob-nav-btn" id="mob-historial" onclick="mobSetView('historial')">
-    <span class="mob-icon">🕐</span>
+    <span class="mob-icon">⏱️</span>
     <span>Historial</span>
   </button>
   <button class="mob-nav-btn" id="mob-planificacion" onclick="mobSetView('planificacion')" style="display:none">
