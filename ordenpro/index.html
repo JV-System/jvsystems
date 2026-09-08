@@ -1781,6 +1781,20 @@
     }
   }
 </style>
+<style id="opdemo-fix">
+  .header-branca-fb .fb-brand { white-space: nowrap; }
+  .header-branca-fb .fb-srl   { white-space: nowrap; }
+  .header-branca-img { max-height: 40px; }
+  @media (max-width: 768px) {
+    #app-version-tag { display: none !important; }
+    .header-branca-box { padding: 0 12px !important; min-width: 0 !important; flex: 0 1 auto; }
+    .header-branca-img { max-height: 30px !important; max-width: 150px !important; }
+    .header-branca-fb .fb-brand { font-size: 12px !important; letter-spacing: 1px !important; }
+    .header-branca-fb .fb-srl   { font-size: 8px !important;  letter-spacing: 1px !important; }
+    .logo-area { min-width: 0; overflow: hidden; }
+  }
+  #splash-logo { background: transparent !important; }
+</style>
 </head>
 <body>
 
@@ -1793,9 +1807,9 @@
   <div id="splash-logo-wrap">
     <img
       id="splash-logo"
-      src="jvs-lockup-light.png"
+      src="jvs-logo.png"
       alt="JV Systems"
-      style="width:340px;height:auto;border-radius:0;box-shadow:none;position:relative;z-index:2;"
+      style="width:150px;height:150px;object-fit:contain;border-radius:0;box-shadow:none;background:transparent;position:relative;z-index:2;"
       onerror="this.style.display='none';document.getElementById('splash-logo-fb').style.display='flex'">
     <div id="splash-logo-fb">JVS</div>
   </div>
@@ -1907,7 +1921,12 @@
 <div class="app-header">
   <div class="logo-area">
     <div class="header-branca-box">
-      <div id="header-branca-fb" class="header-branca-fb" style="display:flex">
+      <img
+        src="demo-tenant-logo.png"
+        alt="Industrias Demo S.A."
+        class="header-branca-img"
+        onerror="this.style.display='none';document.getElementById('header-branca-fb').style.display='flex'">
+      <div id="header-branca-fb" class="header-branca-fb" style="display:none">
         <span class="fb-brand">INDUSTRIAS DEMO</span>
         <span class="fb-srl">S.A.</span>
       </div>
