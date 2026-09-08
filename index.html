@@ -531,6 +531,12 @@
       transition: background .15s;
     }
     .sistema-link:hover { background: rgba(255,140,0,0.1); }
+    .sistema-ctas { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    .sistema-link.demo {
+      background: var(--accent); color: #0b1220; border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(255,148,0,0.28);
+    }
+    .sistema-link.demo:hover { background: #ffa51f; }
 
     /* Controles carrusel */
     .carousel-controls {
@@ -1847,7 +1853,10 @@
           <div class="hpm"><div class="hpm-val up" data-i18n="casos.m4val">1 día</div><div class="hpm-lbl" data-i18n="casos.m4">De implementación a producción</div></div>
         </div>
 
-        <a href="#contacto" class="sistema-link" data-i18n="casos.cta">Quiero resultados así →</a>
+        <div class="sistema-ctas">
+          <a href="/ordenpro/" target="_blank" rel="noopener" class="sistema-link demo" data-i18n="casos.demo">▶ Probá el demo en vivo →</a>
+          <a href="#contacto" class="sistema-link" data-i18n="casos.cta">Quiero resultados así →</a>
+        </div>
       </div>
     </div>
   </div>
@@ -2556,6 +2565,7 @@ const I18N = {
     'casos.features': `<li>Technicians log orders from their phone in the field</li><li>Customer receipt sent via WhatsApp in seconds</li><li>Electronic invoicing integrated with Xubio (AFIP)</li><li>Customer's digital signature at the moment of service</li><li>Visit planning with a visual calendar</li>`,
     'casos.m1': 'Orders left unbilled', 'casos.m2': 'Active users', 'casos.m3': 'Digital receipts',
     'casos.m4val': '1 day', 'casos.m4': 'From implementation to production',
+    'casos.demo': '▶ Try the live demo →',
     'casos.cta': 'I want results like this →',
 
     'marc.tag': '— Attendance Control',
@@ -2703,6 +2713,7 @@ const I18N = {
     'casos.features': '<li>Técnicos registram as ordens pelo celular em campo</li><li>Comprovante enviado ao cliente em segundos por WhatsApp</li><li>Faturamento eletrônico integrado com Xubio (AFIP)</li><li>Assinatura digital do cliente no momento do serviço</li><li>Planejamento de visitas com calendário visual</li>',
     'casos.m1': 'Ordens sem faturar', 'casos.m2': 'Usuários ativos', 'casos.m3': 'Comprovantes digitais',
     'casos.m4val': '1 dia', 'casos.m4': 'Da implementação à produção',
+    'casos.demo': '▶ Testar a demo ao vivo →',
     'casos.cta': 'Quero resultados assim →',
 
     'marc.tag': '— Controle de Ponto',
