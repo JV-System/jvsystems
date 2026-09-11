@@ -5,10 +5,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root{
-    --bg:#0c0b0d;
+    --bg:#07060a;
     --bg-image:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,122,26,.10), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 110% 10%, rgba(228,41,82,.10), transparent 55%);
+      radial-gradient(ellipse 820px 520px at 18% -12%, rgba(155,92,255,.16), transparent 60%),
+      radial-gradient(ellipse 700px 520px at 108% 12%, rgba(228,41,82,.13), transparent 55%),
+      radial-gradient(ellipse 900px 620px at 50% 118%, rgba(155,92,255,.09), transparent 62%);
+    --violet-1:#c98bff;
+    --violet-2:#9b5cff;
+    --violet-glow:rgba(155,92,255,.4);
     --surface:#18161b;
     --surface-2:#221f26;
     --surface-3:#2b2731;
@@ -39,8 +43,15 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--bg-image),var(--bg);
-    background-attachment:fixed;
+    background-color:var(--bg);
+    background-image:
+      linear-gradient(180deg, rgba(5,4,7,.52) 0%, rgba(5,4,7,.84) 45%, var(--bg) 100%),
+      var(--bg-image),
+      url('Montal.png');
+    background-repeat:no-repeat, no-repeat, no-repeat;
+    background-position:center, center, center 18%;
+    background-size:cover, cover, cover;
+    background-attachment:fixed, fixed, fixed;
     color:var(--text);
     font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     min-height:100vh;
@@ -56,13 +67,22 @@
     overflow:hidden;
   }
   .pole-strip{
-    position:absolute; inset:0 0 auto 0; height:5px;
-    background:repeating-linear-gradient(115deg,
-      var(--pole-red) 0 14px, var(--pole-white) 14px 28px, var(--pole-blue) 28px 42px);
-    opacity:.9;
+    position:absolute; inset:0 0 auto 0; height:3px;
+    background:linear-gradient(90deg, var(--pole-red) 0%, var(--violet-2) 50%, var(--pole-red) 100%);
+    opacity:.85; box-shadow:0 0 14px 1px var(--violet-glow);
   }
   .brandrow{display:flex; align-items:center; gap:14px; margin-top:10px;}
-  .pole-icon{flex:none; width:40px; height:40px;}
+  .brand-badge{
+    flex:none; width:44px; height:44px; border-radius:12px;
+    background-image:
+      radial-gradient(circle at 50% 42%, rgba(155,92,255,.4), transparent 60%),
+      url('Montal.png');
+    background-size:cover, 300% auto;
+    background-position:center, 50% 40%;
+    background-repeat:no-repeat, no-repeat;
+    border:1px solid var(--border-soft);
+    box-shadow:0 0 16px 1px var(--violet-glow);
+  }
   .wordmark{
     font-family:'Anton',sans-serif;
     font-size:40px;
@@ -150,6 +170,8 @@
     cursor:pointer; font-variant-numeric:tabular-nums;
   }
   .slot-btn.selected{background:var(--accent-grad); color:#1a0d06; border-color:transparent;}
+  .slot-btn.taken{opacity:.4; cursor:not-allowed; text-decoration:line-through;}
+  .slot-btn .taken-lbl{display:block; font-size:8px; font-weight:800; text-decoration:none; letter-spacing:.3px; margin-top:2px; color:var(--danger);}
   .empty-note{color:var(--text-faint); font-size:13px; font-weight:600; padding:14px 0; text-align:center;}
 
   .notice{
@@ -207,6 +229,25 @@
   .week-col.today{border-color:var(--accent-2);}
   .week-item{font-size:9.5px; font-weight:700; color:var(--text-muted); background:var(--surface-3); border-radius:5px; padding:2px 3px; margin-bottom:3px; text-align:center; font-variant-numeric:tabular-nums;}
 
+  /* ---------- gantt (owner week view) ---------- */
+  .gantt-wrap{overflow:auto; max-height:440px; border:1px solid var(--border-soft); border-radius:var(--radius-md); background:var(--surface);}
+  .gantt{display:flex; flex-direction:column; min-width:540px;}
+  .gantt-row{display:grid; grid-template-columns:54px repeat(7,1fr);}
+  .gantt-head{position:sticky; top:0; z-index:2; background:var(--surface-2); border-bottom:1px solid var(--border);}
+  .gantt-time{font-size:9.5px; font-weight:700; color:var(--text-faint); padding:5px 6px; text-align:right; font-variant-numeric:tabular-nums; border-right:1px solid var(--border-soft); border-top:1px solid var(--border-soft);}
+  .gantt-head .gantt-time{border-top:none;}
+  .gantt-col-head{font-size:9.5px; font-weight:800; text-align:center; padding:8px 2px; color:var(--text-muted); text-transform:uppercase;}
+  .gantt-col-head span{display:block; font-size:12px; margin-top:1px; font-weight:800;}
+  .gantt-col-head.today{color:var(--accent-1);}
+  .gantt-cell{min-height:24px; border-top:1px solid var(--border-soft); border-right:1px solid var(--border-soft); display:flex; align-items:center; justify-content:center; padding:1px;}
+  .gantt-cell.closed{background:repeating-linear-gradient(45deg, var(--surface-2) 0 6px, var(--surface-3) 6px 12px); opacity:.55;}
+  .gantt-cell.booked{background:var(--accent-grad); cursor:pointer;}
+  .gantt-cell.today:not(.booked){background:rgba(155,92,255,.07);}
+  .gantt-name{font-size:8px; font-weight:800; color:#1a0d06; line-height:1.15; text-align:center; padding:0 2px;}
+  .gantt-legend{display:flex; gap:14px; margin:10px 2px 4px; font-size:11px; color:var(--text-faint); font-weight:600;}
+  .gantt-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .gantt-legend i{width:10px; height:10px; border-radius:3px; display:inline-block;}
+
   .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
   .month-dow{font-size:10px; font-weight:800; color:var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px;}
   .month-cell{aspect-ratio:1; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative;}
@@ -260,28 +301,43 @@
   a{color:var(--accent-1);}
   ::-webkit-scrollbar{height:6px; width:6px;}
   ::-webkit-scrollbar-thumb{background:var(--border); border-radius:99px;}
+
+  /* ---------- intro reveal ---------- */
+  .intro-overlay{position:fixed; inset:0; background:#020103; display:flex; align-items:center; justify-content:center; z-index:300; transition:opacity .8s ease, visibility .8s;}
+  .intro-overlay.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  .intro-frame{
+    width:180px; height:180px; border-radius:26px; overflow:hidden;
+    opacity:0; transform:scale(.8);
+    animation:introIn 1.3s cubic-bezier(.2,.8,.3,1) forwards;
+    box-shadow:0 0 70px 12px var(--violet-glow), 0 0 0 1px rgba(255,255,255,.06);
+  }
+  .intro-photo{
+    width:100%; height:100%;
+    background-image:radial-gradient(circle at 50% 40%, rgba(155,92,255,.25), transparent 60%), url('Montal.png');
+    background-size:cover, 230% auto;
+    background-position:center, 50% 38%;
+    background-repeat:no-repeat, no-repeat;
+  }
+  .intro-caption{position:absolute; bottom:14%; left:0; right:0; text-align:center; font-family:'Anton',sans-serif; letter-spacing:2px; font-size:15px; color:var(--violet-1); opacity:0; animation:introText 1.3s ease .5s forwards;}
+  @keyframes introIn{ 0%{opacity:0; transform:scale(.72);} 55%{opacity:1; transform:scale(1.06);} 100%{opacity:1; transform:scale(1);} }
+  @keyframes introText{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:.85; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){
+    .intro-overlay{transition:none;}
+    .intro-frame,.intro-caption{animation:none; opacity:1; transform:none;}
+  }
+
+  .example-tag{display:inline-block; font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; color:var(--violet-1); background:rgba(155,92,255,.14); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:middle;}
 </style>
 
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-frame"><div class="intro-photo"></div></div>
+  <div class="intro-caption">MONTAL</div>
+</div>
 <div class="app">
   <header class="header">
     <div class="pole-strip"></div>
     <div class="brandrow">
-      <svg class="pole-icon" viewBox="0 0 40 40" fill="none">
-        <rect x="16" y="4" width="8" height="4" rx="1.5" fill="var(--pole-white)"/>
-        <rect x="4" y="10" width="32" height="24" rx="12" fill="url(#poleGrad)"/>
-        <rect x="4" y="10" width="32" height="24" rx="12" fill="url(#poleStripes)" opacity=".95"/>
-        <rect x="16" y="32" width="8" height="4" rx="1.5" fill="var(--pole-white)"/>
-        <defs>
-          <linearGradient id="poleGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop stop-color="#2c2830"/><stop offset="1" stop-color="#1a171c"/>
-          </linearGradient>
-          <pattern id="poleStripes" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-            <rect width="14" height="4.6" fill="var(--pole-red)"/>
-            <rect y="4.6" width="14" height="4.6" fill="var(--pole-white)"/>
-            <rect y="9.2" width="14" height="4.6" fill="var(--pole-blue)"/>
-          </pattern>
-        </defs>
-      </svg>
+      <div class="brand-badge" aria-hidden="true"></div>
       <div>
         <h1 class="wordmark">MONTAL</h1>
         <div class="tagline">Barbería · Reyna Montiel</div>
@@ -357,10 +413,33 @@
     };
   }
 
+  function seedExampleData(s){
+    var d0 = toISO(new Date());
+    var d1 = addDays(d0,1);
+    var d2 = addDays(d0,2);
+    function mk(name,lastname,phone,date,time){
+      return {id:uid(), name:name, lastname:lastname, phone:phone||"", date:date, time:time,
+        price:s.config.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
+        seenByOwner:true, clientKey:clientKeyOf(name,lastname,phone), isExample:true};
+    }
+    [ mk("Lucas","Gómez","3436111111", d0, "10:00"),
+      mk("Martina","Fernández","3436222222", d0, "17:30"),
+      mk("Ezequiel","Ríos","", d1, "09:30"),
+      mk("Brisa","Acosta","3436333333", d1, "18:00"),
+      mk("Tomás","Benítez","", d2, "11:00")
+    ].forEach(function(b){ s.bookings.push(b); });
+    var fkey = clientKeyOf("Facundo","Silva","3436444444");
+    s.debts[fkey] = {name:"Facundo", lastname:"Silva", phone:"3436444444", since:Date.now(), isExample:true};
+  }
+
   function loadState(){
     try{
       var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return defaultState();
+      if(!raw){
+        var fresh = defaultState();
+        seedExampleData(fresh);
+        return fresh;
+      }
       var parsed = JSON.parse(raw);
       var d = defaultState();
       parsed.config = Object.assign({}, d.config, parsed.config||{});
@@ -395,6 +474,22 @@
     monthPicker:false,
     lastBooking:null
   };
+
+  // ---------- intro reveal ----------
+  (function(){
+    var overlay = document.getElementById("introOverlay");
+    if(!overlay) return;
+    var seen = false;
+    try{ seen = sessionStorage.getItem("montal_intro_seen")==="1"; }catch(e){}
+    if(seen){
+      overlay.style.display = "none";
+    } else {
+      setTimeout(function(){
+        overlay.classList.add("hide");
+        try{ sessionStorage.setItem("montal_intro_seen","1"); }catch(e){}
+      }, 1200);
+    }
+  })();
 
   // ---------- utils ----------
   function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
@@ -476,6 +571,23 @@
     slots = slots.filter(function(s){ return taken.indexOf(s)===-1; });
     return slots;
   }
+  function getSlotStatuses(iso){
+    var ranges = getRangesForDate(iso);
+    var slotMin = state.config.slotMinutes;
+    var slots = [];
+    ranges.forEach(function(r){
+      var start=timeToMin(r.start), end=timeToMin(r.end);
+      for(var t=start; t+slotMin<=end; t+=slotMin){ slots.push(minToTime(t)); }
+    });
+    var todayISO = toISO(new Date());
+    if(iso===todayISO){
+      var nowMin = new Date().getHours()*60+new Date().getMinutes();
+      slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
+    }
+    var takenSet = {};
+    state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).forEach(function(b){ takenSet[b.time]=true; });
+    return slots.map(function(s){ return {time:s, taken:!!takenSet[s]}; });
+  }
 
   // ---------- booking ops ----------
   function activeDebtFor(key){ return state.debts[key] || null; }
@@ -517,6 +629,18 @@
     b.status = "completed";
     saveState();
     renderOwner();
+  }
+
+  function hasExampleData(){
+    return state.bookings.some(function(b){ return b.isExample; }) ||
+      Object.keys(state.debts).some(function(k){ return state.debts[k].isExample; });
+  }
+  function clearExampleData(){
+    state.bookings = state.bookings.filter(function(b){ return !b.isExample; });
+    Object.keys(state.debts).forEach(function(k){ if(state.debts[k].isExample) delete state.debts[k]; });
+    saveState();
+    renderOwner();
+    showToast("Datos de ejemplo borrados.");
   }
 
   function settleDebt(key){
@@ -598,13 +722,16 @@
 
     var slotsHtml = "";
     if(client.selectedDate){
-      var slots = generateSlots(client.selectedDate);
-      if(slots.length===0){
+      var statuses = getSlotStatuses(client.selectedDate);
+      if(statuses.length===0){
         slotsHtml = '<div class="empty-note">No hay horarios disponibles ese día. Probá con otra fecha.</div>';
       }else{
-        slotsHtml = '<div class="slot-grid">' + slots.map(function(s){
-          var sel = client.selectedTime===s ? " selected" : "";
-          return '<button class="slot-btn'+sel+'" data-time="'+s+'">'+s+'</button>';
+        slotsHtml = '<div class="slot-grid">' + statuses.map(function(st){
+          if(st.taken){
+            return '<button class="slot-btn taken" disabled>'+st.time+'<span class="taken-lbl">Ocupado</span></button>';
+          }
+          var sel = client.selectedTime===st.time ? " selected" : "";
+          return '<button class="slot-btn'+sel+'" data-time="'+st.time+'">'+st.time+'</button>';
         }).join("") + '</div>';
       }
     }
@@ -797,9 +924,14 @@
       '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' +
       '</div>';
 
+    if(hasExampleData()){
+      html += '<div class="notice info" style="align-items:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>' +
+        '<div>Estás viendo turnos de ejemplo para mostrar cómo se ve la agenda llena. <button id="btnClearExamples" style="background:none; border:none; color:var(--accent-1); font-weight:800; font-family:inherit; font-size:13px; cursor:pointer; padding:0; text-decoration:underline;">Borrarlos</button></div></div>';
+    }
+
     html += '<div class="agenda-subnav">' +
       ['dia','semana','mes'].map(function(v){
-        var lbl = v==='dia'?'Día':v==='semana'?'Semana':'Mes';
+        var lbl = v==='dia'?'Día':v==='semana'?'Gantt semanal':'Mes';
         return '<button class="agendaViewBtn'+(session.agendaView===v?' active':'')+'" data-v="'+v+'">'+lbl+'</button>';
       }).join('') + '</div>';
 
@@ -840,7 +972,7 @@
     }
     return '<div class="booking-row">' +
       '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
-      '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+'</div>' +
+      '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
       '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
       (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de seña)</span>':'') +
       '</div>' + actions +
@@ -854,24 +986,68 @@
     start.setDate(start.getDate()+mondayOffset);
     var startISO = toISO(start);
     var todayISO = toISO(new Date());
-    var cols = "";
-    for(var i=0;i<7;i++){
-      var iso = addDays(startISO,i);
-      var d = fromISO(iso);
-      var items = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
-      cols += '<div class="week-col'+(iso===todayISO?' today':'')+'" data-jump="'+iso+'">' +
-        '<div class="dh">'+DOW_SHORT[DOW_KEYS[d.getDay()]]+'</div>' +
-        '<div class="dn">'+d.getDate()+'</div>' +
-        items.slice(0,4).map(function(b){ return '<div class="week-item">'+b.time+' '+esc(b.lastname)+'</div>'; }).join("") +
-        (items.length>4 ? '<div class="week-item">+'+(items.length-4)+'</div>' : "") +
-        '</div>';
-    }
-    return '<div class="nav-arrows">' +
+    var days = [];
+    for(var i=0;i<7;i++) days.push(addDays(startISO,i));
+
+    var nav = '<div class="nav-arrows">' +
       '<button data-wnav="-1">‹</button>' +
       '<div class="lbl">'+formatDateShort(startISO)+' – '+formatDateShort(addDays(startISO,6))+'</div>' +
       '<button data-wnav="1">›</button>' +
-      '</div>' +
-      '<div class="week-grid">'+cols+'</div>';
+      '</div>';
+
+    // rango horario global: min inicio / max fin entre los turnos activos de la semana (o de la config si esa semana está toda cerrada)
+    var minStart=null, maxEnd=null;
+    days.forEach(function(iso){
+      getRangesForDate(iso).forEach(function(r){
+        var s=timeToMin(r.start), e=timeToMin(r.end);
+        if(minStart===null||s<minStart) minStart=s;
+        if(maxEnd===null||e>maxEnd) maxEnd=e;
+      });
+    });
+    if(minStart===null){
+      DOW_KEYS.forEach(function(k){
+        ["morning","afternoon"].forEach(function(sh){
+          var shift = state.config.hours[k][sh];
+          if(shift.active){
+            var s=timeToMin(shift.start), e=timeToMin(shift.end);
+            if(minStart===null||s<minStart) minStart=s;
+            if(maxEnd===null||e>maxEnd) maxEnd=e;
+          }
+        });
+      });
+    }
+    if(minStart===null) return nav + '<div class="empty-note">No hay horarios configurados.</div>';
+
+    var slotMin = state.config.slotMinutes;
+    var rows = [];
+    for(var t=minStart; t<maxEnd; t+=slotMin) rows.push(t);
+
+    var head = '<div class="gantt-row gantt-head"><div class="gantt-time"></div>' +
+      days.map(function(iso){
+        var d = fromISO(iso);
+        return '<div class="gantt-col-head'+(iso===todayISO?' today':'')+'">'+DOW_SHORT[DOW_KEYS[d.getDay()]]+'<span>'+d.getDate()+'</span></div>';
+      }).join('') + '</div>';
+
+    var body = rows.map(function(t){
+      var timeLbl = minToTime(t);
+      var row = '<div class="gantt-row"><div class="gantt-time">'+timeLbl+'</div>';
+      days.forEach(function(iso){
+        var open = getRangesForDate(iso).some(function(r){ return t>=timeToMin(r.start) && t<timeToMin(r.end); });
+        var booking = state.bookings.filter(function(b){ return b.date===iso && b.time===timeLbl && b.status!=="cancelled"; })[0];
+        var cls = "gantt-cell" + (open?"":" closed") + (booking?" booked":"") + (iso===todayISO?" today":"");
+        var content = booking ? '<span class="gantt-name">'+esc(booking.name)+' '+esc((booking.lastname||"").charAt(0))+'.</span>' : "";
+        row += '<div class="'+cls+'"'+(booking?' data-jump="'+iso+'" title="'+esc(booking.name)+' '+esc(booking.lastname)+' · '+timeLbl+'hs"':'')+'>'+content+'</div>';
+      });
+      return row + '</div>';
+    }).join('');
+
+    return nav +
+      '<div class="gantt-wrap"><div class="gantt">'+head+body+'</div></div>' +
+      '<div class="gantt-legend">' +
+        '<span><i style="background:var(--accent-grad)"></i>Ocupado</span>' +
+        '<span><i style="background:var(--surface-2); border:1px solid var(--border);"></i>Libre</span>' +
+        '<span><i style="background:var(--surface-3); opacity:.6;"></i>Cerrado</span>' +
+      '</div>';
   }
 
   function agendaMes(){
@@ -904,6 +1080,10 @@
   }
 
   function bindAgendaEvents(){
+    var ce = document.getElementById("btnClearExamples");
+    if(ce) ce.onclick = function(){
+      askConfirm("Borrar datos de ejemplo", "¿Borrar los turnos y saldos de ejemplo? Los turnos reales no se tocan.", clearExampleData);
+    };
     document.querySelectorAll(".agendaViewBtn").forEach(function(el){
       el.onclick = function(){ session.agendaView = el.getAttribute("data-v"); renderOwner(); };
     });
@@ -1046,7 +1226,7 @@
     if(keys.length===0) html += '<div class="empty-note">No hay saldos pendientes.</div>';
     else html += keys.map(function(k){
       var d = state.debts[k];
-      return '<div class="debt-item"><div><div class="n">'+esc(d.name)+' '+esc(d.lastname)+'</div>'+(d.phone?'<div class="cr" style="font-size:12px;color:var(--text-faint);">'+esc(d.phone)+'</div>':'')+'</div>' +
+      return '<div class="debt-item"><div><div class="n">'+esc(d.name)+' '+esc(d.lastname)+(d.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>'+(d.phone?'<div class="cr" style="font-size:12px;color:var(--text-faint);">'+esc(d.phone)+'</div>':'')+'</div>' +
         '<div style="text-align:right;"><div class="amt">'+money(currentPenalty())+'</div>' +
         '<button class="btn btn-ghost btn-sm" style="margin-top:6px;" data-settle="'+k+'">Marcar pagado</button></div></div>';
     }).join("");
