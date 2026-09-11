@@ -44,14 +44,9 @@
   html,body{margin:0;padding:0;}
   body{
     background-color:var(--bg);
-    background-image:
-      linear-gradient(180deg, rgba(5,4,7,.52) 0%, rgba(5,4,7,.84) 45%, var(--bg) 100%),
-      var(--bg-image),
-      url('Montal.png');
-    background-repeat:no-repeat, no-repeat, no-repeat;
-    background-position:center, center, center 18%;
-    background-size:cover, cover, cover;
-    background-attachment:fixed, fixed, fixed;
+    background-image:var(--bg-image);
+    background-repeat:no-repeat;
+    background-attachment:fixed;
     color:var(--text);
     font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     min-height:100vh;
@@ -66,40 +61,30 @@
   main{flex:1; display:flex; flex-direction:column; justify-content:center;}
   main > *{width:100%;}
 
-  /* ---------- header ---------- */
-  .header{
-    padding:26px 20px 18px;
-    position:relative;
-    overflow:hidden;
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative; width:100%; aspect-ratio:941/860; max-height:40vh; min-height:220px;
+    overflow:hidden; background:#000;
   }
-  .pole-strip{
-    position:absolute; inset:0 0 auto 0; height:3px;
-    background:linear-gradient(90deg, var(--pole-red) 0%, var(--violet-2) 50%, var(--pole-red) 100%);
-    opacity:.85; box-shadow:0 0 14px 1px var(--violet-glow);
+  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 18%; display:block;}
+  .hero-scrim{
+    position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(5,4,7,.05) 0%, rgba(5,4,7,.25) 55%, var(--bg) 97%);
   }
-  .brandrow{display:flex; align-items:center; gap:14px; margin-top:10px;}
-  .brand-badge{
-    flex:none; width:44px; height:44px; border-radius:12px;
-    background-image:
-      radial-gradient(circle at 50% 42%, rgba(155,92,255,.4), transparent 60%),
-      url('Montal.png');
-    background-size:cover, 300% auto;
-    background-position:center, 50% 40%;
-    background-repeat:no-repeat, no-repeat;
-    border:1px solid var(--border-soft);
-    box-shadow:0 0 16px 1px var(--violet-glow);
-  }
+  .hero-top-fade{position:absolute; inset:0 0 auto 0; height:35%; background:linear-gradient(180deg, rgba(5,4,7,.55), transparent); pointer-events:none;}
+  .hero-content{position:absolute; left:20px; right:20px; bottom:16px;}
   .wordmark{
     font-family:'Anton',sans-serif;
-    font-size:40px;
+    font-size:46px;
     line-height:.9;
     letter-spacing:.5px;
     background:var(--accent-grad);
     -webkit-background-clip:text; background-clip:text; color:transparent;
     margin:0;
+    filter:drop-shadow(0 3px 12px rgba(0,0,0,.7));
   }
-  .tagline{color:var(--text-muted); font-size:13px; margin-top:2px; font-weight:600; letter-spacing:.2px;}
-  .meta-row{display:flex; flex-wrap:wrap; gap:14px; margin-top:14px;}
+  .tagline{color:var(--text-muted); font-size:13px; margin-top:3px; font-weight:600; letter-spacing:.2px; text-shadow:0 1px 8px rgba(0,0,0,.9);}
+  .meta-row{display:flex; flex-wrap:wrap; gap:14px; padding:12px 20px 0;}
   .meta-chip{
     display:flex; align-items:center; gap:6px;
     font-size:12.5px; color:var(--text-muted); font-weight:600;
@@ -341,21 +326,20 @@
   <div class="intro-caption">MONTAL</div>
 </div>
 <div class="app">
-  <header class="header">
-    <div class="pole-strip"></div>
-    <div class="brandrow">
-      <div class="brand-badge" aria-hidden="true"></div>
-      <div>
-        <h1 class="wordmark">MONTAL</h1>
-        <div class="tagline">Barbería · Reyna Montiel</div>
-      </div>
+  <div class="hero">
+    <img class="hero-photo" src="Montal.png" alt="MONTAL">
+    <div class="hero-top-fade"></div>
+    <div class="hero-scrim"></div>
+    <div class="hero-content">
+      <h1 class="wordmark">MONTAL</h1>
+      <div class="tagline">Barbería · Reyna Montiel</div>
     </div>
-    <div class="meta-row">
-      <span class="meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>Pasaje Misiones 280</span>
-      <a class="meta-chip" id="whatsAppHeaderLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.3.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.6-1.1.2-.6.2-1 .1-1.1 0-.1-.2-.2-.4-.3Z"/></svg>3436218436</a>
-    </div>
-  </header>
+  </div>
+  <div class="meta-row">
+    <span class="meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>Pasaje Misiones 280</span>
+    <a class="meta-chip" id="whatsAppHeaderLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.3.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.6-1.1.2-.6.2-1 .1-1.1 0-.1-.2-.2-.4-.3Z"/></svg>3436218436</a>
+  </div>
 
   <nav class="roletabs">
     <button id="tabCliente" class="active">Reservar turno</button>
