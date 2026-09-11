@@ -1,0 +1,1064 @@
+<!doctype html>
+<title>MONTAL Turnos</title>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#0c0b0d;
+    --bg-image:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,122,26,.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 110% 10%, rgba(228,41,82,.10), transparent 55%);
+    --surface:#18161b;
+    --surface-2:#221f26;
+    --surface-3:#2b2731;
+    --border:#332f39;
+    --border-soft:#26232a;
+    --text:#f4eee5;
+    --text-muted:#b6adb9;
+    --text-faint:#847b88;
+    --accent-1:#ff9d3d;
+    --accent-2:#ff5b3d;
+    --accent-3:#e42952;
+    --accent-grad:linear-gradient(120deg,var(--accent-1) 0%,var(--accent-2) 50%,var(--accent-3) 100%);
+    --success:#4fae83;
+    --success-bg:rgba(79,174,131,.14);
+    --warn:#e8b23d;
+    --warn-bg:rgba(232,178,61,.14);
+    --danger:#ef4a5b;
+    --danger-bg:rgba(239,74,91,.14);
+    --pole-blue:#3a63c2;
+    --pole-red:#d7263d;
+    --pole-white:#ece5da;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow-1:0 10px 30px -12px rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-image),var(--bg);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{text-wrap:balance; margin:0;}
+  .app{max-width:560px;margin:0 auto;padding:0 0 64px;position:relative;}
+
+  /* ---------- header ---------- */
+  .header{
+    padding:26px 20px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .pole-strip{
+    position:absolute; inset:0 0 auto 0; height:5px;
+    background:repeating-linear-gradient(115deg,
+      var(--pole-red) 0 14px, var(--pole-white) 14px 28px, var(--pole-blue) 28px 42px);
+    opacity:.9;
+  }
+  .brandrow{display:flex; align-items:center; gap:14px; margin-top:10px;}
+  .pole-icon{flex:none; width:40px; height:40px;}
+  .wordmark{
+    font-family:'Anton',sans-serif;
+    font-size:40px;
+    line-height:.9;
+    letter-spacing:.5px;
+    background:var(--accent-grad);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin:0;
+  }
+  .tagline{color:var(--text-muted); font-size:13px; margin-top:2px; font-weight:600; letter-spacing:.2px;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:14px; margin-top:14px;}
+  .meta-chip{
+    display:flex; align-items:center; gap:6px;
+    font-size:12.5px; color:var(--text-muted); font-weight:600;
+    background:var(--surface); border:1px solid var(--border-soft);
+    padding:6px 11px; border-radius:999px;
+  }
+  .meta-chip svg{width:13px;height:13px;flex:none;}
+
+  /* ---------- role tabs ---------- */
+  .roletabs{
+    display:flex; gap:8px; margin:18px 20px 0; background:var(--surface);
+    border:1px solid var(--border-soft); border-radius:999px; padding:5px;
+  }
+  .roletabs button{
+    flex:1; border:none; background:transparent; color:var(--text-muted);
+    font-family:inherit; font-weight:800; font-size:13.5px; letter-spacing:.3px;
+    padding:10px 8px; border-radius:999px; cursor:pointer; text-transform:uppercase;
+  }
+  .roletabs button.active{background:var(--accent-grad); color:#1a0d06; box-shadow:var(--shadow-1);}
+
+  main{padding:20px;}
+  .card{
+    background:var(--surface); border:1px solid var(--border-soft);
+    border-radius:var(--radius-lg); padding:20px; margin-bottom:16px;
+    box-shadow:var(--shadow-1);
+  }
+  .card h2{font-size:16px; font-weight:800; margin-bottom:4px;}
+  .card .sub{color:var(--text-faint); font-size:12.5px; margin-bottom:16px; font-weight:600;}
+
+  label{display:block; font-size:12.5px; font-weight:700; color:var(--text-muted); margin:0 0 6px; text-transform:uppercase; letter-spacing:.3px;}
+  input[type=text],input[type=tel],input[type=number],input[type=date],input[type=password],select{
+    width:100%; background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text); font-family:inherit; font-size:15px; font-weight:600;
+    padding:12px 13px; border-radius:var(--radius-sm); margin-bottom:14px;
+  }
+  input:focus,select:focus{outline:2px solid var(--accent-1); outline-offset:1px;}
+  .field-hint{font-size:11.5px; color:var(--text-faint); margin-top:-10px; margin-bottom:14px; font-weight:600;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .checkline{display:flex; align-items:center; gap:9px; margin-bottom:12px;}
+  .checkline input[type=checkbox]{width:18px;height:18px; accent-color:var(--accent-2);}
+  .checkline span{font-size:13.5px; font-weight:600; color:var(--text-muted);}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; border-radius:999px; font-family:inherit; font-weight:800;
+    font-size:14.5px; letter-spacing:.2px; padding:13px 22px; cursor:pointer;
+    width:100%;
+  }
+  .btn-primary{background:var(--accent-grad); color:#1a0d06; box-shadow:var(--shadow-1);}
+  .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn-wa{background:#1fae58; color:#08210f;}
+  .btn-danger{background:var(--danger-bg); color:var(--danger); border:1px solid rgba(239,74,91,.35);}
+  .btn-sm{width:auto; padding:8px 14px; font-size:12.5px; border-radius:999px;}
+  .btn-row{display:flex; gap:10px;}
+  .btn-row .btn{width:auto; flex:1;}
+
+  /* ---------- date strip ---------- */
+  .date-strip{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px; margin:0 -4px 6px; scrollbar-width:thin;}
+  .date-chip{
+    flex:none; width:58px; text-align:center; padding:10px 0 9px; border-radius:14px;
+    background:var(--surface-2); border:1px solid var(--border); cursor:pointer;
+  }
+  .date-chip .dow{font-size:10.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase;}
+  .date-chip .num{font-size:19px; font-weight:800; margin-top:2px;}
+  .date-chip.selected{background:var(--accent-grad); border-color:transparent;}
+  .date-chip.selected .dow,.date-chip.selected .num{color:#1a0d06;}
+  .date-chip.closed{opacity:.35; cursor:not-allowed;}
+
+  .slot-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px;}
+  .slot-btn{
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    font-family:inherit; font-weight:700; font-size:14px; padding:11px 4px; border-radius:var(--radius-sm);
+    cursor:pointer; font-variant-numeric:tabular-nums;
+  }
+  .slot-btn.selected{background:var(--accent-grad); color:#1a0d06; border-color:transparent;}
+  .empty-note{color:var(--text-faint); font-size:13px; font-weight:600; padding:14px 0; text-align:center;}
+
+  .notice{
+    display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:var(--radius-sm);
+    font-size:13px; font-weight:600; margin-bottom:14px; line-height:1.4;
+  }
+  .notice.warn{background:var(--warn-bg); color:var(--warn);}
+  .notice.info{background:rgba(255,157,61,.1); color:var(--accent-1);}
+  .notice svg{flex:none; width:16px; height:16px; margin-top:1px;}
+
+  .summary-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
+  .summary-row:last-of-type{border-bottom:none;}
+  .summary-row .k{color:var(--text-muted); font-weight:600;}
+  .summary-row .v{font-weight:800; font-variant-numeric:tabular-nums;}
+  .summary-row.total .v{color:var(--accent-1); font-size:17px;}
+
+  .badge{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.3px;}
+  .badge.confirmed{background:var(--success-bg); color:var(--success);}
+  .badge.cancelled{background:var(--danger-bg); color:var(--danger);}
+  .badge.completed{background:var(--surface-3); color:var(--text-muted);}
+
+  /* ---------- owner ---------- */
+  .owner-nav{display:flex; gap:6px; overflow-x:auto; margin-bottom:16px; padding-bottom:2px;}
+  .owner-nav button{
+    flex:none; background:var(--surface); border:1px solid var(--border-soft); color:var(--text-muted);
+    font-family:inherit; font-weight:700; font-size:12.5px; padding:9px 14px; border-radius:999px; cursor:pointer;
+  }
+  .owner-nav button.active{background:var(--surface-3); color:var(--text); border-color:var(--accent-2);}
+
+  .stat-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;}
+  .stat-tile{background:var(--surface); border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:14px 16px;}
+  .stat-tile .num{font-family:'Anton',sans-serif; font-size:28px; background:var(--accent-grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .stat-tile .lbl{font-size:11.5px; color:var(--text-faint); font-weight:700; text-transform:uppercase; letter-spacing:.3px; margin-top:2px;}
+
+  .agenda-subnav{display:flex; gap:8px; margin-bottom:14px;}
+  .agenda-subnav button{flex:1; background:var(--surface-2); border:1px solid var(--border); color:var(--text-muted); font-family:inherit; font-weight:700; font-size:13px; padding:9px; border-radius:var(--radius-sm); cursor:pointer;}
+  .agenda-subnav button.active{background:var(--surface-3); color:var(--text); border-color:var(--accent-2);}
+  .nav-arrows{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .nav-arrows button{background:var(--surface-2); border:1px solid var(--border); color:var(--text); width:34px; height:34px; border-radius:999px; cursor:pointer; font-size:16px; font-weight:800;}
+  .nav-arrows .lbl{font-weight:800; font-size:14.5px; text-transform:capitalize;}
+
+  .booking-row{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md); padding:13px 14px; margin-bottom:10px;}
+  .booking-row .top{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;}
+  .booking-row .time{font-family:'Anton',sans-serif; font-size:19px; letter-spacing:.3px;}
+  .booking-row .name{font-weight:800; font-size:14.5px;}
+  .booking-row .sub{font-size:12px; color:var(--text-faint); font-weight:600; margin-top:2px;}
+  .booking-row .price{font-weight:800; font-variant-numeric:tabular-nums; color:var(--accent-1); font-size:13.5px;}
+  .booking-row .debt-tag{color:var(--warn); font-weight:700;}
+  .booking-row .actions{display:flex; gap:8px; margin-top:10px;}
+
+  .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .week-col{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 5px; min-height:90px; cursor:pointer;}
+  .week-col .dh{font-size:10px; font-weight:800; text-align:center; color:var(--text-faint); text-transform:uppercase;}
+  .week-col .dn{font-size:15px; font-weight:800; text-align:center; margin:2px 0 6px;}
+  .week-col.today{border-color:var(--accent-2);}
+  .week-item{font-size:9.5px; font-weight:700; color:var(--text-muted); background:var(--surface-3); border-radius:5px; padding:2px 3px; margin-bottom:3px; text-align:center; font-variant-numeric:tabular-nums;}
+
+  .month-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+  .month-dow{font-size:10px; font-weight:800; color:var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px;}
+  .month-cell{aspect-ratio:1; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative;}
+  .month-cell.other{opacity:.25; cursor:default;}
+  .month-cell.closed{opacity:.35;}
+  .month-cell.today{border-color:var(--accent-2);}
+  .month-cell .dn{font-weight:800; font-size:14px;}
+  .month-cell .dot{position:absolute; bottom:6px; width:6px; height:6px; border-radius:50%; background:var(--accent-1);}
+
+  .hours-day{display:flex; flex-direction:column; gap:8px; padding:12px 0; border-bottom:1px solid var(--border-soft);}
+  .hours-day:last-child{border-bottom:none;}
+  .hours-day .dlabel{font-weight:800; font-size:14px; margin-bottom:2px;}
+  .hours-shift{display:flex; align-items:center; gap:10px;}
+  .hours-shift .shiftname{font-size:12px; font-weight:700; color:var(--text-faint); width:64px; flex:none;}
+  .hours-shift input[type=checkbox]{width:17px;height:17px; accent-color:var(--accent-2); flex:none;}
+  .hours-shift input[type=time]{background:var(--surface-2); border:1px solid var(--border); color:var(--text); font-family:inherit; font-weight:700; padding:8px; border-radius:8px; width:100%;}
+  .hours-shift.disabled input[type=time]{opacity:.35;}
+
+  .closure-item{display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px;}
+  .closure-item .cd{font-weight:800; font-size:13.5px;}
+  .closure-item .cr{font-size:12px; color:var(--text-faint); font-weight:600;}
+  .closure-item button{background:none; border:none; color:var(--danger); font-size:18px; cursor:pointer; line-height:1;}
+
+  .debt-item{display:flex; justify-content:space-between; align-items:center; background:var(--warn-bg); border:1px solid rgba(232,178,61,.3); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+  .debt-item .n{font-weight:800; font-size:14px;}
+  .debt-item .amt{font-weight:800; color:var(--warn); font-variant-numeric:tabular-nums;}
+
+  .bell-wrap{position:relative; display:inline-flex;}
+  .bell-dot{position:absolute; top:-3px; right:-3px; background:var(--danger); color:#fff; font-size:10px; font-weight:800; min-width:16px; height:16px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 3px;}
+
+  .stepper{display:flex; gap:6px; margin-bottom:18px; padding:0 4px;}
+  .stepper .dot{flex:1; height:4px; border-radius:99px; background:var(--surface-3);}
+  .stepper .dot.done{background:var(--accent-grad);}
+
+  .success-icon{width:56px; height:56px; border-radius:50%; background:var(--success-bg); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;}
+
+  .lockcard{text-align:center; padding:34px 20px;}
+  .lockcard .lockicon{font-size:34px; margin-bottom:10px;}
+
+  .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--surface-3); border:1px solid var(--border); color:var(--text); font-weight:700; font-size:13.5px; padding:12px 18px; border-radius:999px; box-shadow:var(--shadow-1); z-index:50; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
+
+  .modal-overlay{position:fixed; inset:0; background:rgba(8,7,9,.7); display:flex; align-items:center; justify-content:center; padding:24px; z-index:80; opacity:0; pointer-events:none; transition:opacity .18s;}
+  .modal-overlay.show{opacity:1; pointer-events:auto;}
+  .modal-box{background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px; max-width:340px; width:100%; box-shadow:var(--shadow-1); transform:translateY(6px); transition:transform .18s;}
+  .modal-overlay.show .modal-box{transform:translateY(0);}
+  .modal-box h3{font-size:16px; font-weight:800; margin-bottom:8px;}
+  .modal-box p{font-size:13.5px; color:var(--text-muted); font-weight:600; line-height:1.5; margin:0 0 18px;}
+
+  .footer-note{text-align:center; color:var(--text-faint); font-size:11px; font-weight:600; padding:18px 20px 0;}
+  a{color:var(--accent-1);}
+  ::-webkit-scrollbar{height:6px; width:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border); border-radius:99px;}
+</style>
+
+<div class="app">
+  <header class="header">
+    <div class="pole-strip"></div>
+    <div class="brandrow">
+      <svg class="pole-icon" viewBox="0 0 40 40" fill="none">
+        <rect x="16" y="4" width="8" height="4" rx="1.5" fill="var(--pole-white)"/>
+        <rect x="4" y="10" width="32" height="24" rx="12" fill="url(#poleGrad)"/>
+        <rect x="4" y="10" width="32" height="24" rx="12" fill="url(#poleStripes)" opacity=".95"/>
+        <rect x="16" y="32" width="8" height="4" rx="1.5" fill="var(--pole-white)"/>
+        <defs>
+          <linearGradient id="poleGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop stop-color="#2c2830"/><stop offset="1" stop-color="#1a171c"/>
+          </linearGradient>
+          <pattern id="poleStripes" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <rect width="14" height="4.6" fill="var(--pole-red)"/>
+            <rect y="4.6" width="14" height="4.6" fill="var(--pole-white)"/>
+            <rect y="9.2" width="14" height="4.6" fill="var(--pole-blue)"/>
+          </pattern>
+        </defs>
+      </svg>
+      <div>
+        <h1 class="wordmark">MONTAL</h1>
+        <div class="tagline">Barbería · Reyna Montiel</div>
+      </div>
+    </div>
+    <div class="meta-row">
+      <span class="meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>Pasaje Misiones 280</span>
+      <a class="meta-chip" id="whatsAppHeaderLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.3.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.6-1.1.2-.6.2-1 .1-1.1 0-.1-.2-.2-.4-.3Z"/></svg>3436218436</a>
+    </div>
+  </header>
+
+  <nav class="roletabs">
+    <button id="tabCliente" class="active">Reservar turno</button>
+    <button id="tabDueno">Panel del dueño</button>
+  </nav>
+
+  <main id="main"></main>
+
+  <div class="footer-note">MONTAL Turnos · by JV Systems</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMsg"></p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="modalNo">Volver</button>
+      <button class="btn btn-danger" id="modalYes" style="background:var(--accent-grad); color:#1a0d06;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "montal_turnos_v1";
+  var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
+  var DOW_LABEL = {sun:"Domingo",mon:"Lunes",tue:"Martes",wed:"Miércoles",thu:"Jueves",fri:"Viernes",sat:"Sábado"};
+  var DOW_SHORT = {sun:"DOM",mon:"LUN",tue:"MAR",wed:"MIÉ",thu:"JUE",fri:"VIE",sat:"SÁB"};
+  var MONTHS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+  function defaultHoursDay(morningActive, afternoonActive){
+    return {
+      morning:{active:morningActive, start:"09:00", end:"13:00"},
+      afternoon:{active:afternoonActive, start:"16:00", end:"20:00"}
+    };
+  }
+
+  function defaultState(){
+    return {
+      config:{
+        businessName:"MONTAL",
+        ownerName:"Reyna Montiel",
+        address:"Pasaje Misiones 280",
+        whatsappDisplay:"3436218436",
+        whatsappLink:"5493436218436",
+        price:8000,
+        priceIsExample:true,
+        slotMinutes:30,
+        ownerPin:"1234",
+        hours:{
+          mon:defaultHoursDay(true,true), tue:defaultHoursDay(true,true), wed:defaultHoursDay(true,true),
+          thu:defaultHoursDay(true,true), fri:defaultHoursDay(true,true),
+          sat:defaultHoursDay(true,false), sun:defaultHoursDay(false,false)
+        }
+      },
+      closures:[],
+      bookings:[],
+      debts:{}
+    };
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultState();
+      var parsed = JSON.parse(raw);
+      var d = defaultState();
+      parsed.config = Object.assign({}, d.config, parsed.config||{});
+      parsed.config.hours = Object.assign({}, d.config.hours, (parsed.config||{}).hours||{});
+      parsed.closures = parsed.closures||[];
+      parsed.bookings = parsed.bookings||[];
+      parsed.debts = parsed.debts||{};
+      return parsed;
+    }catch(e){ return defaultState(); }
+  }
+
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  var state = loadState();
+
+  var session = {
+    role: "cliente",
+    ownerAuthed: (sessionStorage.getItem("montal_owner_authed")==="1"),
+    ownerTab: "agenda",
+    agendaView: "dia",
+    agendaDate: toISO(new Date()),
+    monthCursor: toISO(new Date()),
+    weekCursor: toISO(new Date())
+  };
+
+  var client = {
+    step:1,
+    name:"", lastname:"", phone:"", remember:false,
+    selectedDate:null, selectedTime:null,
+    monthPicker:false,
+    lastBooking:null
+  };
+
+  // ---------- utils ----------
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+  function pad2(n){ return n<10 ? "0"+n : ""+n; }
+  function toISO(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  function fromISO(iso){ var p=iso.split("-").map(Number); return new Date(p[0],p[1]-1,p[2]); }
+  function addDays(iso,n){ var d=fromISO(iso); d.setDate(d.getDate()+n); return toISO(d); }
+  function addMonths(iso,n){ var d=fromISO(iso); d.setMonth(d.getMonth()+n); d.setDate(1); return toISO(d); }
+  function weekdayKey(iso){ return DOW_KEYS[fromISO(iso).getDay()]; }
+  function timeToMin(t){ var p=t.split(":").map(Number); return p[0]*60+p[1]; }
+  function minToTime(m){ return pad2(Math.floor(m/60))+":"+pad2(m%60); }
+  function money(n){ return "$" + Math.round(n).toLocaleString("es-AR"); }
+  function esc(s){ return (s||"").replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function formatDateLong(iso){
+    var d = fromISO(iso);
+    var wd = DOW_LABEL[DOW_KEYS[d.getDay()]];
+    return wd + " " + d.getDate() + " de " + MONTHS[d.getMonth()];
+  }
+  function formatDateShort(iso){
+    var d = fromISO(iso);
+    return d.getDate() + " " + MONTHS[d.getMonth()].slice(0,3);
+  }
+  function normalize(s){ return (s||"").trim().toLowerCase().replace(/\s+/g," "); }
+  function digitsOnly(s){ return (s||"").replace(/\D/g,""); }
+  function clientKeyOf(name,lastname,phone){
+    var ph = digitsOnly(phone);
+    if(ph.length>=6) return "tel:"+ph;
+    return "name:"+normalize(name+" "+lastname);
+  }
+
+  function askConfirm(title, message, onYes){
+    var overlay = document.getElementById("modalOverlay");
+    document.getElementById("modalTitle").textContent = title;
+    document.getElementById("modalMsg").textContent = message;
+    overlay.classList.add("show");
+    function cleanup(){ overlay.classList.remove("show"); yesBtn.onclick=null; noBtn.onclick=null; }
+    var yesBtn = document.getElementById("modalYes");
+    var noBtn = document.getElementById("modalNo");
+    yesBtn.onclick = function(){ cleanup(); onYes(); };
+    noBtn.onclick = function(){ cleanup(); };
+  }
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(function(){ t.classList.remove("show"); }, 2600);
+  }
+
+  // ---------- availability ----------
+  function getClosure(iso){
+    for(var i=0;i<state.closures.length;i++){ if(state.closures[i].date===iso) return state.closures[i]; }
+    return null;
+  }
+  function getRangesForDate(iso){
+    if(getClosure(iso)) return [];
+    var day = state.config.hours[weekdayKey(iso)];
+    var ranges = [];
+    if(day.morning.active) ranges.push(day.morning);
+    if(day.afternoon.active) ranges.push(day.afternoon);
+    return ranges;
+  }
+  function isDayFullyClosed(iso){ return getRangesForDate(iso).length===0; }
+  function generateSlots(iso){
+    var ranges = getRangesForDate(iso);
+    var slotMin = state.config.slotMinutes;
+    var slots = [];
+    ranges.forEach(function(r){
+      var start=timeToMin(r.start), end=timeToMin(r.end);
+      for(var t=start; t+slotMin<=end; t+=slotMin){ slots.push(minToTime(t)); }
+    });
+    var todayISO = toISO(new Date());
+    if(iso===todayISO){
+      var nowMin = new Date().getHours()*60+new Date().getMinutes();
+      slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
+    }
+    var taken = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).map(function(b){ return b.time; });
+    slots = slots.filter(function(s){ return taken.indexOf(s)===-1; });
+    return slots;
+  }
+
+  // ---------- booking ops ----------
+  function activeDebtFor(key){ return state.debts[key] || null; }
+  function currentPenalty(){ return Math.round(state.config.price/2); }
+
+  function createBooking(){
+    var key = clientKeyOf(client.name, client.lastname, client.phone);
+    var hasDebt = !!activeDebtFor(key);
+    var debtAmount = hasDebt ? currentPenalty() : 0;
+    var booking = {
+      id:uid(), name:client.name, lastname:client.lastname, phone:client.phone,
+      date:client.selectedDate, time:client.selectedTime,
+      price:state.config.price, debtCharged:debtAmount,
+      status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key
+    };
+    state.bookings.push(booking);
+    if(hasDebt) delete state.debts[key];
+    saveState();
+    return booking;
+  }
+
+  function cancelBooking(id){
+    var b = state.bookings.filter(function(x){ return x.id===id; })[0];
+    if(!b) return;
+    var todayISO = toISO(new Date());
+    var penalized = (b.date===todayISO && b.status==="confirmed");
+    if(penalized){
+      state.debts[b.clientKey] = {name:b.name, lastname:b.lastname, phone:b.phone, since:Date.now()};
+    }
+    b.status = "cancelled";
+    saveState();
+    renderOwner();
+    showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+  }
+
+  function completeBooking(id){
+    var b = state.bookings.filter(function(x){ return x.id===id; })[0];
+    if(!b) return;
+    b.status = "completed";
+    saveState();
+    renderOwner();
+  }
+
+  function settleDebt(key){
+    delete state.debts[key];
+    saveState();
+    renderOwner();
+    showToast("Saldo marcado como pagado.");
+  }
+
+  function buildWaLink(b){
+    var total = b.price + (b.debtCharged||0);
+    var msg = "Hola! Soy "+b.name+" "+b.lastname+". Reservé un turno en "+state.config.businessName+
+      " para el "+formatDateLong(b.date)+" a las "+b.time+"hs. Total a abonar: "+money(total)+".";
+    if(b.debtCharged>0) msg += " (incluye "+money(b.debtCharged)+" de una cancelación anterior).";
+    msg += " ¡Gracias!";
+    return "https://wa.me/"+state.config.whatsappLink+"?text="+encodeURIComponent(msg);
+  }
+
+  // ---------- render root ----------
+  function render(){
+    document.getElementById("tabCliente").classList.toggle("active", session.role==="cliente");
+    document.getElementById("tabDueno").classList.toggle("active", session.role==="dueno");
+    document.getElementById("whatsAppHeaderLink").href = "https://wa.me/"+state.config.whatsappLink;
+    if(session.role==="cliente") renderClient(); else renderOwner();
+  }
+
+  document.getElementById("tabCliente").onclick = function(){ session.role="cliente"; render(); };
+  document.getElementById("tabDueno").onclick = function(){ session.role="dueno"; render(); };
+
+  // ================= CLIENT VIEW =================
+  function renderClient(){
+    var main = document.getElementById("main");
+    var html = "";
+    html += '<div class="stepper">' +
+      [1,2,3,4].map(function(n){ return '<div class="dot'+(client.step>=n?' done':'')+'"></div>'; }).join("") +
+      '</div>';
+
+    if(client.step===1) html += stepDatos();
+    else if(client.step===2) html += stepFecha();
+    else if(client.step===3) html += stepConfirmacion();
+    else html += stepExito();
+
+    main.innerHTML = html;
+    bindClientEvents();
+  }
+
+  function stepDatos(){
+    return '<div class="card">' +
+      '<h2>Tus datos</h2>' +
+      '<div class="sub">Para reservar tu turno en '+esc(state.config.businessName)+'</div>' +
+      '<label>Nombre</label>' +
+      '<input type="text" id="inpName" value="'+esc(client.name)+'" placeholder="Ej: Juan">' +
+      '<label>Apellido</label>' +
+      '<input type="text" id="inpLastname" value="'+esc(client.lastname)+'" placeholder="Ej: Pérez">' +
+      '<label>WhatsApp (opcional, recomendado)</label>' +
+      '<input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="Ej: 3436 000000">' +
+      '<div class="field-hint">Nos ayuda a identificarte si volvés y a avisarte cambios de turno.</div>' +
+      '<div class="checkline"><input type="checkbox" id="inpRemember" '+(client.remember?'checked':'')+'><span>Recordar mis datos en este dispositivo</span></div>' +
+      '<button class="btn btn-primary" id="btnStep1">Continuar</button>' +
+      '</div>';
+  }
+
+  function stepFecha(){
+    var days = [];
+    for(var i=0;i<21;i++) days.push(addDays(toISO(new Date()), i));
+    var strip = days.map(function(iso){
+      var closed = isDayFullyClosed(iso);
+      var d = fromISO(iso);
+      var sel = client.selectedDate===iso ? " selected" : "";
+      var cls = "date-chip" + sel + (closed?" closed":"");
+      return '<div class="'+cls+'" data-date="'+iso+'"'+(closed?"":' data-pick="1"')+'>' +
+        '<div class="dow">'+DOW_SHORT[DOW_KEYS[d.getDay()]]+'</div>' +
+        '<div class="num">'+d.getDate()+'</div></div>';
+    }).join("");
+
+    var key = clientKeyOf(client.name, client.lastname, client.phone);
+    var debt = activeDebtFor(key);
+    var debtNotice = debt ? '<div class="notice warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div>Tenés un saldo pendiente de '+money(currentPenalty())+' por una cancelación anterior. Se va a sumar a este turno.</div></div>' : "";
+
+    var slotsHtml = "";
+    if(client.selectedDate){
+      var slots = generateSlots(client.selectedDate);
+      if(slots.length===0){
+        slotsHtml = '<div class="empty-note">No hay horarios disponibles ese día. Probá con otra fecha.</div>';
+      }else{
+        slotsHtml = '<div class="slot-grid">' + slots.map(function(s){
+          var sel = client.selectedTime===s ? " selected" : "";
+          return '<button class="slot-btn'+sel+'" data-time="'+s+'">'+s+'</button>';
+        }).join("") + '</div>';
+      }
+    }
+
+    return '<div class="card">' +
+      '<h2>Elegí fecha y horario</h2>' +
+      '<div class="sub">Precio del corte: '+money(state.config.price)+'</div>' +
+      debtNotice +
+      '<div class="date-strip">'+strip+'</div>' +
+      slotsHtml +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-ghost" id="btnBack1">Atrás</button>' +
+        '<button class="btn btn-primary" id="btnStep2" '+(client.selectedDate&&client.selectedTime?'':'disabled')+'>Continuar</button>' +
+      '</div>';
+  }
+
+  function stepConfirmacion(){
+    var key = clientKeyOf(client.name, client.lastname, client.phone);
+    var debt = activeDebtFor(key);
+    var debtAmount = debt ? currentPenalty() : 0;
+    var total = state.config.price + debtAmount;
+    return '<div class="card">' +
+      '<h2>Confirmá tu turno</h2>' +
+      '<div class="sub">Revisá los datos antes de reservar</div>' +
+      '<div class="summary-row"><span class="k">Cliente</span><span class="v">'+esc(client.name)+' '+esc(client.lastname)+'</span></div>' +
+      '<div class="summary-row"><span class="k">Fecha</span><span class="v">'+formatDateLong(client.selectedDate)+'</span></div>' +
+      '<div class="summary-row"><span class="k">Horario</span><span class="v">'+client.selectedTime+' hs</span></div>' +
+      '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(state.config.price)+'</span></div>' +
+      (debtAmount ? '<div class="summary-row"><span class="k">Saldo anterior</span><span class="v" style="color:var(--warn)">'+money(debtAmount)+'</span></div>' : "") +
+      '<div class="summary-row total"><span class="k">Total</span><span class="v">'+money(total)+'</span></div>' +
+      '</div>' +
+      cancelPolicyNote() +
+      '<div class="btn-row">' +
+        '<button class="btn btn-ghost" id="btnBack2">Atrás</button>' +
+        '<button class="btn btn-primary" id="btnConfirm">Confirmar turno</button>' +
+      '</div>';
+  }
+
+  function cancelPolicyNote(){
+    return '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>' +
+      '<div>Política de cancelación: si cancelás el mismo día del turno, se cobra el 50% como seña y queda registrado a tu nombre para el próximo turno.</div></div>';
+  }
+
+  function stepExito(){
+    var b = client.lastBooking;
+    if(!b) return '<div class="card">Algo salió mal.</div>';
+    var total = b.price + (b.debtCharged||0);
+    return '<div class="card" style="text-align:center;">' +
+      '<div class="success-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4fae83" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>' +
+      '<h2>¡Turno reservado!</h2>' +
+      '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs</div>' +
+      '<div class="summary-row total" style="justify-content:center; gap:8px; border:none;"><span class="k">Total</span><span class="v">'+money(total)+'</span></div>' +
+      '</div>' +
+      '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">Confirmar por WhatsApp</a>' +
+      '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>';
+  }
+
+  function bindClientEvents(){
+    var b1 = document.getElementById("btnStep1");
+    if(b1) b1.onclick = function(){
+      client.name = document.getElementById("inpName").value.trim();
+      client.lastname = document.getElementById("inpLastname").value.trim();
+      client.phone = document.getElementById("inpPhone").value.trim();
+      client.remember = document.getElementById("inpRemember").checked;
+      if(!client.name || !client.lastname){ showToast("Completá nombre y apellido."); return; }
+      if(client.remember){
+        try{ localStorage.setItem("montal_client_profile", JSON.stringify({name:client.name,lastname:client.lastname,phone:client.phone})); }catch(e){}
+      }
+      client.step = 2;
+      renderClient();
+    };
+
+    document.querySelectorAll(".date-chip[data-pick]").forEach(function(el){
+      el.onclick = function(){ client.selectedDate = el.getAttribute("data-date"); client.selectedTime = null; renderClient(); };
+    });
+    document.querySelectorAll(".slot-btn").forEach(function(el){
+      el.onclick = function(){ client.selectedTime = el.getAttribute("data-time"); renderClient(); };
+    });
+    var back1 = document.getElementById("btnBack1");
+    if(back1) back1.onclick = function(){ client.step=1; renderClient(); };
+    var s2 = document.getElementById("btnStep2");
+    if(s2) s2.onclick = function(){ if(client.selectedDate && client.selectedTime){ client.step=3; renderClient(); } };
+    var back2 = document.getElementById("btnBack2");
+    if(back2) back2.onclick = function(){ client.step=2; renderClient(); };
+    var conf = document.getElementById("btnConfirm");
+    if(conf) conf.onclick = function(){
+      client.lastBooking = createBooking();
+      client.step = 4;
+      renderClient();
+    };
+    var nb = document.getElementById("btnNewBooking");
+    if(nb) nb.onclick = function(){
+      client.step=1; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null;
+      renderClient();
+    };
+  }
+
+  // load remembered profile once
+  (function(){
+    try{
+      var raw = localStorage.getItem("montal_client_profile");
+      if(raw){
+        var p = JSON.parse(raw);
+        client.name=p.name||""; client.lastname=p.lastname||""; client.phone=p.phone||""; client.remember=true;
+      }
+    }catch(e){}
+  })();
+
+  // ================= OWNER VIEW =================
+  function renderOwner(){
+    var main = document.getElementById("main");
+    if(!session.ownerAuthed){
+      main.innerHTML = ownerLogin();
+      var btn = document.getElementById("btnOwnerLogin");
+      btn.onclick = function(){
+        var pin = document.getElementById("inpPin").value;
+        if(pin === state.config.ownerPin){
+          session.ownerAuthed = true;
+          sessionStorage.setItem("montal_owner_authed","1");
+          renderOwner();
+        }else{
+          showToast("PIN incorrecto.");
+        }
+      };
+      return;
+    }
+
+    var unseen = state.bookings.filter(function(b){ return !b.seenByOwner && b.status==="confirmed"; }).length;
+    var html = '<div class="owner-nav">' +
+      navBtn("agenda","Agenda", unseen) +
+      navBtn("horarios","Horarios") +
+      navBtn("cierres","Cierres") +
+      navBtn("precios","Precios") +
+      navBtn("saldos","Saldos pendientes", Object.keys(state.debts).length) +
+      '<button id="btnLogout" style="margin-left:auto;">Salir</button>' +
+      '</div>';
+
+    if(session.ownerTab==="agenda") html += ownerAgenda();
+    else if(session.ownerTab==="horarios") html += ownerHorarios();
+    else if(session.ownerTab==="cierres") html += ownerCierres();
+    else if(session.ownerTab==="precios") html += ownerPrecios();
+    else html += ownerSaldos();
+
+    main.innerHTML = html;
+    bindOwnerNav();
+
+    if(session.ownerTab==="agenda"){
+      state.bookings.forEach(function(b){ b.seenByOwner = true; });
+      saveState();
+      bindAgendaEvents();
+    } else if(session.ownerTab==="horarios") bindHorariosEvents();
+    else if(session.ownerTab==="cierres") bindCierresEvents();
+    else if(session.ownerTab==="precios") bindPreciosEvents();
+    else bindSaldosEvents();
+  }
+
+  function navBtn(id,label,count){
+    var active = session.ownerTab===id ? " active" : "";
+    var badge = count ? ' <span class="bell-dot" style="position:static; margin-left:5px; display:inline-flex;">'+count+'</span>' : "";
+    return '<button class="ownerNavBtn'+active+'" data-tab="'+id+'">'+label+badge+'</button>';
+  }
+
+  function ownerLogin(){
+    return '<div class="card lockcard">' +
+      '<div class="lockicon">🔒</div>' +
+      '<h2>Acceso del dueño</h2>' +
+      '<div class="sub">Ingresá el PIN para ver la agenda</div>' +
+      '<input type="password" id="inpPin" placeholder="PIN" style="text-align:center; letter-spacing:4px; max-width:160px; margin:0 auto 14px;">' +
+      '<button class="btn btn-primary" id="btnOwnerLogin" style="max-width:220px; margin:0 auto;">Ingresar</button>' +
+      '<div class="field-hint" style="margin-top:12px;">PIN de ejemplo: 1234 (cambialo en Precios → Acceso)</div>' +
+      '</div>';
+  }
+
+  function bindOwnerNav(){
+    document.querySelectorAll(".ownerNavBtn").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); renderOwner(); };
+    });
+    var lo = document.getElementById("btnLogout");
+    if(lo) lo.onclick = function(){ session.ownerAuthed=false; sessionStorage.removeItem("montal_owner_authed"); renderOwner(); };
+  }
+
+  function ownerAgenda(){
+    var todayISO = toISO(new Date());
+    var todays = state.bookings.filter(function(b){ return b.date===todayISO && b.status!=="cancelled"; });
+    var toCollect = todays.reduce(function(s,b){ return s + b.price + (b.debtCharged||0); }, 0);
+
+    var html = '<div class="stat-row">' +
+      '<div class="stat-tile"><div class="num">'+todays.length+'</div><div class="lbl">Turnos hoy</div></div>' +
+      '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' +
+      '</div>';
+
+    html += '<div class="agenda-subnav">' +
+      ['dia','semana','mes'].map(function(v){
+        var lbl = v==='dia'?'Día':v==='semana'?'Semana':'Mes';
+        return '<button class="agendaViewBtn'+(session.agendaView===v?' active':'')+'" data-v="'+v+'">'+lbl+'</button>';
+      }).join('') + '</div>';
+
+    if(session.agendaView==="dia") html += agendaDia();
+    else if(session.agendaView==="semana") html += agendaSemana();
+    else html += agendaMes();
+
+    return html;
+  }
+
+  function agendaDia(){
+    var iso = session.agendaDate;
+    var list = state.bookings.filter(function(b){ return b.date===iso; }).sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+    var html = '<div class="nav-arrows">' +
+      '<button data-dnav="-1">‹</button>' +
+      '<div class="lbl">'+formatDateLong(iso)+'</div>' +
+      '<button data-dnav="1">›</button>' +
+      '</div>';
+    if(list.length===0){
+      html += '<div class="empty-note">Sin turnos este día'+(isDayFullyClosed(iso)?' · Local cerrado':'')+'.</div>';
+    } else {
+      html += list.map(bookingRow).join("");
+    }
+    return html;
+  }
+
+  function bookingRow(b){
+    var badgeClass = b.status;
+    var badgeLabel = b.status==="confirmed"?"Confirmado":b.status==="cancelled"?"Cancelado":"Completado";
+    var total = b.price + (b.debtCharged||0);
+    var actions = "";
+    if(b.status==="confirmed"){
+      actions = '<div class="actions">' +
+        '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
+        '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>' +
+        (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+digitsOnly(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
+        '</div>';
+    }
+    return '<div class="booking-row">' +
+      '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
+      '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+'</div>' +
+      '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
+      (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de seña)</span>':'') +
+      '</div>' + actions +
+      '</div>';
+  }
+
+  function agendaSemana(){
+    var start = fromISO(session.weekCursor);
+    var wd = start.getDay();
+    var mondayOffset = (wd===0? -6 : 1-wd);
+    start.setDate(start.getDate()+mondayOffset);
+    var startISO = toISO(start);
+    var todayISO = toISO(new Date());
+    var cols = "";
+    for(var i=0;i<7;i++){
+      var iso = addDays(startISO,i);
+      var d = fromISO(iso);
+      var items = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+      cols += '<div class="week-col'+(iso===todayISO?' today':'')+'" data-jump="'+iso+'">' +
+        '<div class="dh">'+DOW_SHORT[DOW_KEYS[d.getDay()]]+'</div>' +
+        '<div class="dn">'+d.getDate()+'</div>' +
+        items.slice(0,4).map(function(b){ return '<div class="week-item">'+b.time+' '+esc(b.lastname)+'</div>'; }).join("") +
+        (items.length>4 ? '<div class="week-item">+'+(items.length-4)+'</div>' : "") +
+        '</div>';
+    }
+    return '<div class="nav-arrows">' +
+      '<button data-wnav="-1">‹</button>' +
+      '<div class="lbl">'+formatDateShort(startISO)+' – '+formatDateShort(addDays(startISO,6))+'</div>' +
+      '<button data-wnav="1">›</button>' +
+      '</div>' +
+      '<div class="week-grid">'+cols+'</div>';
+  }
+
+  function agendaMes(){
+    var cursor = fromISO(session.monthCursor);
+    var year = cursor.getFullYear(), month = cursor.getMonth();
+    var firstOfMonth = new Date(year,month,1);
+    var startOffset = (firstOfMonth.getDay()===0? 6 : firstOfMonth.getDay()-1);
+    var gridStart = new Date(year,month,1-startOffset);
+    var todayISO = toISO(new Date());
+    var cells = "";
+    var dows = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
+    dows.forEach(function(d){ cells += '<div class="month-dow">'+d+'</div>'; });
+    for(var i=0;i<42;i++){
+      var d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
+      var iso = toISO(d);
+      var other = d.getMonth()!==month;
+      var count = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).length;
+      var closed = isDayFullyClosed(iso);
+      cells += '<div class="month-cell'+(other?' other':'')+(closed&&!other?' closed':'')+(iso===todayISO?' today':'')+'" '+(other?'':'data-jump="'+iso+'"')+'>' +
+        '<div class="dn">'+d.getDate()+'</div>' +
+        (count && !other ? '<div class="dot"></div>' : '') +
+        '</div>';
+    }
+    return '<div class="nav-arrows">' +
+      '<button data-mnav="-1">‹</button>' +
+      '<div class="lbl">'+MONTHS[month]+' '+year+'</div>' +
+      '<button data-mnav="1">›</button>' +
+      '</div>' +
+      '<div class="month-grid">'+cells+'</div>';
+  }
+
+  function bindAgendaEvents(){
+    document.querySelectorAll(".agendaViewBtn").forEach(function(el){
+      el.onclick = function(){ session.agendaView = el.getAttribute("data-v"); renderOwner(); };
+    });
+    document.querySelectorAll("[data-complete]").forEach(function(el){
+      el.onclick = function(){ completeBooking(el.getAttribute("data-complete")); };
+    });
+    document.querySelectorAll("[data-cancel]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-cancel");
+        askConfirm("Cancelar turno", "¿Cancelar este turno? Si es el mismo día, se registrará una seña del 50% a nombre del cliente.", function(){ cancelBooking(id); });
+      };
+    });
+    document.querySelectorAll("[data-dnav]").forEach(function(el){
+      el.onclick = function(){ session.agendaDate = addDays(session.agendaDate, parseInt(el.getAttribute("data-dnav"),10)); renderOwner(); };
+    });
+    document.querySelectorAll("[data-wnav]").forEach(function(el){
+      el.onclick = function(){ session.weekCursor = addDays(session.weekCursor, 7*parseInt(el.getAttribute("data-wnav"),10)); renderOwner(); };
+    });
+    document.querySelectorAll("[data-mnav]").forEach(function(el){
+      el.onclick = function(){ session.monthCursor = addMonths(session.monthCursor, parseInt(el.getAttribute("data-mnav"),10)); renderOwner(); };
+    });
+    document.querySelectorAll("[data-jump]").forEach(function(el){
+      el.onclick = function(){ session.agendaDate = el.getAttribute("data-jump"); session.agendaView="dia"; renderOwner(); };
+    });
+  }
+
+  function ownerHorarios(){
+    var html = '<div class="card"><h2>Horarios de atención</h2><div class="sub">Definí cuándo abrís (podés separar turno mañana y tarde)</div>';
+    DOW_KEYS.filter(function(k){ return k!=="sun"; }).concat(["sun"]).forEach(function(k){
+      var day = state.config.hours[k];
+      html += '<div class="hours-day">' +
+        '<div class="dlabel">'+DOW_LABEL[k]+'</div>' +
+        shiftRow(k,"morning","Mañana",day.morning) +
+        shiftRow(k,"afternoon","Tarde",day.afternoon) +
+        '</div>';
+    });
+    html += '<button class="btn btn-primary" id="btnSaveHours" style="margin-top:16px;">Guardar horarios</button></div>';
+    return html;
+  }
+  function shiftRow(dayKey, shiftKey, label, shift){
+    var dis = shift.active ? "" : " disabled";
+    return '<div class="hours-shift'+dis+'">' +
+      '<span class="shiftname">'+label+'</span>' +
+      '<input type="checkbox" data-shift-active="'+dayKey+'.'+shiftKey+'" '+(shift.active?'checked':'')+'>' +
+      '<input type="time" data-shift-start="'+dayKey+'.'+shiftKey+'" value="'+shift.start+'" '+(shift.active?'':'disabled')+'>' +
+      '<input type="time" data-shift-end="'+dayKey+'.'+shiftKey+'" value="'+shift.end+'" '+(shift.active?'':'disabled')+'>' +
+      '</div>';
+  }
+  function bindHorariosEvents(){
+    document.querySelectorAll("[data-shift-active]").forEach(function(el){
+      el.onchange = function(){
+        var parts = el.getAttribute("data-shift-active").split(".");
+        state.config.hours[parts[0]][parts[1]].active = el.checked;
+        renderOwner();
+      };
+    });
+    var btn = document.getElementById("btnSaveHours");
+    if(btn) btn.onclick = function(){
+      document.querySelectorAll("[data-shift-start]").forEach(function(el){
+        var p = el.getAttribute("data-shift-start").split(".");
+        state.config.hours[p[0]][p[1]].start = el.value;
+      });
+      document.querySelectorAll("[data-shift-end]").forEach(function(el){
+        var p = el.getAttribute("data-shift-end").split(".");
+        state.config.hours[p[0]][p[1]].end = el.value;
+      });
+      saveState();
+      showToast("Horarios guardados.");
+    };
+  }
+
+  function ownerCierres(){
+    var html = '<div class="card"><h2>Cierres puntuales</h2><div class="sub">Días u horarios que cerrás por motivos personales</div>' +
+      '<label>Fecha</label><input type="date" id="inpClosureDate">' +
+      '<label>Motivo (opcional)</label><input type="text" id="inpClosureReason" placeholder="Ej: Turno médico">' +
+      '<button class="btn btn-primary" id="btnAddClosure">Agregar cierre</button>' +
+      '</div>';
+    html += '<div class="card"><h2>Próximos cierres</h2>';
+    var upcoming = state.closures.slice().sort(function(a,b){ return a.date<b.date?-1:1; });
+    if(upcoming.length===0) html += '<div class="empty-note">No hay cierres cargados.</div>';
+    else html += upcoming.map(function(c){
+      return '<div class="closure-item"><div><div class="cd">'+formatDateLong(c.date)+'</div>'+(c.reason?'<div class="cr">'+esc(c.reason)+'</div>':'')+'</div><button data-delclosure="'+c.id+'">✕</button></div>';
+    }).join("");
+    html += '</div>';
+    return html;
+  }
+  function bindCierresEvents(){
+    var btn = document.getElementById("btnAddClosure");
+    if(btn) btn.onclick = function(){
+      var date = document.getElementById("inpClosureDate").value;
+      var reason = document.getElementById("inpClosureReason").value.trim();
+      if(!date){ showToast("Elegí una fecha."); return; }
+      state.closures.push({id:uid(), date:date, reason:reason});
+      saveState();
+      renderOwner();
+      showToast("Cierre agregado.");
+    };
+    document.querySelectorAll("[data-delclosure]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-delclosure");
+        state.closures = state.closures.filter(function(c){ return c.id!==id; });
+        saveState();
+        renderOwner();
+      };
+    });
+  }
+
+  function ownerPrecios(){
+    return '<div class="card"><h2>Precio y duración</h2>' +
+      (state.config.priceIsExample ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Este precio es un valor de ejemplo. Actualizalo con el precio real del corte.</div></div>' : '') +
+      '<label>Precio del corte ($)</label><input type="number" id="inpPrice" value="'+state.config.price+'">' +
+      '<label>Duración del turno (minutos)</label>' +
+      '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
+      '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
+      '</div>' +
+      '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel del dueño</div>' +
+      '<label>Nuevo PIN</label><input type="text" id="inpNewPin" value="'+state.config.ownerPin+'">' +
+      '<button class="btn btn-ghost" id="btnSavePin">Guardar PIN</button></div>';
+  }
+  function bindPreciosEvents(){
+    var btn = document.getElementById("btnSavePrecios");
+    if(btn) btn.onclick = function(){
+      var p = parseInt(document.getElementById("inpPrice").value,10);
+      if(!isNaN(p) && p>0){ state.config.price = p; state.config.priceIsExample=false; }
+      state.config.slotMinutes = parseInt(document.getElementById("inpSlotMin").value,10);
+      saveState();
+      renderOwner();
+      showToast("Guardado.");
+    };
+    var btnPin = document.getElementById("btnSavePin");
+    if(btnPin) btnPin.onclick = function(){
+      var v = document.getElementById("inpNewPin").value.trim();
+      if(v){ state.config.ownerPin = v; saveState(); showToast("PIN actualizado."); }
+    };
+  }
+
+  function ownerSaldos(){
+    var keys = Object.keys(state.debts);
+    var html = '<div class="card"><h2>Clientes con saldo pendiente</h2><div class="sub">Cancelaciones del mismo día · se cobra el 50% del precio actual</div>';
+    if(keys.length===0) html += '<div class="empty-note">No hay saldos pendientes.</div>';
+    else html += keys.map(function(k){
+      var d = state.debts[k];
+      return '<div class="debt-item"><div><div class="n">'+esc(d.name)+' '+esc(d.lastname)+'</div>'+(d.phone?'<div class="cr" style="font-size:12px;color:var(--text-faint);">'+esc(d.phone)+'</div>':'')+'</div>' +
+        '<div style="text-align:right;"><div class="amt">'+money(currentPenalty())+'</div>' +
+        '<button class="btn btn-ghost btn-sm" style="margin-top:6px;" data-settle="'+k+'">Marcar pagado</button></div></div>';
+    }).join("");
+    html += '</div>';
+    return html;
+  }
+  function bindSaldosEvents(){
+    document.querySelectorAll("[data-settle]").forEach(function(el){
+      el.onclick = function(){ settleDebt(el.getAttribute("data-settle")); };
+    });
+  }
+
+  render();
+})();
+</script>
