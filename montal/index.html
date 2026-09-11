@@ -58,7 +58,13 @@
     -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3{text-wrap:balance; margin:0;}
-  .app{max-width:560px;margin:0 auto;padding:0 0 64px;position:relative;}
+  .app{
+    max-width:560px; margin:0 auto; padding:0 0 32px; position:relative;
+    min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column;
+  }
+  main{flex:1; display:flex; flex-direction:column; justify-content:center;}
+  main > *{width:100%;}
 
   /* ---------- header ---------- */
   .header{
@@ -303,23 +309,24 @@
   ::-webkit-scrollbar-thumb{background:var(--border); border-radius:99px;}
 
   /* ---------- intro reveal ---------- */
-  .intro-overlay{position:fixed; inset:0; background:#020103; display:flex; align-items:center; justify-content:center; z-index:300; transition:opacity .8s ease, visibility .8s;}
+  .intro-overlay{
+    position:fixed; inset:0; background:#020103; z-index:300;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
+    padding:5vh 24px; transition:opacity .8s ease, visibility .8s;
+  }
   .intro-overlay.hide{opacity:0; visibility:hidden; pointer-events:none;}
   .intro-frame{
-    width:180px; height:180px; border-radius:26px; overflow:hidden;
-    opacity:0; transform:scale(.8);
+    width:min(70vw, 300px);
+    aspect-ratio:941/1672;
+    max-height:70vh;
+    border-radius:22px; overflow:hidden;
+    opacity:0; transform:scale(.88);
     animation:introIn 1.3s cubic-bezier(.2,.8,.3,1) forwards;
-    box-shadow:0 0 70px 12px var(--violet-glow), 0 0 0 1px rgba(255,255,255,.06);
+    box-shadow:0 0 70px 14px var(--violet-glow), 0 0 0 1px rgba(255,255,255,.06);
   }
-  .intro-photo{
-    width:100%; height:100%;
-    background-image:radial-gradient(circle at 50% 40%, rgba(155,92,255,.25), transparent 60%), url('Montal.png');
-    background-size:cover, 230% auto;
-    background-position:center, 50% 38%;
-    background-repeat:no-repeat, no-repeat;
-  }
-  .intro-caption{position:absolute; bottom:14%; left:0; right:0; text-align:center; font-family:'Anton',sans-serif; letter-spacing:2px; font-size:15px; color:var(--violet-1); opacity:0; animation:introText 1.3s ease .5s forwards;}
-  @keyframes introIn{ 0%{opacity:0; transform:scale(.72);} 55%{opacity:1; transform:scale(1.06);} 100%{opacity:1; transform:scale(1);} }
+  .intro-photo{width:100%; height:100%; object-fit:contain; background:#050408; display:block;}
+  .intro-caption{text-align:center; font-family:'Anton',sans-serif; letter-spacing:2px; font-size:16px; color:var(--violet-1); opacity:0; animation:introText 1.3s ease .5s forwards;}
+  @keyframes introIn{ 0%{opacity:0; transform:scale(.8);} 55%{opacity:1; transform:scale(1.03);} 100%{opacity:1; transform:scale(1);} }
   @keyframes introText{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:.85; transform:translateY(0);} }
   @media (prefers-reduced-motion: reduce){
     .intro-overlay{transition:none;}
@@ -330,7 +337,7 @@
 </style>
 
 <div class="intro-overlay" id="introOverlay">
-  <div class="intro-frame"><div class="intro-photo"></div></div>
+  <div class="intro-frame"><img class="intro-photo" src="Montal.png" alt="MONTAL"></div>
   <div class="intro-caption">MONTAL</div>
 </div>
 <div class="app">
