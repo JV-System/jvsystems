@@ -67,7 +67,7 @@
     position:relative; width:100%; aspect-ratio:941/860; max-height:40vh; min-height:220px;
     overflow:hidden; background:#000;
   }
-  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 18%; display:block;}
+  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 30%; display:block;}
   .hero-scrim{
     position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(180deg, rgba(5,4,7,.05) 0%, rgba(5,4,7,.25) 55%, var(--bg) 97%);
@@ -314,27 +314,28 @@
 
   /* ---------- intro reveal ---------- */
   .intro-overlay{
-    position:fixed; inset:0; background:#020103; z-index:300;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;
-    padding:5vh 24px; transition:opacity .8s ease, visibility .8s;
+    position:fixed; inset:0; background:#020103; z-index:300; overflow:hidden;
+    transition:opacity .8s ease, visibility .8s;
   }
   .intro-overlay.hide{opacity:0; visibility:hidden; pointer-events:none;}
-  .intro-frame{
-    width:min(70vw, 300px);
-    aspect-ratio:941/1672;
-    max-height:70vh;
-    border-radius:22px; overflow:hidden;
-    opacity:0; transform:scale(.88);
-    animation:introIn 1.3s cubic-bezier(.2,.8,.3,1) forwards;
-    box-shadow:0 0 70px 14px var(--violet-glow), 0 0 0 1px rgba(255,255,255,.06);
+  .intro-photo{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center 20%; display:block;
+    opacity:0; transform:scale(1.06);
+    animation:introIn 1.4s cubic-bezier(.2,.8,.3,1) forwards;
   }
-  .intro-photo{width:100%; height:100%; object-fit:contain; background:#050408; display:block;}
-  .intro-caption{text-align:center; font-family:'Anton',sans-serif; letter-spacing:2px; font-size:16px; color:var(--violet-1); opacity:0; animation:introText 1.3s ease .5s forwards;}
-  @keyframes introIn{ 0%{opacity:0; transform:scale(.8);} 55%{opacity:1; transform:scale(1.03);} 100%{opacity:1; transform:scale(1);} }
-  @keyframes introText{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:.85; transform:translateY(0);} }
+  .intro-scrim{position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,1,3,.15) 0%, rgba(2,1,3,.1) 55%, rgba(2,1,3,.75) 100%); pointer-events:none;}
+  .intro-caption{
+    position:absolute; left:0; right:0; bottom:9%; text-align:center;
+    font-family:'Anton',sans-serif; letter-spacing:3px; font-size:22px; color:var(--violet-1);
+    text-shadow:0 2px 24px rgba(0,0,0,.9);
+    opacity:0; animation:introText 1.2s ease .6s forwards;
+  }
+  @keyframes introIn{ 0%{opacity:0; transform:scale(1.1);} 100%{opacity:1; transform:scale(1);} }
+  @keyframes introText{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:.9; transform:translateY(0);} }
   @media (prefers-reduced-motion: reduce){
     .intro-overlay{transition:none;}
-    .intro-frame,.intro-caption{animation:none; opacity:1; transform:none;}
+    .intro-photo,.intro-caption{animation:none; opacity:1; transform:none;}
   }
 
   .example-tag{display:inline-block; font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; color:var(--violet-1); background:rgba(155,92,255,.14); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:middle;}
@@ -342,7 +343,8 @@
 
 <div class="backdrop"></div>
 <div class="intro-overlay" id="introOverlay">
-  <div class="intro-frame"><img class="intro-photo" src="Montal.png" alt="MONTAL"></div>
+  <img class="intro-photo" src="Montal.png" alt="MONTAL">
+  <div class="intro-scrim"></div>
   <div class="intro-caption">MONTAL</div>
 </div>
 <div class="app">
