@@ -1,15 +1,17 @@
 <!doctype html>
 <title>MONTAL Turnos</title>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root{
     --bg:#07060a;
     --bg-image:
-      radial-gradient(ellipse 820px 520px at 18% -12%, rgba(155,92,255,.16), transparent 60%),
-      radial-gradient(ellipse 700px 520px at 108% 12%, rgba(228,41,82,.13), transparent 55%),
-      radial-gradient(ellipse 900px 620px at 50% 118%, rgba(155,92,255,.09), transparent 62%);
+      radial-gradient(ellipse 900px 640px at 20% -6%, rgba(155,92,255,.24), transparent 62%),
+      radial-gradient(ellipse 780px 580px at 104% 8%, rgba(228,41,82,.19), transparent 58%),
+      radial-gradient(ellipse 1000px 900px at 50% 62%, rgba(155,92,255,.14), transparent 66%),
+      radial-gradient(ellipse 900px 700px at 50% 100%, rgba(228,41,82,.15), transparent 60%);
     --violet-1:#c98bff;
     --violet-2:#9b5cff;
     --violet-glow:rgba(155,92,255,.4);
@@ -43,14 +45,19 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* fondo fijado exacto a la pantalla (no depende de vh/dvh ni de lo alto que sea el contenido) */
+  .backdrop{
+    position:fixed; inset:0; z-index:-1;
     background-color:var(--bg);
     background-image:var(--bg-image);
     background-repeat:no-repeat;
-    background-attachment:fixed;
-    color:var(--text);
-    font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    min-height:100vh;
-    -webkit-font-smoothing:antialiased;
+    background-size:cover;
+    background-position:center;
   }
   h1,h2,h3{text-wrap:balance; margin:0;}
   .app{max-width:560px; margin:0 auto; padding:0 0 32px; position:relative;}
@@ -315,6 +322,7 @@
   .example-tag{display:inline-block; font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; color:var(--violet-1); background:rgba(155,92,255,.14); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:middle;}
 </style>
 
+<div class="backdrop"></div>
 <div class="intro-overlay" id="introOverlay">
   <div class="intro-frame"><img class="intro-photo" src="Montal.png" alt="MONTAL"></div>
   <div class="intro-caption">MONTAL</div>
