@@ -67,7 +67,7 @@
     position:relative; width:100%; aspect-ratio:941/860; max-height:21vh; min-height:150px;
     overflow:hidden; background:#000;
   }
-  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 30%; display:block;}
+  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 46%; display:block;}
   .hero-scrim{
     position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(180deg, rgba(5,4,7,.05) 0%, rgba(5,4,7,.25) 55%, var(--bg) 97%);
@@ -389,7 +389,7 @@
 (function(){
   "use strict";
 
-  var STORAGE_KEY = "montal_turnos_v1";
+  var STORAGE_KEY = "montal_turnos_v2";
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
   var DOW_LABEL = {sun:"Domingo",mon:"Lunes",tue:"Martes",wed:"Miércoles",thu:"Jueves",fri:"Viernes",sat:"Sábado"};
   var DOW_SHORT = {sun:"DOM",mon:"LUN",tue:"MAR",wed:"MIÉ",thu:"JUE",fri:"VIE",sat:"SÁB"};
@@ -428,21 +428,79 @@
 
   function seedExampleData(s){
     var d0 = toISO(new Date());
-    var d1 = addDays(d0,1);
-    var d2 = addDays(d0,2);
+    var days = []; for(var i=0;i<7;i++) days.push(addDays(d0,i));
+
+    function slotsFor(iso){
+      var day = s.config.hours[DOW_KEYS[fromISO(iso).getDay()]];
+      var ranges = [];
+      if(day.morning.active) ranges.push(day.morning);
+      if(day.afternoon.active) ranges.push(day.afternoon);
+      var slotMin = s.config.slotMinutes, slots = [];
+      ranges.forEach(function(r){
+        var start=timeToMin(r.start), end=timeToMin(r.end);
+        for(var t=start; t+slotMin<=end; t+=slotMin) slots.push(minToTime(t));
+      });
+      return slots;
+    }
     function mk(name,lastname,phone,date,time){
       return {id:uid(), name:name, lastname:lastname, phone:phone||"", date:date, time:time,
         price:s.config.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
         seenByOwner:true, clientKey:clientKeyOf(name,lastname,phone), isExample:true};
     }
-    [ mk("Lucas","Gómez","3436111111", d0, "10:00"),
-      mk("Martina","Fernández","3436222222", d0, "17:30"),
-      mk("Ezequiel","Ríos","", d1, "09:30"),
-      mk("Brisa","Acosta","3436333333", d1, "18:00"),
-      mk("Tomás","Benítez","", d2, "11:00")
-    ].forEach(function(b){ s.bookings.push(b); });
-    var fkey = clientKeyOf("Facundo","Silva","3436444444");
-    s.debts[fkey] = {name:"Facundo", lastname:"Silva", phone:"3436444444", since:Date.now(), isExample:true};
+
+    var names = [
+      ["Lucas","Gómez","3436111111"], ["Martina","Fernández","3436222222"], ["Ezequiel","Ríos",""],
+      ["Brisa","Acosta","3436333333"], ["Tomás","Benítez",""], ["Camila","Torres","3436555555"],
+      ["Nicolás","Herrera",""], ["Valentina","Cruz","3436666666"], ["Franco","Molina",""],
+      ["Agustina","Paz","3436777777"], ["Bruno","Sosa",""], ["Micaela","Ortiz","3436888888"],
+      ["Joaquín","Duarte",""], ["Delfina","Ibáñez","3436999999"], ["Mateo","Aguirre",""]
+    ];
+    var ni = 0;
+    function nextName(){ var n = names[ni % names.length]; ni++; return n; }
+
+    // hoy: un par de turnos sueltos entre horarios libres
+    var d0Slots = slotsFor(days[0]);
+    if(d0Slots.length){
+      var a = nextName();
+      s.bookings.push(mk(a[0],a[1],a[2], days[0], d0Slots[Math.min(1, d0Slots.length-1)]));
+      if(d0Slots.length>4){ var a2=nextName(); s.bookings.push(mk(a2[0],a2[1],a2[2], days[0], d0Slots[d0Slots.length-2])); }
+    }
+
+    // para el resto de la semana, uso los días que realmente tengan horario abierto
+    // (así el ejemplo "día completo" no cae justo en un domingo cerrado)
+    var openRest = [];
+    for(var j=1;j<7;j++){ if(slotsFor(days[j]).length) openRest.push(days[j]); }
+
+    // el primer día abierto: bastante ocupado (3 de cada 4 horarios)
+    if(openRest[0]){
+      slotsFor(openRest[0]).forEach(function(time, idx){
+        if(idx % 4 !== 0){ var n = nextName(); s.bookings.push(mk(n[0],n[1],n[2], openRest[0], time)); }
+      });
+    }
+    // el segundo: día completo, sin ningún horario libre (para ver "no hay horarios disponibles")
+    if(openRest[1]){
+      slotsFor(openRest[1]).forEach(function(time){
+        var n = nextName(); s.bookings.push(mk(n[0],n[1],n[2], openRest[1], time));
+      });
+    }
+    // el tercero: a la mitad
+    if(openRest[2]){
+      slotsFor(openRest[2]).forEach(function(time, idx){
+        if(idx % 2 === 0){ var n = nextName(); s.bookings.push(mk(n[0],n[1],n[2], openRest[2], time)); }
+      });
+    }
+    // el cuarto: un solo turno
+    if(openRest[3]){
+      var s4 = slotsFor(openRest[3]);
+      if(s4.length){ var n4 = nextName(); s.bookings.push(mk(n4[0],n4[1],n4[2], openRest[3], s4[0])); }
+    }
+    // el resto de los días abiertos quedan a propósito totalmente libres, para ver ese caso también
+
+    // saldos pendientes de ejemplo
+    var f1 = clientKeyOf("Facundo","Silva","3436444444");
+    s.debts[f1] = {name:"Facundo", lastname:"Silva", phone:"3436444444", since:Date.now(), isExample:true};
+    var f2 = clientKeyOf("Rocío","Navarro","");
+    s.debts[f2] = {name:"Rocío", lastname:"Navarro", phone:"", since:Date.now(), isExample:true};
   }
 
   function loadState(){
