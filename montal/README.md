@@ -1,1 +1,1 @@
-App de turnos para la barbería MONTAL (Reyna Montiel). Reserva de clientes + agenda del dueño + política de cancelación con seña. Prototipo estático (localStorage), sin backend.
+BarberPro — sistema de turnos para barberías (producto genérico, pensado para vender a distintas barberías). Reserva de clientes + agenda del dueño + política de cancelación con seña. Prototipo estático (localStorage), sin backend. El nombre, dirección y WhatsApp de la barbería se configuran en `state.config` dentro de `index.html`.

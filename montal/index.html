@@ -1,31 +1,31 @@
 <!doctype html>
-<title>MONTAL Turnos</title>
+<title>BarberPro Turnos</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root{
-    --bg:#07060a;
+    --bg:#05080d;
     --bg-image:
-      radial-gradient(ellipse 900px 640px at 20% -6%, rgba(155,92,255,.24), transparent 62%),
-      radial-gradient(ellipse 780px 580px at 104% 8%, rgba(228,41,82,.19), transparent 58%),
-      radial-gradient(ellipse 1000px 900px at 50% 62%, rgba(155,92,255,.14), transparent 66%),
-      radial-gradient(ellipse 900px 700px at 50% 100%, rgba(228,41,82,.15), transparent 60%);
-    --violet-1:#c98bff;
-    --violet-2:#9b5cff;
-    --violet-glow:rgba(155,92,255,.4);
-    --surface:#18161b;
-    --surface-2:#221f26;
-    --surface-3:#2b2731;
-    --border:#332f39;
-    --border-soft:#26232a;
-    --text:#f4eee5;
-    --text-muted:#b6adb9;
-    --text-faint:#847b88;
-    --accent-1:#ff9d3d;
-    --accent-2:#ff5b3d;
-    --accent-3:#e42952;
+      radial-gradient(ellipse 900px 640px at 20% -6%, rgba(41,182,246,.24), transparent 62%),
+      radial-gradient(ellipse 780px 580px at 104% 8%, rgba(21,101,192,.22), transparent 58%),
+      radial-gradient(ellipse 1000px 900px at 50% 62%, rgba(41,182,246,.13), transparent 66%),
+      radial-gradient(ellipse 900px 700px at 50% 100%, rgba(21,101,192,.16), transparent 60%);
+    --violet-1:#7cd4ff;
+    --violet-2:#2196f3;
+    --violet-glow:rgba(41,182,246,.4);
+    --surface:#12181f;
+    --surface-2:#1a222b;
+    --surface-3:#232d38;
+    --border:#2c3947;
+    --border-soft:#1f2932;
+    --text:#eef4f9;
+    --text-muted:#a9b7c4;
+    --text-faint:#7b8794;
+    --accent-1:#29b6f6;
+    --accent-2:#2196f3;
+    --accent-3:#1565c0;
     --accent-grad:linear-gradient(120deg,var(--accent-1) 0%,var(--accent-2) 50%,var(--accent-3) 100%);
     --success:#4fae83;
     --success-bg:rgba(79,174,131,.14);
@@ -33,9 +33,6 @@
     --warn-bg:rgba(232,178,61,.14);
     --danger:#ef4a5b;
     --danger-bg:rgba(239,74,91,.14);
-    --pole-blue:#3a63c2;
-    --pole-red:#d7263d;
-    --pole-white:#ece5da;
     --radius-lg:20px;
     --radius-md:14px;
     --radius-sm:9px;
@@ -64,10 +61,10 @@
 
   /* ---------- hero ---------- */
   .hero{
-    position:relative; width:100%; aspect-ratio:941/860; max-height:21vh; min-height:150px;
+    position:relative; width:100%; aspect-ratio:941/860; max-height:21vh; min-height:170px;
     overflow:hidden; background:#000;
   }
-  .hero-photo{width:100%; height:100%; object-fit:cover; object-position:center 46%; display:block;}
+  .hero-photo{width:100%; height:100%; object-fit:contain; object-position:center; display:block;}
   .hero-scrim{
     position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(180deg, rgba(5,4,7,.05) 0%, rgba(5,4,7,.25) 55%, var(--bg) 97%);
@@ -104,7 +101,7 @@
     font-family:inherit; font-weight:800; font-size:13px; letter-spacing:.3px;
     padding:9px 8px; border-radius:999px; cursor:pointer; text-transform:uppercase;
   }
-  .roletabs button.active{background:var(--accent-grad); color:#1a0d06; box-shadow:var(--shadow-1);}
+  .roletabs button.active{background:var(--accent-grad); color:#ffffff; box-shadow:var(--shadow-1);}
 
   main{padding:14px 20px 20px;}
   .card{
@@ -134,7 +131,7 @@
     font-size:14.5px; letter-spacing:.2px; padding:11px 22px; cursor:pointer;
     width:100%;
   }
-  .btn-primary{background:var(--accent-grad); color:#1a0d06; box-shadow:var(--shadow-1);}
+  .btn-primary{background:var(--accent-grad); color:#ffffff; box-shadow:var(--shadow-1);}
   .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
   .btn-ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
   .btn-wa{background:#1fae58; color:#08210f;}
@@ -152,7 +149,7 @@
   .date-chip .dow{font-size:10.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase;}
   .date-chip .num{font-size:19px; font-weight:800; margin-top:2px;}
   .date-chip.selected{background:var(--accent-grad); border-color:transparent;}
-  .date-chip.selected .dow,.date-chip.selected .num{color:#1a0d06;}
+  .date-chip.selected .dow,.date-chip.selected .num{color:#ffffff;}
   .date-chip.closed{opacity:.35; cursor:not-allowed;}
 
   .slot-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px;}
@@ -161,7 +158,7 @@
     font-family:inherit; font-weight:700; font-size:14px; padding:11px 4px; border-radius:var(--radius-sm);
     cursor:pointer; font-variant-numeric:tabular-nums;
   }
-  .slot-btn.selected{background:var(--accent-grad); color:#1a0d06; border-color:transparent;}
+  .slot-btn.selected{background:var(--accent-grad); color:#ffffff; border-color:transparent;}
   .slot-btn.taken{opacity:.4; cursor:not-allowed; text-decoration:line-through;}
   .slot-btn .taken-lbl{display:block; font-size:8px; font-weight:800; text-decoration:none; letter-spacing:.3px; margin-top:2px; color:var(--danger);}
   .empty-note{color:var(--text-faint); font-size:13px; font-weight:600; padding:14px 0; text-align:center;}
@@ -171,7 +168,7 @@
     font-size:13px; font-weight:600; margin-bottom:14px; line-height:1.4;
   }
   .notice.warn{background:var(--warn-bg); color:var(--warn);}
-  .notice.info{background:rgba(255,157,61,.1); color:var(--accent-1);}
+  .notice.info{background:rgba(41,182,246,.12); color:var(--accent-1);}
   .notice svg{flex:none; width:16px; height:16px; margin-top:1px;}
 
   .summary-row{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
@@ -252,8 +249,8 @@
   .gantt-cell{min-height:24px; border-top:1px solid var(--border-soft); border-right:1px solid var(--border-soft); display:flex; align-items:center; justify-content:center; padding:1px;}
   .gantt-cell.closed{background:repeating-linear-gradient(45deg, var(--surface-2) 0 6px, var(--surface-3) 6px 12px); opacity:.55;}
   .gantt-cell.booked{background:var(--accent-grad); cursor:pointer;}
-  .gantt-cell.today:not(.booked){background:rgba(155,92,255,.07);}
-  .gantt-name{font-size:8px; font-weight:800; color:#1a0d06; line-height:1.15; text-align:center; padding:0 2px;}
+  .gantt-cell.today:not(.booked){background:rgba(41,182,246,.08);}
+  .gantt-name{font-size:8px; font-weight:800; color:#ffffff; line-height:1.15; text-align:center; padding:0 2px;}
   .gantt-legend{display:flex; gap:14px; margin:10px 2px 4px; font-size:11px; color:var(--text-faint); font-weight:600;}
   .gantt-legend span{display:inline-flex; align-items:center; gap:5px;}
   .gantt-legend i{width:10px; height:10px; border-radius:3px; display:inline-block;}
@@ -314,53 +311,45 @@
 
   /* ---------- intro reveal ---------- */
   .intro-overlay{
-    position:fixed; inset:0; background:#020103; z-index:300; overflow:hidden;
+    position:fixed; inset:0; background:#03060b; z-index:300; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
     transition:opacity .8s ease, visibility .8s;
   }
   .intro-overlay.hide{opacity:0; visibility:hidden; pointer-events:none;}
   .intro-photo{
-    position:absolute; inset:0; width:100%; height:100%;
-    object-fit:cover; object-position:center 20%; display:block;
-    opacity:0; transform:scale(1.06);
-    animation:introIn 1.4s cubic-bezier(.2,.8,.3,1) forwards;
+    width:min(78vw, 340px); height:min(78vw, 340px);
+    object-fit:contain; display:block;
+    opacity:0; transform:scale(.85);
+    filter:drop-shadow(0 0 60px rgba(41,182,246,.5));
+    animation:introIn 1.15s cubic-bezier(.2,.8,.3,1) forwards;
   }
-  .intro-scrim{position:absolute; inset:0; background:linear-gradient(180deg, rgba(2,1,3,.15) 0%, rgba(2,1,3,.1) 55%, rgba(2,1,3,.75) 100%); pointer-events:none;}
-  .intro-caption{
-    position:absolute; left:0; right:0; bottom:9%; text-align:center;
-    font-family:'Anton',sans-serif; letter-spacing:3px; font-size:22px; color:var(--violet-1);
-    text-shadow:0 2px 24px rgba(0,0,0,.9);
-    opacity:0; animation:introText 1.2s ease .6s forwards;
-  }
-  @keyframes introIn{ 0%{opacity:0; transform:scale(1.1);} 100%{opacity:1; transform:scale(1);} }
-  @keyframes introText{ 0%{opacity:0; transform:translateY(6px);} 100%{opacity:.9; transform:translateY(0);} }
+  @keyframes introIn{ 0%{opacity:0; transform:scale(.8);} 60%{opacity:1; transform:scale(1.05);} 100%{opacity:1; transform:scale(1);} }
   @media (prefers-reduced-motion: reduce){
     .intro-overlay{transition:none;}
-    .intro-photo,.intro-caption{animation:none; opacity:1; transform:none;}
+    .intro-photo{animation:none; opacity:1; transform:none;}
   }
 
-  .example-tag{display:inline-block; font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; color:var(--violet-1); background:rgba(155,92,255,.14); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:middle;}
+  .example-tag{display:inline-block; font-size:9px; font-weight:800; letter-spacing:.3px; text-transform:uppercase; color:var(--violet-1); background:rgba(41,182,246,.16); border-radius:5px; padding:2px 6px; margin-left:6px; vertical-align:middle;}
 </style>
 
 <div class="backdrop"></div>
 <div class="intro-overlay" id="introOverlay">
-  <img class="intro-photo" src="Montal.png" alt="MONTAL">
-  <div class="intro-scrim"></div>
-  <div class="intro-caption">MONTAL</div>
+  <img class="intro-photo" src="Montal.jpeg" alt="BarberPro">
 </div>
 <div class="app">
   <div class="hero">
-    <img class="hero-photo" src="Montal.png" alt="MONTAL">
+    <img class="hero-photo" src="Montal.jpeg" alt="BarberPro">
     <div class="hero-top-fade"></div>
     <div class="hero-scrim"></div>
     <div class="hero-content">
-      <h1 class="wordmark">MONTAL</h1>
-      <div class="tagline">Barbería · Reyna Montiel</div>
+      <h1 class="wordmark" id="wordmarkText">BarberPro</h1>
+      <div class="tagline" id="taglineText">Tu app de barbería</div>
     </div>
   </div>
   <div class="meta-row">
-    <span class="meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>Pasaje Misiones 280</span>
+    <span class="meta-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span id="addressText"></span></span>
     <a class="meta-chip" id="whatsAppHeaderLink" href="#" target="_blank" rel="noopener" style="text-decoration:none;">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.3.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.6-1.1.2-.6.2-1 .1-1.1 0-.1-.2-.2-.4-.3Z"/></svg>3436218436</a>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.1 8.1 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.4c.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9 0 1.1.8 2.2.9 2.3.1.2 1.6 2.5 4 3.4.5.2 1 .4 1.3.5.5.2 1 .1 1.4.1.4-.1 1.5-.6 1.6-1.1.2-.6.2-1 .1-1.1 0-.1-.2-.2-.4-.3Z"/></svg><span id="whatsAppDisplayText"></span></a>
   </div>
 
   <nav class="roletabs">
@@ -370,7 +359,7 @@
 
   <main id="main"></main>
 
-  <div class="footer-note">MONTAL Turnos · by JV Systems</div>
+  <div class="footer-note"><span id="footerText"></span> · by JV Systems</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -380,7 +369,7 @@
     <p id="modalMsg"></p>
     <div class="btn-row">
       <button class="btn btn-ghost" id="modalNo">Volver</button>
-      <button class="btn btn-danger" id="modalYes" style="background:var(--accent-grad); color:#1a0d06;">Confirmar</button>
+      <button class="btn btn-danger" id="modalYes" style="background:var(--accent-grad); color:#ffffff;">Confirmar</button>
     </div>
   </div>
 </div>
@@ -389,7 +378,7 @@
 (function(){
   "use strict";
 
-  var STORAGE_KEY = "montal_turnos_v2";
+  var STORAGE_KEY = "montal_turnos_v3";
   var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
   var DOW_LABEL = {sun:"Domingo",mon:"Lunes",tue:"Martes",wed:"Miércoles",thu:"Jueves",fri:"Viernes",sat:"Sábado"};
   var DOW_SHORT = {sun:"DOM",mon:"LUN",tue:"MAR",wed:"MIÉ",thu:"JUE",fri:"VIE",sat:"SÁB"};
@@ -405,11 +394,11 @@
   function defaultState(){
     return {
       config:{
-        businessName:"MONTAL",
-        ownerName:"Reyna Montiel",
-        address:"Pasaje Misiones 280",
-        whatsappDisplay:"3436218436",
-        whatsappLink:"5493436218436",
+        businessName:"BarberPro",
+        tagline:"Tu app de barbería",
+        address:"Av. Ejemplo 123",
+        whatsappDisplay:"11 2345-6789",
+        whatsappLink:"5491123456789",
         price:8000,
         priceIsExample:true,
         slotMinutes:30,
@@ -735,6 +724,12 @@
     document.getElementById("tabCliente").classList.toggle("active", session.role==="cliente");
     document.getElementById("tabDueno").classList.toggle("active", session.role==="dueno");
     document.getElementById("whatsAppHeaderLink").href = "https://wa.me/"+state.config.whatsappLink;
+    document.getElementById("whatsAppDisplayText").textContent = state.config.whatsappDisplay;
+    document.getElementById("addressText").textContent = state.config.address;
+    document.getElementById("wordmarkText").textContent = state.config.businessName;
+    document.getElementById("taglineText").textContent = state.config.tagline;
+    document.getElementById("footerText").textContent = state.config.businessName + " Turnos";
+    document.title = state.config.businessName + " Turnos";
     if(session.role==="cliente") renderClient(); else renderOwner();
   }
 
