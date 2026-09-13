@@ -2347,6 +2347,10 @@ let _calYear  = null;
 let _calMonth = null;
 // IDs eliminados persistidos en localStorage para sobrevivir recargas
 const _deletedIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_ids') || '[]'));
+// Mismo mecanismo que _deletedIds, para clientes y técnicos (ver comentario
+// largo en loadFromCloud, sección "Agregar clientes/técnicos locales nuevos").
+const _deletedClienteIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_cliente_ids') || '[]'));
+const _deletedTecnicoIds = new Set(JSON.parse(localStorage.getItem('branca_ignore_tecnico_ids') || '[]'));
 
 // Última versión de cada orden confirmada contra Firebase (clave → JSON).
 // Se usa para subir SOLO lo que este dispositivo realmente modificó, y así
@@ -2658,7 +2662,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 33;
+const APP_BUILD = 34;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2845,16 +2849,19 @@ async function loadFromCloud() {
           return remote;
         });
         // Agregar borradores locales con datos que aún no se subieron.
-        // OJO: mismo resguardo que se aplicó a clientes/técnicos (ver ahí el
-        // comentario largo) -- un borrador local ausente en la nube no
-        // siempre es "recién creado, todavía no subió": si se borró a
-        // propósito desde Firebase (ej: limpieza de borradores abandonados),
-        // sin esto cualquier dispositivo con esa copia vieja en caché lo
-        // resucitaba solo, sin fin, cada vez que sincronizaba. Solo se
-        // protege si es de las últimas 48hs.
-        var _ordenHace48hs = Date.now() - 48*60*60*1000;
+        // OJO (corregido 13/9 -- reporte real de Franco: 3 planillas de MAPCA
+        // SA que nunca llegaron a subirse a Firebase, y al volver a entrar
+        // varios días después ya no estaban): un límite de tiempo fijo (antes:
+        // 48hs) es una mala idea acá -- un borrador "pendiente" puede quedar
+        // sin tocar muchos días de forma legítima (esperando un repuesto, una
+        // respuesta del cliente, etc.), y con el límite de tiempo esa espera
+        // real se confundía con "duplicado viejo abandonado" y se perdía el
+        // trabajo real. Se usa en cambio el mismo mecanismo de "borrado a
+        // propósito" (_deletedIds) que ya protege al resto de las órdenes: si
+        // ESTE dispositivo no lo borró explícitamente (🗑 Eliminar borrador),
+        // se conserva sin importar cuánto tiempo haya pasado.
         draftsLocales.forEach(function(d) {
-          if (!ordenes.find(function(o) { return String(o.id) === String(d.id); }) && Number(d.id) > _ordenHace48hs) {
+          if (!ordenes.find(function(o) { return String(o.id) === String(d.id); }) && !_deletedIds.has(String(d.id))) {
             ordenes.unshift(d);
           }
         });
@@ -2891,20 +2898,26 @@ async function loadFromCloud() {
         return remote;
       });
       // Agregar clientes locales nuevos que todavía no llegaron a Firebase.
-      // OJO: si un cliente local no está en la nube, antes esto asumía SIEMPRE
-      // "recién creado, todavía no subió" y lo volvía a agregar (y a subir) —
-      // pero un cliente borrado a propósito (ej: un duplicado eliminado a mano
-      // desde Firebase) tampoco está en la nube, y con esa lógica cualquier
-      // dispositivo con el dato viejo en caché lo resucitaba solo, sin fin,
-      // cada vez que sincronizaba (bug real: duplicados que "vuelven" después
-      // de borrarlos). Se distingue por antigüedad: el id es un timestamp de
-      // creación, así que solo se protege si es de las últimas 48hs (recién
-      // creado, con tiempo de sobra para cubrir un dispositivo offline un
-      // buen rato); uno más viejo que ya no está en la nube se interpreta
-      // como borrado a propósito, no como pendiente de subir.
-      var _hace48hs = Date.now() - 48*60*60*1000;
+      // OJO (corregido 13/9 -- un límite de tiempo fijo por antigüedad resultó
+      // peligroso: ver el comentario largo en el bloque de órdenes de arriba,
+      // mismo problema exacto). En vez de adivinar por antigüedad, se marca
+      // como "borrado a propósito" (tombstone persistente en este
+      // dispositivo) solo cuando ESTE dispositivo ve, en un sync normal, que
+      // un cliente que tenía sí está ausente de la nube -- eso es una señal
+      // real de borrado, no una adivinanza por tiempo. Un cliente recién
+      // creado que todavía no subió nunca entra acá (no puede estar "ausente"
+      // de algo que ni siquiera se comparó todavía la primera vez).
+      if (_yaSincronizoUnaVez && clientesRemotos.length > 0) {
+        const clientesRemotosIds = new Set(clientesRemotos.map(function(c){ return String(c.id); }));
+        clientesRemotosIds.forEach(function(id) { _deletedClienteIds.delete(id); });
+        Object.keys(clientesLocalMap).forEach(function(id) {
+          const enTransito = (Date.now() - Number(id)) < 15000;
+          if (!clientesRemotosIds.has(id) && !enTransito) _deletedClienteIds.add(id);
+        });
+        localStorage.setItem('branca_ignore_cliente_ids', JSON.stringify([..._deletedClienteIds]));
+      }
       Object.keys(clientesLocalMap).forEach(function(id) {
-        if (!clientesRemotos.find(function(c){ return String(c.id) === id; }) && Number(id) > _hace48hs) {
+        if (!clientesRemotos.find(function(c){ return String(c.id) === id; }) && !_deletedClienteIds.has(id)) {
           clientesDB.push(clientesLocalMap[id]);
         }
       });
@@ -2935,12 +2948,19 @@ async function loadFromCloud() {
         return remote;
       });
       // Agregar técnicos locales nuevos que todavía no llegaron a Firebase.
-      // Mismo resguardo que en clientes (ver comentario ahí): solo se
-      // resucita un técnico local ausente en la nube si es de las últimas
-      // 48hs; uno más viejo que ya no está se interpreta como borrado a
-      // propósito, no como pendiente de subir.
+      // Mismo resguardo que en clientes (ver comentario ahí, corregido 13/9):
+      // se usa un tombstone real en vez de un límite de tiempo.
+      if (_yaSincronizoUnaVez && tecnicosRemotos.length > 0) {
+        const tecnicosRemotosIds = new Set(tecnicosRemotos.map(function(t){ return String(t.id); }));
+        tecnicosRemotosIds.forEach(function(id) { _deletedTecnicoIds.delete(id); });
+        Object.keys(tecnicosLocalMap).forEach(function(id) {
+          const enTransito = (Date.now() - Number(id)) < 15000;
+          if (!tecnicosRemotosIds.has(id) && !enTransito) _deletedTecnicoIds.add(id);
+        });
+        localStorage.setItem('branca_ignore_tecnico_ids', JSON.stringify([..._deletedTecnicoIds]));
+      }
       Object.keys(tecnicosLocalMap).forEach(function(id) {
-        if (!tecnicosRemotos.find(function(t){ return String(t.id) === id; }) && Number(id) > _hace48hs) {
+        if (!tecnicosRemotos.find(function(t){ return String(t.id) === id; }) && !_deletedTecnicoIds.has(id)) {
           tecnicosDB.push(tecnicosLocalMap[id]);
         }
       });
@@ -6835,6 +6855,8 @@ async function eliminarTecnico(id) {
   // explícitamente que se saque esta clave (igual que con clientes).
   if (t) {
     const key = _tecnicoKey(t);
+    _deletedTecnicoIds.add(String(t.id));
+    localStorage.setItem('branca_ignore_tecnico_ids', JSON.stringify([..._deletedTecnicoIds]));
     try { await _fbPatch('/db/tecnicos', { [key]: null }); delete _lastSyncedTecnicosSnap[key]; }
     catch(e) { /* si falla, queda para el próximo intento normal */ }
   }
@@ -6889,6 +6911,8 @@ async function eliminarCliente(id) {
   // Avisarle a Firebase explícitamente que se saque esta clave.
   if (c) {
     const key = _clienteKey(c);
+    _deletedClienteIds.add(String(c.id));
+    localStorage.setItem('branca_ignore_cliente_ids', JSON.stringify([..._deletedClienteIds]));
     try { await _fbPatch('/db/clientes', { [key]: null }); delete _lastSyncedClientesSnap[key]; }
     catch(e) { /* si falla, queda para el próximo intento normal */ }
   }
