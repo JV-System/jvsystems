@@ -256,6 +256,10 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .badge-desc{display:inline-block;background:var(--rojo);color:#fff;font-size:10.5px;font-weight:700;
   padding:2px 7px;border-radius:99px;vertical-align:middle;margin-left:2px}
 .card .fila-acciones{display:flex;align-items:center;gap:8px;margin-top:2px}
+.selector-variante{display:flex;flex-direction:column;gap:7px;width:100%}
+.select-variante{font:inherit;font-size:12.5px;padding:8px 10px;border-radius:9px;
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta);width:100%}
+.variante-nombre-cart{font-weight:500;color:var(--tinta-suave);font-size:.9em}
 .stepper{display:flex;align-items:center;border:1px solid var(--linea);border-radius:10px;overflow:hidden}
 .stepper button{width:30px;height:32px;border:0;background:var(--crema-osc);color:var(--oliva-osc);
   font-size:16px;cursor:pointer;line-height:1}
@@ -399,6 +403,13 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   color:var(--tinta);padding-bottom:2px}
 .check-oferta input{width:auto}
 .campo-descuento{min-width:180px}
+.campo-variantes{background:var(--crema-osc);border-radius:12px;padding:12px}
+.fila-variante{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.fila-variante:last-child{margin-bottom:0}
+.variante-nombre{flex:1;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
+.variante-stock{width:80px;flex:none;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
 .bloque-oferta{background:var(--crema-osc);border-radius:12px;padding:14px;margin-top:2px}
 .bloque-oferta[hidden]{display:none}
 .tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
@@ -666,6 +677,13 @@ footer.pie b{color:var(--tinta)}
                 <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
                 <div class="campo"><label>Stock <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><input type="number" id="stockProducto" min="0" step="1" placeholder="Sin límite" inputmode="numeric"></div>
               </div>
+
+              <div class="campo campo-variantes">
+                <label>Variantes (color, tipo, etc.) <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — si cargás variantes, cada una tiene su propio stock y se ignora el Stock general)</span></label>
+                <div id="listaVariantes"></div>
+                <button type="button" class="btn-ghost" id="btnAgregarVariante" style="margin-top:6px">+ Agregar variante</button>
+              </div>
+
               <div class="fila-oferta">
                 <label class="check-oferta">
                   <input type="checkbox" id="ofertaProducto">
@@ -787,17 +805,43 @@ const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&am
 /* ---------- stock ---------- */
 const stockDisponible = p => (p.stock === undefined || p.stock === null) ? Infinity : p.stock;
 const sinStock = p => stockDisponible(p) <= 0;
-function intentarSumarCarrito(id, delta){
-  const p = productos[id];
+
+/* ---------- variantes (color, tipo, etc. con stock propio) ---------- */
+const tieneVariantes = p => Array.isArray(p.variantes) && p.variantes.length > 0;
+function varianteStock(p, idx){
+  const v = p.variantes && p.variantes[idx];
+  if (!v) return 0;
+  return (v.stock === undefined || v.stock === null) ? Infinity : v.stock;
+}
+const claveCarrito = (prodId, varIdx) => (varIdx === null || varIdx === undefined) ? prodId : `${prodId}__v${varIdx}`;
+function resolverClave(clave){
+  const m = String(clave).match(/^(.*)__v(\d+)$/);
+  return m ? { prodId: m[1], varIdx: +m[2] } : { prodId: clave, varIdx: null };
+}
+function productoDeClave(clave){ return productos[resolverClave(clave).prodId]; }
+function stockDeClave(clave){
+  const { prodId, varIdx } = resolverClave(clave);
+  const p = productos[prodId];
+  if (!p) return 0;
+  return varIdx != null ? varianteStock(p, varIdx) : stockDisponible(p);
+}
+function nombreVarianteDeClave(clave){
+  const { prodId, varIdx } = resolverClave(clave);
+  const p = productos[prodId];
+  return (varIdx != null && p && p.variantes && p.variantes[varIdx]) ? p.variantes[varIdx].nombre : null;
+}
+
+function intentarSumarCarrito(clave, delta){
+  const p = productoDeClave(clave);
   if (!p) return;
-  const max = stockDisponible(p);
-  const nuevo = (carrito[id] || 0) + delta;
+  const max = stockDeClave(clave);
+  const nuevo = (carrito[clave] || 0) + delta;
   if (delta > 0 && nuevo > max){
     mostrarToast(max <= 0 ? "Sin stock disponible." : `Solo quedan ${max} disponibles.`);
     return;
   }
-  if (nuevo <= 0) delete carrito[id];
-  else carrito[id] = nuevo;
+  if (nuevo <= 0) delete carrito[clave];
+  else carrito[clave] = nuevo;
   guardarCarritoLocal();
 }
 
@@ -849,26 +893,16 @@ function renderOfertas(){
   const sec = $("#seccionOfertas");
   sec.hidden = !arr.length;
   if (!arr.length) return;
-  $("#carruselOfertas").innerHTML = arr.map(p => {
-    const cant = carrito[p.id] || 0;
-    const agotado = sinStock(p);
-    return `
+  $("#carruselOfertas").innerHTML = arr.map(p => `
     <div class="tarjeta-oferta" data-id="${p.id}">
       ${fotoHtml(p, "foto")}
       <div class="cuerpo-oferta">
         <span class="badge-oferta">🔥 Oferta</span>
         <h4>${esc(p.nombre)}</h4>
         <div class="precio-oferta">${precioHtml(p)}</div>
-        ${agotado ? `<button type="button" class="btn-agregar" disabled>Sin stock</button>` : cant > 0 ? `
-          <div class="stepper">
-            <button type="button" data-accion="menos" data-id="${p.id}">−</button>
-            <span>${cant}</span>
-            <button type="button" data-accion="mas" data-id="${p.id}"${cant >= stockDisponible(p) ? " disabled" : ""}>+</button>
-          </div>
-        ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
+        ${accionesProductoHtml(p)}
       </div>
-    </div>`;
-  }).join("");
+    </div>`).join("");
   iniciarAutoOfertas();
 }
 
@@ -885,16 +919,8 @@ function iniciarAutoOfertas(){
   }, 3200);
 }
 $("#carruselOfertas").addEventListener("pointerdown", () => clearInterval(ofertasAutoTimer));
-$("#carruselOfertas").addEventListener("click", e => {
-  const b = e.target.closest("button[data-accion]");
-  if (!b) return;
-  const id = b.dataset.id;
-  if (b.dataset.accion === "agregar" || b.dataset.accion === "mas") intentarSumarCarrito(id, 1);
-  else if (b.dataset.accion === "menos") intentarSumarCarrito(id, -1);
-  renderOfertas();
-  renderGrid();
-  renderCarrito();
-});
+$("#carruselOfertas").addEventListener("click", manejarClickAcciones);
+$("#carruselOfertas").addEventListener("change", manejarCambioVariante);
 
 const CAT_OFERTAS = "__OFERTAS__";
 function renderCategorias(){
@@ -935,6 +961,36 @@ function fotoHtml(p, claseWrap, claseImg){
   return `<div class="${claseWrap}"><div class="sin-foto"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/></svg></div></div>`;
 }
 
+/* tarjeta: zona de "Agregar" — con selector de variante si el producto tiene */
+function accionesProductoHtml(p){
+  if (tieneVariantes(p)){
+    const opciones = p.variantes.map((v, idx) => {
+      const st = varianteStock(p, idx);
+      return `<option value="${idx}"${st <= 0 ? " disabled" : ""}>${esc(v.nombre)}${st <= 0 ? " (sin stock)" : ""}</option>`;
+    }).join("");
+    const todasSinStock = p.variantes.every((v, idx) => varianteStock(p, idx) <= 0);
+    return `
+      <div class="selector-variante">
+        <select class="select-variante" data-id="${p.id}">
+          <option value="">Elegí una opción</option>
+          ${opciones}
+        </select>
+        <button type="button" class="btn-agregar btn-variante-agregar" data-id="${p.id}" disabled>${todasSinStock ? "Sin stock" : "Agregar"}</button>
+      </div>`;
+  }
+  const cant = carrito[p.id] || 0;
+  if (sinStock(p)) return `<button type="button" class="btn-agregar" disabled>Sin stock</button>`;
+  if (cant > 0){
+    return `
+      <div class="stepper">
+        <button type="button" data-accion="menos" data-id="${p.id}">−</button>
+        <span>${cant}</span>
+        <button type="button" data-accion="mas" data-id="${p.id}"${cant >= stockDisponible(p) ? " disabled" : ""}>+</button>
+      </div>`;
+  }
+  return `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`;
+}
+
 function renderGrid(){
   const lista = listaVisible();
   $("#vacio").hidden = Object.keys(productos).length > 0 ? true : false;
@@ -945,8 +1001,9 @@ function renderGrid(){
     return;
   }
   $("#grid").innerHTML = lista.map(p => {
-    const cant = carrito[p.id] || 0;
-    const agotado = sinStock(p);
+    const agotado = tieneVariantes(p)
+      ? p.variantes.every((v, idx) => varianteStock(p, idx) <= 0)
+      : sinStock(p);
     const tag = esc(p.categoria || "Otros") + (p.subcategoria ? " · " + esc(p.subcategoria) : "");
     return `
     <article class="card" data-id="${p.id}">
@@ -957,21 +1014,21 @@ function renderGrid(){
         <h3>${esc(p.nombre)}</h3>
         ${p.descripcion ? `<p class="desc">${esc(p.descripcion)}</p>` : `<p class="desc"></p>`}
         <div class="precio">${precioHtml(p)}</div>
-        <div class="fila-acciones">
-          ${agotado ? `<button type="button" class="btn-agregar" disabled>Sin stock</button>` : cant > 0 ? `
-            <div class="stepper">
-              <button type="button" data-accion="menos" data-id="${p.id}">−</button>
-              <span>${cant}</span>
-              <button type="button" data-accion="mas" data-id="${p.id}"${cant >= stockDisponible(p) ? " disabled" : ""}>+</button>
-            </div>
-          ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
-        </div>
+        <div class="fila-acciones">${accionesProductoHtml(p)}</div>
       </div>
     </article>`;
   }).join("");
 }
 
-$("#grid").addEventListener("click", e => {
+function manejarClickAcciones(e){
+  const btnVar = e.target.closest(".btn-variante-agregar");
+  if (btnVar){
+    const sel = btnVar.parentElement.querySelector(".select-variante");
+    if (!sel || sel.value === "") return;
+    intentarSumarCarrito(claveCarrito(btnVar.dataset.id, +sel.value), 1);
+    renderGrid(); renderOfertas(); renderCarrito();
+    return;
+  }
   const b = e.target.closest("button[data-accion]");
   if (!b) return;
   const id = b.dataset.id;
@@ -980,7 +1037,15 @@ $("#grid").addEventListener("click", e => {
   renderGrid();
   renderOfertas();
   renderCarrito();
-});
+}
+function manejarCambioVariante(e){
+  const sel = e.target.closest(".select-variante");
+  if (!sel) return;
+  const btn = sel.parentElement.querySelector(".btn-variante-agregar");
+  if (btn && !btn.textContent.includes("Sin stock")) btn.disabled = sel.value === "";
+}
+$("#grid").addEventListener("click", manejarClickAcciones);
+$("#grid").addEventListener("change", manejarCambioVariante);
 
 $("#buscador").addEventListener("input", e => { textoBusqueda = e.target.value.trim().toLowerCase(); renderGrid(); });
 
@@ -1005,34 +1070,35 @@ $("#btnLimpiarFiltros").onclick = () => {
 
 /* ---------- carrito (drawer) ---------- */
 function renderCarrito(){
-  const ids = Object.keys(carrito).filter(id => productos[id]);
-  const subtotal = ids.reduce((s, id) => s + totalLinea(productos[id], carrito[id]), 0);
+  const claves = Object.keys(carrito).filter(c => productoDeClave(c));
+  const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
   const envio = subtotal > 0 ? (+config.costoEnvio || 0) : 0;
   const total = subtotal + envio;
-  const cantTotal = ids.reduce((s, id) => s + carrito[id], 0);
+  const cantTotal = claves.reduce((s, c) => s + carrito[c], 0);
   $("#badgeCarrito").textContent = cantTotal;
   $("#totalCarrito").textContent = plata(total);
   $("#filaEnvioCarrito").hidden = envio <= 0;
   if (envio > 0) $("#envioCarrito").textContent = plata(envio);
-  if (!ids.length){
+  if (!claves.length){
     $("#carritoLista").innerHTML = `<div class="carrito-vacio">Todavía no agregaste productos.<br>Elegí algo del catálogo 🤍</div>`;
     return;
   }
-  $("#carritoLista").innerHTML = ids.map(id => {
-    const p = productos[id];
+  $("#carritoLista").innerHTML = claves.map(clave => {
+    const p = productoDeClave(clave);
+    const nombreVar = nombreVarianteDeClave(clave);
     return `
-    <div class="item-carrito" data-id="${id}">
+    <div class="item-carrito" data-id="${clave}">
       ${fotoHtml(p, "foto")}
       <div class="info">
-        <h4>${esc(p.nombre)}</h4>
-        <span class="precio-u">${precioHtml(p)} c/u${carrito[id] > 1 ? ` · Subtotal: ${plata(totalLinea(p, carrito[id]))}` : ""}</span>
+        <h4>${esc(p.nombre)}${nombreVar ? ` <span class="variante-nombre-cart">· ${esc(nombreVar)}</span>` : ""}</h4>
+        <span class="precio-u">${precioHtml(p)} c/u${carrito[clave] > 1 ? ` · Subtotal: ${plata(totalLinea(p, carrito[clave]))}` : ""}</span>
         <div class="fila">
           <div class="stepper">
-            <button type="button" data-accion="menos" data-id="${id}">−</button>
-            <span>${carrito[id]}</span>
-            <button type="button" data-accion="mas" data-id="${id}"${carrito[id] >= stockDisponible(p) ? " disabled" : ""}>+</button>
+            <button type="button" data-accion="menos" data-id="${clave}">−</button>
+            <span>${carrito[clave]}</span>
+            <button type="button" data-accion="mas" data-id="${clave}"${carrito[clave] >= stockDeClave(clave) ? " disabled" : ""}>+</button>
           </div>
-          <button type="button" class="quitar-item" data-accion="quitar" data-id="${id}">Quitar</button>
+          <button type="button" class="quitar-item" data-accion="quitar" data-id="${clave}">Quitar</button>
         </div>
       </div>
     </div>`;
@@ -1074,17 +1140,19 @@ function avisoSinWhatsapp(){
 $("#btnEnviarPedido").onclick = () => {
   const num = numeroWhatsapp();
   if (!num){ avisoSinWhatsapp(); return; }
-  const ids = Object.keys(carrito).filter(id => productos[id]);
-  if (!ids.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
-  const lineas = ids.map(id => {
-    const p = productos[id];
-    const cant = carrito[id];
+  const claves = Object.keys(carrito).filter(c => productoDeClave(c));
+  if (!claves.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
+  const lineas = claves.map(clave => {
+    const p = productoDeClave(clave);
+    const cant = carrito[clave];
+    const nombreVar = nombreVarianteDeClave(clave);
     let detalle = "";
     if (esPromoNxm(p)) detalle = ` (promo ${p.promoLleva}x${p.promoPaga})`;
     else if (esDescuentoPct(p)) detalle = ` (${plata(precioFinal(p))} c/u, -${p.descuento}%)`;
-    return `• ${p.nombre} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
+    const nombreCompleto = nombreVar ? `${p.nombre} (${nombreVar})` : p.nombre;
+    return `• ${nombreCompleto} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
   });
-  const subtotal = ids.reduce((s, id) => s + totalLinea(productos[id], carrito[id]), 0);
+  const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
   const envio = +config.costoEnvio || 0;
   const total = subtotal + envio;
   const lineaEnvio = envio > 0 ? `\nEnvío: ${plata(envio)}` : "";
@@ -1227,7 +1295,9 @@ function renderListaAdmin(){
       ? `${plata(precioFinal(p))} (antes ${plata(p.precio)}, -${p.descuento}%)`
       : plata(p.precio);
     const catTxt = esc(p.categoria || "Otros") + (p.subcategoria ? " › " + esc(p.subcategoria) : "");
-    const stockTxt = (p.stock === undefined || p.stock === null) ? "" : (p.stock > 0 ? ` · Stock: ${p.stock}` : ` · <span style="color:var(--rojo);font-weight:600">Sin stock</span>`);
+    const stockTxt = tieneVariantes(p)
+      ? ` · ${p.variantes.length} variante${p.variantes.length === 1 ? "" : "s"} (${p.variantes.map((v, i) => `${esc(v.nombre)}: ${varianteStock(p, i) === Infinity ? "s/límite" : varianteStock(p, i)}`).join(", ")})`
+      : (p.stock === undefined || p.stock === null) ? "" : (p.stock > 0 ? ` · Stock: ${p.stock}` : ` · <span style="color:var(--rojo);font-weight:600">Sin stock</span>`);
     return `
     <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
       ${fotoHtml(p, "foto")}
@@ -1264,6 +1334,8 @@ function cargarFormEdicion(id, p){
   $("#descuentoProducto").value = p.descuento || "";
   $("#promoLleva").value = p.promoLleva || "";
   $("#promoPaga").value = p.promoPaga || "";
+  variantesForm = (p.variantes || []).map(v => ({ nombre: v.nombre || "", stock: (v.stock === undefined || v.stock === null) ? "" : v.stock }));
+  renderVariantesForm();
   ultimaCategoriaValida = p.categoria || CATEGORIAS_SUGERIDAS[0];
   ultimaSubcategoriaValida = p.subcategoria || "";
   renderChipsCatAdmin();
@@ -1292,6 +1364,8 @@ function limpiarForm(mantenerCategoria){
   $("#formProducto").reset();
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
+  variantesForm = [];
+  renderVariantesForm();
   ultimaCategoriaValida = mantenerCategoria ? categoriaPrevia : CATEGORIAS_SUGERIDAS[0];
   ultimaSubcategoriaValida = mantenerCategoria ? subcategoriaPrevia : "";
   renderChipsCatAdmin();
@@ -1344,6 +1418,29 @@ function actualizarPreviewOferta(){
       : "Poné el porcentaje de descuento.";
   }
 }
+
+/* ---------- variantes (repetidor en el formulario) ---------- */
+let variantesForm = [];
+function renderVariantesForm(){
+  $("#listaVariantes").innerHTML = variantesForm.map((v, idx) => `
+    <div class="fila-variante" data-idx="${idx}">
+      <input type="text" class="variante-nombre" placeholder="Ej: Rojo, Redondo…" value="${esc(v.nombre)}">
+      <input type="number" class="variante-stock" placeholder="Stock" min="0" step="1" value="${v.stock === "" || v.stock == null ? "" : v.stock}">
+      <button type="button" class="icon-btn peligro btn-quitar-variante" title="Quitar">🗑</button>
+    </div>`).join("");
+  $$(".fila-variante").forEach(fila => {
+    const idx = +fila.dataset.idx;
+    fila.querySelector(".variante-nombre").addEventListener("input", e => { variantesForm[idx].nombre = e.target.value; });
+    fila.querySelector(".variante-stock").addEventListener("input", e => { variantesForm[idx].stock = e.target.value; });
+    fila.querySelector(".btn-quitar-variante").onclick = () => { variantesForm.splice(idx, 1); renderVariantesForm(); };
+  });
+}
+$("#btnAgregarVariante").onclick = () => {
+  variantesForm.push({ nombre: "", stock: "" });
+  renderVariantesForm();
+  const inputs = $$(".variante-nombre");
+  if (inputs.length) inputs[inputs.length - 1].focus();
+};
 
 /* ---------- imagen: comprimir a base64 ---------- */
 let imagenNueva = null;
@@ -1403,8 +1500,13 @@ $("#formProducto").addEventListener("submit", e => {
   if (oferta && tipoOferta === "nxm" && (!(promoLleva > 1) || !(promoPaga > 0) || promoPaga >= promoLleva)){ err.textContent = "Completá bien la promo (ej: llevás 3, pagás 2)."; err.hidden = false; $("#promoLleva").focus(); return; }
   err.hidden = true;
 
+  const variantes = variantesForm
+    .filter(v => v.nombre && v.nombre.trim())
+    .map(v => ({ nombre: v.nombre.trim(), stock: v.stock === "" ? null : Math.max(0, Math.round(+v.stock)) }));
+
   const datos = {
     nombre, precio, stock, categoria, subcategoria, descripcion, activo, oferta,
+    variantes: variantes.length ? variantes : null,
     tipoOferta: oferta ? tipoOferta : null,
     descuento: (oferta && tipoOferta === "descuento") ? descuento : null,
     promoLleva: (oferta && tipoOferta === "nxm") ? promoLleva : null,
