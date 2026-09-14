@@ -38,9 +38,30 @@ body{margin:0;background:var(--crema);color:var(--tinta);
   font-family:"Outfit",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
 .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
-.marca-fondo{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:url('harmonia-icon.png') center 18vh / min(640px,72vw) auto no-repeat;
-  opacity:.05}
+.marca-fondo{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:var(--crema)}
+.fondo-foto{position:absolute;inset:-8%;
+  background:url('fondo-bg.jpg') center 55% / cover no-repeat;
+  filter:blur(16px) saturate(1.04) brightness(1.03);
+  opacity:.6;will-change:transform;
+  animation:fondoBrisa 34s ease-in-out infinite alternate}
+.fondo-tinte{position:absolute;inset:0;
+  background:linear-gradient(175deg, rgba(247,242,231,.55) 0%, rgba(247,242,231,.35) 45%, rgba(247,242,231,.65) 100%)}
+.fondo-brillo{position:absolute;inset:-60% -20%;
+  background:linear-gradient(112deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+  background-size:220% 220%;mix-blend-mode:soft-light;
+  animation:fondoBrillo 13s ease-in-out infinite}
+@keyframes fondoBrisa{
+  0%{transform:scale(1.06) translate(0,0)}
+  50%{transform:scale(1.11) translate(-1.4%,-1%)}
+  100%{transform:scale(1.06) translate(1.2%,.6%)}
+}
+@keyframes fondoBrillo{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+@media (prefers-reduced-motion:reduce){
+  .fondo-foto,.fondo-brillo{animation:none}
+}
 header.principal,.hero,.controles,.catalogo,footer.pie,.overlay,.carrito,.modal,.toast{position:relative;z-index:1}
 a{color:inherit}
 button{font:inherit}
@@ -359,7 +380,11 @@ footer.pie b{color:var(--tinta)}
 </style>
 </head>
 <body>
-<div class="marca-fondo" aria-hidden="true"></div>
+<div class="marca-fondo" aria-hidden="true">
+  <div class="fondo-foto"></div>
+  <div class="fondo-tinte"></div>
+  <div class="fondo-brillo"></div>
+</div>
 
 <header class="principal">
   <div class="wrap barra-top">
