@@ -308,6 +308,9 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .fila-total{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
 .fila-total span{font-size:13px;color:var(--tinta-suave);text-transform:uppercase;letter-spacing:.08em}
 .fila-total b{font-family:"Outfit",sans-serif;font-size:23px;color:var(--oliva-osc)}
+.fila-envio{margin-bottom:6px}
+.fila-envio b{font-size:15px;color:var(--tinta-suave)}
+.fila-envio[hidden]{display:none}
 .btn-whatsapp{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--wasap);
   color:#fff;border:0;border-radius:12px;padding:14px;font-weight:700;font-size:14.5px;cursor:pointer;
   transition:.15s}
@@ -395,8 +398,16 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .check-oferta{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:600;
   color:var(--tinta);padding-bottom:2px}
 .check-oferta input{width:auto}
-.campo-descuento{margin-bottom:0!important;min-width:180px}
-.campo-descuento[hidden]{display:none}
+.campo-descuento{min-width:180px}
+.bloque-oferta{background:var(--crema-osc);border-radius:12px;padding:14px;margin-top:2px}
+.bloque-oferta[hidden]{display:none}
+.tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
+.tipo-oferta-btn{flex:1;background:var(--papel);border:1.5px solid var(--linea);border-radius:9px;
+  padding:8px 10px;font:inherit;font-size:12.5px;font-weight:600;color:var(--tinta-suave);cursor:pointer}
+.tipo-oferta-btn.activo{background:var(--oliva);border-color:var(--oliva);color:#fff}
+.campo-nxm{margin-bottom:0}
+.campo-nxm[hidden]{display:none}
+.preview-oferta{margin:10px 0 0;font-size:12.5px;color:var(--oliva-osc);font-weight:600;min-height:16px}
 .btn-agregar-grande{width:100%;background:var(--oliva);color:#fff;border:0;
   border-radius:14px;padding:15px;font-weight:700;font-size:15.5px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;gap:8px;margin-top:14px}
@@ -597,6 +608,7 @@ footer.pie b{color:var(--tinta)}
   </div>
   <div class="carrito-lista" id="carritoLista"></div>
   <div class="carrito-pie">
+    <div class="fila-total fila-envio" id="filaEnvioCarrito" hidden><span>Envío</span><b id="envioCarrito">$0</b></div>
     <div class="fila-total"><span>Total estimado</span><b id="totalCarrito">$0</b></div>
     <button class="btn-whatsapp" id="btnEnviarPedido" type="button">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
@@ -632,10 +644,10 @@ footer.pie b{color:var(--tinta)}
       <div class="pestana-admin activa" id="tabProductos">
         <form id="formProducto" class="form-rapido">
           <input type="hidden" id="prodId">
-          <input type="hidden" id="categoriaProducto">
-          <input type="hidden" id="subcategoriaProducto">
-          <div class="chips-cat-admin" id="chipsCatAdmin"></div>
-          <div class="chips-cat-admin chips-subcat" id="chipsSubcatAdmin"></div>
+          <div class="fila2">
+            <div class="campo"><label>Categoría</label><select id="categoriaProducto"></select></div>
+            <div class="campo"><label>Subcategoría <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><select id="subcategoriaProducto"></select></div>
+          </div>
 
           <div class="fila-foto-campos">
             <label class="foto-media" for="imgProducto">
@@ -659,14 +671,27 @@ footer.pie b{color:var(--tinta)}
                   <input type="checkbox" id="ofertaProducto">
                   <span>🔥 Tiene oferta</span>
                 </label>
-                <div class="campo campo-descuento" id="campoDescuento" hidden>
-                  <label>Descuento sobre el valor (%)</label>
-                  <input type="number" id="descuentoProducto" min="1" max="95" step="1" placeholder="20" inputmode="numeric">
-                </div>
                 <label class="check-oferta">
                   <input type="checkbox" id="activoProducto" checked>
                   <span>Visible</span>
                 </label>
+              </div>
+
+              <div class="bloque-oferta" id="bloqueOferta" hidden>
+                <input type="hidden" id="tipoOfertaProducto" value="descuento">
+                <div class="tipo-oferta">
+                  <button type="button" class="tipo-oferta-btn activo" data-tipo="descuento" id="btnTipoDescuento">Descuento %</button>
+                  <button type="button" class="tipo-oferta-btn" data-tipo="nxm" id="btnTipoNxm">Promo (2x1, 3x2…)</button>
+                </div>
+                <div class="campo campo-descuento" id="campoDescuento">
+                  <label>Descuento sobre el valor (%)</label>
+                  <input type="number" id="descuentoProducto" min="1" max="95" step="1" placeholder="20" inputmode="numeric">
+                </div>
+                <div class="fila2 campo-nxm" id="campoNxm" hidden>
+                  <div class="campo"><label>Llevás</label><input type="number" id="promoLleva" min="2" step="1" placeholder="3" inputmode="numeric"></div>
+                  <div class="campo"><label>Pagás</label><input type="number" id="promoPaga" min="1" step="1" placeholder="2" inputmode="numeric"></div>
+                </div>
+                <p class="preview-oferta" id="previewOferta"></p>
               </div>
             </div>
           </div>
@@ -687,6 +712,8 @@ footer.pie b{color:var(--tinta)}
           <input type="tel" id="whatsappConfig" placeholder="5493811234567"></div>
         <div class="campo"><label>Mensaje inicial del pedido</label>
           <textarea id="saludoConfig" placeholder="¡Hola Harmonia! Quiero hacer este pedido:"></textarea></div>
+        <div class="campo"><label>Costo de envío (ARS) <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — se suma al total del pedido)</span></label>
+          <input type="number" id="costoEnvioConfig" min="0" step="1" placeholder="Sin cargo fijo" inputmode="numeric"></div>
         <button class="btn-full" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
       </div>
     </div>
@@ -735,9 +762,22 @@ function setPreviewFoto(url){
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const plata = n => "$" + Math.round(+n || 0).toLocaleString("es-AR");
-const precioFinal = p => (p.oferta && p.descuento > 0) ? Math.round((p.precio || 0) * (1 - p.descuento / 100)) : (p.precio || 0);
+const esPromoNxm = p => p.oferta && p.tipoOferta === "nxm" && p.promoLleva > 1 && p.promoPaga > 0 && p.promoPaga < p.promoLleva;
+const esDescuentoPct = p => p.oferta && p.tipoOferta !== "nxm" && p.descuento > 0;
+const precioFinal = p => esDescuentoPct(p) ? Math.round((p.precio || 0) * (1 - p.descuento / 100)) : (p.precio || 0);
+function totalLinea(p, cant){
+  if (esPromoNxm(p)){
+    const grupos = Math.floor(cant / p.promoLleva);
+    const resto = cant % p.promoLleva;
+    return (grupos * p.promoPaga + resto) * (p.precio || 0);
+  }
+  return precioFinal(p) * cant;
+}
 function precioHtml(p){
-  if (p.oferta && p.descuento > 0){
+  if (esPromoNxm(p)){
+    return `<span class="precio-final">${plata(p.precio)}</span> <span class="badge-desc">${p.promoLleva}x${p.promoPaga}</span>`;
+  }
+  if (esDescuentoPct(p)){
     return `<span class="precio-tachado">${plata(p.precio)}</span> <span class="precio-final">${plata(precioFinal(p))}</span> <span class="badge-desc">-${p.descuento}%</span>`;
   }
   return `<span class="precio-final">${plata(p.precio)}</span>`;
@@ -966,10 +1006,14 @@ $("#btnLimpiarFiltros").onclick = () => {
 /* ---------- carrito (drawer) ---------- */
 function renderCarrito(){
   const ids = Object.keys(carrito).filter(id => productos[id]);
-  const total = ids.reduce((s, id) => s + precioFinal(productos[id]) * carrito[id], 0);
+  const subtotal = ids.reduce((s, id) => s + totalLinea(productos[id], carrito[id]), 0);
+  const envio = subtotal > 0 ? (+config.costoEnvio || 0) : 0;
+  const total = subtotal + envio;
   const cantTotal = ids.reduce((s, id) => s + carrito[id], 0);
   $("#badgeCarrito").textContent = cantTotal;
   $("#totalCarrito").textContent = plata(total);
+  $("#filaEnvioCarrito").hidden = envio <= 0;
+  if (envio > 0) $("#envioCarrito").textContent = plata(envio);
   if (!ids.length){
     $("#carritoLista").innerHTML = `<div class="carrito-vacio">Todavía no agregaste productos.<br>Elegí algo del catálogo 🤍</div>`;
     return;
@@ -981,7 +1025,7 @@ function renderCarrito(){
       ${fotoHtml(p, "foto")}
       <div class="info">
         <h4>${esc(p.nombre)}</h4>
-        <span class="precio-u">${precioHtml(p)} c/u</span>
+        <span class="precio-u">${precioHtml(p)} c/u${carrito[id] > 1 ? ` · Subtotal: ${plata(totalLinea(p, carrito[id]))}` : ""}</span>
         <div class="fila">
           <div class="stepper">
             <button type="button" data-accion="menos" data-id="${id}">−</button>
@@ -1034,12 +1078,17 @@ $("#btnEnviarPedido").onclick = () => {
   if (!ids.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
   const lineas = ids.map(id => {
     const p = productos[id];
-    const pu = precioFinal(p);
-    const detalleDesc = (p.oferta && p.descuento > 0) ? ` (${plata(pu)} c/u, -${p.descuento}%)` : "";
-    return `• ${p.nombre} x${carrito[id]} — ${plata(pu * carrito[id])}${detalleDesc}`;
+    const cant = carrito[id];
+    let detalle = "";
+    if (esPromoNxm(p)) detalle = ` (promo ${p.promoLleva}x${p.promoPaga})`;
+    else if (esDescuentoPct(p)) detalle = ` (${plata(precioFinal(p))} c/u, -${p.descuento}%)`;
+    return `• ${p.nombre} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
   });
-  const total = ids.reduce((s, id) => s + precioFinal(productos[id]) * carrito[id], 0);
-  const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
+  const subtotal = ids.reduce((s, id) => s + totalLinea(productos[id], carrito[id]), 0);
+  const envio = +config.costoEnvio || 0;
+  const total = subtotal + envio;
+  const lineaEnvio = envio > 0 ? `\nEnvío: ${plata(envio)}` : "";
+  const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n${lineaEnvio}\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
 };
 
@@ -1067,44 +1116,53 @@ $("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") inten
 function abrirAdmin(){
   $("#whatsappConfig").value = config.whatsapp || "";
   $("#saludoConfig").value = config.saludo || "";
-  if (!$("#categoriaProducto").value) $("#categoriaProducto").value = CATEGORIAS_SUGERIDAS[0];
+  $("#costoEnvioConfig").value = config.costoEnvio || "";
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
   renderListaAdmin();
   $("#modalAdmin").classList.add("abierto");
 }
 
-function categoriasConocidas(){
+let ultimaCategoriaValida = CATEGORIAS_SUGERIDAS[0];
+let ultimaSubcategoriaValida = "";
+
+function categoriasConocidas(actual){
   const usadas = [...new Set(Object.values(productos).map(p => p.categoria || "Otros"))];
   const todas = [...CATEGORIAS_SUGERIDAS];
   usadas.forEach(c => { if (!todas.includes(c)) todas.push(c); });
-  const actual = $("#categoriaProducto").value;
   if (actual && !todas.includes(actual)) todas.push(actual);
   return todas;
 }
 
 function renderChipsCatAdmin(){
-  const actual = $("#categoriaProducto").value;
-  const cats = categoriasConocidas();
-  $("#chipsCatAdmin").innerHTML = cats.map(c =>
-    `<button type="button" class="chip-cat${c === actual ? " activo" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`
-  ).join("") + `<button type="button" class="chip-cat" id="chipNuevaCategoria">+ Nueva</button>`;
-  $$("#chipsCatAdmin .chip-cat[data-cat]").forEach(b => b.onclick = () => {
-    $("#categoriaProducto").value = b.dataset.cat;
-    $("#subcategoriaProducto").value = "";
-    renderChipsCatAdmin();
-    renderChipsSubcatAdmin();
-  });
-  $("#chipNuevaCategoria").onclick = () => {
-    const nueva = prompt("Nombre de la nueva categoría:");
-    if (nueva && nueva.trim()){
-      $("#categoriaProducto").value = nueva.trim();
-      $("#subcategoriaProducto").value = "";
-      renderChipsCatAdmin();
-      renderChipsSubcatAdmin();
-    }
-  };
+  const sel = $("#categoriaProducto");
+  const previa = sel.value && sel.value !== "__nueva__" ? sel.value : ultimaCategoriaValida;
+  const cats = categoriasConocidas(previa);
+  sel.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")
+    + `<option value="__nueva__">+ Nueva categoría…</option>`;
+  sel.value = previa;
+  ultimaCategoriaValida = previa;
 }
+$("#categoriaProducto").addEventListener("change", () => {
+  const sel = $("#categoriaProducto");
+  if (sel.value === "__nueva__"){
+    const nueva = (prompt("Nombre de la nueva categoría:") || "").trim();
+    if (nueva){
+      const opt = document.createElement("option");
+      opt.value = nueva; opt.textContent = nueva;
+      sel.insertBefore(opt, sel.querySelector('option[value="__nueva__"]'));
+      sel.value = nueva;
+      ultimaCategoriaValida = nueva;
+    } else {
+      renderChipsCatAdmin();
+    }
+  } else {
+    ultimaCategoriaValida = sel.value;
+  }
+  $("#subcategoriaProducto").value = "";
+  ultimaSubcategoriaValida = "";
+  renderChipsSubcatAdmin();
+});
 
 function subcategoriasConocidas(categoria){
   return [...new Set(
@@ -1115,25 +1173,35 @@ function subcategoriasConocidas(categoria){
 }
 
 function renderChipsSubcatAdmin(){
+  const sel = $("#subcategoriaProducto");
   const categoria = $("#categoriaProducto").value || "Otros";
-  const actual = $("#subcategoriaProducto").value;
+  const previaRaw = sel.value && sel.value !== "__nueva__" ? sel.value : ultimaSubcategoriaValida;
   const subcats = subcategoriasConocidas(categoria);
   const items = [{ val: "", txt: "Sin subcategoría" }, ...subcats.map(s => ({ val: s, txt: s }))];
-  $("#chipsSubcatAdmin").innerHTML = items.map(it =>
-    `<button type="button" class="chip-cat${it.val === actual ? " activo" : ""}" data-subcat="${esc(it.val)}">${esc(it.txt)}</button>`
-  ).join("") + `<button type="button" class="chip-cat" id="chipNuevaSubcat">+ Nueva</button>`;
-  $$("#chipsSubcatAdmin .chip-cat[data-subcat]").forEach(b => b.onclick = () => {
-    $("#subcategoriaProducto").value = b.dataset.subcat;
-    renderChipsSubcatAdmin();
-  });
-  $("#chipNuevaSubcat").onclick = () => {
-    const nueva = prompt(`Nueva subcategoría dentro de "${categoria}":`);
-    if (nueva && nueva.trim()){
-      $("#subcategoriaProducto").value = nueva.trim();
+  const previa = items.some(it => it.val === previaRaw) ? previaRaw : "";
+  sel.innerHTML = items.map(it => `<option value="${esc(it.val)}">${esc(it.txt)}</option>`).join("")
+    + `<option value="__nueva__">+ Nueva subcategoría…</option>`;
+  sel.value = previa;
+  ultimaSubcategoriaValida = previa;
+}
+$("#subcategoriaProducto").addEventListener("change", () => {
+  const sel = $("#subcategoriaProducto");
+  if (sel.value === "__nueva__"){
+    const categoria = $("#categoriaProducto").value || "Otros";
+    const nueva = (prompt(`Nueva subcategoría dentro de "${categoria}":`) || "").trim();
+    if (nueva){
+      const opt = document.createElement("option");
+      opt.value = nueva; opt.textContent = nueva;
+      sel.insertBefore(opt, sel.querySelector('option[value="__nueva__"]'));
+      sel.value = nueva;
+      ultimaSubcategoriaValida = nueva;
+    } else {
       renderChipsSubcatAdmin();
     }
-  };
-}
+  } else {
+    ultimaSubcategoriaValida = sel.value;
+  }
+});
 
 $("#cerrarAdmin").onclick = cerrarPaneles;
 
@@ -1153,7 +1221,9 @@ function renderListaAdmin(){
     return;
   }
   $("#listaAdminProductos").innerHTML = arr.map(p => {
-    const precioTxt = (p.oferta && p.descuento > 0)
+    const precioTxt = esPromoNxm(p)
+      ? `${plata(p.precio)} · Promo ${p.promoLleva}x${p.promoPaga}`
+      : esDescuentoPct(p)
       ? `${plata(precioFinal(p))} (antes ${plata(p.precio)}, -${p.descuento}%)`
       : plata(p.precio);
     const catTxt = esc(p.categoria || "Otros") + (p.subcategoria ? " › " + esc(p.subcategoria) : "");
@@ -1192,14 +1262,22 @@ function cargarFormEdicion(id, p){
   $("#precioProducto").value = p.precio || "";
   $("#stockProducto").value = (p.stock === undefined || p.stock === null) ? "" : p.stock;
   $("#descuentoProducto").value = p.descuento || "";
-  $("#categoriaProducto").value = p.categoria || "";
-  $("#subcategoriaProducto").value = p.subcategoria || "";
+  $("#promoLleva").value = p.promoLleva || "";
+  $("#promoPaga").value = p.promoPaga || "";
+  ultimaCategoriaValida = p.categoria || CATEGORIAS_SUGERIDAS[0];
+  ultimaSubcategoriaValida = p.subcategoria || "";
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
   $("#ofertaProducto").checked = !!p.oferta;
-  $("#campoDescuento").hidden = !p.oferta;
+  $("#bloqueOferta").hidden = !p.oferta;
+  const tipo = p.tipoOferta === "nxm" ? "nxm" : "descuento";
+  $("#tipoOfertaProducto").value = tipo;
+  $$(".tipo-oferta-btn").forEach(b => b.classList.toggle("activo", b.dataset.tipo === tipo));
+  $("#campoDescuento").hidden = tipo !== "descuento";
+  $("#campoNxm").hidden = tipo !== "nxm";
+  actualizarPreviewOferta();
   setPreviewFoto(p.imagen || null);
   imagenNueva = p.imagen || null;
   $("#btnGuardarProducto").innerHTML = `<span class="signo">✓</span> Guardar cambios`;
@@ -1214,11 +1292,16 @@ function limpiarForm(mantenerCategoria){
   $("#formProducto").reset();
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
-  $("#categoriaProducto").value = mantenerCategoria ? categoriaPrevia : "";
-  $("#subcategoriaProducto").value = mantenerCategoria ? subcategoriaPrevia : "";
+  ultimaCategoriaValida = mantenerCategoria ? categoriaPrevia : CATEGORIAS_SUGERIDAS[0];
+  ultimaSubcategoriaValida = mantenerCategoria ? subcategoriaPrevia : "";
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
-  $("#campoDescuento").hidden = true;
+  $("#bloqueOferta").hidden = true;
+  $("#tipoOfertaProducto").value = "descuento";
+  $$(".tipo-oferta-btn").forEach(b => b.classList.toggle("activo", b.dataset.tipo === "descuento"));
+  $("#campoDescuento").hidden = false;
+  $("#campoNxm").hidden = true;
+  $("#previewOferta").textContent = "";
   setPreviewFoto(null);
   $("#btnGuardarProducto").innerHTML = `<span class="signo">+</span> Agregar producto`;
   $("#btnCancelarEdicion").hidden = true;
@@ -1226,9 +1309,41 @@ function limpiarForm(mantenerCategoria){
 }
 $("#btnCancelarEdicion").onclick = () => limpiarForm(true);
 $("#ofertaProducto").addEventListener("change", e => {
-  $("#campoDescuento").hidden = !e.target.checked;
+  $("#bloqueOferta").hidden = !e.target.checked;
   if (e.target.checked) $("#descuentoProducto").focus();
+  actualizarPreviewOferta();
 });
+$$(".tipo-oferta-btn").forEach(b => b.onclick = () => {
+  $$(".tipo-oferta-btn").forEach(x => x.classList.remove("activo"));
+  b.classList.add("activo");
+  $("#tipoOfertaProducto").value = b.dataset.tipo;
+  $("#campoDescuento").hidden = b.dataset.tipo !== "descuento";
+  $("#campoNxm").hidden = b.dataset.tipo !== "nxm";
+  actualizarPreviewOferta();
+});
+["precioProducto", "descuentoProducto", "promoLleva", "promoPaga"].forEach(id => {
+  $("#" + id).addEventListener("input", actualizarPreviewOferta);
+});
+function actualizarPreviewOferta(){
+  const el = $("#previewOferta");
+  const precio = +$("#precioProducto").value || 0;
+  if (!$("#ofertaProducto").checked || !precio){ el.textContent = ""; return; }
+  if ($("#tipoOfertaProducto").value === "nxm"){
+    const n = +$("#promoLleva").value || 0;
+    const m = +$("#promoPaga").value || 0;
+    if (n > 1 && m > 0 && m < n){
+      const ahorro = Math.round((1 - m / n) * 100);
+      el.textContent = `Llevando ${n} pagás ${plata(precio * m)} en vez de ${plata(precio * n)} (ahorro del ${ahorro}%).`;
+    } else {
+      el.textContent = "Completá cuántas se llevan y cuántas se pagan (ej: llevás 3, pagás 2).";
+    }
+  } else {
+    const desc = Math.max(0, Math.min(95, +$("#descuentoProducto").value || 0));
+    el.textContent = desc > 0
+      ? `Precio final con descuento: ${plata(Math.round(precio * (1 - desc / 100)))} (antes ${plata(precio)}).`
+      : "Poné el porcentaje de descuento.";
+  }
+}
 
 /* ---------- imagen: comprimir a base64 ---------- */
 let imagenNueva = null;
@@ -1274,17 +1389,27 @@ $("#formProducto").addEventListener("submit", e => {
   const precio = +$("#precioProducto").value;
   const stockTxt = $("#stockProducto").value;
   const stock = stockTxt === "" ? null : Math.max(0, Math.round(+stockTxt));
+  const tipoOferta = $("#tipoOfertaProducto").value === "nxm" ? "nxm" : "descuento";
   const descuento = Math.max(0, Math.min(95, +$("#descuentoProducto").value || 0));
+  const promoLleva = Math.round(+$("#promoLleva").value || 0);
+  const promoPaga = Math.round(+$("#promoPaga").value || 0);
   const descripcion = $("#descProducto").value.trim();
   const activo = $("#activoProducto").checked;
   const oferta = $("#ofertaProducto").checked;
   const err = $("#errorProducto");
   if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; $("#nombreProducto").focus(); return; }
   if (!precio || precio <= 0){ err.textContent = "Poné un valor para el producto."; err.hidden = false; $("#precioProducto").focus(); return; }
-  if (oferta && !descuento){ err.textContent = "Marcaste que tiene oferta: poné el porcentaje de descuento."; err.hidden = false; $("#descuentoProducto").focus(); return; }
+  if (oferta && tipoOferta === "descuento" && !descuento){ err.textContent = "Marcaste que tiene oferta: poné el porcentaje de descuento."; err.hidden = false; $("#descuentoProducto").focus(); return; }
+  if (oferta && tipoOferta === "nxm" && (!(promoLleva > 1) || !(promoPaga > 0) || promoPaga >= promoLleva)){ err.textContent = "Completá bien la promo (ej: llevás 3, pagás 2)."; err.hidden = false; $("#promoLleva").focus(); return; }
   err.hidden = true;
 
-  const datos = { nombre, precio, stock, descuento, categoria, subcategoria, descripcion, activo, oferta };
+  const datos = {
+    nombre, precio, stock, categoria, subcategoria, descripcion, activo, oferta,
+    tipoOferta: oferta ? tipoOferta : null,
+    descuento: (oferta && tipoOferta === "descuento") ? descuento : null,
+    promoLleva: (oferta && tipoOferta === "nxm") ? promoLleva : null,
+    promoPaga: (oferta && tipoOferta === "nxm") ? promoPaga : null
+  };
   if (imagenNueva) datos.imagen = imagenNueva;
 
   const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
@@ -1304,7 +1429,8 @@ $("#formProducto").addEventListener("submit", e => {
 $("#btnGuardarAjustes").onclick = () => {
   const whatsapp = $("#whatsappConfig").value.trim();
   const saludo = $("#saludoConfig").value.trim();
-  db.ref(`${RUTA}/config`).update({ whatsapp, saludo }).then(() => mostrarToast("Ajustes guardados."));
+  const costoEnvio = $("#costoEnvioConfig").value === "" ? null : Math.max(0, Math.round(+$("#costoEnvioConfig").value));
+  db.ref(`${RUTA}/config`).update({ whatsapp, saludo, costoEnvio }).then(() => mostrarToast("Ajustes guardados."));
 };
 
 /* ---------- pantalla de carga ---------- */
