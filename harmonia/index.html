@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light only">
+<meta name="color-scheme" content="only light">
 <meta name="description" content="Harmonia · Ropa blanca delicada. Sábanas, toallas y acolchados de calidad premium. Mirá el catálogo y hacé tu pedido por WhatsApp.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JV Systems">
@@ -23,7 +23,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
-  color-scheme:light only;
+  color-scheme:only light;
   --crema:#F7F2E7; --crema-osc:#EFE7D6; --papel:#FFFFFF;
   --oliva:#4B5A3E; --oliva-osc:#37432E; --oliva-cl:#8A9A78; --oliva-pale:#E7EBDF;
   --taupe:#B9AA97; --taupe-cl:#E7DDCB;
@@ -341,6 +341,20 @@ footer.pie b{color:var(--tinta)}
   .wrap{padding:0 14px}
   .hero{padding:32px 0 22px}
   .controles{top:42px}
+  .rasgos{gap:8px}
+  .rasgo{font-size:11.5px;padding:6px 11px}
+  /* catálogo en 2 columnas, más compacto, como una app de tienda */
+  .grid{grid-template-columns:1fr 1fr;gap:10px}
+  .card .cuerpo{padding:10px 11px 12px;gap:6px}
+  .card h3{font-size:13.5px;line-height:1.25}
+  .card .desc{display:none}
+  .card .precio{font-size:15px}
+  .precio-tachado{font-size:.68em}
+  .badge-desc{font-size:9px;padding:1px 6px}
+  .card .categoria-tag{font-size:9px;padding:3px 8px;top:7px;left:7px}
+  .stepper button{width:26px;height:28px;font-size:14px}
+  .stepper span{font-size:12px;min-width:20px}
+  .btn-agregar{font-size:12px;padding:8px 6px}
 }
 </style>
 </head>
