@@ -41,19 +41,19 @@ img{max-width:100%;display:block}
 .marca-fondo{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:var(--crema)}
 .fondo-foto{position:absolute;inset:-8%;
   background:url('fondo-bg.jpg') center 55% / cover no-repeat;
-  filter:blur(16px) saturate(1.04) brightness(1.03);
-  opacity:.6;will-change:transform;
-  animation:fondoBrisa 34s ease-in-out infinite alternate}
+  filter:blur(5px) saturate(1.02) brightness(1.02);
+  opacity:.7;will-change:transform;
+  animation:fondoBrisa 40s ease-in-out infinite alternate}
 .fondo-tinte{position:absolute;inset:0;
-  background:linear-gradient(175deg, rgba(247,242,231,.55) 0%, rgba(247,242,231,.35) 45%, rgba(247,242,231,.65) 100%)}
+  background:linear-gradient(175deg, rgba(247,242,231,.4) 0%, rgba(247,242,231,.22) 45%, rgba(247,242,231,.5) 100%)}
 .fondo-brillo{position:absolute;inset:-60% -20%;
-  background:linear-gradient(112deg, transparent 40%, rgba(255,255,255,.55) 50%, transparent 60%);
+  background:linear-gradient(112deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
   background-size:220% 220%;mix-blend-mode:soft-light;
-  animation:fondoBrillo 13s ease-in-out infinite}
+  animation:fondoBrillo 18s ease-in-out infinite}
 @keyframes fondoBrisa{
-  0%{transform:scale(1.06) translate(0,0)}
-  50%{transform:scale(1.11) translate(-1.4%,-1%)}
-  100%{transform:scale(1.06) translate(1.2%,.6%)}
+  0%{transform:scale(1.04) translate(0,0)}
+  50%{transform:scale(1.06) translate(-.8%,-.6%)}
+  100%{transform:scale(1.04) translate(.7%,.4%)}
 }
 @keyframes fondoBrillo{
   0%,100%{background-position:0% 50%}
