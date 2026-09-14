@@ -95,6 +95,39 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   transition:.15s}
 .chip-cat:hover{border-color:var(--oliva-cl)}
 .chip-cat.activo{background:var(--oliva);border-color:var(--oliva);color:#fff}
+.btn-filtros{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linea);
+  background:var(--papel);color:var(--tinta);border-radius:12px;padding:10px 14px;font-size:13.5px;
+  font-weight:500;cursor:pointer;transition:.15s}
+.btn-filtros:hover{border-color:var(--oliva-cl)}
+.btn-filtros.activo{background:var(--oliva-pale);border-color:var(--oliva-cl);color:var(--oliva-osc)}
+.panel-filtros{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-top:12px;padding:14px 16px;
+  background:var(--papel);border:1px solid var(--linea);border-radius:14px}
+.panel-filtros[hidden]{display:none}
+.campo-filtro{display:flex;flex-direction:column;gap:5px}
+.campo-filtro label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);font-weight:600}
+.campo-filtro select{font:inherit;font-size:13.5px;padding:9px 12px;border-radius:10px;border:1px solid var(--linea);
+  background:var(--crema);color:var(--tinta);min-width:190px}
+.rango-precio{display:flex;align-items:center;gap:8px;color:var(--tinta-suave)}
+.rango-precio input{width:100px;font:inherit;font-size:13.5px;padding:9px 10px;border-radius:10px;
+  border:1px solid var(--linea);background:var(--crema);color:var(--tinta)}
+.btn-limpiar-filtros{margin-left:auto;background:none;border:0;color:var(--rojo);font-size:13px;
+  font-weight:600;cursor:pointer;text-decoration:underline;padding:9px 0}
+
+/* ---------- ofertas ---------- */
+.ofertas{padding:6px 0 8px}
+.titulo-ofertas{font-family:"Playfair Display",serif;font-size:19px;font-weight:700;margin:0 0 12px}
+.carrusel-ofertas{display:flex;gap:14px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;
+  scrollbar-width:thin}
+.tarjeta-oferta{flex:none;width:170px;scroll-snap-align:start;background:var(--papel);
+  border:1px solid var(--linea);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.tarjeta-oferta .foto{aspect-ratio:1/1;background:var(--crema-osc);position:relative}
+.tarjeta-oferta .foto img{width:100%;height:100%;object-fit:cover}
+.tarjeta-oferta .cuerpo-oferta{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.badge-oferta{align-self:flex-start;background:var(--rojo);color:#fff;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:99px;letter-spacing:.02em}
+.tarjeta-oferta h4{margin:0;font-family:"Playfair Display",serif;font-weight:600;font-size:14px;line-height:1.25;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.precio-oferta{font-weight:700;color:var(--oliva-osc);font-size:15px}
 
 /* ---------- catálogo ---------- */
 .catalogo{padding:26px 0 70px}
@@ -267,6 +300,18 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 footer.pie{padding:30px 0 18px;text-align:center;color:var(--tinta-suave);font-size:11.5px}
 footer.pie b{color:var(--tinta)}
 
+/* ---------- barra de marca JV Systems ---------- */
+.app-footer{background:linear-gradient(135deg,#060E1F 0%,#0A1628 100%);
+  border-top:1px solid rgba(21,101,216,.3);padding:10px 20px;display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;gap:8px}
+.footer-brand{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.footer-jv-badge{display:flex;align-items:center;gap:6px;background:rgba(21,101,216,.15);
+  border:1px solid rgba(21,101,216,.3);border-radius:20px;padding:3px 10px 3px 6px}
+.footer-jv-text{font-size:11px;font-weight:700;color:#1E90FF;letter-spacing:.5px}
+.footer-dev{font-size:11px;color:rgba(255,255,255,.45)}
+.footer-dev span{color:#F5A623;font-weight:700}
+.footer-app-name{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.3px}
+
 @media (max-width:640px){
   .wrap{padding:0 14px}
   .hero{padding:32px 0 22px}
@@ -307,13 +352,44 @@ footer.pie b{color:var(--tinta)}
   </div>
 </section>
 
+<section class="ofertas" id="seccionOfertas" hidden>
+  <div class="wrap">
+    <h2 class="titulo-ofertas">🔥 Ofertas</h2>
+    <div class="carrusel-ofertas" id="carruselOfertas"></div>
+  </div>
+</section>
+
 <div class="controles" id="controles">
   <div class="wrap fila-controles">
     <div class="buscador">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
       <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
     </div>
+    <button type="button" class="btn-filtros" id="btnFiltros">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Filtros
+    </button>
     <div class="chips" id="chipsCategorias"></div>
+  </div>
+  <div class="wrap panel-filtros" id="panelFiltros" hidden>
+    <div class="campo-filtro">
+      <label>Ordenar por</label>
+      <select id="selectOrden">
+        <option value="recientes">Más recientes</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="nombre">Nombre A-Z</option>
+      </select>
+    </div>
+    <div class="campo-filtro">
+      <label>Precio</label>
+      <div class="rango-precio">
+        <input type="number" id="precioDesde" placeholder="Desde" min="0" inputmode="numeric">
+        <span>—</span>
+        <input type="number" id="precioHasta" placeholder="Hasta" min="0" inputmode="numeric">
+      </div>
+    </div>
+    <button type="button" class="btn-limpiar-filtros" id="btnLimpiarFiltros">Limpiar filtros</button>
   </div>
 </div>
 
@@ -328,13 +404,24 @@ footer.pie b{color:var(--tinta)}
 
 <footer class="pie">
   <div class="wrap">
-    <p>Hecho con ♥ por <b>JV Systems</b> · Pedidos coordinados directamente por WhatsApp</p>
+    <p>Pedidos coordinados directamente por WhatsApp</p>
   </div>
   <a href="#" class="link-admin" id="linkAdmin">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3.5 4 7v5c0 5 3.4 8 8 9.5 4.6-1.5 8-4.5 8-9.5V7l-8-3.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15.5 10" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Panel de administración
   </a>
 </footer>
+
+<div class="app-footer">
+  <div class="footer-brand">
+    <div class="footer-jv-badge">
+      <img src="data:image/png;base64,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" alt="JV Systems" style="width:20px;height:20px;border-radius:4px;display:block;">
+      <span class="footer-jv-text">JV SYSTEMS</span>
+    </div>
+    <span class="footer-dev">· Desarrollado por <span>Juan Villanueva</span></span>
+  </div>
+  <span class="footer-app-name">Catálogo de Ropa Blanca · Harmonia</span>
+</div>
 
 <!-- ---------- carrito ---------- -->
 <div class="overlay" id="overlay"></div>
@@ -403,8 +490,12 @@ footer.pie b{color:var(--tinta)}
           <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
 
           <details class="detalles-extra">
-            <summary>Descripción y visibilidad (opcional)</summary>
+            <summary>Descripción, oferta y visibilidad (opcional)</summary>
             <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
+            <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
+              <input type="checkbox" id="ofertaProducto" style="width:auto">
+              <label style="margin:0" for="ofertaProducto">🔥 Marcar como oferta (aparece en el carrusel de arriba)</label>
+            </div>
             <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
               <input type="checkbox" id="activoProducto" checked style="width:auto">
               <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
@@ -455,6 +546,9 @@ let config = { whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pe
 let carrito = {};
 let categoriaActiva = "Todos";
 let textoBusqueda = "";
+let ordenActivo = "recientes";
+let precioDesde = null;
+let precioHasta = null;
 let editandoId = null;
 const CATEGORIAS_SUGERIDAS = ["Sábanas", "Toallas", "Acolchados y cubrecamas", "Almohadas", "Manteles", "Otros"];
 const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Tocá para sacar o elegir una foto</span></div>`;
@@ -488,14 +582,66 @@ function mostrarToast(msg){
 
 /* ---------- render catálogo ---------- */
 function listaVisible(){
-  const arr = Object.entries(productos)
+  let arr = Object.entries(productos)
     .map(([id, p]) => ({ id, ...p }))
-    .filter(p => p.activo !== false);
-  return arr
+    .filter(p => p.activo !== false)
     .filter(p => categoriaActiva === "Todos" || (p.categoria || "Otros") === categoriaActiva)
     .filter(p => !textoBusqueda || (p.nombre || "").toLowerCase().includes(textoBusqueda) || (p.descripcion || "").toLowerCase().includes(textoBusqueda))
-    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
+    .filter(p => precioDesde == null || (p.precio || 0) >= precioDesde)
+    .filter(p => precioHasta == null || (p.precio || 0) <= precioHasta);
+
+  switch (ordenActivo){
+    case "precio-asc": arr.sort((a, b) => (a.precio || 0) - (b.precio || 0)); break;
+    case "precio-desc": arr.sort((a, b) => (b.precio || 0) - (a.precio || 0)); break;
+    case "nombre": arr.sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es")); break;
+    default: arr.sort((a, b) => (b.creado || 0) - (a.creado || 0));
+  }
+  return arr;
 }
+
+function listaOfertas(){
+  return Object.entries(productos).map(([id, p]) => ({ id, ...p }))
+    .filter(p => p.activo !== false && p.oferta)
+    .sort((a, b) => (b.creado || 0) - (a.creado || 0));
+}
+
+function renderOfertas(){
+  const arr = listaOfertas();
+  const sec = $("#seccionOfertas");
+  sec.hidden = !arr.length;
+  if (!arr.length) return;
+  $("#carruselOfertas").innerHTML = arr.map(p => {
+    const cant = carrito[p.id] || 0;
+    return `
+    <div class="tarjeta-oferta" data-id="${p.id}">
+      ${fotoHtml(p, "foto")}
+      <div class="cuerpo-oferta">
+        <span class="badge-oferta">🔥 Oferta</span>
+        <h4>${esc(p.nombre)}</h4>
+        <div class="precio-oferta">${plata(p.precio)}</div>
+        ${cant > 0 ? `
+          <div class="stepper">
+            <button type="button" data-accion="menos" data-id="${p.id}">−</button>
+            <span>${cant}</span>
+            <button type="button" data-accion="mas" data-id="${p.id}">+</button>
+          </div>
+        ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
+      </div>
+    </div>`;
+  }).join("");
+}
+$("#carruselOfertas").addEventListener("click", e => {
+  const b = e.target.closest("button[data-accion]");
+  if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.accion === "agregar"){ carrito[id] = 1; }
+  else if (b.dataset.accion === "mas"){ carrito[id] = (carrito[id] || 0) + 1; }
+  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
+  guardarCarritoLocal();
+  renderOfertas();
+  renderGrid();
+  renderCarrito();
+});
 
 function renderCategorias(){
   const cats = ["Todos", ...new Set(Object.values(productos).filter(p => p.activo !== false).map(p => p.categoria || "Otros"))];
@@ -551,10 +697,30 @@ $("#grid").addEventListener("click", e => {
   else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
   guardarCarritoLocal();
   renderGrid();
+  renderOfertas();
   renderCarrito();
 });
 
 $("#buscador").addEventListener("input", e => { textoBusqueda = e.target.value.trim().toLowerCase(); renderGrid(); });
+
+/* ---------- filtros ---------- */
+$("#btnFiltros").onclick = () => {
+  const abierto = $("#panelFiltros").hidden;
+  $("#panelFiltros").hidden = !abierto;
+  $("#btnFiltros").classList.toggle("activo", abierto);
+};
+$("#selectOrden").addEventListener("change", e => { ordenActivo = e.target.value; renderGrid(); });
+$("#precioDesde").addEventListener("input", e => { precioDesde = e.target.value === "" ? null : +e.target.value; renderGrid(); });
+$("#precioHasta").addEventListener("input", e => { precioHasta = e.target.value === "" ? null : +e.target.value; renderGrid(); });
+$("#btnLimpiarFiltros").onclick = () => {
+  ordenActivo = "recientes"; precioDesde = null; precioHasta = null; textoBusqueda = ""; categoriaActiva = "Todos";
+  $("#selectOrden").value = "recientes";
+  $("#precioDesde").value = "";
+  $("#precioHasta").value = "";
+  $("#buscador").value = "";
+  renderCategorias();
+  renderGrid();
+};
 
 /* ---------- carrito (drawer) ---------- */
 function renderCarrito(){
@@ -598,6 +764,7 @@ $("#carritoLista").addEventListener("click", e => {
   guardarCarritoLocal();
   renderCarrito();
   renderGrid();
+  renderOfertas();
 });
 
 function abrirCarrito(){ $("#carrito").classList.add("abierto"); $("#overlay").classList.add("abierto"); }
@@ -722,7 +889,7 @@ function renderListaAdmin(){
   $("#listaAdminProductos").innerHTML = arr.map(p => `
     <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
       ${fotoHtml(p, "foto")}
-      <div class="info"><b>${esc(p.nombre)}</b><span>${plata(p.precio)} · ${esc(p.categoria || "Otros")}${p.activo === false ? " · oculto" : ""}</span></div>
+      <div class="info"><b>${p.oferta ? "🔥 " : ""}${esc(p.nombre)}</b><span>${plata(p.precio)} · ${esc(p.categoria || "Otros")}${p.activo === false ? " · oculto" : ""}</span></div>
       <div class="acciones">
         <button type="button" class="icon-btn" data-accion="ver" data-id="${p.id}" title="${p.activo === false ? "Mostrar" : "Ocultar"}">${p.activo === false ? "👁️‍🗨️" : "👁️"}</button>
         <button type="button" class="icon-btn" data-accion="editar" data-id="${p.id}" title="Editar">✎</button>
@@ -754,6 +921,7 @@ function cargarFormEdicion(id, p){
   renderChipsCatAdmin();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
+  $("#ofertaProducto").checked = !!p.oferta;
   setPreviewFoto(p.imagen || null);
   imagenNueva = p.imagen || null;
   $("#btnGuardarProducto").innerHTML = `<span class="signo">✓</span> Guardar cambios`;
@@ -819,12 +987,13 @@ $("#formProducto").addEventListener("submit", e => {
   const precio = +$("#precioProducto").value;
   const descripcion = $("#descProducto").value.trim();
   const activo = $("#activoProducto").checked;
+  const oferta = $("#ofertaProducto").checked;
   const err = $("#errorProducto");
   if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; $("#nombreProducto").focus(); return; }
   if (!precio || precio <= 0){ err.textContent = "Poné un valor para el producto."; err.hidden = false; $("#precioProducto").focus(); return; }
   err.hidden = true;
 
-  const datos = { nombre, precio, categoria, descripcion, activo };
+  const datos = { nombre, precio, categoria, descripcion, activo, oferta };
   if (imagenNueva) datos.imagen = imagenNueva;
 
   const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
@@ -862,6 +1031,7 @@ function iniciar(){
       productos = snap.val() || {};
       renderCategorias();
       renderGrid();
+      renderOfertas();
       renderCarrito();
       if ($("#modalAdmin").classList.contains("abierto")){
         renderCarruselAgregados();
