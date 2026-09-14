@@ -192,9 +192,6 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .campo textarea{resize:vertical;min-height:64px}
 .campo input[type=file]{font-size:13px}
 .fila2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.preview-img{width:100%;aspect-ratio:1/1;max-width:160px;border-radius:12px;background:var(--crema-osc);
-  overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--taupe);margin-bottom:8px}
-.preview-img img{width:100%;height:100%;object-fit:cover}
 .btn-full{width:100%;background:var(--oliva);color:#fff;border:0;border-radius:11px;padding:12px;
   font-weight:700;font-size:14px;cursor:pointer}
 .btn-full:hover{background:var(--oliva-osc)}
@@ -238,20 +235,20 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .chips-cat-admin{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 14px;scrollbar-width:thin}
 .foto-grande{display:block;cursor:pointer;margin-bottom:14px}
 .foto-grande .preview-img{width:100%;aspect-ratio:4/3;border-radius:16px;
-  border:2px dashed var(--taupe);background:var(--crema-osc);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:8px;color:var(--tinta-suave);overflow:hidden;
-  text-align:center;padding:16px;transition:.15s}
+  border:2px dashed var(--taupe);background:var(--crema-osc);overflow:hidden;transition:.15s}
 .foto-grande:active .preview-img{border-color:var(--oliva);background:var(--oliva-pale)}
-.foto-grande .preview-img img{width:100%;height:100%;object-fit:cover;border-radius:0;margin:-16px}
-.foto-grande .preview-img span{font-size:13px;font-weight:500;max-width:220px}
+.foto-grande .preview-img.tiene-foto{border-style:solid;border-color:var(--linea)}
+.foto-grande .preview-img img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.foto-grande .placeholder-foto{height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;color:var(--tinta-suave);text-align:center;padding:16px}
+.foto-grande .placeholder-foto span{font-size:13px;font-weight:500;max-width:220px}
 .precio-grande{display:block;width:100%;font-size:34px;font-weight:700;font-family:"Outfit",sans-serif;
   text-align:center;padding:16px 10px;border-radius:14px;border:1.5px solid var(--linea);
   background:var(--crema);color:var(--oliva-osc);margin-bottom:14px}
 .precio-grande::placeholder{color:var(--taupe)}
-.btn-agregar-grande{position:sticky;bottom:-1px;width:100%;background:var(--oliva);color:#fff;border:0;
+.btn-agregar-grande{width:100%;background:var(--oliva);color:#fff;border:0;
   border-radius:14px;padding:17px;font-weight:700;font-size:17px;cursor:pointer;display:flex;
-  align-items:center;justify-content:center;gap:8px;box-shadow:0 -12px 24px -8px rgba(51,46,34,.14);
-  margin-top:2px}
+  align-items:center;justify-content:center;gap:8px;margin-top:2px}
 .btn-agregar-grande:hover{background:var(--oliva-osc)}
 .btn-agregar-grande .signo{font-size:22px;line-height:1;font-weight:400}
 .detalles-extra{margin:14px 0 4px;font-size:13px}
@@ -391,20 +388,22 @@ footer.pie b{color:var(--tinta)}
           <label class="foto-grande" for="imgProducto">
             <input type="file" id="imgProducto" accept="image/*" capture="environment" hidden>
             <div class="preview-img" id="previewImg">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
-              <span>Tocá para sacar o elegir una foto</span>
+              <div class="placeholder-foto">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
+                <span>Tocá para sacar o elegir una foto</span>
+              </div>
             </div>
           </label>
 
+          <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
           <input type="number" id="precioProducto" class="precio-grande" min="0" step="1" placeholder="$ 0" inputmode="decimal">
 
+          <p class="error-form" id="errorProducto" hidden></p>
           <button class="btn-agregar-grande" id="btnGuardarProducto" type="submit"><span class="signo">+</span> Agregar producto</button>
           <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
-          <p class="error-form" id="errorProducto" hidden></p>
 
           <details class="detalles-extra">
-            <summary>Nombre, descripción y visibilidad (opcional)</summary>
-            <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Se arma solo si lo dejás vacío"></div>
+            <summary>Descripción y visibilidad (opcional)</summary>
             <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
             <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
               <input type="checkbox" id="activoProducto" checked style="width:auto">
@@ -458,7 +457,12 @@ let categoriaActiva = "Todos";
 let textoBusqueda = "";
 let editandoId = null;
 const CATEGORIAS_SUGERIDAS = ["Sábanas", "Toallas", "Acolchados y cubrecamas", "Almohadas", "Manteles", "Otros"];
-const PLACEHOLDER_FOTO = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Tocá para sacar o elegir una foto</span>`;
+const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Tocá para sacar o elegir una foto</span></div>`;
+function setPreviewFoto(url){
+  const el = $("#previewImg");
+  if (url){ el.innerHTML = `<img src="${url}">`; el.classList.add("tiene-foto"); }
+  else { el.innerHTML = PLACEHOLDER_FOTO; el.classList.remove("tiene-foto"); }
+}
 
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -664,6 +668,8 @@ function categoriasConocidas(){
   const usadas = [...new Set(Object.values(productos).map(p => p.categoria || "Otros"))];
   const todas = [...CATEGORIAS_SUGERIDAS];
   usadas.forEach(c => { if (!todas.includes(c)) todas.push(c); });
+  const actual = $("#categoriaProducto").value;
+  if (actual && !todas.includes(actual)) todas.push(actual);
   return todas;
 }
 
@@ -748,7 +754,7 @@ function cargarFormEdicion(id, p){
   renderChipsCatAdmin();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
-  $("#previewImg").innerHTML = p.imagen ? `<img src="${p.imagen}">` : PLACEHOLDER_FOTO;
+  setPreviewFoto(p.imagen || null);
   imagenNueva = p.imagen || null;
   $("#btnGuardarProducto").innerHTML = `<span class="signo">✓</span> Guardar cambios`;
   $("#btnCancelarEdicion").hidden = false;
@@ -763,17 +769,12 @@ function limpiarForm(mantenerCategoria){
   $("#activoProducto").checked = true;
   $("#categoriaProducto").value = mantenerCategoria ? categoriaPrevia : "";
   renderChipsCatAdmin();
-  $("#previewImg").innerHTML = PLACEHOLDER_FOTO;
+  setPreviewFoto(null);
   $("#btnGuardarProducto").innerHTML = `<span class="signo">+</span> Agregar producto`;
   $("#btnCancelarEdicion").hidden = true;
   $("#errorProducto").hidden = true;
 }
 $("#btnCancelarEdicion").onclick = () => limpiarForm(true);
-
-function siguienteNombreAuto(categoria){
-  const n = Object.values(productos).filter(p => (p.categoria || "Otros") === categoria).length + 1;
-  return `${categoria} ${n}`;
-}
 
 /* ---------- imagen: comprimir a base64 ---------- */
 let imagenNueva = null;
@@ -782,8 +783,8 @@ $("#imgProducto").addEventListener("change", e => {
   if (!file) return;
   comprimirImagen(file, 900, 0.82).then(dataUrl => {
     imagenNueva = dataUrl;
-    $("#previewImg").innerHTML = `<img src="${dataUrl}">`;
-    $("#precioProducto").focus();
+    setPreviewFoto(dataUrl);
+    $("#nombreProducto").focus();
   }).catch(() => mostrarToast("No se pudo procesar la imagen."));
 });
 function comprimirImagen(file, maxLado, calidad){
@@ -814,11 +815,12 @@ function comprimirImagen(file, maxLado, calidad){
 $("#formProducto").addEventListener("submit", e => {
   e.preventDefault();
   const categoria = $("#categoriaProducto").value.trim() || "Otros";
+  const nombre = $("#nombreProducto").value.trim();
   const precio = +$("#precioProducto").value;
-  const nombre = $("#nombreProducto").value.trim() || siguienteNombreAuto(categoria);
   const descripcion = $("#descProducto").value.trim();
   const activo = $("#activoProducto").checked;
   const err = $("#errorProducto");
+  if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; $("#nombreProducto").focus(); return; }
   if (!precio || precio <= 0){ err.textContent = "Poné un valor para el producto."; err.hidden = false; $("#precioProducto").focus(); return; }
   err.hidden = true;
 
