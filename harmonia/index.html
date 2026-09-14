@@ -38,6 +38,10 @@ body{margin:0;background:var(--crema);color:var(--tinta);
   font-family:"Outfit",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
 .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+.marca-fondo{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:url('harmonia-icon.png') center 18vh / min(640px,72vw) auto no-repeat;
+  opacity:.05}
+header.principal,.hero,.controles,.catalogo,footer.pie,.overlay,.carrito,.modal,.toast{position:relative;z-index:1}
 a{color:inherit}
 button{font:inherit}
 :focus-visible{outline:2px solid var(--oliva);outline-offset:2px}
@@ -221,6 +225,8 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .tab-admin.activo{color:var(--oliva-osc);border-color:var(--oliva)}
 .pestana-admin{display:none}
 .pestana-admin.activa{display:block}
+.ayuda-carga{background:var(--oliva-pale);color:var(--oliva-osc);border-radius:10px;padding:10px 13px;
+  font-size:12.5px;line-height:1.4;margin:0 0 16px}
 
 /* ---------- toast ---------- */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:90;
@@ -240,17 +246,12 @@ footer.pie b{color:var(--tinta)}
 </style>
 </head>
 <body>
+<div class="marca-fondo" aria-hidden="true"></div>
 
 <header class="principal">
   <div class="wrap barra-top">
     <div class="marca">
-      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
-        <path d="M8 26c6-2 10-8 10-14 6 3 9 9 8 15" stroke="#4B5A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M56 26c-6-2-10-8-10-14-6 3-9 9-8 15" stroke="#4B5A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M12 32 32 15l20 17" stroke="#37432E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M18 32v17h28V32" stroke="#37432E" stroke-width="3" fill="none" stroke-linejoin="round"/>
-        <path d="M24 36c3 2 4 5 3 9M31 34c3 3 4 7 2 11" stroke="#B9AA97" stroke-width="2" fill="none" stroke-linecap="round"/>
-      </svg>
+      <img src="harmonia-icon.png" alt="Harmonia" width="40" height="39" style="width:40px;height:auto">
       <div class="marca-txt">
         <span class="marca-nombre">Harmonia</span>
         <span class="marca-tag">Ropa blanca delicada</span>
@@ -345,30 +346,29 @@ footer.pie b{color:var(--tinta)}
       </div>
 
       <div class="pestana-admin activa" id="tabProductos">
+        <p class="ayuda-carga">⚡ Carga rápida: elegí la categoría una vez, y después andá agregando foto + precio — la categoría queda puesta para el siguiente producto.</p>
         <form id="formProducto">
           <input type="hidden" id="prodId">
+          <div class="campo"><label>Categoría</label>
+            <input type="text" id="categoriaProducto" list="listaCategorias" placeholder="Sábanas">
+            <datalist id="listaCategorias">
+              <option value="Sábanas"><option value="Toallas"><option value="Acolchados y cubrecamas">
+              <option value="Almohadas"><option value="Manteles"><option value="Otros">
+            </datalist>
+          </div>
           <div class="preview-img" id="previewImg">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>
           </div>
-          <div class="campo"><label>Foto del producto</label><input type="file" id="imgProducto" accept="image/*"></div>
-          <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
-          <div class="fila2">
-            <div class="campo"><label>Precio (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000"></div>
-            <div class="campo"><label>Categoría</label>
-              <input type="text" id="categoriaProducto" list="listaCategorias" placeholder="Sábanas">
-              <datalist id="listaCategorias">
-                <option value="Sábanas"><option value="Toallas"><option value="Acolchados y cubrecamas">
-                <option value="Almohadas"><option value="Manteles"><option value="Otros">
-              </datalist>
-            </div>
-          </div>
-          <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
+          <div class="campo"><label>Imagen</label><input type="file" id="imgProducto" accept="image/*"></div>
+          <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
+          <div class="campo"><label>Nombre <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — si lo dejás vacío, se arma solo)</span></label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
+          <div class="campo"><label>Descripción <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
           <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
             <input type="checkbox" id="activoProducto" checked style="width:auto">
             <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
           </div>
           <p class="error-form" id="errorProducto" hidden></p>
-          <button class="btn-full" id="btnGuardarProducto" type="submit">Guardar producto</button>
+          <button class="btn-full" id="btnGuardarProducto" type="submit">Agregar producto</button>
           <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
         </form>
 
@@ -679,18 +679,25 @@ function cargarFormEdicion(id, p){
   $("#btnCancelarEdicion").hidden = false;
   $("#tabProductos").scrollIntoView({ block: "start" });
 }
-function limpiarForm(){
+function limpiarForm(mantenerCategoria){
+  const categoriaPrevia = $("#categoriaProducto").value;
   editandoId = null;
   imagenNueva = null;
   $("#formProducto").reset();
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
+  if (mantenerCategoria) $("#categoriaProducto").value = categoriaPrevia;
   $("#previewImg").innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>`;
-  $("#btnGuardarProducto").textContent = "Guardar producto";
+  $("#btnGuardarProducto").textContent = "Agregar producto";
   $("#btnCancelarEdicion").hidden = true;
   $("#errorProducto").hidden = true;
 }
-$("#btnCancelarEdicion").onclick = limpiarForm;
+$("#btnCancelarEdicion").onclick = () => limpiarForm(false);
+
+function siguienteNombreAuto(categoria){
+  const n = Object.values(productos).filter(p => (p.categoria || "Otros") === categoria).length + 1;
+  return `${categoria} ${n}`;
+}
 
 /* ---------- imagen: comprimir a base64 ---------- */
 let imagenNueva = null;
@@ -729,14 +736,13 @@ function comprimirImagen(file, maxLado, calidad){
 /* ---------- guardar producto ---------- */
 $("#formProducto").addEventListener("submit", e => {
   e.preventDefault();
-  const nombre = $("#nombreProducto").value.trim();
-  const precio = +$("#precioProducto").value;
   const categoria = $("#categoriaProducto").value.trim() || "Otros";
+  const precio = +$("#precioProducto").value;
+  const nombre = $("#nombreProducto").value.trim() || siguienteNombreAuto(categoria);
   const descripcion = $("#descProducto").value.trim();
   const activo = $("#activoProducto").checked;
   const err = $("#errorProducto");
-  if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; return; }
-  if (!precio || precio <= 0){ err.textContent = "Poné un precio válido."; err.hidden = false; return; }
+  if (!precio || precio <= 0){ err.textContent = "Poné un valor para el producto."; err.hidden = false; $("#precioProducto").focus(); return; }
   err.hidden = true;
 
   const datos = { nombre, precio, categoria, descripcion, activo };
@@ -744,11 +750,15 @@ $("#formProducto").addEventListener("submit", e => {
 
   const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
   if (editandoId){
-    ref.update(datos).then(() => { mostrarToast("Producto actualizado."); limpiarForm(); });
+    ref.update(datos).then(() => { mostrarToast("Producto actualizado."); limpiarForm(false); });
   } else {
     datos.creado = Date.now();
     if (!datos.imagen) datos.imagen = null;
-    ref.set(datos).then(() => { mostrarToast("Producto agregado."); limpiarForm(); });
+    ref.set(datos).then(() => {
+      mostrarToast("Producto agregado — seguí cargando el próximo.");
+      limpiarForm(true);
+      $("#imgProducto").focus();
+    });
   }
 });
 
