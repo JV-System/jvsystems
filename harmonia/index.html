@@ -80,7 +80,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .rasgo b{color:var(--oliva-osc)}
 
 /* ---------- controles ---------- */
-.controles{position:sticky;top:124px;z-index:30;background:var(--crema);padding:14px 0;
+.controles{position:sticky;top:70px;z-index:30;background:var(--crema);padding:14px 0;
   border-bottom:1px solid transparent}
 .controles.pegado{border-color:var(--linea)}
 .fila-controles{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -97,9 +97,8 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .chip-cat.activo{background:var(--oliva);border-color:var(--oliva);color:#fff}
 
 /* ---------- nav de categorías ---------- */
-.nav-categorias{position:sticky;top:70px;z-index:35;background:var(--papel);
-  border-bottom:1px solid var(--linea)}
-.nav-cat-scroll{display:flex;gap:26px;overflow-x:auto;padding:13px 18px;scrollbar-width:thin}
+.nav-cat-scroll{display:flex;gap:26px;overflow-x:auto;padding:0 1px 12px;margin-bottom:10px;
+  border-bottom:1px solid var(--linea);scrollbar-width:thin}
 .nav-cat-item{flex:none;background:none;border:0;padding:3px 1px;font:inherit;font-size:12.5px;
   font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tinta-suave);cursor:pointer;
   white-space:nowrap;border-bottom:2px solid transparent;transition:.15s}
@@ -328,8 +327,7 @@ footer.pie b{color:var(--tinta)}
 @media (max-width:640px){
   .wrap{padding:0 14px}
   .hero{padding:32px 0 22px}
-  .nav-categorias{top:42px}
-  .controles{top:90px}
+  .controles{top:42px}
 }
 </style>
 </head>
@@ -353,10 +351,6 @@ footer.pie b{color:var(--tinta)}
   </div>
 </header>
 
-<nav class="nav-categorias" id="navCategorias">
-  <div class="wrap nav-cat-scroll" id="navCatScroll"></div>
-</nav>
-
 <section class="hero">
   <div class="wrap">
     <span class="hero-eyebrow">Ropa blanca delicada</span>
@@ -378,6 +372,7 @@ footer.pie b{color:var(--tinta)}
 </section>
 
 <div class="controles" id="controles">
+  <div class="wrap nav-cat-scroll" id="navCatScroll"></div>
   <div class="wrap fila-controles">
     <div class="buscador">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
