@@ -13,7 +13,8 @@
 <meta property="og:url" content="https://jvsystems.com.ar/harmonia/">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Harmonia · Ropa blanca delicada">
-<meta name="theme-color" content="#4B5A3E">
+<meta name="theme-color" content="#4B5A3E" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#4B5A3E" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234B5A3E'/%3E%3Cpath d='M14 34 32 18l18 16' stroke='%23F7F2E7' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M20 34v14h24V34' stroke='%23F7F2E7' stroke-width='3' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
 <title>Harmonia · Ropa blanca delicada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,6 +33,22 @@
   --wasap:#25D366; --wasap-osc:#1DA851;
   --rojo:#B5473A; --rojo-pale:#F7E6E2;
   --sombra:0 18px 40px -24px rgba(51,46,34,.35);
+}
+/* Se repiten los mismos colores claros bajo prefers-color-scheme:dark
+   a propósito: le indica al navegador que el sitio "ya piensa" el modo
+   oscuro y decide quedarse claro, para que no aplique su oscurecimiento
+   automático (relevante en Chrome/Samsung Internet en Android). */
+@media (prefers-color-scheme:dark){
+  :root{
+    color-scheme:only light;
+    --crema:#F7F2E7; --crema-osc:#EFE7D6; --papel:#FFFFFF;
+    --oliva:#4B5A3E; --oliva-osc:#37432E; --oliva-cl:#8A9A78; --oliva-pale:#E7EBDF;
+    --taupe:#B9AA97; --taupe-cl:#E7DDCB;
+    --tinta:#332E22; --tinta-suave:#8A8067;
+    --linea:#E6DCC8;
+    --wasap:#25D366; --wasap-osc:#1DA851;
+    --rojo:#B5473A; --rojo-pale:#F7E6E2;
+  }
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--crema);color:var(--tinta);
@@ -420,7 +437,7 @@ footer.pie b{color:var(--tinta)}
 
 <section class="ofertas" id="seccionOfertas" hidden>
   <div class="wrap">
-    <h2 class="titulo-ofertas">🔥 Ofertas</h2>
+    <h2 class="titulo-ofertas">🔥 Ofertas destacadas</h2>
     <div class="carrusel-ofertas" id="carruselOfertas"></div>
   </div>
 </section>
@@ -717,7 +734,22 @@ function renderOfertas(){
       </div>
     </div>`;
   }).join("");
+  iniciarAutoOfertas();
 }
+
+let ofertasAutoTimer = null;
+function iniciarAutoOfertas(){
+  clearInterval(ofertasAutoTimer);
+  const el = $("#carruselOfertas");
+  if (!el || el.children.length < 2) return;
+  ofertasAutoTimer = setInterval(() => {
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 2) return;
+    if (el.scrollLeft >= maxScroll - 4) el.scrollTo({ left: 0, behavior: "auto" });
+    else el.scrollBy({ left: 188, behavior: "auto" });
+  }, 3200);
+}
+$("#carruselOfertas").addEventListener("pointerdown", () => clearInterval(ofertasAutoTimer));
 $("#carruselOfertas").addEventListener("click", e => {
   const b = e.target.closest("button[data-accion]");
   if (!b) return;
