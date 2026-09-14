@@ -68,13 +68,10 @@ button{font:inherit}
 :focus-visible{outline:2px solid var(--oliva);outline-offset:2px}
 
 /* ---------- marca ---------- */
-.marca{display:flex;align-items:center;gap:10px}
-.marca svg{flex:none}
-.marca-txt{line-height:1.05}
+.marca{display:flex;align-items:center;gap:11px}
+.marca img{flex:none}
 .marca-nombre{font-family:"Playfair Display",Georgia,serif;font-weight:900;font-style:italic;
-  font-size:22px;letter-spacing:-.01em;color:var(--oliva-osc)}
-.marca-tag{display:block;font-size:9px;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--tinta-suave);margin-top:2px}
+  font-size:25px;letter-spacing:-.01em;color:var(--oliva-osc);line-height:1}
 
 /* ---------- header ---------- */
 header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.92);
@@ -121,7 +118,9 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   font-weight:600;cursor:pointer;text-decoration:underline;padding:0}
 
 .contenido-catalogo{min-width:0}
-.fila-controles{display:flex;gap:10px;align-items:center;margin-bottom:16px}
+.barra-sticky{position:sticky;top:42px;z-index:25;background:var(--crema);
+  border-bottom:1px solid var(--linea);margin-bottom:16px}
+.fila-controles{display:flex;gap:10px;align-items:center;margin-bottom:16px;padding-top:14px}
 .buscador{flex:1;position:relative}
 .buscador input{width:100%;font:inherit;font-size:14px;padding:10px 14px 10px 36px;border-radius:12px;
   border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
@@ -131,8 +130,8 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   background:var(--papel);color:var(--tinta);border-radius:12px;padding:10px 14px;font-size:13.5px;
   font-weight:500;cursor:pointer}
 
-.fila-orden{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;
-  padding-bottom:14px;border-bottom:1px solid var(--linea)}
+.fila-orden{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-bottom:14px}
 .cantidad-resultados{font-size:12.5px;color:var(--tinta-suave)}
 .campo-orden{display:flex;align-items:center;gap:8px}
 .campo-orden label{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);font-weight:600}
@@ -148,6 +147,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   .sidebar-cab-movil h3{font-family:"Playfair Display",serif;font-size:18px;margin:0}
   .btn-filtros{display:inline-flex}
   .btn-limpiar-filtros{margin-top:6px}
+  .solo-desktop{display:none!important}
 }
 
 /* ---------- ofertas ---------- */
@@ -389,14 +389,11 @@ footer.pie b{color:var(--tinta)}
 <header class="principal">
   <div class="wrap barra-top">
     <div class="marca">
-      <img src="harmonia-icon.png" alt="Harmonia" width="40" height="39" style="width:40px;height:auto">
-      <div class="marca-txt">
-        <span class="marca-nombre">Harmonia</span>
-        <span class="marca-tag">Ropa blanca delicada</span>
-      </div>
+      <img src="harmonia-icon.png" alt="Harmonia" width="42" height="41" style="width:42px;height:auto">
+      <span class="marca-nombre">Harmonia</span>
     </div>
     <div class="acciones-header">
-      <a href="#" class="btn-admin-header" id="linkAdmin" title="Panel de administración">
+      <a href="#" class="btn-admin-header solo-desktop" id="linkAdmin" title="Panel de administración">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3.5 4 7v5c0 5 3.4 8 8 9.5 4.6-1.5 8-4.5 8-9.5V7l-8-3.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15.5 10" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
       <button class="btn-carrito" id="btnAbrirCarrito" type="button">
@@ -450,27 +447,29 @@ footer.pie b{color:var(--tinta)}
   </aside>
 
   <main class="contenido-catalogo">
-    <div class="fila-controles">
-      <div class="buscador">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
-        <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
+    <div class="barra-sticky">
+      <div class="fila-controles">
+        <div class="buscador">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
+        </div>
+        <button type="button" class="btn-filtros" id="btnFiltros">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Filtros
+        </button>
       </div>
-      <button type="button" class="btn-filtros" id="btnFiltros">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Filtros
-      </button>
-    </div>
 
-    <div class="fila-orden">
-      <span class="cantidad-resultados" id="cantidadResultados"></span>
-      <div class="campo-orden">
-        <label for="selectOrden">Ordenar por</label>
-        <select id="selectOrden">
-          <option value="recientes">Más recientes</option>
-          <option value="precio-asc">Precio: menor a mayor</option>
-          <option value="precio-desc">Precio: mayor a menor</option>
-          <option value="nombre">Nombre A-Z</option>
-        </select>
+      <div class="fila-orden">
+        <span class="cantidad-resultados" id="cantidadResultados"></span>
+        <div class="campo-orden">
+          <label for="selectOrden">Ordenar por</label>
+          <select id="selectOrden">
+            <option value="recientes">Más recientes</option>
+            <option value="precio-asc">Precio: menor a mayor</option>
+            <option value="precio-desc">Precio: mayor a menor</option>
+            <option value="nombre">Nombre A-Z</option>
+          </select>
+        </div>
       </div>
     </div>
 
