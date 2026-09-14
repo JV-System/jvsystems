@@ -234,6 +234,10 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .caja-modal{background:var(--papel);border-radius:18px;width:100%;max-width:480px;max-height:88vh;
   overflow-y:auto;box-shadow:var(--sombra)}
 .caja-modal.ancha{max-width:920px}
+/* el panel de admin ocupa toda la página, no un modal chico */
+.modal.modal-full{padding:0;background:var(--crema)}
+.modal.modal-full .caja-modal.ancha{max-width:none;width:100%;height:100%;max-height:100%;
+  border-radius:0;box-shadow:none}
 .modal-cab{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
   border-bottom:1px solid var(--linea);position:sticky;top:0;background:var(--papel);z-index:1}
 .modal-cab h2{margin:0;font-family:"Playfair Display",serif;font-size:18px;font-weight:700}
@@ -276,39 +280,39 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .pestana-admin{display:none}
 .pestana-admin.activa{display:block}
 
-/* ---- carga rápida: form compacto + lista siempre visible ---- */
-.admin-grid{display:grid;grid-template-columns:300px 1fr;gap:26px;align-items:start}
-.admin-form-col{min-width:0}
-.chips-cat-admin{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 14px;scrollbar-width:thin}
-.fila-foto-nombre{display:flex;gap:12px;align-items:flex-start;margin-bottom:13px}
-.foto-chica{display:block;cursor:pointer;flex:none}
-.foto-chica .preview-img{width:76px;height:76px;border-radius:12px;
+/* ---- carga rápida: foto en tamaño real + campos al lado, lista abajo ---- */
+.chips-cat-admin{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 16px;scrollbar-width:thin}
+.fila-foto-campos{display:flex;gap:20px;align-items:flex-start;margin-bottom:14px}
+.foto-media{display:block;cursor:pointer;flex:none}
+.foto-media .preview-img{width:190px;height:190px;border-radius:14px;
   border:2px dashed var(--taupe);background:var(--crema-osc);overflow:hidden;transition:.15s}
-.foto-chica:active .preview-img{border-color:var(--oliva);background:var(--oliva-pale)}
-.foto-chica .preview-img.tiene-foto{border-style:solid;border-color:var(--linea)}
-.foto-chica .preview-img img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-.foto-chica .placeholder-foto{height:100%;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:2px;color:var(--tinta-suave);padding:4px}
-.foto-chica .placeholder-foto span{font-size:10px;font-weight:600}
-.campos-derecha{flex:1;min-width:0}
-.campos-derecha .campo{margin-bottom:0}
+.foto-media:active .preview-img{border-color:var(--oliva);background:var(--oliva-pale)}
+.foto-media .preview-img.tiene-foto{border-style:solid;border-color:var(--linea)}
+.foto-media .preview-img img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.foto-media .placeholder-foto{height:100%;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:8px;color:var(--tinta-suave);text-align:center;padding:14px}
+.foto-media .placeholder-foto span{font-size:12.5px;font-weight:500;max-width:140px}
+.campos-junto-foto{flex:1;min-width:0}
+.campos-junto-foto .campo{margin-bottom:11px}
+.fila-oferta{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.check-oferta{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:600;
+  color:var(--tinta);padding-bottom:2px}
+.check-oferta input{width:auto}
+.campo-descuento{margin-bottom:0!important;min-width:180px}
+.campo-descuento[hidden]{display:none}
 .btn-agregar-grande{width:100%;background:var(--oliva);color:#fff;border:0;
   border-radius:14px;padding:15px;font-weight:700;font-size:15.5px;cursor:pointer;display:flex;
-  align-items:center;justify-content:center;gap:8px;margin-top:2px}
+  align-items:center;justify-content:center;gap:8px;margin-top:14px}
 .btn-agregar-grande:hover{background:var(--oliva-osc)}
 .btn-agregar-grande .signo{font-size:20px;line-height:1;font-weight:400}
-.detalles-extra{margin:14px 0 4px;font-size:13px}
-.detalles-extra summary{cursor:pointer;color:var(--tinta-suave);font-weight:600;padding:8px 0}
-.detalles-extra .campo{margin-top:12px}
-.admin-lista-col{min-width:0;border-left:1px solid var(--linea);padding-left:26px}
-.admin-lista-col h3{font-family:"Playfair Display",serif;font-size:15px;font-weight:700;margin:0 0 12px;
+.admin-lista-col{margin-top:28px;padding-top:22px;border-top:1px solid var(--linea)}
+.admin-lista-col h3{font-family:"Playfair Display",serif;font-size:16px;font-weight:700;margin:0 0 14px;
   color:var(--tinta)}
 .admin-lista-col h3 span{font-family:"Outfit",sans-serif;font-weight:500;color:var(--tinta-suave);font-size:13px}
-.admin-lista-col .lista-admin{max-height:min(520px,60vh);overflow-y:auto;padding-right:4px}
-@media (max-width:760px){
-  .admin-grid{display:block}
-  .admin-lista-col{border-left:0;padding-left:0;margin-top:26px;padding-top:20px;border-top:1px solid var(--linea)}
-  .admin-lista-col .lista-admin{max-height:none;overflow:visible}
+.admin-lista-col .lista-admin{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+@media (max-width:640px){
+  .fila-foto-campos{flex-direction:column;align-items:center}
+  .foto-media .preview-img{width:100%;max-width:220px;height:auto;aspect-ratio:1/1}
 }
 
 /* ---------- toast ---------- */
@@ -488,8 +492,8 @@ footer.pie b{color:var(--tinta)}
   </div>
 </div>
 
-<!-- ---------- panel admin ---------- -->
-<div class="modal" id="modalAdmin">
+<!-- ---------- panel admin (página completa) ---------- -->
+<div class="modal modal-full" id="modalAdmin">
   <div class="caja-modal ancha">
     <div class="modal-cab"><h2>Catálogo — Harmonia</h2><button class="cerrar" id="cerrarAdmin" type="button">✕</button></div>
     <div class="modal-cuerpo">
@@ -499,56 +503,52 @@ footer.pie b{color:var(--tinta)}
       </div>
 
       <div class="pestana-admin activa" id="tabProductos">
-        <div class="admin-grid">
-          <div class="admin-form-col">
-            <form id="formProducto" class="form-rapido">
-              <input type="hidden" id="prodId">
-              <input type="hidden" id="categoriaProducto">
-              <div class="chips-cat-admin" id="chipsCatAdmin"></div>
+        <form id="formProducto" class="form-rapido">
+          <input type="hidden" id="prodId">
+          <input type="hidden" id="categoriaProducto">
+          <div class="chips-cat-admin" id="chipsCatAdmin"></div>
 
-              <div class="fila-foto-nombre">
-                <label class="foto-chica" for="imgProducto">
-                  <input type="file" id="imgProducto" accept="image/*" capture="environment" hidden>
-                  <div class="preview-img" id="previewImg">
-                    <div class="placeholder-foto">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
-                      <span>Foto</span>
-                    </div>
-                  </div>
-                </label>
-                <div class="campos-derecha">
-                  <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
+          <div class="fila-foto-campos">
+            <label class="foto-media" for="imgProducto">
+              <input type="file" id="imgProducto" accept="image/*" capture="environment" hidden>
+              <div class="preview-img" id="previewImg">
+                <div class="placeholder-foto">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
+                  <span>Tocá para elegir la foto</span>
                 </div>
               </div>
-
+            </label>
+            <div class="campos-junto-foto">
+              <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
+              <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…" rows="2"></textarea></div>
               <div class="fila2">
                 <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
-                <div class="campo"><label>Descuento (%)</label><input type="number" id="descuentoProducto" min="0" max="95" step="1" placeholder="0" inputmode="numeric"></div>
-              </div>
-
-              <p class="error-form" id="errorProducto" hidden></p>
-              <button class="btn-agregar-grande" id="btnGuardarProducto" type="submit"><span class="signo">+</span> Agregar producto</button>
-              <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
-
-              <details class="detalles-extra">
-                <summary>Descripción, oferta y visibilidad (opcional)</summary>
-                <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
-                <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
-                  <input type="checkbox" id="ofertaProducto" style="width:auto">
-                  <label style="margin:0" for="ofertaProducto">🔥 Marcar como oferta (aparece en el carrusel de arriba)</label>
-                </div>
-                <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
+                <div class="campo" style="flex-direction:row;align-items:center;gap:8px;padding-top:22px">
                   <input type="checkbox" id="activoProducto" checked style="width:auto">
-                  <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
+                  <label style="margin:0" for="activoProducto">Visible</label>
                 </div>
-              </details>
-            </form>
+              </div>
+              <div class="fila-oferta">
+                <label class="check-oferta">
+                  <input type="checkbox" id="ofertaProducto">
+                  <span>🔥 Tiene oferta</span>
+                </label>
+                <div class="campo campo-descuento" id="campoDescuento" hidden>
+                  <label>Descuento sobre el valor (%)</label>
+                  <input type="number" id="descuentoProducto" min="1" max="95" step="1" placeholder="20" inputmode="numeric">
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="admin-lista-col">
-            <h3>Productos cargados <span id="contadorProductos"></span></h3>
-            <div class="lista-admin" id="listaAdminProductos"></div>
-          </div>
+          <p class="error-form" id="errorProducto" hidden></p>
+          <button class="btn-agregar-grande" id="btnGuardarProducto" type="submit"><span class="signo">+</span> Agregar producto</button>
+          <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
+        </form>
+
+        <div class="admin-lista-col">
+          <h3>Productos cargados <span id="contadorProductos"></span></h3>
+          <div class="lista-admin" id="listaAdminProductos"></div>
         </div>
       </div>
 
@@ -594,7 +594,7 @@ let precioDesde = null;
 let precioHasta = null;
 let editandoId = null;
 const CATEGORIAS_SUGERIDAS = ["Sábanas", "Toallas", "Acolchados y cubrecamas", "Almohadas", "Manteles", "Otros"];
-const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Foto</span></div>`;
+const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Tocá para elegir la foto</span></div>`;
 function setPreviewFoto(url){
   const el = $("#previewImg");
   if (url){ el.innerHTML = `<img src="${url}">`; el.classList.add("tiene-foto"); }
@@ -604,9 +604,9 @@ function setPreviewFoto(url){
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const plata = n => "$" + Math.round(+n || 0).toLocaleString("es-AR");
-const precioFinal = p => (p.descuento > 0) ? Math.round((p.precio || 0) * (1 - p.descuento / 100)) : (p.precio || 0);
+const precioFinal = p => (p.oferta && p.descuento > 0) ? Math.round((p.precio || 0) * (1 - p.descuento / 100)) : (p.precio || 0);
 function precioHtml(p){
-  if (p.descuento > 0){
+  if (p.oferta && p.descuento > 0){
     return `<span class="precio-tachado">${plata(p.precio)}</span> <span class="precio-final">${plata(precioFinal(p))}</span> <span class="badge-desc">-${p.descuento}%</span>`;
   }
   return `<span class="precio-final">${plata(p.precio)}</span>`;
@@ -853,7 +853,7 @@ $("#btnEnviarPedido").onclick = () => {
   const lineas = ids.map(id => {
     const p = productos[id];
     const pu = precioFinal(p);
-    const detalleDesc = p.descuento > 0 ? ` (${plata(pu)} c/u, -${p.descuento}%)` : "";
+    const detalleDesc = (p.oferta && p.descuento > 0) ? ` (${plata(pu)} c/u, -${p.descuento}%)` : "";
     return `• ${p.nombre} x${carrito[id]} — ${plata(pu * carrito[id])}${detalleDesc}`;
   });
   const total = ids.reduce((s, id) => s + precioFinal(productos[id]) * carrito[id], 0);
@@ -937,7 +937,7 @@ function renderListaAdmin(){
     return;
   }
   $("#listaAdminProductos").innerHTML = arr.map(p => {
-    const precioTxt = p.descuento > 0
+    const precioTxt = (p.oferta && p.descuento > 0)
       ? `${plata(precioFinal(p))} (antes ${plata(p.precio)}, -${p.descuento}%)`
       : plata(p.precio);
     return `
@@ -978,6 +978,7 @@ function cargarFormEdicion(id, p){
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
   $("#ofertaProducto").checked = !!p.oferta;
+  $("#campoDescuento").hidden = !p.oferta;
   setPreviewFoto(p.imagen || null);
   imagenNueva = p.imagen || null;
   $("#btnGuardarProducto").innerHTML = `<span class="signo">✓</span> Guardar cambios`;
@@ -993,12 +994,17 @@ function limpiarForm(mantenerCategoria){
   $("#activoProducto").checked = true;
   $("#categoriaProducto").value = mantenerCategoria ? categoriaPrevia : "";
   renderChipsCatAdmin();
+  $("#campoDescuento").hidden = true;
   setPreviewFoto(null);
   $("#btnGuardarProducto").innerHTML = `<span class="signo">+</span> Agregar producto`;
   $("#btnCancelarEdicion").hidden = true;
   $("#errorProducto").hidden = true;
 }
 $("#btnCancelarEdicion").onclick = () => limpiarForm(true);
+$("#ofertaProducto").addEventListener("change", e => {
+  $("#campoDescuento").hidden = !e.target.checked;
+  if (e.target.checked) $("#descuentoProducto").focus();
+});
 
 /* ---------- imagen: comprimir a base64 ---------- */
 let imagenNueva = null;
@@ -1048,6 +1054,7 @@ $("#formProducto").addEventListener("submit", e => {
   const err = $("#errorProducto");
   if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; $("#nombreProducto").focus(); return; }
   if (!precio || precio <= 0){ err.textContent = "Poné un valor para el producto."; err.hidden = false; $("#precioProducto").focus(); return; }
+  if (oferta && !descuento){ err.textContent = "Marcaste que tiene oferta: poné el porcentaje de descuento."; err.hidden = false; $("#descuentoProducto").focus(); return; }
   err.hidden = true;
 
   const datos = { nombre, precio, descuento, categoria, descripcion, activo, oferta };
