@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="description" content="Harmonia · Ropa blanca delicada. Sábanas, toallas y acolchados de calidad premium. Mirá el catálogo y hacé tu pedido por WhatsApp.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="JV Systems">
+<meta property="og:locale" content="es_AR">
+<meta property="og:title" content="Harmonia · Ropa blanca delicada">
+<meta property="og:description" content="Catálogo de ropa blanca premium · Pedidos por WhatsApp">
+<meta property="og:url" content="https://jvsystems.com.ar/harmonia/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Harmonia · Ropa blanca delicada">
+<meta name="theme-color" content="#4B5A3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234B5A3E'/%3E%3Cpath d='M14 34 32 18l18 16' stroke='%23F7F2E7' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M20 34v14h24V34' stroke='%23F7F2E7' stroke-width='3' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Harmonia · Ropa blanca delicada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,500;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+:root{
+  color-scheme:light only;
+  --crema:#F7F2E7; --crema-osc:#EFE7D6; --papel:#FFFFFF;
+  --oliva:#4B5A3E; --oliva-osc:#37432E; --oliva-cl:#8A9A78; --oliva-pale:#E7EBDF;
+  --taupe:#B9AA97; --taupe-cl:#E7DDCB;
+  --tinta:#332E22; --tinta-suave:#8A8067;
+  --linea:#E6DCC8;
+  --wasap:#25D366; --wasap-osc:#1DA851;
+  --rojo:#B5473A; --rojo-pale:#F7E6E2;
+  --sombra:0 18px 40px -24px rgba(51,46,34,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--crema);color:var(--tinta);
+  font-family:"Outfit",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+a{color:inherit}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--oliva);outline-offset:2px}
+
+/* ---------- marca ---------- */
+.marca{display:flex;align-items:center;gap:10px}
+.marca svg{flex:none}
+.marca-txt{line-height:1.05}
+.marca-nombre{font-family:"Playfair Display",Georgia,serif;font-weight:900;font-style:italic;
+  font-size:22px;letter-spacing:-.01em;color:var(--oliva-osc)}
+.marca-tag{display:block;font-size:9px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--tinta-suave);margin-top:2px}
+
+/* ---------- header ---------- */
+header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.92);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--linea)}
+.barra-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0}
+.btn-carrito{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--oliva);
+  color:#fff;border:0;border-radius:99px;padding:10px 18px 10px 16px;cursor:pointer;font-weight:600;
+  font-size:13.5px;transition:.15s;box-shadow:var(--sombra)}
+.btn-carrito:hover{background:var(--oliva-osc)}
+.btn-carrito .badge{background:#fff;color:var(--oliva-osc);border-radius:99px;font-size:11.5px;
+  font-weight:700;min-width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;
+  padding:0 5px}
+
+/* ---------- hero ---------- */
+.hero{padding:46px 0 30px;text-align:center}
+.hero-eyebrow{font-family:"Outfit",sans-serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--oliva);font-weight:600}
+.hero h1{font-family:"Playfair Display",Georgia,serif;font-weight:700;font-size:clamp(28px,5vw,44px);
+  margin:10px 0 8px;letter-spacing:-.01em;line-height:1.08}
+.hero p{max-width:520px;margin:0 auto;color:var(--tinta-suave);font-size:15px}
+.rasgos{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:22px}
+.rasgo{display:inline-flex;align-items:center;gap:7px;background:var(--papel);border:1px solid var(--linea);
+  border-radius:99px;padding:8px 15px;font-size:12.5px;color:var(--tinta-suave);font-weight:500}
+.rasgo b{color:var(--oliva-osc)}
+
+/* ---------- controles ---------- */
+.controles{position:sticky;top:66px;z-index:30;background:var(--crema);padding:14px 0;
+  border-bottom:1px solid transparent}
+.controles.pegado{border-color:var(--linea)}
+.fila-controles{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.buscador{flex:1 1 220px;position:relative}
+.buscador input{width:100%;font:inherit;font-size:14px;padding:10px 14px 10px 36px;border-radius:12px;
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
+.buscador input::placeholder{color:var(--tinta-suave)}
+.buscador svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.55}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 1px;scrollbar-width:thin}
+.chip-cat{flex:none;border:1px solid var(--linea);background:var(--papel);color:var(--tinta-suave);
+  border-radius:99px;padding:8px 15px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:500;
+  transition:.15s}
+.chip-cat:hover{border-color:var(--oliva-cl)}
+.chip-cat.activo{background:var(--oliva);border-color:var(--oliva);color:#fff}
+
+/* ---------- catálogo ---------- */
+.catalogo{padding:26px 0 70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.card{background:var(--papel);border:1px solid var(--linea);border-radius:18px;overflow:hidden;
+  display:flex;flex-direction:column;transition:.18s;position:relative}
+.card:hover{box-shadow:var(--sombra);transform:translateY(-2px)}
+.card .foto{aspect-ratio:1/1;background:var(--crema-osc);position:relative;overflow:hidden}
+.card .foto img{width:100%;height:100%;object-fit:cover}
+.card .foto .sin-foto{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--taupe)}
+.card .categoria-tag{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.92);
+  color:var(--oliva-osc);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:4px 10px;border-radius:99px}
+.card .cuerpo{padding:14px 15px 15px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card h3{margin:0;font-family:"Playfair Display",serif;font-weight:600;font-size:16.5px;line-height:1.25}
+.card .desc{font-size:12.5px;color:var(--tinta-suave);margin:0;flex:1;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .precio{font-family:"Outfit",sans-serif;font-weight:700;font-size:18px;color:var(--oliva-osc)}
+.card .fila-acciones{display:flex;align-items:center;gap:8px;margin-top:2px}
+.stepper{display:flex;align-items:center;border:1px solid var(--linea);border-radius:10px;overflow:hidden}
+.stepper button{width:30px;height:32px;border:0;background:var(--crema-osc);color:var(--oliva-osc);
+  font-size:16px;cursor:pointer;line-height:1}
+.stepper button:hover{background:var(--taupe-cl)}
+.stepper span{min-width:26px;text-align:center;font-weight:600;font-size:13.5px}
+.btn-agregar{flex:1;background:var(--oliva);color:#fff;border:0;border-radius:10px;padding:9px 10px;
+  font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+.btn-agregar:hover{background:var(--oliva-osc)}
+.btn-agregar.en-carrito{background:var(--oliva-pale);color:var(--oliva-osc)}
+.btn-consulta{flex:none;width:34px;height:34px;border-radius:10px;border:1px solid var(--linea);
+  background:var(--papel);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--wasap-osc)}
+.btn-consulta:hover{border-color:var(--wasap)}
+
+.vacio{text-align:center;padding:70px 20px;color:var(--tinta-suave)}
+.vacio svg{opacity:.5;margin-bottom:14px}
+.vacio b{display:block;font-family:"Playfair Display",serif;font-size:20px;color:var(--tinta);margin-bottom:6px}
+
+/* ---------- carrito (drawer) ---------- */
+.overlay{position:fixed;inset:0;background:rgba(51,46,34,.45);z-index:60;opacity:0;visibility:hidden;
+  transition:opacity .25s}
+.overlay.abierto{opacity:1;visibility:visible}
+.carrito{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--papel);z-index:61;
+  display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.3,1);
+  box-shadow:-20px 0 50px -20px rgba(0,0,0,.35)}
+.carrito.abierto{transform:none}
+.carrito-cab{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
+  border-bottom:1px solid var(--linea)}
+.carrito-cab h2{margin:0;font-family:"Playfair Display",serif;font-size:19px;font-weight:700}
+.cerrar{width:34px;height:34px;border-radius:10px;border:1px solid var(--linea);background:var(--papel);
+  cursor:pointer;font-size:18px;color:var(--tinta-suave);display:flex;align-items:center;justify-content:center}
+.cerrar:hover{background:var(--crema-osc)}
+.carrito-lista{flex:1;overflow-y:auto;padding:8px 20px}
+.item-carrito{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--linea)}
+.item-carrito .foto{width:56px;height:56px;border-radius:10px;background:var(--crema-osc);flex:none;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--taupe)}
+.item-carrito .foto img{width:100%;height:100%;object-fit:cover}
+.item-carrito .info{flex:1;min-width:0}
+.item-carrito .info h4{margin:0 0 3px;font-size:14px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-carrito .info .precio-u{font-size:12px;color:var(--tinta-suave)}
+.item-carrito .fila{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.quitar-item{background:none;border:0;color:var(--rojo);font-size:12px;cursor:pointer;padding:4px 0;
+  text-decoration:underline}
+.carrito-vacio{padding:50px 10px;text-align:center;color:var(--tinta-suave)}
+.carrito-pie{border-top:1px solid var(--linea);padding:16px 20px 20px;background:var(--crema)}
+.fila-total{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.fila-total span{font-size:13px;color:var(--tinta-suave);text-transform:uppercase;letter-spacing:.08em}
+.fila-total b{font-family:"Outfit",sans-serif;font-size:23px;color:var(--oliva-osc)}
+.btn-whatsapp{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;background:var(--wasap);
+  color:#fff;border:0;border-radius:12px;padding:14px;font-weight:700;font-size:14.5px;cursor:pointer;
+  transition:.15s}
+.btn-whatsapp:hover{background:var(--wasap-osc)}
+.btn-mp{width:100%;margin-top:9px;background:var(--papel);border:1px dashed var(--taupe);color:var(--tinta-suave);
+  border-radius:12px;padding:11px;font-size:12.5px;font-weight:500;cursor:not-allowed;text-align:center}
+.nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
+
+/* ---------- admin ---------- */
+.link-admin{display:block;text-align:center;font-size:11.5px;color:var(--tinta-suave);padding:6px 0 26px;
+  text-decoration:none;opacity:.7}
+.link-admin:hover{opacity:1}
+.modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;visibility:hidden;transition:opacity .2s;background:rgba(51,46,34,.5)}
+.modal.abierto{opacity:1;visibility:visible}
+.caja-modal{background:var(--papel);border-radius:18px;width:100%;max-width:480px;max-height:88vh;
+  overflow-y:auto;box-shadow:var(--sombra)}
+.caja-modal.ancha{max-width:760px}
+.modal-cab{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
+  border-bottom:1px solid var(--linea);position:sticky;top:0;background:var(--papel);z-index:1}
+.modal-cab h2{margin:0;font-family:"Playfair Display",serif;font-size:18px;font-weight:700}
+.modal-cuerpo{padding:20px 22px}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.campo label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-suave);font-weight:600}
+.campo input[type=text],.campo input[type=number],.campo input[type=tel],.campo textarea,.campo select{
+  font:inherit;font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid var(--linea);
+  background:var(--crema);color:var(--tinta);width:100%}
+.campo textarea{resize:vertical;min-height:64px}
+.campo input[type=file]{font-size:13px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.preview-img{width:100%;aspect-ratio:1/1;max-width:160px;border-radius:12px;background:var(--crema-osc);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--taupe);margin-bottom:8px}
+.preview-img img{width:100%;height:100%;object-fit:cover}
+.btn-full{width:100%;background:var(--oliva);color:#fff;border:0;border-radius:11px;padding:12px;
+  font-weight:700;font-size:14px;cursor:pointer}
+.btn-full:hover{background:var(--oliva-osc)}
+.btn-full:disabled{opacity:.6;cursor:default}
+.btn-ghost{width:100%;background:none;border:1px solid var(--linea);color:var(--tinta-suave);
+  border-radius:11px;padding:11px;font-weight:600;font-size:13.5px;cursor:pointer;margin-top:8px}
+.btn-ghost:hover{background:var(--crema-osc)}
+.error-form{color:var(--rojo);font-size:12.5px;margin:-4px 0 12px}
+.lista-admin{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.fila-admin{display:flex;align-items:center;gap:12px;border:1px solid var(--linea);border-radius:12px;
+  padding:10px 12px}
+.fila-admin.inactivo{opacity:.5}
+.fila-admin .foto{width:44px;height:44px;border-radius:9px;background:var(--crema-osc);flex:none;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--taupe)}
+.fila-admin .foto img{width:100%;height:100%;object-fit:cover}
+.fila-admin .info{flex:1;min-width:0}
+.fila-admin .info b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fila-admin .info span{font-size:11.5px;color:var(--tinta-suave)}
+.fila-admin .acciones{display:flex;gap:6px;flex:none}
+.icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--linea);background:var(--papel);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tinta-suave)}
+.icon-btn:hover{background:var(--crema-osc);color:var(--tinta)}
+.icon-btn.peligro:hover{background:var(--rojo-pale);color:var(--rojo);border-color:var(--rojo)}
+.tabs-admin{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--linea)}
+.tab-admin{padding:9px 4px;border:0;background:none;font-weight:600;font-size:13.5px;color:var(--tinta-suave);
+  cursor:pointer;border-bottom:2px solid transparent;margin-right:14px}
+.tab-admin.activo{color:var(--oliva-osc);border-color:var(--oliva)}
+.pestana-admin{display:none}
+.pestana-admin.activa{display:block}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:90;
+  background:var(--oliva-osc);color:#fff;padding:12px 20px;border-radius:99px;font-size:13.5px;font-weight:500;
+  opacity:0;visibility:hidden;transition:.25s;box-shadow:var(--sombra)}
+.toast.mostrar{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+
+/* ---------- footer ---------- */
+footer.pie{padding:30px 0 18px;text-align:center;color:var(--tinta-suave);font-size:11.5px}
+footer.pie b{color:var(--tinta)}
+
+@media (max-width:640px){
+  .wrap{padding:0 14px}
+  .hero{padding:32px 0 22px}
+  .controles{top:62px}
+}
+</style>
+</head>
+<body>
+
+<header class="principal">
+  <div class="wrap barra-top">
+    <div class="marca">
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none">
+        <path d="M8 26c6-2 10-8 10-14 6 3 9 9 8 15" stroke="#4B5A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M56 26c-6-2-10-8-10-14-6 3-9 9-8 15" stroke="#4B5A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M12 32 32 15l20 17" stroke="#37432E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 32v17h28V32" stroke="#37432E" stroke-width="3" fill="none" stroke-linejoin="round"/>
+        <path d="M24 36c3 2 4 5 3 9M31 34c3 3 4 7 2 11" stroke="#B9AA97" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="marca-txt">
+        <span class="marca-nombre">Harmonia</span>
+        <span class="marca-tag">Ropa blanca delicada</span>
+      </div>
+    </div>
+    <button class="btn-carrito" id="btnAbrirCarrito" type="button">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="21" r="1.4" fill="#fff"/><circle cx="18" cy="21" r="1.4" fill="#fff"/></svg>
+      Pedido
+      <span class="badge" id="badgeCarrito">0</span>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="hero-eyebrow">Sábanas · Toallas · Acolchados</span>
+    <h1>Textiles suaves para tu hogar</h1>
+    <p>Mirá el catálogo, armá tu pedido y coordinamos todo por WhatsApp: variantes, envío y forma de pago.</p>
+    <div class="rasgos">
+      <span class="rasgo">🧵 <b>Calidad&nbsp;premium</b></span>
+      <span class="rasgo">💬 <b>Pedís por WhatsApp</b></span>
+      <span class="rasgo">🚚 <b>Coordinamos envío</b></span>
+    </div>
+  </div>
+</section>
+
+<div class="controles" id="controles">
+  <div class="wrap fila-controles">
+    <div class="buscador">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
+    </div>
+    <div class="chips" id="chipsCategorias"></div>
+  </div>
+</div>
+
+<main class="catalogo wrap">
+  <div class="grid" id="grid"></div>
+  <div class="vacio" id="vacio" hidden>
+    <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M6 7l1 13h10l1-13M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <b>Todavía no hay productos cargados</b>
+    <span>El catálogo se completa desde el panel de administración.</span>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="wrap">
+    <p>Hecho con ♥ por <b>JV Systems</b> · Pedidos coordinados directamente por WhatsApp</p>
+  </div>
+  <a href="#" class="link-admin" id="linkAdmin">Panel de administración</a>
+</footer>
+
+<!-- ---------- carrito ---------- -->
+<div class="overlay" id="overlay"></div>
+<aside class="carrito" id="carrito">
+  <div class="carrito-cab">
+    <h2>Tu pedido</h2>
+    <button class="cerrar" id="btnCerrarCarrito" type="button">✕</button>
+  </div>
+  <div class="carrito-lista" id="carritoLista"></div>
+  <div class="carrito-pie">
+    <div class="fila-total"><span>Total estimado</span><b id="totalCarrito">$0</b></div>
+    <button class="btn-whatsapp" id="btnEnviarPedido" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
+      Enviar pedido por WhatsApp
+    </button>
+    <div class="btn-mp" title="Próximamente">💳 Pago con Mercado Pago — próximamente</div>
+    <p class="nota-pie">Al enviar, se abre WhatsApp con el detalle de tu pedido ya armado.</p>
+  </div>
+</aside>
+
+<!-- ---------- login admin ---------- -->
+<div class="modal" id="modalLogin">
+  <div class="caja-modal">
+    <div class="modal-cab"><h2>Panel de administración</h2><button class="cerrar" id="cerrarLogin" type="button">✕</button></div>
+    <div class="modal-cuerpo">
+      <div class="campo"><label>Clave</label><input type="text" id="claveAdmin" placeholder="Clave de administración"></div>
+      <p class="error-form" id="errorLogin" hidden>Clave incorrecta.</p>
+      <button class="btn-full" id="btnIngresarAdmin" type="button">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- panel admin ---------- -->
+<div class="modal" id="modalAdmin">
+  <div class="caja-modal ancha">
+    <div class="modal-cab"><h2>Catálogo — Harmonia</h2><button class="cerrar" id="cerrarAdmin" type="button">✕</button></div>
+    <div class="modal-cuerpo">
+      <div class="tabs-admin">
+        <button class="tab-admin activo" data-tab="productos" type="button">Productos</button>
+        <button class="tab-admin" data-tab="ajustes" type="button">Ajustes</button>
+      </div>
+
+      <div class="pestana-admin activa" id="tabProductos">
+        <form id="formProducto">
+          <input type="hidden" id="prodId">
+          <div class="preview-img" id="previewImg">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>
+          </div>
+          <div class="campo"><label>Foto del producto</label><input type="file" id="imgProducto" accept="image/*"></div>
+          <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
+          <div class="fila2">
+            <div class="campo"><label>Precio (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000"></div>
+            <div class="campo"><label>Categoría</label>
+              <input type="text" id="categoriaProducto" list="listaCategorias" placeholder="Sábanas">
+              <datalist id="listaCategorias">
+                <option value="Sábanas"><option value="Toallas"><option value="Acolchados y cubrecamas">
+                <option value="Almohadas"><option value="Manteles"><option value="Otros">
+              </datalist>
+            </div>
+          </div>
+          <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
+          <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
+            <input type="checkbox" id="activoProducto" checked style="width:auto">
+            <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
+          </div>
+          <p class="error-form" id="errorProducto" hidden></p>
+          <button class="btn-full" id="btnGuardarProducto" type="submit">Guardar producto</button>
+          <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
+        </form>
+
+        <div class="lista-admin" id="listaAdminProductos" style="margin-top:26px"></div>
+      </div>
+
+      <div class="pestana-admin" id="tabAjustes">
+        <div class="campo"><label>Número de WhatsApp (con código de país)</label>
+          <input type="tel" id="whatsappConfig" placeholder="5493811234567"></div>
+        <div class="campo"><label>Mensaje inicial del pedido</label>
+          <textarea id="saludoConfig" placeholder="¡Hola Harmonia! Quiero hacer este pedido:"></textarea></div>
+        <button class="btn-full" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =============================================================
+   Harmonia · catálogo + pedidos por WhatsApp
+   Datos en Firebase Realtime Database, compartido con el resto
+   de apps de jvsystems (cada app vive bajo su propia RUTA).
+   ============================================================= */
+const FB = {
+  apiKey: "AIzaSyCaAKXQCJriMXgi2OXqf2Xb_1zIAF51ZGE",
+  authDomain: "sabores-misiones.firebaseapp.com",
+  databaseURL: "https://sabores-misiones-default-rtdb.firebaseio.com",
+  projectId: "sabores-misiones",
+  storageBucket: "sabores-misiones.firebasestorage.app",
+  messagingSenderId: "156257311110",
+  appId: "1:156257311110:web:1700654b3afee9f38e3407"
+};
+const RUTA = "harmonia";
+const CLAVE_ADMIN = "harmonia2026";
+
+let db = null;
+let productos = {};
+let config = { whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" };
+let carrito = {};
+let categoriaActiva = "Todos";
+let textoBusqueda = "";
+let editandoId = null;
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const plata = n => "$" + Math.round(+n || 0).toLocaleString("es-AR");
+const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+/* ---------- carrito local ---------- */
+function leerCarrito(){
+  try{ return JSON.parse(localStorage.getItem("harmonia_carrito") || "{}"); }catch(e){ return {}; }
+}
+function guardarCarritoLocal(){
+  try{ localStorage.setItem("harmonia_carrito", JSON.stringify(carrito)); }catch(e){}
+}
+carrito = leerCarrito();
+
+function mostrarToast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("mostrar");
+  clearTimeout(mostrarToast._h);
+  mostrarToast._h = setTimeout(() => t.classList.remove("mostrar"), 2200);
+}
+
+/* ---------- render catálogo ---------- */
+function listaVisible(){
+  const arr = Object.entries(productos)
+    .map(([id, p]) => ({ id, ...p }))
+    .filter(p => p.activo !== false);
+  return arr
+    .filter(p => categoriaActiva === "Todos" || (p.categoria || "Otros") === categoriaActiva)
+    .filter(p => !textoBusqueda || (p.nombre || "").toLowerCase().includes(textoBusqueda) || (p.descripcion || "").toLowerCase().includes(textoBusqueda))
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
+}
+
+function renderCategorias(){
+  const cats = ["Todos", ...new Set(Object.values(productos).filter(p => p.activo !== false).map(p => p.categoria || "Otros"))];
+  $("#chipsCategorias").innerHTML = cats.map(c =>
+    `<button type="button" class="chip-cat${c === categoriaActiva ? " activo" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`
+  ).join("");
+  $$(".chip-cat").forEach(b => b.onclick = () => { categoriaActiva = b.dataset.cat; renderCategorias(); renderGrid(); });
+}
+
+function fotoHtml(p, claseWrap, claseImg){
+  if (p.imagen) return `<div class="${claseWrap}"><img class="${claseImg||''}" src="${p.imagen}" alt="${esc(p.nombre)}"></div>`;
+  return `<div class="${claseWrap}"><div class="sin-foto"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/></svg></div></div>`;
+}
+
+function renderGrid(){
+  const lista = listaVisible();
+  $("#vacio").hidden = Object.keys(productos).length > 0 ? true : false;
+  if (!Object.keys(productos).length){ $("#grid").innerHTML = ""; return; }
+  if (!lista.length){
+    $("#grid").innerHTML = `<div class="vacio" style="grid-column:1/-1"><b>Sin resultados</b><span>Probá con otra búsqueda o categoría.</span></div>`;
+    return;
+  }
+  $("#grid").innerHTML = lista.map(p => {
+    const cant = carrito[p.id] || 0;
+    return `
+    <article class="card" data-id="${p.id}">
+      ${fotoHtml(p, "foto")}
+      <span class="categoria-tag">${esc(p.categoria || "Otros")}</span>
+      <div class="cuerpo">
+        <h3>${esc(p.nombre)}</h3>
+        ${p.descripcion ? `<p class="desc">${esc(p.descripcion)}</p>` : `<p class="desc"></p>`}
+        <div class="precio">${plata(p.precio)}</div>
+        <div class="fila-acciones">
+          ${cant > 0 ? `
+            <div class="stepper">
+              <button type="button" data-accion="menos" data-id="${p.id}">−</button>
+              <span>${cant}</span>
+              <button type="button" data-accion="mas" data-id="${p.id}">+</button>
+            </div>
+          ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
+          <button type="button" class="btn-consulta" data-accion="consultar" data-id="${p.id}" title="Consultar por WhatsApp">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+$("#grid").addEventListener("click", e => {
+  const b = e.target.closest("button[data-accion]");
+  if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.accion === "agregar"){ carrito[id] = 1; }
+  else if (b.dataset.accion === "mas"){ carrito[id] = (carrito[id] || 0) + 1; }
+  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
+  else if (b.dataset.accion === "consultar"){ consultarProducto(id); return; }
+  guardarCarritoLocal();
+  renderGrid();
+  renderCarrito();
+});
+
+$("#buscador").addEventListener("input", e => { textoBusqueda = e.target.value.trim().toLowerCase(); renderGrid(); });
+
+/* ---------- carrito (drawer) ---------- */
+function renderCarrito(){
+  const ids = Object.keys(carrito).filter(id => productos[id]);
+  const total = ids.reduce((s, id) => s + (productos[id].precio || 0) * carrito[id], 0);
+  const cantTotal = ids.reduce((s, id) => s + carrito[id], 0);
+  $("#badgeCarrito").textContent = cantTotal;
+  $("#totalCarrito").textContent = plata(total);
+  if (!ids.length){
+    $("#carritoLista").innerHTML = `<div class="carrito-vacio">Todavía no agregaste productos.<br>Elegí algo del catálogo 🤍</div>`;
+    return;
+  }
+  $("#carritoLista").innerHTML = ids.map(id => {
+    const p = productos[id];
+    return `
+    <div class="item-carrito" data-id="${id}">
+      ${fotoHtml(p, "foto")}
+      <div class="info">
+        <h4>${esc(p.nombre)}</h4>
+        <span class="precio-u">${plata(p.precio)} c/u</span>
+        <div class="fila">
+          <div class="stepper">
+            <button type="button" data-accion="menos" data-id="${id}">−</button>
+            <span>${carrito[id]}</span>
+            <button type="button" data-accion="mas" data-id="${id}">+</button>
+          </div>
+          <button type="button" class="quitar-item" data-accion="quitar" data-id="${id}">Quitar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+$("#carritoLista").addEventListener("click", e => {
+  const b = e.target.closest("button[data-accion]");
+  if (!b) return;
+  const id = b.dataset.id;
+  if (b.dataset.accion === "mas") carrito[id] = (carrito[id] || 0) + 1;
+  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
+  else if (b.dataset.accion === "quitar") delete carrito[id];
+  guardarCarritoLocal();
+  renderCarrito();
+  renderGrid();
+});
+
+function abrirCarrito(){ $("#carrito").classList.add("abierto"); $("#overlay").classList.add("abierto"); }
+function cerrarPaneles(){
+  $("#carrito").classList.remove("abierto");
+  $("#overlay").classList.remove("abierto");
+  $("#modalLogin").classList.remove("abierto");
+  $("#modalAdmin").classList.remove("abierto");
+}
+$("#btnAbrirCarrito").onclick = abrirCarrito;
+$("#btnCerrarCarrito").onclick = cerrarPaneles;
+$("#overlay").onclick = cerrarPaneles;
+
+/* ---------- WhatsApp ---------- */
+function numeroWhatsapp(){
+  return (config.whatsapp || "").replace(/\D/g, "");
+}
+function avisoSinWhatsapp(){
+  mostrarToast("Todavía no se configuró el número de WhatsApp en Ajustes del panel.");
+}
+
+function consultarProducto(id){
+  const num = numeroWhatsapp();
+  if (!num){ avisoSinWhatsapp(); return; }
+  const p = productos[id];
+  if (!p) return;
+  const msg = `Hola! Te consulto por este producto de Harmonia:\n\n• ${p.nombre} — ${plata(p.precio)}\n\n¿Está disponible?`;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+$("#btnEnviarPedido").onclick = () => {
+  const num = numeroWhatsapp();
+  if (!num){ avisoSinWhatsapp(); return; }
+  const ids = Object.keys(carrito).filter(id => productos[id]);
+  if (!ids.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
+  const lineas = ids.map(id => {
+    const p = productos[id];
+    return `• ${p.nombre} x${carrito[id]} — ${plata((p.precio || 0) * carrito[id])}`;
+  });
+  const total = ids.reduce((s, id) => s + (productos[id].precio || 0) * carrito[id], 0);
+  const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+};
+
+/* ---------- admin: login ---------- */
+$("#linkAdmin").onclick = e => {
+  e.preventDefault();
+  $("#claveAdmin").value = "";
+  $("#errorLogin").hidden = true;
+  $("#modalLogin").classList.add("abierto");
+  setTimeout(() => $("#claveAdmin").focus(), 50);
+};
+$("#cerrarLogin").onclick = cerrarPaneles;
+function intentarLogin(){
+  if ($("#claveAdmin").value === CLAVE_ADMIN){
+    $("#modalLogin").classList.remove("abierto");
+    abrirAdmin();
+  } else {
+    $("#errorLogin").hidden = false;
+  }
+}
+$("#btnIngresarAdmin").onclick = intentarLogin;
+$("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") intentarLogin(); });
+
+/* ---------- admin: panel ---------- */
+function abrirAdmin(){
+  $("#whatsappConfig").value = config.whatsapp || "";
+  $("#saludoConfig").value = config.saludo || "";
+  renderListaAdmin();
+  $("#modalAdmin").classList.add("abierto");
+}
+$("#cerrarAdmin").onclick = cerrarPaneles;
+
+$$(".tab-admin").forEach(t => t.onclick = () => {
+  $$(".tab-admin").forEach(x => x.classList.remove("activo"));
+  $$(".pestana-admin").forEach(x => x.classList.remove("activa"));
+  t.classList.add("activo");
+  $("#tab" + t.dataset.tab.charAt(0).toUpperCase() + t.dataset.tab.slice(1)).classList.add("activa");
+});
+
+function renderListaAdmin(){
+  const arr = Object.entries(productos).map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
+  if (!arr.length){
+    $("#listaAdminProductos").innerHTML = `<p style="color:var(--tinta-suave);font-size:13px">Todavía no cargaste productos.</p>`;
+    return;
+  }
+  $("#listaAdminProductos").innerHTML = arr.map(p => `
+    <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
+      ${fotoHtml(p, "foto")}
+      <div class="info"><b>${esc(p.nombre)}</b><span>${plata(p.precio)} · ${esc(p.categoria || "Otros")}${p.activo === false ? " · oculto" : ""}</span></div>
+      <div class="acciones">
+        <button type="button" class="icon-btn" data-accion="ver" data-id="${p.id}" title="${p.activo === false ? "Mostrar" : "Ocultar"}">${p.activo === false ? "👁️‍🗨️" : "👁️"}</button>
+        <button type="button" class="icon-btn" data-accion="editar" data-id="${p.id}" title="Editar">✎</button>
+        <button type="button" class="icon-btn peligro" data-accion="borrar" data-id="${p.id}" title="Eliminar">🗑</button>
+      </div>
+    </div>`).join("");
+}
+
+$("#listaAdminProductos").addEventListener("click", e => {
+  const b = e.target.closest("button[data-accion]");
+  if (!b) return;
+  const id = b.dataset.id, p = productos[id];
+  if (!p) return;
+  if (b.dataset.accion === "ver"){
+    db.ref(`${RUTA}/productos/${id}/activo`).set(p.activo === false ? true : false);
+  } else if (b.dataset.accion === "editar"){
+    cargarFormEdicion(id, p);
+  } else if (b.dataset.accion === "borrar"){
+    if (confirm(`¿Eliminar "${p.nombre}" del catálogo?`)) db.ref(`${RUTA}/productos/${id}`).remove();
+  }
+});
+
+function cargarFormEdicion(id, p){
+  editandoId = id;
+  $("#prodId").value = id;
+  $("#nombreProducto").value = p.nombre || "";
+  $("#precioProducto").value = p.precio || "";
+  $("#categoriaProducto").value = p.categoria || "";
+  $("#descProducto").value = p.descripcion || "";
+  $("#activoProducto").checked = p.activo !== false;
+  $("#previewImg").innerHTML = p.imagen ? `<img src="${p.imagen}">` : $("#previewImg").innerHTML;
+  imagenNueva = p.imagen || null;
+  $("#btnGuardarProducto").textContent = "Guardar cambios";
+  $("#btnCancelarEdicion").hidden = false;
+  $("#tabProductos").scrollIntoView({ block: "start" });
+}
+function limpiarForm(){
+  editandoId = null;
+  imagenNueva = null;
+  $("#formProducto").reset();
+  $("#prodId").value = "";
+  $("#activoProducto").checked = true;
+  $("#previewImg").innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>`;
+  $("#btnGuardarProducto").textContent = "Guardar producto";
+  $("#btnCancelarEdicion").hidden = true;
+  $("#errorProducto").hidden = true;
+}
+$("#btnCancelarEdicion").onclick = limpiarForm;
+
+/* ---------- imagen: comprimir a base64 ---------- */
+let imagenNueva = null;
+$("#imgProducto").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  comprimirImagen(file, 900, 0.82).then(dataUrl => {
+    imagenNueva = dataUrl;
+    $("#previewImg").innerHTML = `<img src="${dataUrl}">`;
+  }).catch(() => mostrarToast("No se pudo procesar la imagen."));
+});
+function comprimirImagen(file, maxLado, calidad){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxLado || height > maxLado){
+          if (width > height){ height = Math.round(height * maxLado / width); width = maxLado; }
+          else { width = Math.round(width * maxLado / height); height = maxLado; }
+        }
+        const c = document.createElement("canvas");
+        c.width = width; c.height = height;
+        c.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(c.toDataURL("image/jpeg", calidad));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------- guardar producto ---------- */
+$("#formProducto").addEventListener("submit", e => {
+  e.preventDefault();
+  const nombre = $("#nombreProducto").value.trim();
+  const precio = +$("#precioProducto").value;
+  const categoria = $("#categoriaProducto").value.trim() || "Otros";
+  const descripcion = $("#descProducto").value.trim();
+  const activo = $("#activoProducto").checked;
+  const err = $("#errorProducto");
+  if (!nombre){ err.textContent = "Poné un nombre para el producto."; err.hidden = false; return; }
+  if (!precio || precio <= 0){ err.textContent = "Poné un precio válido."; err.hidden = false; return; }
+  err.hidden = true;
+
+  const datos = { nombre, precio, categoria, descripcion, activo };
+  if (imagenNueva) datos.imagen = imagenNueva;
+
+  const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
+  if (editandoId){
+    ref.update(datos).then(() => { mostrarToast("Producto actualizado."); limpiarForm(); });
+  } else {
+    datos.creado = Date.now();
+    if (!datos.imagen) datos.imagen = null;
+    ref.set(datos).then(() => { mostrarToast("Producto agregado."); limpiarForm(); });
+  }
+});
+
+/* ---------- ajustes ---------- */
+$("#btnGuardarAjustes").onclick = () => {
+  const whatsapp = $("#whatsappConfig").value.trim();
+  const saludo = $("#saludoConfig").value.trim();
+  db.ref(`${RUTA}/config`).update({ whatsapp, saludo }).then(() => mostrarToast("Ajustes guardados."));
+};
+
+/* ---------- scroll: sombra de controles pegados ---------- */
+window.addEventListener("scroll", () => {
+  $("#controles").classList.toggle("pegado", window.scrollY > 130);
+}, { passive: true });
+
+/* ---------- Firebase ---------- */
+function iniciar(){
+  try{
+    firebase.initializeApp(FB);
+    db = firebase.database();
+
+    db.ref(`${RUTA}/productos`).on("value", snap => {
+      productos = snap.val() || {};
+      renderCategorias();
+      renderGrid();
+      renderCarrito();
+    });
+
+    db.ref(`${RUTA}/config`).on("value", snap => {
+      config = Object.assign({ whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" }, snap.val() || {});
+    });
+  }catch(e){
+    console.error("No se pudo conectar a Firebase", e);
+    mostrarToast("Sin conexión con la base de datos.");
+  }
+}
+iniciar();
+renderCarrito();
+</script>
+</body>
+</html>
