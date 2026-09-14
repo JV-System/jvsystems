@@ -224,8 +224,41 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .tab-admin.activo{color:var(--oliva-osc);border-color:var(--oliva)}
 .pestana-admin{display:none}
 .pestana-admin.activa{display:block}
-.ayuda-carga{background:var(--oliva-pale);color:var(--oliva-osc);border-radius:10px;padding:10px 13px;
-  font-size:12.5px;line-height:1.4;margin:0 0 16px}
+
+/* ---- carga rápida ---- */
+.carrusel-agregados{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 16px;scrollbar-width:thin}
+.carrusel-agregados:empty{display:none}
+.item-carrusel{flex:none;width:60px;text-align:center;cursor:pointer;background:none;border:0;padding:0;font:inherit}
+.item-carrusel .foto{width:60px;height:60px;border-radius:12px;overflow:hidden;background:var(--crema-osc);
+  border:2px solid transparent;display:flex;align-items:center;justify-content:center;color:var(--taupe)}
+.item-carrusel .foto img{width:100%;height:100%;object-fit:cover}
+.item-carrusel:hover .foto{border-color:var(--oliva-cl)}
+.item-carrusel span{display:block;font-size:10px;color:var(--tinta-suave);margin-top:4px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips-cat-admin{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 14px;scrollbar-width:thin}
+.foto-grande{display:block;cursor:pointer;margin-bottom:14px}
+.foto-grande .preview-img{width:100%;aspect-ratio:4/3;border-radius:16px;
+  border:2px dashed var(--taupe);background:var(--crema-osc);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;color:var(--tinta-suave);overflow:hidden;
+  text-align:center;padding:16px;transition:.15s}
+.foto-grande:active .preview-img{border-color:var(--oliva);background:var(--oliva-pale)}
+.foto-grande .preview-img img{width:100%;height:100%;object-fit:cover;border-radius:0;margin:-16px}
+.foto-grande .preview-img span{font-size:13px;font-weight:500;max-width:220px}
+.precio-grande{display:block;width:100%;font-size:34px;font-weight:700;font-family:"Outfit",sans-serif;
+  text-align:center;padding:16px 10px;border-radius:14px;border:1.5px solid var(--linea);
+  background:var(--crema);color:var(--oliva-osc);margin-bottom:14px}
+.precio-grande::placeholder{color:var(--taupe)}
+.btn-agregar-grande{position:sticky;bottom:-1px;width:100%;background:var(--oliva);color:#fff;border:0;
+  border-radius:14px;padding:17px;font-weight:700;font-size:17px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:8px;box-shadow:0 -12px 24px -8px rgba(51,46,34,.14);
+  margin-top:2px}
+.btn-agregar-grande:hover{background:var(--oliva-osc)}
+.btn-agregar-grande .signo{font-size:22px;line-height:1;font-weight:400}
+.detalles-extra{margin:14px 0 4px;font-size:13px}
+.detalles-extra summary{cursor:pointer;color:var(--tinta-suave);font-weight:600;padding:8px 0}
+.detalles-extra .campo{margin-top:12px}
+.lista-completa{margin-top:24px;border-top:1px solid var(--linea);padding-top:16px}
+.lista-completa summary{cursor:pointer;font-weight:600;color:var(--tinta-suave);font-size:13.5px;padding:4px 0}
 
 /* ---------- toast ---------- */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:90;
@@ -348,33 +381,42 @@ footer.pie b{color:var(--tinta)}
       </div>
 
       <div class="pestana-admin activa" id="tabProductos">
-        <p class="ayuda-carga">⚡ Carga rápida: elegí la categoría una vez, y después andá agregando foto + precio — la categoría queda puesta para el siguiente producto.</p>
-        <form id="formProducto">
+        <div class="carrusel-agregados" id="carruselAgregados"></div>
+
+        <form id="formProducto" class="form-rapido">
           <input type="hidden" id="prodId">
-          <div class="campo"><label>Categoría</label>
-            <input type="text" id="categoriaProducto" list="listaCategorias" placeholder="Sábanas">
-            <datalist id="listaCategorias">
-              <option value="Sábanas"><option value="Toallas"><option value="Acolchados y cubrecamas">
-              <option value="Almohadas"><option value="Manteles"><option value="Otros">
-            </datalist>
-          </div>
-          <div class="preview-img" id="previewImg">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>
-          </div>
-          <div class="campo"><label>Imagen</label><input type="file" id="imgProducto" accept="image/*"></div>
-          <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
-          <div class="campo"><label>Nombre <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — si lo dejás vacío, se arma solo)</span></label><input type="text" id="nombreProducto" placeholder="Sábana lisa king 400 hilos"></div>
-          <div class="campo"><label>Descripción <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
-          <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
-            <input type="checkbox" id="activoProducto" checked style="width:auto">
-            <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
-          </div>
-          <p class="error-form" id="errorProducto" hidden></p>
-          <button class="btn-full" id="btnGuardarProducto" type="submit">Agregar producto</button>
+          <input type="hidden" id="categoriaProducto">
+          <div class="chips-cat-admin" id="chipsCatAdmin"></div>
+
+          <label class="foto-grande" for="imgProducto">
+            <input type="file" id="imgProducto" accept="image/*" capture="environment" hidden>
+            <div class="preview-img" id="previewImg">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
+              <span>Tocá para sacar o elegir una foto</span>
+            </div>
+          </label>
+
+          <input type="number" id="precioProducto" class="precio-grande" min="0" step="1" placeholder="$ 0" inputmode="decimal">
+
+          <button class="btn-agregar-grande" id="btnGuardarProducto" type="submit"><span class="signo">+</span> Agregar producto</button>
           <button class="btn-ghost" id="btnCancelarEdicion" type="button" hidden>Cancelar edición</button>
+          <p class="error-form" id="errorProducto" hidden></p>
+
+          <details class="detalles-extra">
+            <summary>Nombre, descripción y visibilidad (opcional)</summary>
+            <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Se arma solo si lo dejás vacío"></div>
+            <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…"></textarea></div>
+            <div class="campo" style="flex-direction:row;align-items:center;gap:8px">
+              <input type="checkbox" id="activoProducto" checked style="width:auto">
+              <label style="margin:0" for="activoProducto">Visible en el catálogo</label>
+            </div>
+          </details>
         </form>
 
-        <div class="lista-admin" id="listaAdminProductos" style="margin-top:26px"></div>
+        <details class="lista-completa">
+          <summary>Ver / editar todos los productos cargados</summary>
+          <div class="lista-admin" id="listaAdminProductos" style="margin-top:14px"></div>
+        </details>
       </div>
 
       <div class="pestana-admin" id="tabAjustes">
@@ -415,6 +457,8 @@ let carrito = {};
 let categoriaActiva = "Todos";
 let textoBusqueda = "";
 let editandoId = null;
+const CATEGORIAS_SUGERIDAS = ["Sábanas", "Toallas", "Acolchados y cubrecamas", "Almohadas", "Manteles", "Otros"];
+const PLACEHOLDER_FOTO = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg><span>Tocá para sacar o elegir una foto</span>`;
 
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
@@ -609,8 +653,49 @@ $("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") inten
 function abrirAdmin(){
   $("#whatsappConfig").value = config.whatsapp || "";
   $("#saludoConfig").value = config.saludo || "";
+  if (!$("#categoriaProducto").value) $("#categoriaProducto").value = CATEGORIAS_SUGERIDAS[0];
+  renderChipsCatAdmin();
+  renderCarruselAgregados();
   renderListaAdmin();
   $("#modalAdmin").classList.add("abierto");
+}
+
+function categoriasConocidas(){
+  const usadas = [...new Set(Object.values(productos).map(p => p.categoria || "Otros"))];
+  const todas = [...CATEGORIAS_SUGERIDAS];
+  usadas.forEach(c => { if (!todas.includes(c)) todas.push(c); });
+  return todas;
+}
+
+function renderChipsCatAdmin(){
+  const actual = $("#categoriaProducto").value;
+  const cats = categoriasConocidas();
+  $("#chipsCatAdmin").innerHTML = cats.map(c =>
+    `<button type="button" class="chip-cat${c === actual ? " activo" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`
+  ).join("") + `<button type="button" class="chip-cat" id="chipNuevaCategoria">+ Nueva</button>`;
+  $$("#chipsCatAdmin .chip-cat[data-cat]").forEach(b => b.onclick = () => {
+    $("#categoriaProducto").value = b.dataset.cat;
+    renderChipsCatAdmin();
+  });
+  $("#chipNuevaCategoria").onclick = () => {
+    const nueva = prompt("Nombre de la nueva categoría:");
+    if (nueva && nueva.trim()){
+      $("#categoriaProducto").value = nueva.trim();
+      renderChipsCatAdmin();
+    }
+  };
+}
+
+function renderCarruselAgregados(){
+  const arr = Object.entries(productos).map(([id, p]) => ({ id, ...p }))
+    .sort((a, b) => (b.creado || 0) - (a.creado || 0)).slice(0, 16);
+  if (!arr.length){ $("#carruselAgregados").innerHTML = ""; return; }
+  $("#carruselAgregados").innerHTML = arr.map(p => `
+    <button type="button" class="item-carrusel" data-id="${p.id}" title="Editar ${esc(p.nombre)}">
+      ${fotoHtml(p, "foto")}
+      <span>${plata(p.precio)}</span>
+    </button>`).join("");
+  $$(".item-carrusel").forEach(el => el.onclick = () => cargarFormEdicion(el.dataset.id, productos[el.dataset.id]));
 }
 $("#cerrarAdmin").onclick = cerrarPaneles;
 
@@ -660,11 +745,12 @@ function cargarFormEdicion(id, p){
   $("#nombreProducto").value = p.nombre || "";
   $("#precioProducto").value = p.precio || "";
   $("#categoriaProducto").value = p.categoria || "";
+  renderChipsCatAdmin();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
-  $("#previewImg").innerHTML = p.imagen ? `<img src="${p.imagen}">` : $("#previewImg").innerHTML;
+  $("#previewImg").innerHTML = p.imagen ? `<img src="${p.imagen}">` : PLACEHOLDER_FOTO;
   imagenNueva = p.imagen || null;
-  $("#btnGuardarProducto").textContent = "Guardar cambios";
+  $("#btnGuardarProducto").innerHTML = `<span class="signo">✓</span> Guardar cambios`;
   $("#btnCancelarEdicion").hidden = false;
   $("#tabProductos").scrollIntoView({ block: "start" });
 }
@@ -675,13 +761,14 @@ function limpiarForm(mantenerCategoria){
   $("#formProducto").reset();
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
-  if (mantenerCategoria) $("#categoriaProducto").value = categoriaPrevia;
-  $("#previewImg").innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 16.5 8.5 12a2 2 0 0 1 2.8 0L16 16.7M13.5 14.2 15 12.7a2 2 0 0 1 2.8 0L20 15" stroke="#B9AA97" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#B9AA97" stroke-width="1.6"/><circle cx="8.5" cy="8.5" r="1.5" fill="#B9AA97"/></svg>`;
-  $("#btnGuardarProducto").textContent = "Agregar producto";
+  $("#categoriaProducto").value = mantenerCategoria ? categoriaPrevia : "";
+  renderChipsCatAdmin();
+  $("#previewImg").innerHTML = PLACEHOLDER_FOTO;
+  $("#btnGuardarProducto").innerHTML = `<span class="signo">+</span> Agregar producto`;
   $("#btnCancelarEdicion").hidden = true;
   $("#errorProducto").hidden = true;
 }
-$("#btnCancelarEdicion").onclick = () => limpiarForm(false);
+$("#btnCancelarEdicion").onclick = () => limpiarForm(true);
 
 function siguienteNombreAuto(categoria){
   const n = Object.values(productos).filter(p => (p.categoria || "Otros") === categoria).length + 1;
@@ -696,6 +783,7 @@ $("#imgProducto").addEventListener("change", e => {
   comprimirImagen(file, 900, 0.82).then(dataUrl => {
     imagenNueva = dataUrl;
     $("#previewImg").innerHTML = `<img src="${dataUrl}">`;
+    $("#precioProducto").focus();
   }).catch(() => mostrarToast("No se pudo procesar la imagen."));
 });
 function comprimirImagen(file, maxLado, calidad){
@@ -746,7 +834,6 @@ $("#formProducto").addEventListener("submit", e => {
     ref.set(datos).then(() => {
       mostrarToast("Producto agregado — seguí cargando el próximo.");
       limpiarForm(true);
-      $("#imgProducto").focus();
     });
   }
 });
@@ -774,6 +861,11 @@ function iniciar(){
       renderCategorias();
       renderGrid();
       renderCarrito();
+      if ($("#modalAdmin").classList.contains("abierto")){
+        renderCarruselAgregados();
+        renderChipsCatAdmin();
+        renderListaAdmin();
+      }
     });
 
     db.ref(`${RUTA}/config`).on("value", snap => {
@@ -786,6 +878,12 @@ function iniciar(){
 }
 iniciar();
 renderCarrito();
+
+/* acceso directo: harmonia/?admin abre el login de una */
+if (/[?&#]admin\b/.test(location.href)){
+  $("#claveAdmin").value = "";
+  $("#modalLogin").classList.add("abierto");
+}
 </script>
 </body>
 </html>
