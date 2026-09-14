@@ -214,11 +214,11 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
 
 /* ---------- admin ---------- */
-.link-admin{display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;
-  margin:6px auto 30px;font-size:14px;font-weight:600;color:var(--oliva-osc);
-  background:var(--papel);border:1.5px solid var(--linea);border-radius:99px;padding:11px 22px;
-  text-decoration:none;transition:.15s}
-.link-admin:hover{border-color:var(--oliva-cl);background:var(--oliva-pale)}
+.acciones-header{display:flex;align-items:center;gap:10px}
+.btn-admin-header{display:flex;align-items:center;justify-content:center;width:38px;height:38px;
+  border-radius:99px;border:1.5px solid var(--linea);background:var(--papel);color:var(--tinta-suave);
+  text-decoration:none;transition:.15s;flex:none}
+.btn-admin-header:hover{border-color:var(--oliva-cl);background:var(--oliva-pale);color:var(--oliva-osc)}
 .modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
   padding:20px;opacity:0;visibility:hidden;transition:opacity .2s;background:rgba(51,46,34,.5)}
 .modal.abierto{opacity:1;visibility:visible}
@@ -343,11 +343,16 @@ footer.pie b{color:var(--tinta)}
         <span class="marca-tag">Ropa blanca delicada</span>
       </div>
     </div>
-    <button class="btn-carrito" id="btnAbrirCarrito" type="button">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="21" r="1.4" fill="#fff"/><circle cx="18" cy="21" r="1.4" fill="#fff"/></svg>
-      Pedido
-      <span class="badge" id="badgeCarrito">0</span>
-    </button>
+    <div class="acciones-header">
+      <a href="#" class="btn-admin-header" id="linkAdmin" title="Panel de administración">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 3.5 4 7v5c0 5 3.4 8 8 9.5 4.6-1.5 8-4.5 8-9.5V7l-8-3.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15.5 10" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <button class="btn-carrito" id="btnAbrirCarrito" type="button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 8H6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="21" r="1.4" fill="#fff"/><circle cx="18" cy="21" r="1.4" fill="#fff"/></svg>
+        Pedido
+        <span class="badge" id="badgeCarrito">0</span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -418,10 +423,6 @@ footer.pie b{color:var(--tinta)}
   <div class="wrap">
     <p>Pedidos coordinados directamente por WhatsApp</p>
   </div>
-  <a href="#" class="link-admin" id="linkAdmin">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3.5 4 7v5c0 5 3.4 8 8 9.5 4.6-1.5 8-4.5 8-9.5V7l-8-3.5Z" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15.5 10" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    Panel de administración
-  </a>
 </footer>
 
 <div class="app-footer">
