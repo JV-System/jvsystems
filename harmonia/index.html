@@ -171,6 +171,12 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .cat-sidebar-item.es-oferta{color:var(--rojo)}
 .cat-sidebar-item.es-oferta:hover{background:var(--rojo-pale);color:var(--rojo)}
 .cat-sidebar-item.es-oferta.activo{background:var(--rojo-pale);color:var(--rojo)}
+.subcat-sidebar{display:flex;flex-direction:column;gap:1px;margin:2px 0 6px 14px;
+  padding-left:10px;border-left:2px solid var(--linea)}
+.subcat-sidebar-item{background:none;border:0;text-align:left;padding:6px 8px;border-radius:7px;
+  font:inherit;font-size:12.5px;color:var(--tinta-suave);cursor:pointer;transition:.15s}
+.subcat-sidebar-item:hover{background:var(--crema-osc);color:var(--tinta)}
+.subcat-sidebar-item.activo{color:var(--oliva-osc);font-weight:700}
 .sidebar-bloque .rango-precio{display:flex;align-items:center;gap:7px}
 .sidebar-bloque .rango-precio input{width:0;flex:1;font:inherit;font-size:13px;padding:8px 9px;
   border-radius:9px;border:1px solid var(--linea);background:var(--crema);color:var(--tinta)}
@@ -259,6 +265,13 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
 .btn-agregar:hover{background:var(--oliva-osc)}
 .btn-agregar.en-carrito{background:var(--oliva-pale);color:var(--oliva-osc)}
+.btn-agregar:disabled{background:var(--taupe-cl);color:var(--tinta-suave);cursor:default}
+.stepper button:disabled{color:var(--taupe);cursor:default}
+.stepper button:disabled:hover{background:var(--crema-osc)}
+.badge-sin-stock{position:absolute;top:10px;right:10px;background:var(--rojo);color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;
+  border-radius:99px}
+.card:has(.badge-sin-stock) .foto{opacity:.55}
 
 .vacio{text-align:center;padding:70px 20px;color:var(--tinta-suave)}
 .vacio svg{opacity:.5;margin-bottom:14px}
@@ -362,6 +375,10 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 
 /* ---- carga rápida: foto en tamaño real + campos al lado, lista abajo ---- */
 .chips-cat-admin{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 16px;scrollbar-width:thin}
+.chips-subcat{padding-top:0;margin-top:-8px}
+.chips-subcat .chip-cat{font-size:11.5px;padding:6px 12px;background:var(--crema);border-color:var(--linea)}
+.chips-subcat .chip-cat.activo{background:var(--oliva-cl);border-color:var(--oliva-cl)}
+.chips-subcat:empty{display:none}
 .fila-foto-campos{display:flex;gap:20px;align-items:flex-start;margin-bottom:14px}
 .foto-media{display:block;cursor:pointer;flex:none}
 .foto-media .preview-img{width:190px;height:190px;border-radius:14px;
@@ -616,7 +633,9 @@ footer.pie b{color:var(--tinta)}
         <form id="formProducto" class="form-rapido">
           <input type="hidden" id="prodId">
           <input type="hidden" id="categoriaProducto">
+          <input type="hidden" id="subcategoriaProducto">
           <div class="chips-cat-admin" id="chipsCatAdmin"></div>
+          <div class="chips-cat-admin chips-subcat" id="chipsSubcatAdmin"></div>
 
           <div class="fila-foto-campos">
             <label class="foto-media" for="imgProducto">
@@ -633,10 +652,7 @@ footer.pie b{color:var(--tinta)}
               <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Medidas, material, colores disponibles…" rows="2"></textarea></div>
               <div class="fila2">
                 <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
-                <div class="campo" style="flex-direction:row;align-items:center;gap:8px;padding-top:22px">
-                  <input type="checkbox" id="activoProducto" checked style="width:auto">
-                  <label style="margin:0" for="activoProducto">Visible</label>
-                </div>
+                <div class="campo"><label>Stock <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><input type="number" id="stockProducto" min="0" step="1" placeholder="Sin límite" inputmode="numeric"></div>
               </div>
               <div class="fila-oferta">
                 <label class="check-oferta">
@@ -647,6 +663,10 @@ footer.pie b{color:var(--tinta)}
                   <label>Descuento sobre el valor (%)</label>
                   <input type="number" id="descuentoProducto" min="1" max="95" step="1" placeholder="20" inputmode="numeric">
                 </div>
+                <label class="check-oferta">
+                  <input type="checkbox" id="activoProducto" checked>
+                  <span>Visible</span>
+                </label>
               </div>
             </div>
           </div>
@@ -698,6 +718,7 @@ let productos = {};
 let config = { whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" };
 let carrito = {};
 let categoriaActiva = "Todos";
+let subcategoriaActiva = null;
 let textoBusqueda = "";
 let ordenActivo = "recientes";
 let precioDesde = null;
@@ -723,6 +744,23 @@ function precioHtml(p){
 }
 const esc = t => String(t == null ? "" : t).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 
+/* ---------- stock ---------- */
+const stockDisponible = p => (p.stock === undefined || p.stock === null) ? Infinity : p.stock;
+const sinStock = p => stockDisponible(p) <= 0;
+function intentarSumarCarrito(id, delta){
+  const p = productos[id];
+  if (!p) return;
+  const max = stockDisponible(p);
+  const nuevo = (carrito[id] || 0) + delta;
+  if (delta > 0 && nuevo > max){
+    mostrarToast(max <= 0 ? "Sin stock disponible." : `Solo quedan ${max} disponibles.`);
+    return;
+  }
+  if (nuevo <= 0) delete carrito[id];
+  else carrito[id] = nuevo;
+  guardarCarritoLocal();
+}
+
 /* ---------- carrito local ---------- */
 function leerCarrito(){
   try{ return JSON.parse(localStorage.getItem("harmonia_carrito") || "{}"); }catch(e){ return {}; }
@@ -746,6 +784,7 @@ function listaVisible(){
     .map(([id, p]) => ({ id, ...p }))
     .filter(p => p.activo !== false)
     .filter(p => categoriaActiva === "Todos" || (categoriaActiva === CAT_OFERTAS ? p.oferta : (p.categoria || "Otros") === categoriaActiva))
+    .filter(p => !subcategoriaActiva || p.subcategoria === subcategoriaActiva)
     .filter(p => !textoBusqueda || (p.nombre || "").toLowerCase().includes(textoBusqueda) || (p.descripcion || "").toLowerCase().includes(textoBusqueda))
     .filter(p => precioDesde == null || (p.precio || 0) >= precioDesde)
     .filter(p => precioHasta == null || (p.precio || 0) <= precioHasta);
@@ -772,6 +811,7 @@ function renderOfertas(){
   if (!arr.length) return;
   $("#carruselOfertas").innerHTML = arr.map(p => {
     const cant = carrito[p.id] || 0;
+    const agotado = sinStock(p);
     return `
     <div class="tarjeta-oferta" data-id="${p.id}">
       ${fotoHtml(p, "foto")}
@@ -779,11 +819,11 @@ function renderOfertas(){
         <span class="badge-oferta">🔥 Oferta</span>
         <h4>${esc(p.nombre)}</h4>
         <div class="precio-oferta">${precioHtml(p)}</div>
-        ${cant > 0 ? `
+        ${agotado ? `<button type="button" class="btn-agregar" disabled>Sin stock</button>` : cant > 0 ? `
           <div class="stepper">
             <button type="button" data-accion="menos" data-id="${p.id}">−</button>
             <span>${cant}</span>
-            <button type="button" data-accion="mas" data-id="${p.id}">+</button>
+            <button type="button" data-accion="mas" data-id="${p.id}"${cant >= stockDisponible(p) ? " disabled" : ""}>+</button>
           </div>
         ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
       </div>
@@ -809,10 +849,8 @@ $("#carruselOfertas").addEventListener("click", e => {
   const b = e.target.closest("button[data-accion]");
   if (!b) return;
   const id = b.dataset.id;
-  if (b.dataset.accion === "agregar"){ carrito[id] = 1; }
-  else if (b.dataset.accion === "mas"){ carrito[id] = (carrito[id] || 0) + 1; }
-  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
-  guardarCarritoLocal();
+  if (b.dataset.accion === "agregar" || b.dataset.accion === "mas") intentarSumarCarrito(id, 1);
+  else if (b.dataset.accion === "menos") intentarSumarCarrito(id, -1);
   renderOfertas();
   renderGrid();
   renderCarrito();
@@ -820,17 +858,36 @@ $("#carruselOfertas").addEventListener("click", e => {
 
 const CAT_OFERTAS = "__OFERTAS__";
 function renderCategorias(){
+  const activos = Object.values(productos).filter(p => p.activo !== false);
   const hayOfertas = listaOfertas().length > 0;
-  const cats = Object.values(productos).filter(p => p.activo !== false).map(p => p.categoria || "Otros");
+  const cats = activos.map(p => p.categoria || "Otros");
   const items = [
     { val: "Todos", txt: "Todos" },
     ...(hayOfertas ? [{ val: CAT_OFERTAS, txt: "Ofertas", oferta: true }] : []),
     ...[...new Set(cats)].map(c => ({ val: c, txt: c }))
   ];
-  $("#listaCatSidebar").innerHTML = items.map(it =>
-    `<button type="button" class="cat-sidebar-item${it.val === categoriaActiva ? " activo" : ""}${it.oferta ? " es-oferta" : ""}" data-cat="${esc(it.val)}">${esc(it.txt)}</button>`
-  ).join("");
-  $$(".cat-sidebar-item").forEach(b => b.onclick = () => { categoriaActiva = b.dataset.cat; renderCategorias(); renderGrid(); });
+  $("#listaCatSidebar").innerHTML = items.map(it => {
+    const btn = `<button type="button" class="cat-sidebar-item${it.val === categoriaActiva ? " activo" : ""}${it.oferta ? " es-oferta" : ""}" data-cat="${esc(it.val)}">${esc(it.txt)}</button>`;
+    if (it.val !== categoriaActiva || it.val === "Todos" || it.val === CAT_OFERTAS) return btn;
+    const subcats = [...new Set(activos.filter(p => (p.categoria || "Otros") === it.val && p.subcategoria).map(p => p.subcategoria))];
+    if (!subcats.length) return btn;
+    const subHtml = `<div class="subcat-sidebar">` +
+      `<button type="button" class="subcat-sidebar-item${!subcategoriaActiva ? " activo" : ""}" data-subcat="">Todas</button>` +
+      subcats.map(s => `<button type="button" class="subcat-sidebar-item${s === subcategoriaActiva ? " activo" : ""}" data-subcat="${esc(s)}">${esc(s)}</button>`).join("") +
+      `</div>`;
+    return btn + subHtml;
+  }).join("");
+  $$(".cat-sidebar-item").forEach(b => b.onclick = () => {
+    categoriaActiva = b.dataset.cat;
+    subcategoriaActiva = null;
+    renderCategorias();
+    renderGrid();
+  });
+  $$(".subcat-sidebar-item").forEach(b => b.onclick = () => {
+    subcategoriaActiva = b.dataset.subcat || null;
+    renderCategorias();
+    renderGrid();
+  });
 }
 
 function fotoHtml(p, claseWrap, claseImg){
@@ -849,20 +906,23 @@ function renderGrid(){
   }
   $("#grid").innerHTML = lista.map(p => {
     const cant = carrito[p.id] || 0;
+    const agotado = sinStock(p);
+    const tag = esc(p.categoria || "Otros") + (p.subcategoria ? " · " + esc(p.subcategoria) : "");
     return `
     <article class="card" data-id="${p.id}">
       ${fotoHtml(p, "foto")}
-      <span class="categoria-tag">${esc(p.categoria || "Otros")}</span>
+      <span class="categoria-tag">${tag}</span>
+      ${agotado ? `<span class="badge-sin-stock">Sin stock</span>` : ""}
       <div class="cuerpo">
         <h3>${esc(p.nombre)}</h3>
         ${p.descripcion ? `<p class="desc">${esc(p.descripcion)}</p>` : `<p class="desc"></p>`}
         <div class="precio">${precioHtml(p)}</div>
         <div class="fila-acciones">
-          ${cant > 0 ? `
+          ${agotado ? `<button type="button" class="btn-agregar" disabled>Sin stock</button>` : cant > 0 ? `
             <div class="stepper">
               <button type="button" data-accion="menos" data-id="${p.id}">−</button>
               <span>${cant}</span>
-              <button type="button" data-accion="mas" data-id="${p.id}">+</button>
+              <button type="button" data-accion="mas" data-id="${p.id}"${cant >= stockDisponible(p) ? " disabled" : ""}>+</button>
             </div>
           ` : `<button type="button" class="btn-agregar" data-accion="agregar" data-id="${p.id}">Agregar</button>`}
         </div>
@@ -875,10 +935,8 @@ $("#grid").addEventListener("click", e => {
   const b = e.target.closest("button[data-accion]");
   if (!b) return;
   const id = b.dataset.id;
-  if (b.dataset.accion === "agregar"){ carrito[id] = 1; }
-  else if (b.dataset.accion === "mas"){ carrito[id] = (carrito[id] || 0) + 1; }
-  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
-  guardarCarritoLocal();
+  if (b.dataset.accion === "agregar" || b.dataset.accion === "mas") intentarSumarCarrito(id, 1);
+  else if (b.dataset.accion === "menos") intentarSumarCarrito(id, -1);
   renderGrid();
   renderOfertas();
   renderCarrito();
@@ -896,7 +954,7 @@ $("#selectOrden").addEventListener("change", e => { ordenActivo = e.target.value
 $("#precioDesde").addEventListener("input", e => { precioDesde = e.target.value === "" ? null : +e.target.value; renderGrid(); });
 $("#precioHasta").addEventListener("input", e => { precioHasta = e.target.value === "" ? null : +e.target.value; renderGrid(); });
 $("#btnLimpiarFiltros").onclick = () => {
-  ordenActivo = "recientes"; precioDesde = null; precioHasta = null; textoBusqueda = ""; categoriaActiva = "Todos";
+  ordenActivo = "recientes"; precioDesde = null; precioHasta = null; textoBusqueda = ""; categoriaActiva = "Todos"; subcategoriaActiva = null;
   $("#selectOrden").value = "recientes";
   $("#precioDesde").value = "";
   $("#precioHasta").value = "";
@@ -928,7 +986,7 @@ function renderCarrito(){
           <div class="stepper">
             <button type="button" data-accion="menos" data-id="${id}">−</button>
             <span>${carrito[id]}</span>
-            <button type="button" data-accion="mas" data-id="${id}">+</button>
+            <button type="button" data-accion="mas" data-id="${id}"${carrito[id] >= stockDisponible(p) ? " disabled" : ""}>+</button>
           </div>
           <button type="button" class="quitar-item" data-accion="quitar" data-id="${id}">Quitar</button>
         </div>
@@ -941,10 +999,9 @@ $("#carritoLista").addEventListener("click", e => {
   const b = e.target.closest("button[data-accion]");
   if (!b) return;
   const id = b.dataset.id;
-  if (b.dataset.accion === "mas") carrito[id] = (carrito[id] || 0) + 1;
-  else if (b.dataset.accion === "menos"){ carrito[id] = (carrito[id] || 0) - 1; if (carrito[id] <= 0) delete carrito[id]; }
-  else if (b.dataset.accion === "quitar") delete carrito[id];
-  guardarCarritoLocal();
+  if (b.dataset.accion === "mas") intentarSumarCarrito(id, 1);
+  else if (b.dataset.accion === "menos") intentarSumarCarrito(id, -1);
+  else if (b.dataset.accion === "quitar"){ delete carrito[id]; guardarCarritoLocal(); }
   renderCarrito();
   renderGrid();
   renderOfertas();
@@ -1012,6 +1069,7 @@ function abrirAdmin(){
   $("#saludoConfig").value = config.saludo || "";
   if (!$("#categoriaProducto").value) $("#categoriaProducto").value = CATEGORIAS_SUGERIDAS[0];
   renderChipsCatAdmin();
+  renderChipsSubcatAdmin();
   renderListaAdmin();
   $("#modalAdmin").classList.add("abierto");
 }
@@ -1033,13 +1091,46 @@ function renderChipsCatAdmin(){
   ).join("") + `<button type="button" class="chip-cat" id="chipNuevaCategoria">+ Nueva</button>`;
   $$("#chipsCatAdmin .chip-cat[data-cat]").forEach(b => b.onclick = () => {
     $("#categoriaProducto").value = b.dataset.cat;
+    $("#subcategoriaProducto").value = "";
     renderChipsCatAdmin();
+    renderChipsSubcatAdmin();
   });
   $("#chipNuevaCategoria").onclick = () => {
     const nueva = prompt("Nombre de la nueva categoría:");
     if (nueva && nueva.trim()){
       $("#categoriaProducto").value = nueva.trim();
+      $("#subcategoriaProducto").value = "";
       renderChipsCatAdmin();
+      renderChipsSubcatAdmin();
+    }
+  };
+}
+
+function subcategoriasConocidas(categoria){
+  return [...new Set(
+    Object.values(productos)
+      .filter(p => (p.categoria || "Otros") === categoria && p.subcategoria)
+      .map(p => p.subcategoria)
+  )];
+}
+
+function renderChipsSubcatAdmin(){
+  const categoria = $("#categoriaProducto").value || "Otros";
+  const actual = $("#subcategoriaProducto").value;
+  const subcats = subcategoriasConocidas(categoria);
+  const items = [{ val: "", txt: "Sin subcategoría" }, ...subcats.map(s => ({ val: s, txt: s }))];
+  $("#chipsSubcatAdmin").innerHTML = items.map(it =>
+    `<button type="button" class="chip-cat${it.val === actual ? " activo" : ""}" data-subcat="${esc(it.val)}">${esc(it.txt)}</button>`
+  ).join("") + `<button type="button" class="chip-cat" id="chipNuevaSubcat">+ Nueva</button>`;
+  $$("#chipsSubcatAdmin .chip-cat[data-subcat]").forEach(b => b.onclick = () => {
+    $("#subcategoriaProducto").value = b.dataset.subcat;
+    renderChipsSubcatAdmin();
+  });
+  $("#chipNuevaSubcat").onclick = () => {
+    const nueva = prompt(`Nueva subcategoría dentro de "${categoria}":`);
+    if (nueva && nueva.trim()){
+      $("#subcategoriaProducto").value = nueva.trim();
+      renderChipsSubcatAdmin();
     }
   };
 }
@@ -1065,10 +1156,12 @@ function renderListaAdmin(){
     const precioTxt = (p.oferta && p.descuento > 0)
       ? `${plata(precioFinal(p))} (antes ${plata(p.precio)}, -${p.descuento}%)`
       : plata(p.precio);
+    const catTxt = esc(p.categoria || "Otros") + (p.subcategoria ? " › " + esc(p.subcategoria) : "");
+    const stockTxt = (p.stock === undefined || p.stock === null) ? "" : (p.stock > 0 ? ` · Stock: ${p.stock}` : ` · <span style="color:var(--rojo);font-weight:600">Sin stock</span>`);
     return `
     <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
       ${fotoHtml(p, "foto")}
-      <div class="info"><b>${p.oferta ? "🔥 " : ""}${esc(p.nombre)}</b><span>${precioTxt} · ${esc(p.categoria || "Otros")}${p.activo === false ? " · oculto" : ""}</span></div>
+      <div class="info"><b>${p.oferta ? "🔥 " : ""}${esc(p.nombre)}</b><span>${precioTxt} · ${catTxt}${stockTxt}${p.activo === false ? " · oculto" : ""}</span></div>
       <div class="acciones">
         <button type="button" class="icon-btn" data-accion="ver" data-id="${p.id}" title="${p.activo === false ? "Mostrar" : "Ocultar"}">${p.activo === false ? "👁️‍🗨️" : "👁️"}</button>
         <button type="button" class="icon-btn" data-accion="editar" data-id="${p.id}" title="Editar">✎</button>
@@ -1097,9 +1190,12 @@ function cargarFormEdicion(id, p){
   $("#prodId").value = id;
   $("#nombreProducto").value = p.nombre || "";
   $("#precioProducto").value = p.precio || "";
+  $("#stockProducto").value = (p.stock === undefined || p.stock === null) ? "" : p.stock;
   $("#descuentoProducto").value = p.descuento || "";
   $("#categoriaProducto").value = p.categoria || "";
+  $("#subcategoriaProducto").value = p.subcategoria || "";
   renderChipsCatAdmin();
+  renderChipsSubcatAdmin();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
   $("#ofertaProducto").checked = !!p.oferta;
@@ -1112,13 +1208,16 @@ function cargarFormEdicion(id, p){
 }
 function limpiarForm(mantenerCategoria){
   const categoriaPrevia = $("#categoriaProducto").value;
+  const subcategoriaPrevia = $("#subcategoriaProducto").value;
   editandoId = null;
   imagenNueva = null;
   $("#formProducto").reset();
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
   $("#categoriaProducto").value = mantenerCategoria ? categoriaPrevia : "";
+  $("#subcategoriaProducto").value = mantenerCategoria ? subcategoriaPrevia : "";
   renderChipsCatAdmin();
+  renderChipsSubcatAdmin();
   $("#campoDescuento").hidden = true;
   setPreviewFoto(null);
   $("#btnGuardarProducto").innerHTML = `<span class="signo">+</span> Agregar producto`;
@@ -1170,8 +1269,11 @@ function comprimirImagen(file, maxLado, calidad){
 $("#formProducto").addEventListener("submit", e => {
   e.preventDefault();
   const categoria = $("#categoriaProducto").value.trim() || "Otros";
+  const subcategoria = $("#subcategoriaProducto").value.trim() || null;
   const nombre = $("#nombreProducto").value.trim();
   const precio = +$("#precioProducto").value;
+  const stockTxt = $("#stockProducto").value;
+  const stock = stockTxt === "" ? null : Math.max(0, Math.round(+stockTxt));
   const descuento = Math.max(0, Math.min(95, +$("#descuentoProducto").value || 0));
   const descripcion = $("#descProducto").value.trim();
   const activo = $("#activoProducto").checked;
@@ -1182,7 +1284,7 @@ $("#formProducto").addEventListener("submit", e => {
   if (oferta && !descuento){ err.textContent = "Marcaste que tiene oferta: poné el porcentaje de descuento."; err.hidden = false; $("#descuentoProducto").focus(); return; }
   err.hidden = true;
 
-  const datos = { nombre, precio, descuento, categoria, descripcion, activo, oferta };
+  const datos = { nombre, precio, stock, descuento, categoria, subcategoria, descripcion, activo, oferta };
   if (imagenNueva) datos.imagen = imagenNueva;
 
   const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
@@ -1227,6 +1329,7 @@ function iniciar(){
       renderCarrito();
       if ($("#modalAdmin").classList.contains("abierto")){
         renderChipsCatAdmin();
+        renderChipsSubcatAdmin();
         renderListaAdmin();
       }
       cargaDatosListos = true;
