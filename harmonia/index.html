@@ -80,7 +80,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .rasgo b{color:var(--oliva-osc)}
 
 /* ---------- controles ---------- */
-.controles{position:sticky;top:66px;z-index:30;background:var(--crema);padding:14px 0;
+.controles{position:sticky;top:124px;z-index:30;background:var(--crema);padding:14px 0;
   border-bottom:1px solid transparent}
 .controles.pegado{border-color:var(--linea)}
 .fila-controles{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -95,6 +95,19 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   transition:.15s}
 .chip-cat:hover{border-color:var(--oliva-cl)}
 .chip-cat.activo{background:var(--oliva);border-color:var(--oliva);color:#fff}
+
+/* ---------- nav de categorías ---------- */
+.nav-categorias{position:sticky;top:70px;z-index:35;background:var(--papel);
+  border-bottom:1px solid var(--linea)}
+.nav-cat-scroll{display:flex;gap:26px;overflow-x:auto;padding:13px 18px;scrollbar-width:thin}
+.nav-cat-item{flex:none;background:none;border:0;padding:3px 1px;font:inherit;font-size:12.5px;
+  font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tinta-suave);cursor:pointer;
+  white-space:nowrap;border-bottom:2px solid transparent;transition:.15s}
+.nav-cat-item:hover{color:var(--oliva-osc)}
+.nav-cat-item.activo{color:var(--oliva-osc);border-color:var(--oliva)}
+.nav-cat-item.es-oferta{color:var(--rojo)}
+.nav-cat-item.es-oferta:hover{color:var(--rojo)}
+.nav-cat-item.es-oferta.activo{color:var(--rojo);border-color:var(--rojo)}
 .btn-filtros{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--linea);
   background:var(--papel);color:var(--tinta);border-radius:12px;padding:10px 14px;font-size:13.5px;
   font-weight:500;cursor:pointer;transition:.15s}
@@ -315,7 +328,8 @@ footer.pie b{color:var(--tinta)}
 @media (max-width:640px){
   .wrap{padding:0 14px}
   .hero{padding:32px 0 22px}
-  .controles{top:62px}
+  .nav-categorias{top:42px}
+  .controles{top:90px}
 }
 </style>
 </head>
@@ -338,6 +352,10 @@ footer.pie b{color:var(--tinta)}
     </button>
   </div>
 </header>
+
+<nav class="nav-categorias" id="navCategorias">
+  <div class="wrap nav-cat-scroll" id="navCatScroll"></div>
+</nav>
 
 <section class="hero">
   <div class="wrap">
@@ -369,7 +387,6 @@ footer.pie b{color:var(--tinta)}
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       Filtros
     </button>
-    <div class="chips" id="chipsCategorias"></div>
   </div>
   <div class="wrap panel-filtros" id="panelFiltros" hidden>
     <div class="campo-filtro">
@@ -585,7 +602,7 @@ function listaVisible(){
   let arr = Object.entries(productos)
     .map(([id, p]) => ({ id, ...p }))
     .filter(p => p.activo !== false)
-    .filter(p => categoriaActiva === "Todos" || (p.categoria || "Otros") === categoriaActiva)
+    .filter(p => categoriaActiva === "Todos" || (categoriaActiva === CAT_OFERTAS ? p.oferta : (p.categoria || "Otros") === categoriaActiva))
     .filter(p => !textoBusqueda || (p.nombre || "").toLowerCase().includes(textoBusqueda) || (p.descripcion || "").toLowerCase().includes(textoBusqueda))
     .filter(p => precioDesde == null || (p.precio || 0) >= precioDesde)
     .filter(p => precioHasta == null || (p.precio || 0) <= precioHasta);
@@ -643,12 +660,19 @@ $("#carruselOfertas").addEventListener("click", e => {
   renderCarrito();
 });
 
+const CAT_OFERTAS = "__OFERTAS__";
 function renderCategorias(){
-  const cats = ["Todos", ...new Set(Object.values(productos).filter(p => p.activo !== false).map(p => p.categoria || "Otros"))];
-  $("#chipsCategorias").innerHTML = cats.map(c =>
-    `<button type="button" class="chip-cat${c === categoriaActiva ? " activo" : ""}" data-cat="${esc(c)}">${esc(c)}</button>`
+  const hayOfertas = listaOfertas().length > 0;
+  const cats = Object.values(productos).filter(p => p.activo !== false).map(p => p.categoria || "Otros");
+  const items = [
+    { val: "Todos", txt: "Todos" },
+    ...(hayOfertas ? [{ val: CAT_OFERTAS, txt: "Ofertas", oferta: true }] : []),
+    ...[...new Set(cats)].map(c => ({ val: c, txt: c }))
+  ];
+  $("#navCatScroll").innerHTML = items.map(it =>
+    `<button type="button" class="nav-cat-item${it.val === categoriaActiva ? " activo" : ""}${it.oferta ? " es-oferta" : ""}" data-cat="${esc(it.val)}">${esc(it.txt)}</button>`
   ).join("");
-  $$(".chip-cat").forEach(b => b.onclick = () => { categoriaActiva = b.dataset.cat; renderCategorias(); renderGrid(); });
+  $$(".nav-cat-item").forEach(b => b.onclick = () => { categoriaActiva = b.dataset.cat; renderCategorias(); renderGrid(); });
 }
 
 function fotoHtml(p, claseWrap, claseImg){
