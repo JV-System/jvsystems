@@ -79,7 +79,7 @@ img{max-width:100%;display:block}
 @media (prefers-reduced-motion:reduce){
   .fondo-foto,.fondo-brillo{animation:none}
 }
-header.principal,.hero,.controles,.catalogo,footer.pie,.overlay,.carrito,.modal,.toast{position:relative;z-index:1}
+header.principal,.hero,.ofertas,.catalogo-layout,.catalogo,footer.pie,.app-footer,.overlay,.carrito,.modal,.toast{position:relative;z-index:1}
 a{color:inherit}
 button{font:inherit}
 :focus-visible{outline:2px solid var(--oliva);outline-offset:2px}
@@ -442,6 +442,32 @@ footer.pie b{color:var(--tinta)}
   </div>
 </section>
 
+<div class="barra-sticky">
+  <div class="wrap fila-controles">
+    <div class="buscador">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
+    </div>
+    <button type="button" class="btn-filtros" id="btnFiltros">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Filtros
+    </button>
+  </div>
+
+  <div class="wrap fila-orden">
+    <span class="cantidad-resultados" id="cantidadResultados"></span>
+    <div class="campo-orden">
+      <label for="selectOrden">Ordenar por</label>
+      <select id="selectOrden">
+        <option value="recientes">Más recientes</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="nombre">Nombre A-Z</option>
+      </select>
+    </div>
+  </div>
+</div>
+
 <div class="wrap catalogo-layout">
   <aside class="sidebar-filtros" id="sidebarFiltros">
     <div class="sidebar-cab-movil">
@@ -464,31 +490,6 @@ footer.pie b{color:var(--tinta)}
   </aside>
 
   <main class="contenido-catalogo">
-    <div class="barra-sticky">
-      <div class="fila-controles">
-        <div class="buscador">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8A8067" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8A8067" stroke-width="2" stroke-linecap="round"/></svg>
-          <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
-        </div>
-        <button type="button" class="btn-filtros" id="btnFiltros">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Filtros
-        </button>
-      </div>
-
-      <div class="fila-orden">
-        <span class="cantidad-resultados" id="cantidadResultados"></span>
-        <div class="campo-orden">
-          <label for="selectOrden">Ordenar por</label>
-          <select id="selectOrden">
-            <option value="recientes">Más recientes</option>
-            <option value="precio-asc">Precio: menor a mayor</option>
-            <option value="precio-desc">Precio: mayor a menor</option>
-            <option value="nombre">Nombre A-Z</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
     <div class="grid" id="grid"></div>
     <div class="vacio" id="vacio" hidden>
