@@ -368,6 +368,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .fila-admin .info{flex:1;min-width:0}
 .fila-admin .info b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fila-admin .info span{font-size:11.5px;color:var(--tinta-suave)}
+.autor-producto{display:block;font-style:italic;opacity:.8}
 .fila-admin .acciones{display:flex;gap:6px;flex:none}
 .icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--linea);background:var(--papel);
   cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tinta-suave)}
@@ -411,6 +412,30 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .variante-stock{width:80px;flex:none;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
   border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
 .bloque-oferta{background:var(--crema-osc);border-radius:12px;padding:14px;margin-top:2px}
+
+/* ---- tramos de envío ---- */
+.fila-tramo{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.fila-tramo:last-child{margin-bottom:0}
+.fila-tramo span{font-size:12.5px;color:var(--tinta-suave);white-space:nowrap}
+.tramo-desde,.tramo-costo{width:100px;flex:none;font:inherit;font-size:13px;padding:8px 10px;
+  border-radius:9px;border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
+
+/* ---- usuarios ---- */
+.separador-ajustes{border:0;border-top:1px solid var(--linea);margin:26px 0 18px}
+.titulo-ajustes{font-family:"Playfair Display",serif;font-size:15px;font-weight:700;margin:0 0 12px;color:var(--tinta)}
+.fila-usuario{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--linea)}
+.fila-usuario b{flex:1;font-size:13.5px}
+.fila-usuario input[type=text]{width:130px;font:inherit;font-size:12.5px;padding:7px 9px;border-radius:8px;
+  border:1px solid var(--linea);background:var(--crema)}
+.fila-nuevo-usuario{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.fila-nuevo-usuario input{flex:1 1 140px;font:inherit;font-size:13px;padding:9px 11px;border-radius:9px;
+  border:1px solid var(--linea);background:var(--crema);color:var(--tinta)}
+
+/* ---- historial ---- */
+.lista-historial{display:flex;flex-direction:column-reverse;gap:2px;max-height:340px;overflow-y:auto}
+.fila-historial{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--linea);font-size:12.5px}
+.fila-historial .quien{font-weight:700;color:var(--oliva-osc);flex:none}
+.fila-historial .cuando{margin-left:auto;color:var(--tinta-suave);flex:none;font-size:11.5px}
 .bloque-oferta[hidden]{display:none}
 .tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
 .tipo-oferta-btn{flex:1;background:var(--papel);border:1.5px solid var(--linea);border-radius:9px;
@@ -635,8 +660,9 @@ footer.pie b{color:var(--tinta)}
   <div class="caja-modal">
     <div class="modal-cab"><h2>Panel de administración</h2><button class="cerrar" id="cerrarLogin" type="button">✕</button></div>
     <div class="modal-cuerpo">
-      <div class="campo"><label>Clave</label><input type="text" id="claveAdmin" placeholder="Clave de administración"></div>
-      <p class="error-form" id="errorLogin" hidden>Clave incorrecta.</p>
+      <div class="campo"><label>Usuario</label><input type="text" id="usuarioAdmin" placeholder="Tu nombre de usuario" autocomplete="username"></div>
+      <div class="campo"><label>Clave</label><input type="password" id="claveAdmin" placeholder="Clave" autocomplete="current-password"></div>
+      <p class="error-form" id="errorLogin" hidden>Usuario o clave incorrectos.</p>
       <button class="btn-full" id="btnIngresarAdmin" type="button">Ingresar</button>
     </div>
   </div>
@@ -730,9 +756,31 @@ footer.pie b{color:var(--tinta)}
           <input type="tel" id="whatsappConfig" placeholder="5493811234567"></div>
         <div class="campo"><label>Mensaje inicial del pedido</label>
           <textarea id="saludoConfig" placeholder="¡Hola Harmonia! Quiero hacer este pedido:"></textarea></div>
-        <div class="campo"><label>Costo de envío (ARS) <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — se suma al total del pedido)</span></label>
+        <div class="campo"><label>Costo de envío por defecto (ARS) <span style="text-transform:none;font-weight:400;opacity:.7">(se usa si no aplica ningún tramo de abajo)</span></label>
           <input type="number" id="costoEnvioConfig" min="0" step="1" placeholder="Sin cargo fijo" inputmode="numeric"></div>
+
+        <div class="campo campo-variantes">
+          <label>Envío según cantidad de productos <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — ej: desde 1 producto $2000, desde 10 $1000, desde 20 gratis)</span></label>
+          <div id="listaTramosEnvio"></div>
+          <button type="button" class="btn-ghost" id="btnAgregarTramo" style="margin-top:6px">+ Agregar tramo</button>
+        </div>
+
         <button class="btn-full" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
+
+        <hr class="separador-ajustes">
+
+        <h3 class="titulo-ajustes">Usuarios que pueden administrar</h3>
+        <div id="listaUsuarios"></div>
+        <div class="fila-nuevo-usuario">
+          <input type="text" id="nuevoUsuarioNombre" placeholder="Nombre de usuario">
+          <input type="text" id="nuevoUsuarioClave" placeholder="Clave">
+          <button type="button" class="btn-ghost" id="btnAgregarUsuario" style="margin-top:0">+ Agregar usuario</button>
+        </div>
+
+        <hr class="separador-ajustes">
+
+        <h3 class="titulo-ajustes">Historial de actividad</h3>
+        <div id="listaHistorial" class="lista-historial"></div>
       </div>
     </div>
   </div>
@@ -756,10 +804,13 @@ const FB = {
   appId: "1:156257311110:web:1700654b3afee9f38e3407"
 };
 const RUTA = "harmonia";
-const CLAVE_ADMIN = "harmonia2026";
+const USUARIOS_INICIALES = { admin: "harmonia2026", Angie: "Angie", Eve: "Eve", Mary: "Mary" };
 
 let db = null;
 let productos = {};
+let usuarios = {};
+let usuarioActual = null;
+let historial = {};
 let config = { whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" };
 let carrito = {};
 let categoriaActiva = "Todos";
@@ -1072,9 +1123,9 @@ $("#btnLimpiarFiltros").onclick = () => {
 function renderCarrito(){
   const claves = Object.keys(carrito).filter(c => productoDeClave(c));
   const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
-  const envio = subtotal > 0 ? (+config.costoEnvio || 0) : 0;
-  const total = subtotal + envio;
   const cantTotal = claves.reduce((s, c) => s + carrito[c], 0);
+  const envio = subtotal > 0 ? costoEnvioPorCantidad(cantTotal) : 0;
+  const total = subtotal + envio;
   $("#badgeCarrito").textContent = cantTotal;
   $("#totalCarrito").textContent = plata(total);
   $("#filaEnvioCarrito").hidden = envio <= 0;
@@ -1153,24 +1204,45 @@ $("#btnEnviarPedido").onclick = () => {
     return `• ${nombreCompleto} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
   });
   const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
-  const envio = +config.costoEnvio || 0;
+  const cantTotal = claves.reduce((s, c) => s + carrito[c], 0);
+  const envio = costoEnvioPorCantidad(cantTotal);
   const total = subtotal + envio;
   const lineaEnvio = envio > 0 ? `\nEnvío: ${plata(envio)}` : "";
   const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n${lineaEnvio}\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
 };
 
-/* ---------- admin: login ---------- */
-$("#linkAdmin").onclick = e => {
-  e.preventDefault();
+/* ---------- admin: login (varios usuarios) ---------- */
+function abrirLogin(){
+  $("#usuarioAdmin").value = "";
   $("#claveAdmin").value = "";
   $("#errorLogin").hidden = true;
   $("#modalLogin").classList.add("abierto");
-  setTimeout(() => $("#claveAdmin").focus(), 50);
-};
+  setTimeout(() => $("#usuarioAdmin").focus(), 50);
+  intentarAutoLogin();
+}
+function intentarAutoLogin(){
+  if (usuarioActual || !$("#modalLogin").classList.contains("abierto")) return;
+  let guardado = null;
+  try{ guardado = sessionStorage.getItem("harmonia_usuario"); }catch(e){}
+  if (guardado && usuarios[guardado]){
+    usuarioActual = guardado;
+    $("#modalLogin").classList.remove("abierto");
+    abrirAdmin();
+  }
+}
+function registrarHistorial(accion, detalle){
+  if (!db) return;
+  db.ref(`${RUTA}/historial`).push({ usuario: usuarioActual || "?", accion, detalle: detalle || "", fecha: Date.now() });
+}
+$("#linkAdmin").onclick = e => { e.preventDefault(); abrirLogin(); };
 $("#cerrarLogin").onclick = cerrarPaneles;
 function intentarLogin(){
-  if ($("#claveAdmin").value === CLAVE_ADMIN){
+  const usuario = $("#usuarioAdmin").value.trim();
+  const clave = $("#claveAdmin").value;
+  if (usuario && usuarios[usuario] && usuarios[usuario].clave === clave){
+    usuarioActual = usuario;
+    try{ sessionStorage.setItem("harmonia_usuario", usuario); }catch(e){}
     $("#modalLogin").classList.remove("abierto");
     abrirAdmin();
   } else {
@@ -1178,6 +1250,7 @@ function intentarLogin(){
   }
 }
 $("#btnIngresarAdmin").onclick = intentarLogin;
+$("#usuarioAdmin").addEventListener("keydown", e => { if (e.key === "Enter") $("#claveAdmin").focus(); });
 $("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") intentarLogin(); });
 
 /* ---------- admin: panel ---------- */
@@ -1185,9 +1258,13 @@ function abrirAdmin(){
   $("#whatsappConfig").value = config.whatsapp || "";
   $("#saludoConfig").value = config.saludo || "";
   $("#costoEnvioConfig").value = config.costoEnvio || "";
+  tramosEnvioForm = (config.enviosPorCantidad || []).map(t => ({ desde: t.desde, costo: t.costo }));
+  renderTramosEnvio();
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
   renderListaAdmin();
+  renderListaUsuarios();
+  renderHistorial();
   $("#modalAdmin").classList.add("abierto");
 }
 
@@ -1301,7 +1378,9 @@ function renderListaAdmin(){
     return `
     <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
       ${fotoHtml(p, "foto")}
-      <div class="info"><b>${p.oferta ? "🔥 " : ""}${esc(p.nombre)}</b><span>${precioTxt} · ${catTxt}${stockTxt}${p.activo === false ? " · oculto" : ""}</span></div>
+      <div class="info"><b>${p.oferta ? "🔥 " : ""}${esc(p.nombre)}</b><span>${precioTxt} · ${catTxt}${stockTxt}${p.activo === false ? " · oculto" : ""}</span>
+        <span class="autor-producto">${p.modificadoPor ? `Editado por ${esc(p.modificadoPor)}` : p.creadoPor ? `Cargado por ${esc(p.creadoPor)}` : ""}</span>
+      </div>
       <div class="acciones">
         <button type="button" class="icon-btn" data-accion="ver" data-id="${p.id}" title="${p.activo === false ? "Mostrar" : "Ocultar"}">${p.activo === false ? "👁️‍🗨️" : "👁️"}</button>
         <button type="button" class="icon-btn" data-accion="editar" data-id="${p.id}" title="Editar">✎</button>
@@ -1317,11 +1396,16 @@ $("#listaAdminProductos").addEventListener("click", e => {
   const id = b.dataset.id, p = productos[id];
   if (!p) return;
   if (b.dataset.accion === "ver"){
-    db.ref(`${RUTA}/productos/${id}/activo`).set(p.activo === false ? true : false);
+    const nuevoEstado = p.activo === false ? true : false;
+    db.ref(`${RUTA}/productos/${id}/activo`).set(nuevoEstado);
+    registrarHistorial(nuevoEstado ? "Mostró" : "Ocultó", p.nombre);
   } else if (b.dataset.accion === "editar"){
     cargarFormEdicion(id, p);
   } else if (b.dataset.accion === "borrar"){
-    if (confirm(`¿Eliminar "${p.nombre}" del catálogo?`)) db.ref(`${RUTA}/productos/${id}`).remove();
+    if (confirm(`¿Eliminar "${p.nombre}" del catálogo?`)){
+      db.ref(`${RUTA}/productos/${id}`).remove();
+      registrarHistorial("Eliminó", p.nombre);
+    }
   }
 });
 
@@ -1516,23 +1600,121 @@ $("#formProducto").addEventListener("submit", e => {
 
   const ref = editandoId ? db.ref(`${RUTA}/productos/${editandoId}`) : db.ref(`${RUTA}/productos`).push();
   if (editandoId){
-    ref.update(datos).then(() => { mostrarToast("Producto actualizado."); limpiarForm(false); });
+    datos.modificadoPor = usuarioActual || "?";
+    datos.modificadoEn = Date.now();
+    ref.update(datos).then(() => {
+      registrarHistorial("Editó", nombre);
+      mostrarToast("Producto actualizado.");
+      limpiarForm(false);
+    });
   } else {
     datos.creado = Date.now();
+    datos.creadoPor = usuarioActual || "?";
     if (!datos.imagen) datos.imagen = null;
     ref.set(datos).then(() => {
+      registrarHistorial("Agregó", nombre);
       mostrarToast("Producto agregado — seguí cargando el próximo.");
       limpiarForm(true);
     });
   }
 });
 
-/* ---------- ajustes ---------- */
+/* ---------- ajustes: envío por defecto + tramos por cantidad ---------- */
+let tramosEnvioForm = [];
+function renderTramosEnvio(){
+  $("#listaTramosEnvio").innerHTML = tramosEnvioForm.map((t, idx) => `
+    <div class="fila-tramo" data-idx="${idx}">
+      <span>Desde</span>
+      <input type="number" class="tramo-desde" min="1" step="1" placeholder="10" value="${t.desde === "" || t.desde == null ? "" : t.desde}">
+      <span>productos, cobrar</span>
+      <input type="number" class="tramo-costo" min="0" step="1" placeholder="0 = gratis" value="${t.costo === "" || t.costo == null ? "" : t.costo}">
+      <button type="button" class="icon-btn peligro btn-quitar-tramo" title="Quitar">🗑</button>
+    </div>`).join("");
+  $$(".fila-tramo").forEach(fila => {
+    const idx = +fila.dataset.idx;
+    fila.querySelector(".tramo-desde").addEventListener("input", e => { tramosEnvioForm[idx].desde = e.target.value; });
+    fila.querySelector(".tramo-costo").addEventListener("input", e => { tramosEnvioForm[idx].costo = e.target.value; });
+    fila.querySelector(".btn-quitar-tramo").onclick = () => { tramosEnvioForm.splice(idx, 1); renderTramosEnvio(); };
+  });
+}
+$("#btnAgregarTramo").onclick = () => {
+  tramosEnvioForm.push({ desde: "", costo: "" });
+  renderTramosEnvio();
+};
+function costoEnvioPorCantidad(cantTotal){
+  const tramos = (config.enviosPorCantidad || []).filter(t => t.desde > 0).slice().sort((a, b) => a.desde - b.desde);
+  let costo = null;
+  for (const t of tramos){ if (cantTotal >= t.desde) costo = t.costo; }
+  return costo === null ? (+config.costoEnvio || 0) : (+costo || 0);
+}
+
+/* ---------- ajustes: usuarios ---------- */
+function renderListaUsuarios(){
+  const nombres = Object.keys(usuarios).sort((a, b) => a.localeCompare(b, "es"));
+  $("#listaUsuarios").innerHTML = nombres.map(u => `
+    <div class="fila-usuario" data-usuario="${esc(u)}">
+      <b>${esc(u)}${u === usuarioActual ? " (vos)" : ""}</b>
+      <input type="text" class="input-nueva-clave" placeholder="Nueva clave">
+      <button type="button" class="btn-ghost btn-cambiar-clave" style="margin-top:0;width:auto;padding:8px 14px">Cambiar clave</button>
+      <button type="button" class="icon-btn peligro btn-borrar-usuario" title="Quitar acceso">🗑</button>
+    </div>`).join("");
+  $$(".fila-usuario").forEach(fila => {
+    const u = fila.dataset.usuario;
+    fila.querySelector(".btn-cambiar-clave").onclick = () => {
+      const nueva = fila.querySelector(".input-nueva-clave").value.trim();
+      if (!nueva){ mostrarToast("Escribí la nueva clave primero."); return; }
+      db.ref(`${RUTA}/usuarios/${u}/clave`).set(nueva).then(() => {
+        registrarHistorial("Cambió la clave de", u);
+        mostrarToast(`Clave de ${u} actualizada.`);
+      });
+    };
+    fila.querySelector(".btn-borrar-usuario").onclick = () => {
+      if (Object.keys(usuarios).length <= 1){ mostrarToast("Tiene que quedar al menos un usuario."); return; }
+      if (confirm(`¿Sacarle el acceso a "${u}"?`)){
+        db.ref(`${RUTA}/usuarios/${u}`).remove();
+        registrarHistorial("Quitó acceso a", u);
+      }
+    };
+  });
+}
+$("#btnAgregarUsuario").onclick = () => {
+  const nombre = $("#nuevoUsuarioNombre").value.trim();
+  const clave = $("#nuevoUsuarioClave").value.trim();
+  if (!nombre || !clave){ mostrarToast("Completá nombre y clave para el nuevo usuario."); return; }
+  if (usuarios[nombre]){ mostrarToast("Ya existe un usuario con ese nombre."); return; }
+  db.ref(`${RUTA}/usuarios/${nombre}`).set({ clave }).then(() => {
+    registrarHistorial("Agregó al usuario", nombre);
+    $("#nuevoUsuarioNombre").value = "";
+    $("#nuevoUsuarioClave").value = "";
+    mostrarToast(`Usuario ${nombre} agregado.`);
+  });
+};
+
+/* ---------- ajustes: historial ---------- */
+function renderHistorial(){
+  const entradas = Object.values(historial).sort((a, b) => (a.fecha || 0) - (b.fecha || 0));
+  if (!entradas.length){
+    $("#listaHistorial").innerHTML = `<p style="color:var(--tinta-suave);font-size:13px">Todavía no hay actividad registrada.</p>`;
+    return;
+  }
+  $("#listaHistorial").innerHTML = entradas.map(h => {
+    const fecha = h.fecha ? new Date(h.fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+    return `<div class="fila-historial"><span class="quien">${esc(h.usuario)}</span><span>${esc(h.accion)}${h.detalle ? " " + esc(h.detalle) : ""}</span><span class="cuando">${fecha}</span></div>`;
+  }).join("");
+}
+
+/* ---------- ajustes: guardar ---------- */
 $("#btnGuardarAjustes").onclick = () => {
   const whatsapp = $("#whatsappConfig").value.trim();
   const saludo = $("#saludoConfig").value.trim();
   const costoEnvio = $("#costoEnvioConfig").value === "" ? null : Math.max(0, Math.round(+$("#costoEnvioConfig").value));
-  db.ref(`${RUTA}/config`).update({ whatsapp, saludo, costoEnvio }).then(() => mostrarToast("Ajustes guardados."));
+  const enviosPorCantidad = tramosEnvioForm
+    .filter(t => t.desde !== "" && +t.desde > 0)
+    .map(t => ({ desde: Math.round(+t.desde), costo: t.costo === "" ? 0 : Math.max(0, Math.round(+t.costo)) }));
+  db.ref(`${RUTA}/config`).update({ whatsapp, saludo, costoEnvio, enviosPorCantidad: enviosPorCantidad.length ? enviosPorCantidad : null }).then(() => {
+    registrarHistorial("Modificó los ajustes", "");
+    mostrarToast("Ajustes guardados.");
+  });
 };
 
 /* ---------- pantalla de carga ---------- */
@@ -1567,6 +1749,23 @@ function iniciar(){
     db.ref(`${RUTA}/config`).on("value", snap => {
       config = Object.assign({ whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" }, snap.val() || {});
     });
+
+    db.ref(`${RUTA}/usuarios`).on("value", snap => {
+      usuarios = snap.val() || {};
+      if (!Object.keys(usuarios).length){
+        const semilla = {};
+        Object.entries(USUARIOS_INICIALES).forEach(([u, c]) => semilla[u] = { clave: c });
+        db.ref(`${RUTA}/usuarios`).set(semilla);
+        usuarios = semilla;
+      }
+      intentarAutoLogin();
+      if ($("#modalAdmin").classList.contains("abierto")) renderListaUsuarios();
+    });
+
+    db.ref(`${RUTA}/historial`).limitToLast(60).on("value", snap => {
+      historial = snap.val() || {};
+      if ($("#modalAdmin").classList.contains("abierto")) renderHistorial();
+    });
   }catch(e){
     console.error("No se pudo conectar a Firebase", e);
     mostrarToast("Sin conexión con la base de datos.");
@@ -1579,8 +1778,7 @@ renderCarrito();
 
 /* acceso directo: harmonia/?admin abre el login de una */
 if (/[?&#]admin\b/.test(location.href)){
-  $("#claveAdmin").value = "";
-  $("#modalLogin").classList.add("abierto");
+  abrirLogin();
 }
 </script>
 </body>
