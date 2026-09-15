@@ -405,9 +405,9 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .check-oferta input{width:auto}
 .campo-descuento{min-width:180px}
 .campo-variantes{background:var(--crema-osc);border-radius:12px;padding:12px}
-.fila-variante{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.fila-variante{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
 .fila-variante:last-child{margin-bottom:0}
-.variante-nombre{flex:1;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
+.variante-color,.variante-modelo{flex:1;min-width:110px;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
   border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
 .variante-stock{width:80px;flex:none;font:inherit;font-size:13px;padding:8px 10px;border-radius:9px;
   border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
@@ -705,8 +705,10 @@ footer.pie b{color:var(--tinta)}
               </div>
 
               <div class="campo campo-variantes">
-                <label>Variantes (color, tipo, etc.) <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — si cargás variantes, cada una tiene su propio stock y se ignora el Stock general)</span></label>
+                <label>Color y Modelo <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — si cargás variantes, cada una tiene su propio stock y se ignora el Stock general. Si no aplica, poné N/A)</span></label>
                 <div id="listaVariantes"></div>
+                <datalist id="listaColoresConocidos"></datalist>
+                <datalist id="listaModelosConocidos"></datalist>
                 <button type="button" class="btn-ghost" id="btnAgregarVariante" style="margin-top:6px">+ Agregar variante</button>
               </div>
 
@@ -879,7 +881,26 @@ function stockDeClave(clave){
 function nombreVarianteDeClave(clave){
   const { prodId, varIdx } = resolverClave(clave);
   const p = productos[prodId];
-  return (varIdx != null && p && p.variantes && p.variantes[varIdx]) ? p.variantes[varIdx].nombre : null;
+  return (varIdx != null && p && p.variantes && p.variantes[varIdx]) ? nombreVariante(p.variantes[varIdx]) : null;
+}
+function esNA(t){ return !t || /^n\/?a$/i.test(t.trim()); }
+function nombreVariante(v){
+  const partes = [];
+  if (!esNA(v.color)) partes.push(v.color.trim());
+  if (!esNA(v.modelo)) partes.push(v.modelo.trim());
+  return partes.length ? partes.join(" · ") : "Único";
+}
+function coloresConocidos(){
+  const set = new Set();
+  Object.values(productos).forEach(p => (p.variantes || []).forEach(v => { if (v.color) set.add(v.color); }));
+  return [...set].sort((a, b) => a.localeCompare(b, "es"));
+}
+function modelosConocidos(subcategoria){
+  const set = new Set();
+  Object.values(productos).forEach(p => {
+    if ((p.subcategoria || "") === (subcategoria || "")) (p.variantes || []).forEach(v => { if (v.modelo) set.add(v.modelo); });
+  });
+  return [...set].sort((a, b) => a.localeCompare(b, "es"));
 }
 
 function intentarSumarCarrito(clave, delta){
@@ -1017,7 +1038,7 @@ function accionesProductoHtml(p){
   if (tieneVariantes(p)){
     const opciones = p.variantes.map((v, idx) => {
       const st = varianteStock(p, idx);
-      return `<option value="${idx}"${st <= 0 ? " disabled" : ""}>${esc(v.nombre)}${st <= 0 ? " (sin stock)" : ""}</option>`;
+      return `<option value="${idx}"${st <= 0 ? " disabled" : ""}>${esc(nombreVariante(v))}${st <= 0 ? " (sin stock)" : ""}</option>`;
     }).join("");
     const todasSinStock = p.variantes.every((v, idx) => varianteStock(p, idx) <= 0);
     return `
@@ -1262,6 +1283,7 @@ function abrirAdmin(){
   renderTramosEnvio();
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
+  renderVariantesForm();
   renderListaAdmin();
   renderListaUsuarios();
   renderHistorial();
@@ -1307,6 +1329,7 @@ $("#categoriaProducto").addEventListener("change", () => {
   $("#subcategoriaProducto").value = "";
   ultimaSubcategoriaValida = "";
   renderChipsSubcatAdmin();
+  renderVariantesForm();
 });
 
 function subcategoriasConocidas(categoria){
@@ -1346,6 +1369,7 @@ $("#subcategoriaProducto").addEventListener("change", () => {
   } else {
     ultimaSubcategoriaValida = sel.value;
   }
+  renderVariantesForm();
 });
 
 $("#cerrarAdmin").onclick = cerrarPaneles;
@@ -1373,7 +1397,7 @@ function renderListaAdmin(){
       : plata(p.precio);
     const catTxt = esc(p.categoria || "Otros") + (p.subcategoria ? " › " + esc(p.subcategoria) : "");
     const stockTxt = tieneVariantes(p)
-      ? ` · ${p.variantes.length} variante${p.variantes.length === 1 ? "" : "s"} (${p.variantes.map((v, i) => `${esc(v.nombre)}: ${varianteStock(p, i) === Infinity ? "s/límite" : varianteStock(p, i)}`).join(", ")})`
+      ? ` · ${p.variantes.length} variante${p.variantes.length === 1 ? "" : "s"} (${p.variantes.map((v, i) => `${esc(nombreVariante(v))}: ${varianteStock(p, i) === Infinity ? "s/límite" : varianteStock(p, i)}`).join(", ")})`
       : (p.stock === undefined || p.stock === null) ? "" : (p.stock > 0 ? ` · Stock: ${p.stock}` : ` · <span style="color:var(--rojo);font-weight:600">Sin stock</span>`);
     return `
     <div class="fila-admin${p.activo === false ? " inactivo" : ""}">
@@ -1418,12 +1442,12 @@ function cargarFormEdicion(id, p){
   $("#descuentoProducto").value = p.descuento || "";
   $("#promoLleva").value = p.promoLleva || "";
   $("#promoPaga").value = p.promoPaga || "";
-  variantesForm = (p.variantes || []).map(v => ({ nombre: v.nombre || "", stock: (v.stock === undefined || v.stock === null) ? "" : v.stock }));
-  renderVariantesForm();
+  variantesForm = (p.variantes || []).map(v => ({ color: v.color || "", modelo: v.modelo || "", stock: (v.stock === undefined || v.stock === null) ? "" : v.stock }));
   ultimaCategoriaValida = p.categoria || CATEGORIAS_SUGERIDAS[0];
   ultimaSubcategoriaValida = p.subcategoria || "";
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
+  renderVariantesForm();
   $("#descProducto").value = p.descripcion || "";
   $("#activoProducto").checked = p.activo !== false;
   $("#ofertaProducto").checked = !!p.oferta;
@@ -1449,11 +1473,11 @@ function limpiarForm(mantenerCategoria){
   $("#prodId").value = "";
   $("#activoProducto").checked = true;
   variantesForm = [];
-  renderVariantesForm();
   ultimaCategoriaValida = mantenerCategoria ? categoriaPrevia : CATEGORIAS_SUGERIDAS[0];
   ultimaSubcategoriaValida = mantenerCategoria ? subcategoriaPrevia : "";
   renderChipsCatAdmin();
   renderChipsSubcatAdmin();
+  renderVariantesForm();
   $("#bloqueOferta").hidden = true;
   $("#tipoOfertaProducto").value = "descuento";
   $$(".tipo-oferta-btn").forEach(b => b.classList.toggle("activo", b.dataset.tipo === "descuento"));
@@ -1506,23 +1530,28 @@ function actualizarPreviewOferta(){
 /* ---------- variantes (repetidor en el formulario) ---------- */
 let variantesForm = [];
 function renderVariantesForm(){
+  const subcat = $("#subcategoriaProducto").value || "";
+  $("#listaColoresConocidos").innerHTML = coloresConocidos().map(c => `<option value="${esc(c)}">`).join("");
+  $("#listaModelosConocidos").innerHTML = modelosConocidos(subcat).map(m => `<option value="${esc(m)}">`).join("");
   $("#listaVariantes").innerHTML = variantesForm.map((v, idx) => `
     <div class="fila-variante" data-idx="${idx}">
-      <input type="text" class="variante-nombre" placeholder="Ej: Rojo, Redondo…" value="${esc(v.nombre)}">
+      <input type="text" class="variante-color" list="listaColoresConocidos" placeholder="Color (o N/A)" value="${esc(v.color || "")}">
+      <input type="text" class="variante-modelo" list="listaModelosConocidos" placeholder="Modelo (o N/A)" value="${esc(v.modelo || "")}">
       <input type="number" class="variante-stock" placeholder="Stock" min="0" step="1" value="${v.stock === "" || v.stock == null ? "" : v.stock}">
       <button type="button" class="icon-btn peligro btn-quitar-variante" title="Quitar">🗑</button>
     </div>`).join("");
   $$(".fila-variante").forEach(fila => {
     const idx = +fila.dataset.idx;
-    fila.querySelector(".variante-nombre").addEventListener("input", e => { variantesForm[idx].nombre = e.target.value; });
+    fila.querySelector(".variante-color").addEventListener("input", e => { variantesForm[idx].color = e.target.value; });
+    fila.querySelector(".variante-modelo").addEventListener("input", e => { variantesForm[idx].modelo = e.target.value; });
     fila.querySelector(".variante-stock").addEventListener("input", e => { variantesForm[idx].stock = e.target.value; });
     fila.querySelector(".btn-quitar-variante").onclick = () => { variantesForm.splice(idx, 1); renderVariantesForm(); };
   });
 }
 $("#btnAgregarVariante").onclick = () => {
-  variantesForm.push({ nombre: "", stock: "" });
+  variantesForm.push({ color: "", modelo: "", stock: "" });
   renderVariantesForm();
-  const inputs = $$(".variante-nombre");
+  const inputs = $$(".variante-color");
   if (inputs.length) inputs[inputs.length - 1].focus();
 };
 
@@ -1585,8 +1614,12 @@ $("#formProducto").addEventListener("submit", e => {
   err.hidden = true;
 
   const variantes = variantesForm
-    .filter(v => v.nombre && v.nombre.trim())
-    .map(v => ({ nombre: v.nombre.trim(), stock: v.stock === "" ? null : Math.max(0, Math.round(+v.stock)) }));
+    .filter(v => (v.color && v.color.trim()) || (v.modelo && v.modelo.trim()))
+    .map(v => ({
+      color: (v.color || "").trim() || null,
+      modelo: (v.modelo || "").trim() || null,
+      stock: v.stock === "" ? null : Math.max(0, Math.round(+v.stock))
+    }));
 
   const datos = {
     nombre, precio, stock, categoria, subcategoria, descripcion, activo, oferta,
