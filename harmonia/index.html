@@ -27,6 +27,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,500;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   color-scheme:only light;
@@ -319,8 +320,10 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   color:#fff;border:0;border-radius:12px;padding:14px;font-weight:700;font-size:14.5px;cursor:pointer;
   transition:.15s}
 .btn-whatsapp:hover{background:var(--wasap-osc)}
-.btn-mp{width:100%;margin-top:9px;background:var(--papel);border:1px dashed var(--taupe);color:var(--tinta-suave);
-  border-radius:12px;padding:11px;font-size:12.5px;font-weight:500;cursor:not-allowed;text-align:center}
+.btn-mp{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;
+  background:var(--tinta);color:#fff;border:0;border-radius:12px;padding:12px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
+.btn-mp:hover{opacity:.9}
+.btn-mp[hidden]{display:none}
 .btn-qr{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;
   background:var(--papel);border:2px solid var(--oliva);color:var(--oliva-osc);border-radius:12px;
   padding:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
@@ -444,6 +447,14 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .fila-historial{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--linea);font-size:12.5px}
 .fila-historial .quien{font-weight:700;color:var(--oliva-osc);flex:none}
 .fila-historial .cuando{margin-left:auto;color:var(--tinta-suave);flex:none;font-size:11.5px}
+.fila-pedido{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--linea)}
+.estado-pedido{flex:none;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.estado-pedido.estado-pagado{background:var(--oliva-pale);color:var(--oliva-osc)}
+.estado-pedido.estado-pendiente{background:var(--crema-osc);color:var(--tinta-suave)}
+.estado-pedido:not(.estado-pagado):not(.estado-pendiente){background:var(--rojo-pale);color:var(--rojo)}
+.info-pedido{display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.info-pedido b{font-size:14px}
+.info-pedido .cuando{color:var(--tinta-suave);font-size:11.5px}
 .bloque-oferta[hidden]{display:none}
 .tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
 .tipo-oferta-btn{flex:1;background:var(--papel);border:1.5px solid var(--linea);border-radius:9px;
@@ -658,8 +669,8 @@ footer.pie b{color:var(--tinta)}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
       Enviar pedido por WhatsApp
     </button>
+    <button class="btn-mp" id="btnPagarMP" type="button" hidden>💳 Pagar con Mercado Pago</button>
     <button class="btn-qr" id="btnPagarQR" type="button" hidden>🔳 Pagar con QR</button>
-    <div class="btn-mp" title="Próximamente">💳 Pago con Mercado Pago — próximamente</div>
     <p class="nota-pie">Al enviar, se abre WhatsApp con el detalle de tu pedido ya armado.</p>
   </div>
 </aside>
@@ -672,6 +683,24 @@ footer.pie b{color:var(--tinta)}
       <p class="total-qr" id="totalQRModal">$0</p>
       <img id="imgQRModal" src="" alt="QR para pagar" style="max-width:100%;border-radius:12px;border:1px solid var(--linea);background:#fff">
       <p id="notaQRModal" style="font-size:13px;color:var(--tinta-suave);margin-top:14px"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- pago con Mercado Pago (monto automático) ---------- -->
+<div class="modal" id="modalMP">
+  <div class="caja-modal">
+    <div class="modal-cab"><h2>Pagá con Mercado Pago</h2><button class="cerrar" id="cerrarMP" type="button">✕</button></div>
+    <div class="modal-cuerpo" style="text-align:center">
+      <p class="total-qr" id="totalMPModal">$0</p>
+      <div id="estadoMP">
+        <p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>
+      </div>
+      <div id="contenidoMP" hidden>
+        <div id="qrMPCanvas" style="display:flex;justify-content:center;margin:10px 0"></div>
+        <a id="linkMP" class="btn-full" href="#" target="_blank" rel="noopener" style="display:block;text-decoration:none;box-sizing:border-box">Abrir Mercado Pago</a>
+        <p style="font-size:12px;color:var(--tinta-suave);margin-top:14px">Escaneá el código o tocá el botón. Cuando se acredite el pago, tu pedido queda registrado solo — no hace falta que nos avises.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -696,6 +725,7 @@ footer.pie b{color:var(--tinta)}
     <div class="modal-cuerpo">
       <div class="tabs-admin">
         <button class="tab-admin activo" data-tab="productos" type="button">Productos</button>
+        <button class="tab-admin" data-tab="pedidos" type="button">Pedidos</button>
         <button class="tab-admin" data-tab="ajustes" type="button">Ajustes</button>
       </div>
 
@@ -774,6 +804,11 @@ footer.pie b{color:var(--tinta)}
         </div>
       </div>
 
+      <div class="pestana-admin" id="tabPedidos">
+        <h3 class="titulo-ajustes">Pedidos pagados con Mercado Pago <span id="contadorPedidos"></span></h3>
+        <div id="listaPedidos"></div>
+      </div>
+
       <div class="pestana-admin" id="tabAjustes">
         <div class="campo"><label>Número de WhatsApp (con código de país)</label>
           <input type="tel" id="whatsappConfig" placeholder="5493811234567"></div>
@@ -801,6 +836,14 @@ footer.pie b{color:var(--tinta)}
             <label>Instrucciones para el pago <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label>
             <textarea id="notaQRConfig" placeholder="Escaneá el código con la app de tu banco o Mercado Pago y avisanos por WhatsApp cuando hagas el pago."></textarea>
           </div>
+        </div>
+
+        <div class="campo campo-variantes">
+          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">
+            <input type="checkbox" id="mpHabilitadoConfig">
+            <span>💳 Habilitar botón de pago con Mercado Pago (monto automático)</span>
+          </label>
+          <p style="font-size:12px;color:var(--tinta-suave);margin:8px 0 0">Activalo recién cuando el backend de pagos esté desplegado y probado — mientras esté apagado, el botón no aparece en el carrito.</p>
         </div>
 
         <button class="btn-full" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
@@ -842,6 +885,7 @@ const FB = {
   appId: "1:156257311110:web:1700654b3afee9f38e3407"
 };
 const RUTA = "harmonia";
+const MP_BACKEND = "https://us-central1-harmonia-ropa-blanca.cloudfunctions.net";
 const USUARIOS_INICIALES = { admin: "harmonia2026", Angie: "Angie", Eve: "Eve", Mary: "Mary" };
 
 let db = null;
@@ -849,6 +893,7 @@ let productos = {};
 let usuarios = {};
 let usuarioActual = null;
 let historial = {};
+let pedidos = {};
 let config = { whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" };
 let carrito = {};
 let categoriaActiva = "Todos";
@@ -1196,6 +1241,7 @@ function renderCarrito(){
   $("#filaEnvioCarrito").hidden = envio <= 0;
   if (envio > 0) $("#envioCarrito").textContent = plata(envio);
   $("#btnPagarQR").hidden = !config.qrPago;
+  $("#btnPagarMP").hidden = !config.mpHabilitado;
   if (!claves.length){
     $("#carritoLista").innerHTML = `<div class="carrito-vacio">Todavía no agregaste productos.<br>Elegí algo del catálogo 🤍</div>`;
     return;
@@ -1241,6 +1287,7 @@ function cerrarPaneles(){
   $("#modalLogin").classList.remove("abierto");
   $("#modalAdmin").classList.remove("abierto");
   $("#modalQR").classList.remove("abierto");
+  $("#modalMP").classList.remove("abierto");
   $("#sidebarFiltros").classList.remove("abierto");
 }
 $("#btnAbrirCarrito").onclick = abrirCarrito;
@@ -1256,6 +1303,45 @@ $("#btnPagarQR").onclick = () => {
   $("#modalQR").classList.add("abierto");
 };
 $("#cerrarQR").onclick = () => $("#modalQR").classList.remove("abierto");
+
+$("#btnPagarMP").onclick = async () => {
+  const { claves, total, envio } = calcularTotalCarrito();
+  if (!claves.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
+  $("#totalMPModal").textContent = plata(total);
+  $("#estadoMP").hidden = false;
+  $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>`;
+  $("#contenidoMP").hidden = true;
+  $("#modalMP").classList.add("abierto");
+
+  const items = claves.map(clave => {
+    const p = productoDeClave(clave);
+    const nombreVar = nombreVarianteDeClave(clave);
+    return {
+      nombre: nombreVar ? `${p.nombre} (${nombreVar})` : p.nombre,
+      cantidad: carrito[clave],
+      precioUnitario: precioFinal(p)
+    };
+  });
+
+  try {
+    const r = await fetch(`${MP_BACKEND}/crearPreferencia`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, envio, total })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.initPoint) throw new Error(data.error || "Error");
+    $("#qrMPCanvas").innerHTML = "";
+    new QRCode($("#qrMPCanvas"), { text: data.initPoint, width: 190, height: 190 });
+    $("#linkMP").href = data.initPoint;
+    $("#estadoMP").hidden = true;
+    $("#contenidoMP").hidden = false;
+  } catch (e) {
+    console.error(e);
+    $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--rojo)">No se pudo iniciar el pago. Probá de nuevo en un momento o hacé el pedido por WhatsApp.</p>`;
+  }
+};
+$("#cerrarMP").onclick = () => $("#modalMP").classList.remove("abierto");
 
 /* ---------- WhatsApp ---------- */
 function numeroWhatsapp(){
@@ -1332,6 +1418,7 @@ function abrirAdmin(){
   $("#saludoConfig").value = config.saludo || "";
   $("#costoEnvioConfig").value = config.costoEnvio || "";
   $("#notaQRConfig").value = config.notaQR || "";
+  $("#mpHabilitadoConfig").checked = !!config.mpHabilitado;
   qrPagoNueva = undefined;
   setPreviewQR(config.qrPago || null);
   tramosEnvioForm = (config.enviosPorCantidad || []).map(t => ({ desde: t.desde, costo: t.costo }));
@@ -1340,6 +1427,7 @@ function abrirAdmin(){
   renderChipsSubcatAdmin();
   renderVariantesForm();
   renderListaAdmin();
+  renderPedidos();
   renderListaUsuarios();
   renderHistorial();
   $("#modalAdmin").classList.add("abierto");
@@ -1806,16 +1894,36 @@ function renderHistorial(){
   }).join("");
 }
 
+/* ---------- pedidos pagados con Mercado Pago ---------- */
+function renderPedidos(){
+  const lista = Object.entries(pedidos).map(([id, p]) => ({ id, ...p })).sort((a, b) => (b.fecha || 0) - (a.fecha || 0));
+  $("#contadorPedidos").textContent = lista.length ? `(${lista.length})` : "";
+  if (!lista.length){
+    $("#listaPedidos").innerHTML = `<p style="color:var(--tinta-suave);font-size:13px">Todavía no hay pedidos por acá. Van a aparecer solos apenas alguien pague con Mercado Pago.</p>`;
+    return;
+  }
+  $("#listaPedidos").innerHTML = lista.map(p => {
+    const fecha = p.fecha ? new Date(p.fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
+    const resumen = (p.items || []).map(it => `${esc(it.nombre)} x${it.cantidad}`).join(", ") || "—";
+    const estadoTxt = p.estado === "pagado" ? "Pagado" : p.estado === "pendiente" ? "Pendiente" : esc(p.estado || "?");
+    return `<div class="fila-pedido">
+      <span class="estado-pedido estado-${esc(p.estado || "pendiente")}">${estadoTxt}</span>
+      <div class="info-pedido"><b>${plata(p.total || 0)}</b><span>${resumen}</span><span class="cuando">${fecha}</span></div>
+    </div>`;
+  }).join("");
+}
+
 /* ---------- ajustes: guardar ---------- */
 $("#btnGuardarAjustes").onclick = () => {
   const whatsapp = $("#whatsappConfig").value.trim();
   const saludo = $("#saludoConfig").value.trim();
   const notaQR = $("#notaQRConfig").value.trim();
+  const mpHabilitado = $("#mpHabilitadoConfig").checked;
   const costoEnvio = $("#costoEnvioConfig").value === "" ? null : Math.max(0, Math.round(+$("#costoEnvioConfig").value));
   const enviosPorCantidad = tramosEnvioForm
     .filter(t => t.desde !== "" && +t.desde > 0)
     .map(t => ({ desde: Math.round(+t.desde), costo: t.costo === "" ? 0 : Math.max(0, Math.round(+t.costo)) }));
-  const datosAjustes = { whatsapp, saludo, notaQR: notaQR || null, costoEnvio, enviosPorCantidad: enviosPorCantidad.length ? enviosPorCantidad : null };
+  const datosAjustes = { whatsapp, saludo, notaQR: notaQR || null, mpHabilitado, costoEnvio, enviosPorCantidad: enviosPorCantidad.length ? enviosPorCantidad : null };
   if (qrPagoNueva !== undefined) datosAjustes.qrPago = qrPagoNueva;
   db.ref(`${RUTA}/config`).update(datosAjustes).then(() => {
     qrPagoNueva = undefined;
@@ -1873,6 +1981,11 @@ function iniciar(){
     db.ref(`${RUTA}/historial`).limitToLast(60).on("value", snap => {
       historial = snap.val() || {};
       if ($("#modalAdmin").classList.contains("abierto")) renderHistorial();
+    });
+
+    db.ref(`${RUTA}/pedidos`).limitToLast(100).on("value", snap => {
+      pedidos = snap.val() || {};
+      if ($("#modalAdmin").classList.contains("abierto")) renderPedidos();
     });
   }catch(e){
     console.error("No se pudo conectar a Firebase", e);

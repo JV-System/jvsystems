@@ -1,0 +1,17 @@
+{
+  "name": "harmonia-backend",
+  "description": "Backend de pagos (Mercado Pago) para Harmonia — separado de branca-ingenieria",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^6.0.0"
+  }
+}
