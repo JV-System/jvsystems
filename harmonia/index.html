@@ -321,6 +321,11 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .btn-whatsapp:hover{background:var(--wasap-osc)}
 .btn-mp{width:100%;margin-top:9px;background:var(--papel);border:1px dashed var(--taupe);color:var(--tinta-suave);
   border-radius:12px;padding:11px;font-size:12.5px;font-weight:500;cursor:not-allowed;text-align:center}
+.btn-qr{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:9px;
+  background:var(--papel);border:2px solid var(--oliva);color:var(--oliva-osc);border-radius:12px;
+  padding:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
+.btn-qr:hover{background:var(--oliva-pale)}
+.btn-qr[hidden]{display:none}
 .nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
 
 /* ---------- admin ---------- */
@@ -397,6 +402,8 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .foto-media .placeholder-foto{height:100%;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:8px;color:var(--tinta-suave);text-align:center;padding:14px}
 .foto-media .placeholder-foto span{font-size:12.5px;font-weight:500;max-width:140px}
+.foto-media-chica .preview-img{width:140px;height:140px}
+#previewQRPago img{object-fit:contain;background:#fff}
 .campos-junto-foto{flex:1;min-width:0}
 .campos-junto-foto .campo{margin-bottom:11px}
 .fila-oferta{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
@@ -650,10 +657,22 @@ footer.pie b{color:var(--tinta)}
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm5.7 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-3.3-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.5.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.1.3-.3.5-.1.2-.3.4-.4.5-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.5 1.5.3.1.5.1.7-.1.2-.2.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.5.7 1.8.8.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>
       Enviar pedido por WhatsApp
     </button>
+    <button class="btn-qr" id="btnPagarQR" type="button" hidden>🔳 Pagar con QR</button>
     <div class="btn-mp" title="Próximamente">💳 Pago con Mercado Pago — próximamente</div>
     <p class="nota-pie">Al enviar, se abre WhatsApp con el detalle de tu pedido ya armado.</p>
   </div>
 </aside>
+
+<!-- ---------- QR de pago ---------- -->
+<div class="modal" id="modalQR">
+  <div class="caja-modal">
+    <div class="modal-cab"><h2>Pagá con QR</h2><button class="cerrar" id="cerrarQR" type="button">✕</button></div>
+    <div class="modal-cuerpo" style="text-align:center">
+      <img id="imgQRModal" src="" alt="QR para pagar" style="max-width:100%;border-radius:12px;border:1px solid var(--linea);background:#fff">
+      <p id="notaQRModal" style="font-size:13px;color:var(--tinta-suave);margin-top:14px"></p>
+    </div>
+  </div>
+</div>
 
 <!-- ---------- login admin ---------- -->
 <div class="modal" id="modalLogin">
@@ -767,6 +786,21 @@ footer.pie b{color:var(--tinta)}
           <button type="button" class="btn-ghost" id="btnAgregarTramo" style="margin-top:6px">+ Agregar tramo</button>
         </div>
 
+        <div class="campo campo-variantes">
+          <label>QR para pagos <span style="text-transform:none;font-weight:400;opacity:.7">(opcional — la foto del QR de Mercado Pago, tu banco, etc. Se la mostramos al cliente en el carrito)</span></label>
+          <label class="foto-media foto-media-chica" for="imgQRPago">
+            <input type="file" id="imgQRPago" accept="image/*" hidden>
+            <div class="preview-img" id="previewQRPago">
+              <div class="placeholder-foto"><span>Tocá para subir la foto del QR</span></div>
+            </div>
+          </label>
+          <button type="button" class="btn-ghost" id="btnQuitarQR" style="margin-top:8px;width:auto;padding:8px 14px" hidden>Quitar QR</button>
+          <div class="campo" style="margin-top:12px;margin-bottom:0">
+            <label>Instrucciones para el pago <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label>
+            <textarea id="notaQRConfig" placeholder="Escaneá el código con la app de tu banco o Mercado Pago y avisanos por WhatsApp cuando hagas el pago."></textarea>
+          </div>
+        </div>
+
         <button class="btn-full" id="btnGuardarAjustes" type="button">Guardar ajustes</button>
 
         <hr class="separador-ajustes">
@@ -828,6 +862,11 @@ function setPreviewFoto(url){
   const el = $("#previewImg");
   if (url){ el.innerHTML = `<img src="${url}">`; el.classList.add("tiene-foto"); }
   else { el.innerHTML = PLACEHOLDER_FOTO; el.classList.remove("tiene-foto"); }
+}
+function setPreviewQR(url){
+  const el = $("#previewQRPago");
+  if (url){ el.innerHTML = `<img src="${url}">`; el.classList.add("tiene-foto"); $("#btnQuitarQR").hidden = false; }
+  else { el.innerHTML = `<div class="placeholder-foto"><span>Tocá para subir la foto del QR</span></div>`; el.classList.remove("tiene-foto"); $("#btnQuitarQR").hidden = true; }
 }
 
 const $ = s => document.querySelector(s);
@@ -1151,6 +1190,7 @@ function renderCarrito(){
   $("#totalCarrito").textContent = plata(total);
   $("#filaEnvioCarrito").hidden = envio <= 0;
   if (envio > 0) $("#envioCarrito").textContent = plata(envio);
+  $("#btnPagarQR").hidden = !config.qrPago;
   if (!claves.length){
     $("#carritoLista").innerHTML = `<div class="carrito-vacio">Todavía no agregaste productos.<br>Elegí algo del catálogo 🤍</div>`;
     return;
@@ -1195,11 +1235,20 @@ function cerrarPaneles(){
   $("#overlay").classList.remove("abierto");
   $("#modalLogin").classList.remove("abierto");
   $("#modalAdmin").classList.remove("abierto");
+  $("#modalQR").classList.remove("abierto");
   $("#sidebarFiltros").classList.remove("abierto");
 }
 $("#btnAbrirCarrito").onclick = abrirCarrito;
 $("#btnCerrarCarrito").onclick = cerrarPaneles;
 $("#overlay").onclick = cerrarPaneles;
+
+$("#btnPagarQR").onclick = () => {
+  if (!config.qrPago) return;
+  $("#imgQRModal").src = config.qrPago;
+  $("#notaQRModal").textContent = config.notaQR || "Escaneá el código con la app de tu banco o Mercado Pago y avisanos por WhatsApp cuando hagas el pago.";
+  $("#modalQR").classList.add("abierto");
+};
+$("#cerrarQR").onclick = () => $("#modalQR").classList.remove("abierto");
 
 /* ---------- WhatsApp ---------- */
 function numeroWhatsapp(){
@@ -1279,6 +1328,9 @@ function abrirAdmin(){
   $("#whatsappConfig").value = config.whatsapp || "";
   $("#saludoConfig").value = config.saludo || "";
   $("#costoEnvioConfig").value = config.costoEnvio || "";
+  $("#notaQRConfig").value = config.notaQR || "";
+  qrPagoNueva = undefined;
+  setPreviewQR(config.qrPago || null);
   tramosEnvioForm = (config.enviosPorCantidad || []).map(t => ({ desde: t.desde, costo: t.costo }));
   renderTramosEnvio();
   renderChipsCatAdmin();
@@ -1566,6 +1618,21 @@ $("#imgProducto").addEventListener("change", e => {
     $("#nombreProducto").focus();
   }).catch(() => mostrarToast("No se pudo procesar la imagen."));
 });
+
+/* ---------- QR de pago ---------- */
+let qrPagoNueva; // undefined = sin cambios, string = nueva foto, null = se quitó
+$("#imgQRPago").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  comprimirImagen(file, 600, 0.92).then(dataUrl => {
+    qrPagoNueva = dataUrl;
+    setPreviewQR(dataUrl);
+  }).catch(() => mostrarToast("No se pudo procesar la imagen."));
+});
+$("#btnQuitarQR").onclick = () => {
+  qrPagoNueva = null;
+  setPreviewQR(null);
+};
 function comprimirImagen(file, maxLado, calidad){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1740,11 +1807,15 @@ function renderHistorial(){
 $("#btnGuardarAjustes").onclick = () => {
   const whatsapp = $("#whatsappConfig").value.trim();
   const saludo = $("#saludoConfig").value.trim();
+  const notaQR = $("#notaQRConfig").value.trim();
   const costoEnvio = $("#costoEnvioConfig").value === "" ? null : Math.max(0, Math.round(+$("#costoEnvioConfig").value));
   const enviosPorCantidad = tramosEnvioForm
     .filter(t => t.desde !== "" && +t.desde > 0)
     .map(t => ({ desde: Math.round(+t.desde), costo: t.costo === "" ? 0 : Math.max(0, Math.round(+t.costo)) }));
-  db.ref(`${RUTA}/config`).update({ whatsapp, saludo, costoEnvio, enviosPorCantidad: enviosPorCantidad.length ? enviosPorCantidad : null }).then(() => {
+  const datosAjustes = { whatsapp, saludo, notaQR: notaQR || null, costoEnvio, enviosPorCantidad: enviosPorCantidad.length ? enviosPorCantidad : null };
+  if (qrPagoNueva !== undefined) datosAjustes.qrPago = qrPagoNueva;
+  db.ref(`${RUTA}/config`).update(datosAjustes).then(() => {
+    qrPagoNueva = undefined;
     registrarHistorial("Modificó los ajustes", "");
     mostrarToast("Ajustes guardados.");
   });
@@ -1781,6 +1852,7 @@ function iniciar(){
 
     db.ref(`${RUTA}/config`).on("value", snap => {
       config = Object.assign({ whatsapp: "", saludo: "¡Hola Harmonia! 👋 Quiero hacer este pedido:" }, snap.val() || {});
+      renderCarrito();
     });
 
     db.ref(`${RUTA}/usuarios`).on("value", snap => {
