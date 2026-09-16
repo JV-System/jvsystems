@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 35;
+const APP_BUILD = 36;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2818,6 +2818,14 @@ async function loadFromCloud() {
       _lastSyncedSnap = {};
       remotas.forEach(function(o) { _lastSyncedSnap[_ordenKey(o)] = JSON.stringify(o); });
       _yaSincronizoUnaVez = true;
+      // Lista de borradores borrados COMPARTIDA en Firebase (no solo local) --
+      // así, si un borrador se borra a propósito desde un dispositivo (o
+      // directo desde Firebase), TODOS los demás dispositivos lo respetan,
+      // en vez de resucitarlo desde su propia caché vieja.
+      if (remoteDb.deletedDraftIds && typeof remoteDb.deletedDraftIds === 'object') {
+        Object.keys(remoteDb.deletedDraftIds).forEach(function(id) { _deletedIds.add(id); });
+        localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
+      }
       if (remotas.length > 0) {
         const remotasIds = new Set(remotas.map(function(o){ return String(o.id); }));
         // Si Firebase tiene una orden, sacarla de _deletedIds (por si quedó ahí por error)
@@ -3286,6 +3294,13 @@ async function eliminarOrden(id) {
     if (!confirmar) return;
     _deletedIds.add(String(id));
     localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
+    // Avisar también en Firebase (no solo localmente) que este borrador se
+    // borró a propósito -- así CUALQUIER dispositivo respeta el borrado, no
+    // solo el que lo hizo. Sin esto, un borrador eliminado a mano desde
+    // Firebase (o incluso desde otro celular) podía "resucitar" para
+    // siempre en cualquier otro dispositivo que todavía lo tuviera en su
+    // caché (pasó de verdad: 8 borradores viejos volvieron a subirse).
+    _fbPatch('/db/deletedDraftIds', { [String(id)]: true }).catch(function(){});
     ordenes = ordenes.filter(function(x) { return String(x.id) !== String(id); });
     if (ordenActual && String(ordenActual.id) === String(id)) ordenActual = null;
     localStorage.setItem('branca_ordenes', JSON.stringify(ordenes));
