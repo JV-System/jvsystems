@@ -326,6 +326,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
   padding:11px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.15s}
 .btn-qr:hover{background:var(--oliva-pale)}
 .btn-qr[hidden]{display:none}
+.total-qr{font-family:"Playfair Display",serif;font-size:30px;font-weight:700;color:var(--oliva-osc);margin:0 0 14px}
 .nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
 
 /* ---------- admin ---------- */
@@ -668,6 +669,7 @@ footer.pie b{color:var(--tinta)}
   <div class="caja-modal">
     <div class="modal-cab"><h2>Pagá con QR</h2><button class="cerrar" id="cerrarQR" type="button">✕</button></div>
     <div class="modal-cuerpo" style="text-align:center">
+      <p class="total-qr" id="totalQRModal">$0</p>
       <img id="imgQRModal" src="" alt="QR para pagar" style="max-width:100%;border-radius:12px;border:1px solid var(--linea);background:#fff">
       <p id="notaQRModal" style="font-size:13px;color:var(--tinta-suave);margin-top:14px"></p>
     </div>
@@ -1180,12 +1182,15 @@ $("#btnLimpiarFiltros").onclick = () => {
 };
 
 /* ---------- carrito (drawer) ---------- */
-function renderCarrito(){
+function calcularTotalCarrito(){
   const claves = Object.keys(carrito).filter(c => productoDeClave(c));
   const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
   const cantTotal = claves.reduce((s, c) => s + carrito[c], 0);
   const envio = subtotal > 0 ? costoEnvioPorCantidad(cantTotal) : 0;
-  const total = subtotal + envio;
+  return { claves, subtotal, cantTotal, envio, total: subtotal + envio };
+}
+function renderCarrito(){
+  const { claves, total, cantTotal, envio } = calcularTotalCarrito();
   $("#badgeCarrito").textContent = cantTotal;
   $("#totalCarrito").textContent = plata(total);
   $("#filaEnvioCarrito").hidden = envio <= 0;
@@ -1244,8 +1249,10 @@ $("#overlay").onclick = cerrarPaneles;
 
 $("#btnPagarQR").onclick = () => {
   if (!config.qrPago) return;
+  const { total } = calcularTotalCarrito();
+  $("#totalQRModal").textContent = plata(total);
   $("#imgQRModal").src = config.qrPago;
-  $("#notaQRModal").textContent = config.notaQR || "Escaneá el código con la app de tu banco o Mercado Pago y avisanos por WhatsApp cuando hagas el pago.";
+  $("#notaQRModal").textContent = config.notaQR || "Escaneá el código con la app de tu banco o Mercado Pago y cargá vos este monto. Avisanos por WhatsApp cuando hagas el pago.";
   $("#modalQR").classList.add("abierto");
 };
 $("#cerrarQR").onclick = () => $("#modalQR").classList.remove("abierto");
@@ -1261,7 +1268,7 @@ function avisoSinWhatsapp(){
 $("#btnEnviarPedido").onclick = () => {
   const num = numeroWhatsapp();
   if (!num){ avisoSinWhatsapp(); return; }
-  const claves = Object.keys(carrito).filter(c => productoDeClave(c));
+  const { claves, total, envio } = calcularTotalCarrito();
   if (!claves.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
   const lineas = claves.map(clave => {
     const p = productoDeClave(clave);
@@ -1273,10 +1280,6 @@ $("#btnEnviarPedido").onclick = () => {
     const nombreCompleto = nombreVar ? `${p.nombre} (${nombreVar})` : p.nombre;
     return `• ${nombreCompleto} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
   });
-  const subtotal = claves.reduce((s, c) => s + totalLinea(productoDeClave(c), carrito[c]), 0);
-  const cantTotal = claves.reduce((s, c) => s + carrito[c], 0);
-  const envio = costoEnvioPorCantidad(cantTotal);
-  const total = subtotal + envio;
   const lineaEnvio = envio > 0 ? `\nEnvío: ${plata(envio)}` : "";
   const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n${lineaEnvio}\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
