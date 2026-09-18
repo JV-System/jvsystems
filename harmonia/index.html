@@ -841,7 +841,7 @@ footer.pie b{color:var(--tinta)}
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiUnidadesStock">0</span><span class="etiqueta-kpi">Unidades en stock</span></div>
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiValorStock">$0</span><span class="etiqueta-kpi">Valor del catálogo</span></div>
         </div>
-        <p style="font-size:11.5px;color:var(--tinta-suave);margin:4px 0 0">No cuenta los productos marcados "Sin límite" de stock.</p>
+        <p style="font-size:11.5px;color:var(--tinta-suave);margin:4px 0 0">"Unidades en stock" no cuenta los productos marcados "Sin límite" (no hay un número que contar). El valor sí suma todos los productos, tengan stock cargado o no.</p>
 
         <h3 class="titulo-ajustes" style="margin-top:26px">Ventas por Mercado Pago</h3>
         <p style="font-size:11.5px;color:var(--tinta-suave);margin:-8px 0 14px">No incluye los pedidos coordinados por WhatsApp — esos no quedan registrados en ningún lado.</p>
@@ -2006,17 +2006,23 @@ function renderPedidos(){
 
 /* ---------- análisis: tarjetas de resumen ---------- */
 function renderAnalisis(){
-  // Catálogo: unidades y valor en stock (se ignoran los productos "sin límite")
-  let unidadesStock = 0, valorStock = 0;
+  // Unidades en stock: solo cuenta si el producto tiene un número de stock cargado
+  // (no se puede contar unidades de algo marcado "Sin límite").
+  let unidadesStock = 0;
+  // Valor del catálogo: la suma de los precios, uno por producto (o por variante),
+  // sin depender de si tienen stock cargado o no — así los "Sin límite" también suman.
+  let valorCatalogo = 0;
   Object.values(productos).forEach(p => {
     if (tieneVariantes(p)){
       p.variantes.forEach((v, i) => {
         const st = varianteStock(p, i);
-        if (st !== Infinity){ unidadesStock += st; valorStock += st * precioFinal(p); }
+        if (st !== Infinity) unidadesStock += st;
+        valorCatalogo += precioFinal(p);
       });
     } else {
       const st = stockDisponible(p);
-      if (st !== Infinity){ unidadesStock += st; valorStock += st * precioFinal(p); }
+      if (st !== Infinity) unidadesStock += st;
+      valorCatalogo += precioFinal(p);
     }
   });
 
@@ -2030,11 +2036,11 @@ function renderAnalisis(){
 
   $("#kpiTotalProductos").textContent = Object.keys(productos).length;
   $("#kpiUnidadesStock").textContent = unidadesStock;
-  $("#kpiValorStock").textContent = plata(valorStock);
+  $("#kpiValorStock").textContent = plata(valorCatalogo);
   $("#kpiUnidadesVendidas").textContent = unidadesVendidas;
   $("#kpiTotalVendido").textContent = plata(totalVendido);
   $("#kpiUnidadesFaltan").textContent = Math.max(0, unidadesStock - unidadesVendidas);
-  $("#kpiValorFaltan").textContent = plata(Math.max(0, valorStock - totalVendido));
+  $("#kpiValorFaltan").textContent = plata(Math.max(0, valorCatalogo - totalVendido));
 }
 
 /* ---------- ajustes: guardar ---------- */
