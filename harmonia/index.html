@@ -331,6 +331,8 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .btn-qr[hidden]{display:none}
 .total-qr{font-family:"Playfair Display",serif;font-size:30px;font-weight:700;color:var(--oliva-osc);margin:0 0 14px}
 .nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
+.input-nombre-carrito{width:100%;font:inherit;font-size:13.5px;padding:10px 12px;border-radius:10px;
+  border:1px solid var(--linea);background:var(--crema);color:var(--tinta);margin-bottom:12px;box-sizing:border-box}
 
 /* ---------- admin ---------- */
 .acciones-header{display:flex;align-items:center;gap:10px}
@@ -664,6 +666,7 @@ footer.pie b{color:var(--tinta)}
   </div>
   <div class="carrito-lista" id="carritoLista"></div>
   <div class="carrito-pie">
+    <input type="text" id="nombreClienteCarrito" class="input-nombre-carrito" placeholder="Nombre y apellido">
     <div class="fila-total fila-envio" id="filaEnvioCarrito" hidden><span>Envío</span><b id="envioCarrito">$0</b></div>
     <div class="fila-total"><span>Total estimado</span><b id="totalCarrito">$0</b></div>
     <button class="btn-whatsapp" id="btnEnviarPedido" type="button">
@@ -1324,6 +1327,7 @@ function mostrarExitoMP(orderId, pedido){
   renderCarrito();
   renderGrid();
   renderOfertas();
+  $("#nombreClienteCarrito").value = "";
   $("#estadoMP").hidden = true;
   $("#contenidoMP").hidden = true;
   $("#exitoMP").hidden = false;
@@ -1338,6 +1342,8 @@ function mostrarExitoMP(orderId, pedido){
 $("#btnPagarMP").onclick = async () => {
   const { claves, total, envio } = calcularTotalCarrito();
   if (!claves.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
+  const cliente = $("#nombreClienteCarrito").value.trim();
+  if (!cliente){ mostrarToast("Escribí tu nombre y apellido antes de pagar."); $("#nombreClienteCarrito").focus(); return; }
   dejarDeEscucharMP();
   $("#totalMPModal").textContent = plata(total);
   $("#estadoMP").hidden = false;
@@ -1360,7 +1366,7 @@ $("#btnPagarMP").onclick = async () => {
     const r = await fetch(`${MP_BACKEND}/crearPreferencia`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, envio, total })
+      body: JSON.stringify({ items, envio, total, cliente })
     });
     const data = await r.json();
     if (!r.ok || !data.initPoint) throw new Error(data.error || "Error");
@@ -1409,7 +1415,9 @@ $("#btnEnviarPedido").onclick = () => {
     return `• ${nombreCompleto} x${cant} — ${plata(totalLinea(p, cant))}${detalle}`;
   });
   const lineaEnvio = envio > 0 ? `\nEnvío: ${plata(envio)}` : "";
-  const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineas.join("\n")}\n${lineaEnvio}\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
+  const cliente = $("#nombreClienteCarrito").value.trim();
+  const lineaCliente = cliente ? `Nombre: ${cliente}\n` : "";
+  const msg = `${config.saludo || "¡Hola Harmonia! Quiero hacer este pedido:"}\n\n${lineaCliente}${lineas.join("\n")}\n${lineaEnvio}\nTotal estimado: ${plata(total)}\n\n(Coordinamos nombre, dirección y forma de pago por acá)`;
   window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
 };
 
@@ -1948,9 +1956,8 @@ function renderPedidos(){
     const fecha = p.fecha ? new Date(p.fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
     const resumen = (p.items || []).map(it => `${esc(it.nombre)} x${it.cantidad}`).join(", ") || "—";
     const estadoTxt = p.estado === "pagado" ? "Pagado" : p.estado === "pendiente" ? "Pendiente" : esc(p.estado || "?");
-    const quien = p.pagador || p.pagadorEmail
-      ? `<span class="pagador-pedido">👤 ${esc(p.pagador || p.pagadorEmail)}</span>`
-      : "";
+    const nombreQuien = p.cliente || p.pagador || p.pagadorEmail;
+    const quien = nombreQuien ? `<span class="pagador-pedido">👤 ${esc(nombreQuien)}</span>` : "";
     return `<div class="fila-pedido">
       <span class="estado-pedido estado-${esc(p.estado || "pendiente")}">${estadoTxt}</span>
       <div class="info-pedido"><b>${plata(p.total || 0)}</b>${quien}<span>${resumen}</span><span class="cuando">${fecha}</span></div>

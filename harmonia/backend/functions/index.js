@@ -80,7 +80,7 @@ exports.crearPreferencia = onRequest({ secrets: [MP_ACCESS_TOKEN], cors: true },
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
 
   try {
-    const { items, envio, total } = req.body || {};
+    const { items, envio, total, cliente } = req.body || {};
     if (!Array.isArray(items) || !items.length || !(total > 0)) {
       return res.status(400).json({ error: "Carrito inválido" });
     }
@@ -89,9 +89,11 @@ exports.crearPreferencia = onRequest({ secrets: [MP_ACCESS_TOKEN], cors: true },
 
     // Guardamos el pedido como "pendiente" ANTES de mandarlo a Mercado Pago,
     // así el detalle completo (nombres, variantes, cantidades) queda en nuestra
-    // base pase lo que pase con el pago.
+    // base pase lo que pase con el pago. El nombre del cliente lo escribe él
+    // mismo en el carrito — es más confiable que lo que devuelve Mercado Pago.
     await rtdbSet(`${RUTA}/pedidos/${orderId}`, {
       items, envio: envio || 0, total,
+      cliente: String(cliente || "").trim().slice(0, 120) || null,
       estado: "pendiente",
       fecha: Date.now()
     });
