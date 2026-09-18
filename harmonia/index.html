@@ -331,8 +331,15 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .btn-qr[hidden]{display:none}
 .total-qr{font-family:"Playfair Display",serif;font-size:30px;font-weight:700;color:var(--oliva-osc);margin:0 0 14px}
 .nota-pie{font-size:11px;color:var(--tinta-suave);text-align:center;margin:10px 0 0}
+.label-nombre-carrito{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--oliva-osc);margin-bottom:6px}
 .input-nombre-carrito{width:100%;font:inherit;font-size:13.5px;padding:10px 12px;border-radius:10px;
   border:1px solid var(--linea);background:var(--crema);color:var(--tinta);margin-bottom:12px;box-sizing:border-box}
+.items-mp-modal{text-align:left;background:var(--crema-osc);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.items-mp-modal .fila-item-mp{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0}
+.items-mp-modal .fila-item-mp:not(:last-child){border-bottom:1px solid var(--linea)}
+.items-mp-modal .fila-item-mp span:first-child{color:var(--tinta)}
+.items-mp-modal .fila-item-mp b{flex:none;color:var(--tinta-suave);font-weight:600}
 
 /* ---------- admin ---------- */
 .acciones-header{display:flex;align-items:center;gap:10px}
@@ -666,6 +673,7 @@ footer.pie b{color:var(--tinta)}
   </div>
   <div class="carrito-lista" id="carritoLista"></div>
   <div class="carrito-pie">
+    <label for="nombreClienteCarrito" class="label-nombre-carrito">Ingresá tu nombre para pagar</label>
     <input type="text" id="nombreClienteCarrito" class="input-nombre-carrito" placeholder="Nombre y apellido">
     <div class="fila-total fila-envio" id="filaEnvioCarrito" hidden><span>Envío</span><b id="envioCarrito">$0</b></div>
     <div class="fila-total"><span>Total estimado</span><b id="totalCarrito">$0</b></div>
@@ -696,6 +704,7 @@ footer.pie b{color:var(--tinta)}
   <div class="caja-modal">
     <div class="modal-cab"><h2>Pagá con Mercado Pago</h2><button class="cerrar" id="cerrarMP" type="button">✕</button></div>
     <div class="modal-cuerpo" style="text-align:center">
+      <div id="itemsMPModal" class="items-mp-modal"></div>
       <p class="total-qr" id="totalMPModal">$0</p>
       <div id="estadoMP">
         <p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>
@@ -707,7 +716,7 @@ footer.pie b{color:var(--tinta)}
       </div>
       <div id="exitoMP" hidden>
         <div style="font-size:42px;margin-bottom:4px">🎉</div>
-        <h3 style="font-family:'Playfair Display',serif;font-size:19px;margin:0 0 8px">¡Gracias por tu compra!</h3>
+        <h3 id="tituloExitoMP" style="font-family:'Playfair Display',serif;font-size:19px;margin:0 0 8px">¡Gracias por tu compra!</h3>
         <p style="font-size:13px;color:var(--tinta-suave);margin-bottom:18px">Tu pago se acreditó y el pedido ya quedó registrado.</p>
         <button class="btn-whatsapp" id="btnComprobanteWA" type="button" style="margin-bottom:10px">Enviar comprobante por WhatsApp</button>
         <button class="btn-ghost" id="btnCerrarExitoMP" type="button">Cerrar</button>
@@ -1331,6 +1340,8 @@ function mostrarExitoMP(orderId, pedido){
   $("#estadoMP").hidden = true;
   $("#contenidoMP").hidden = true;
   $("#exitoMP").hidden = false;
+  const primerNombre = pedido.cliente ? pedido.cliente.trim().split(/\s+/)[0] : "";
+  $("#tituloExitoMP").textContent = primerNombre ? `¡Gracias por tu compra, ${primerNombre}!` : "¡Gracias por tu compra!";
   const resumen = (pedido.items || []).map(it => `• ${it.nombre} x${it.cantidad}`).join("\n");
   const msg = `¡Hola! Te paso el comprobante de mi pedido pagado por Mercado Pago 🧾\n\n${resumen}\n${pedido.envio > 0 ? `Envío: ${plata(pedido.envio)}\n` : ""}Total: ${plata(pedido.total)}\n\n(Pedido #${orderId.slice(-6)})`;
   $("#btnComprobanteWA").onclick = () => {
@@ -1345,13 +1356,6 @@ $("#btnPagarMP").onclick = async () => {
   const cliente = $("#nombreClienteCarrito").value.trim();
   if (!cliente){ mostrarToast("Escribí tu nombre y apellido antes de pagar."); $("#nombreClienteCarrito").focus(); return; }
   dejarDeEscucharMP();
-  $("#totalMPModal").textContent = plata(total);
-  $("#estadoMP").hidden = false;
-  $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>`;
-  $("#contenidoMP").hidden = true;
-  $("#exitoMP").hidden = true;
-  $("#modalMP").classList.add("abierto");
-
   const items = claves.map(clave => {
     const p = productoDeClave(clave);
     const nombreVar = nombreVarianteDeClave(clave);
@@ -1361,6 +1365,16 @@ $("#btnPagarMP").onclick = async () => {
       precioUnitario: precioFinal(p)
     };
   });
+
+  $("#itemsMPModal").innerHTML = items.map(it =>
+    `<div class="fila-item-mp"><span>${esc(it.nombre)}</span><b>x${it.cantidad}</b></div>`
+  ).join("");
+  $("#totalMPModal").textContent = plata(total);
+  $("#estadoMP").hidden = false;
+  $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>`;
+  $("#contenidoMP").hidden = true;
+  $("#exitoMP").hidden = true;
+  $("#modalMP").classList.add("abierto");
 
   try {
     const r = await fetch(`${MP_BACKEND}/crearPreferencia`, {
