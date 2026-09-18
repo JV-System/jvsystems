@@ -130,10 +130,16 @@ exports.webhookMercadoPago = onRequest({ secrets: [MP_ACCESS_TOKEN] }, async (re
     if (pago.status === "approved") {
       const pedido = await rtdbGet(`${RUTA}/pedidos/${orderId}`);
       if (pedido && pedido.estado !== "pagado") {
+        const nombrePagador =
+          pago.card?.cardholder?.name ||
+          [pago.payer?.first_name, pago.payer?.last_name].filter(Boolean).join(" ") ||
+          null;
         await rtdbUpdate(`${RUTA}/pedidos/${orderId}`, {
           estado: "pagado",
           pagadoEn: Date.now(),
-          mpPaymentId: paymentId
+          mpPaymentId: paymentId,
+          pagador: nombrePagador,
+          pagadorEmail: pago.payer?.email || null
         });
       }
     } else {
