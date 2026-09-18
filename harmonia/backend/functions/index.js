@@ -12,6 +12,8 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 
 const MP_ACCESS_TOKEN = defineSecret("MP_ACCESS_TOKEN");
+// .trim() por las dudas de que haya quedado un espacio/salto de línea al pegar el token.
+function mpToken(){ return MP_ACCESS_TOKEN.value().trim(); }
 
 const RTDB_BASE = "https://sabores-misiones-default-rtdb.firebaseio.com";
 const RUTA = "harmonia";
@@ -85,7 +87,7 @@ exports.crearPreferencia = onRequest({ secrets: [MP_ACCESS_TOKEN], cors: true },
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${MP_ACCESS_TOKEN.value()}`
+        "Authorization": `Bearer ${mpToken()}`
       },
       body: JSON.stringify({
         items: itemsMp,
@@ -118,7 +120,7 @@ exports.webhookMercadoPago = onRequest({ secrets: [MP_ACCESS_TOKEN] }, async (re
 
     // Nunca confiamos en lo que dice el aviso: volvemos a preguntarle a Mercado Pago.
     const pagoResp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: { "Authorization": `Bearer ${MP_ACCESS_TOKEN.value()}` }
+      headers: { "Authorization": `Bearer ${mpToken()}` }
     });
     if (!pagoResp.ok) return res.status(200).send("no encontrado");
     const pago = await pagoResp.json();
