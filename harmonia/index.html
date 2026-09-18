@@ -701,6 +701,13 @@ footer.pie b{color:var(--tinta)}
         <a id="linkMP" class="btn-full" href="#" target="_blank" rel="noopener" style="display:block;text-decoration:none;box-sizing:border-box">Abrir Mercado Pago</a>
         <p style="font-size:12px;color:var(--tinta-suave);margin-top:14px">Escaneá el código o tocá el botón. Cuando se acredite el pago, tu pedido queda registrado solo — no hace falta que nos avises.</p>
       </div>
+      <div id="exitoMP" hidden>
+        <div style="font-size:42px;margin-bottom:4px">🎉</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:19px;margin:0 0 8px">¡Gracias por tu compra!</h3>
+        <p style="font-size:13px;color:var(--tinta-suave);margin-bottom:18px">Tu pago se acreditó y el pedido ya quedó registrado.</p>
+        <button class="btn-whatsapp" id="btnComprobanteWA" type="button" style="margin-bottom:10px">Enviar comprobante por WhatsApp</button>
+        <button class="btn-ghost" id="btnCerrarExitoMP" type="button">Cerrar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1288,6 +1295,7 @@ function cerrarPaneles(){
   $("#modalAdmin").classList.remove("abierto");
   $("#modalQR").classList.remove("abierto");
   $("#modalMP").classList.remove("abierto");
+  dejarDeEscucharMP();
   $("#sidebarFiltros").classList.remove("abierto");
 }
 $("#btnAbrirCarrito").onclick = abrirCarrito;
@@ -1304,13 +1312,37 @@ $("#btnPagarQR").onclick = () => {
 };
 $("#cerrarQR").onclick = () => $("#modalQR").classList.remove("abierto");
 
+let refPedidoMP = null;
+function dejarDeEscucharMP(){
+  if (refPedidoMP){ refPedidoMP.off(); refPedidoMP = null; }
+}
+function mostrarExitoMP(orderId, pedido){
+  dejarDeEscucharMP();
+  carrito = {};
+  guardarCarritoLocal();
+  renderCarrito();
+  renderGrid();
+  renderOfertas();
+  $("#estadoMP").hidden = true;
+  $("#contenidoMP").hidden = true;
+  $("#exitoMP").hidden = false;
+  const resumen = (pedido.items || []).map(it => `• ${it.nombre} x${it.cantidad}`).join("\n");
+  const msg = `¡Hola! Te paso el comprobante de mi pedido pagado por Mercado Pago 🧾\n\n${resumen}\n${pedido.envio > 0 ? `Envío: ${plata(pedido.envio)}\n` : ""}Total: ${plata(pedido.total)}\n\n(Pedido #${orderId.slice(-6)})`;
+  $("#btnComprobanteWA").onclick = () => {
+    const num = numeroWhatsapp();
+    if (!num){ avisoSinWhatsapp(); return; }
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+}
 $("#btnPagarMP").onclick = async () => {
   const { claves, total, envio } = calcularTotalCarrito();
   if (!claves.length){ mostrarToast("Agregá al menos un producto a tu pedido."); return; }
+  dejarDeEscucharMP();
   $("#totalMPModal").textContent = plata(total);
   $("#estadoMP").hidden = false;
   $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--tinta-suave)">Generando el pago…</p>`;
   $("#contenidoMP").hidden = true;
+  $("#exitoMP").hidden = true;
   $("#modalMP").classList.add("abierto");
 
   const items = claves.map(clave => {
@@ -1336,12 +1368,21 @@ $("#btnPagarMP").onclick = async () => {
     $("#linkMP").href = data.initPoint;
     $("#estadoMP").hidden = true;
     $("#contenidoMP").hidden = false;
+
+    refPedidoMP = db.ref(`${RUTA}/pedidos/${data.orderId}`);
+    refPedidoMP.on("value", snap => {
+      const pedido = snap.val();
+      if (pedido && pedido.estado === "pagado" && $("#modalMP").classList.contains("abierto")){
+        mostrarExitoMP(data.orderId, pedido);
+      }
+    });
   } catch (e) {
     console.error(e);
     $("#estadoMP").innerHTML = `<p style="font-size:13px;color:var(--rojo)">No se pudo iniciar el pago. Probá de nuevo en un momento o hacé el pedido por WhatsApp.</p>`;
   }
 };
-$("#cerrarMP").onclick = () => $("#modalMP").classList.remove("abierto");
+$("#cerrarMP").onclick = () => { dejarDeEscucharMP(); $("#modalMP").classList.remove("abierto"); };
+$("#btnCerrarExitoMP").onclick = () => { dejarDeEscucharMP(); $("#modalMP").classList.remove("abierto"); };
 
 /* ---------- WhatsApp ---------- */
 function numeroWhatsapp(){
