@@ -469,6 +469,10 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .tarjeta-kpi{background:var(--crema-osc);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:5px}
 .valor-kpi{font-family:"Playfair Display",serif;font-size:23px;font-weight:700;color:var(--oliva-osc);word-break:break-word}
 .etiqueta-kpi{font-size:11px;color:var(--tinta-suave);font-weight:600;letter-spacing:.02em}
+.fila-comprador{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea);flex-wrap:wrap}
+.info-comprador{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--tinta-suave)}
+.info-comprador b{color:var(--tinta);font-size:14px}
+.info-comprador .cuando{font-size:11.5px}
 .bloque-oferta[hidden]{display:none}
 .tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
 .tipo-oferta-btn{flex:1;background:var(--papel);border:1.5px solid var(--linea);border-radius:9px;
@@ -848,9 +852,13 @@ footer.pie b{color:var(--tinta)}
         <div class="grid-tarjetas">
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiUnidadesVendidas">0</span><span class="etiqueta-kpi">Unidades vendidas</span></div>
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiTotalVendido">$0</span><span class="etiqueta-kpi">Total vendido</span></div>
+          <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiPorcentajeVendido">0%</span><span class="etiqueta-kpi">% del catálogo vendido</span></div>
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiUnidadesFaltan">0</span><span class="etiqueta-kpi">Unidades por vender</span></div>
           <div class="tarjeta-kpi"><span class="valor-kpi" id="kpiValorFaltan">$0</span><span class="etiqueta-kpi">Valor por vender</span></div>
         </div>
+
+        <h3 class="titulo-ajustes" style="margin-top:26px">Compradores <span id="contadorCompradores"></span></h3>
+        <div id="listaCompradores"></div>
       </div>
 
       <div class="pestana-admin" id="tabAjustes">
@@ -2028,19 +2036,42 @@ function renderAnalisis(){
 
   // Ventas: solo lo pagado por Mercado Pago (no hay registro de lo coordinado por WhatsApp)
   let unidadesVendidas = 0, totalVendido = 0;
+  const compradores = {}; // nombre -> { total, pedidos, ultima }
   Object.values(pedidos).forEach(p => {
     if (p.estado !== "pagado") return;
     totalVendido += p.total || 0;
     (p.items || []).forEach(it => { unidadesVendidas += it.cantidad || 0; });
+    const nombre = p.cliente || p.pagador || p.pagadorEmail || "Sin nombre";
+    if (!compradores[nombre]) compradores[nombre] = { total: 0, pedidos: 0, ultima: 0 };
+    compradores[nombre].total += p.total || 0;
+    compradores[nombre].pedidos += 1;
+    compradores[nombre].ultima = Math.max(compradores[nombre].ultima, p.pagadoEn || p.fecha || 0);
   });
+
+  const porcentajeVendido = valorCatalogo > 0 ? Math.min(100, (totalVendido / valorCatalogo) * 100) : 0;
 
   $("#kpiTotalProductos").textContent = Object.keys(productos).length;
   $("#kpiUnidadesStock").textContent = unidadesStock;
   $("#kpiValorStock").textContent = plata(valorCatalogo);
   $("#kpiUnidadesVendidas").textContent = unidadesVendidas;
   $("#kpiTotalVendido").textContent = plata(totalVendido);
+  $("#kpiPorcentajeVendido").textContent = `${porcentajeVendido.toFixed(1).replace(/\.0$/, "")}%`;
   $("#kpiUnidadesFaltan").textContent = Math.max(0, unidadesStock - unidadesVendidas);
   $("#kpiValorFaltan").textContent = plata(Math.max(0, valorCatalogo - totalVendido));
+
+  const listaCompradores = Object.entries(compradores).sort((a, b) => b[1].ultima - a[1].ultima);
+  $("#contadorCompradores").textContent = listaCompradores.length ? `(${listaCompradores.length})` : "";
+  $("#listaCompradores").innerHTML = listaCompradores.length
+    ? listaCompradores.map(([nombre, c]) => `
+      <div class="fila-comprador">
+        <span class="pagador-pedido">👤 ${esc(nombre)}</span>
+        <div class="info-comprador">
+          <b>${plata(c.total)}</b>
+          <span>${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"}</span>
+          <span class="cuando">${c.ultima ? new Date(c.ultima).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : ""}</span>
+        </div>
+      </div>`).join("")
+    : `<p style="color:var(--tinta-suave);font-size:13px">Todavía no compró nadie por acá.</p>`;
 }
 
 /* ---------- ajustes: guardar ---------- */
