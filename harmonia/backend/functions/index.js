@@ -15,17 +15,26 @@ const MP_ACCESS_TOKEN = defineSecret("MP_ACCESS_TOKEN");
 // .trim() por las dudas de que haya quedado un espacio/salto de línea al pegar el token.
 function mpToken(){ return MP_ACCESS_TOKEN.value().trim(); }
 
-// El nombre del pagador puede venir de distintos lugares según cómo pagó:
-// - tarjeta de invitado: card.cardholder.name
-// - cuenta de Mercado Pago (QR/wallet, lo más común): viene oculto en payer,
-//   pero Mercado Pago arma la descripción como "Producto de <Nombre>".
-function extraerNombrePagador(pago){
+// El nombre de quien PAGA (no el de quien cobra). Ojo: pago.description
+// ("Producto de <Nombre>") es el nombre del VENDEDOR, no del comprador — no usar esa.
+// Cuando paga con su cuenta de Mercado Pago (QR/wallet), Mercado Pago oculta el
+// nombre real por privacidad y solo da su id — ahí se busca su nickname público.
+async function extraerNombrePagador(pago){
   const deTarjeta = pago.card?.cardholder?.name;
   if (deTarjeta) return deTarjeta;
   const dePayer = [pago.payer?.first_name, pago.payer?.last_name].filter(Boolean).join(" ");
   if (dePayer) return dePayer;
-  const m = /^Producto de (.+)$/i.exec(pago.description || "");
-  if (m) return m[1].trim();
+  if (pago.payer?.id) {
+    try {
+      const r = await fetch(`https://api.mercadopago.com/users/${pago.payer.id}`, {
+        headers: { "Authorization": `Bearer ${mpToken()}` }
+      });
+      if (r.ok) {
+        const u = await r.json();
+        if (u.nickname) return u.nickname;
+      }
+    } catch (e) { console.error("No se pudo obtener el nickname del comprador:", e); }
+  }
   return null;
 }
 
@@ -144,7 +153,7 @@ exports.webhookMercadoPago = onRequest({ secrets: [MP_ACCESS_TOKEN] }, async (re
     if (pago.status === "approved") {
       const pedido = await rtdbGet(`${RUTA}/pedidos/${orderId}`);
       if (pedido && pedido.estado !== "pagado") {
-        const nombrePagador = extraerNombrePagador(pago);
+        const nombrePagador = await extraerNombrePagador(pago);
         await rtdbUpdate(`${RUTA}/pedidos/${orderId}`, {
           estado: "pagado",
           pagadoEn: Date.now(),
