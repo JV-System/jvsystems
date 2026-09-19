@@ -942,6 +942,49 @@
     }
     .sol-cta-btn:hover { opacity: .88; transform: translateY(-2px); }
 
+    /* ── PORTAFOLIO DE SISTEMAS ── */
+    .portfolio-section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+    .pf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    @media (max-width: 1024px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .pf-grid { grid-template-columns: 1fr; } .portfolio-section { padding: 3.5rem 1.25rem; } }
+    .pf-card {
+      background: var(--card-bg); border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius); padding: 1.5rem;
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .pf-card:hover { border-color: rgba(255,140,0,.3); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,.4); }
+    .pf-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .9rem; }
+    .pf-icon { font-size: 1.75rem; line-height: 1; }
+    .pf-badge {
+      font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      padding: .25rem .6rem; border-radius: 99px; white-space: nowrap;
+      background: rgba(52,211,153,.12); color: #34d399; border: 1px solid rgba(52,211,153,.3);
+    }
+    .pf-badge.demo { background: rgba(255,140,0,.12); color: var(--accent); border-color: rgba(255,140,0,.3); }
+    .pf-badge.ind  { background: rgba(96,165,250,.12); color: #60a5fa; border-color: rgba(96,165,250,.3); }
+    .pf-rubro { font-size: .7rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+    .pf-card h3 { font-size: 1.02rem; font-weight: 800; margin-bottom: .5rem; color: var(--white); }
+    .pf-card p { font-size: .82rem; color: rgba(255,255,255,.55); line-height: 1.6; margin-bottom: .9rem; }
+    .pf-card ul { list-style: none; display: flex; flex-direction: column; gap: .3rem; margin-bottom: 1rem; }
+    .pf-card ul li { font-size: .78rem; color: rgba(255,255,255,.5); padding-left: .85rem; position: relative; line-height: 1.4; }
+    .pf-card ul li::before { content: '·'; position: absolute; left: 0; color: var(--accent); font-weight: 900; }
+    .pf-tech { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: auto; }
+    .pf-tech span {
+      font-size: .66rem; font-weight: 600; color: rgba(255,255,255,.6);
+      padding: .2rem .55rem; border-radius: 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+    }
+    .pf-link { display: inline-block; margin-top: .9rem; font-size: .8rem; font-weight: 800; color: var(--accent); text-decoration: none; }
+    .pf-link:hover { text-decoration: underline; }
+    .pf-clientes { margin-top: 3rem; text-align: center; }
+    .pf-clientes h3 { font-size: 1.1rem; font-weight: 900; margin-bottom: .4rem; }
+    .pf-clientes > p { font-size: .87rem; color: rgba(255,255,255,.5); margin-bottom: 1.25rem; }
+    .pf-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; max-width: 900px; margin: 0 auto 2rem; }
+    .pf-chip {
+      font-size: .82rem; font-weight: 600; padding: .5rem 1rem; border-radius: 99px;
+      background: var(--card-bg); border: 1px solid var(--border); color: rgba(255,255,255,.85);
+    }
+
     /* ── LIGHTBOX ── */
     .lb-overlay {
       position: fixed; inset: 0; z-index: 1000;
@@ -1535,6 +1578,7 @@
   <div class="nav-links">
     <a href="#sobre" data-i18n="nav.sobre">Sobre mí</a>
     <a href="#casos" data-i18n="nav.casos">Casos de éxito</a>
+    <a href="#sistemas" data-i18n="nav.sis">Sistemas</a>
     <a href="#marcacion" data-i18n="nav.marc">Marcación</a>
     <a href="#bi" data-i18n="nav.bi">Dashboards</a>
     <a href="#proceso" data-i18n="nav.proceso">Proceso</a>
@@ -1555,6 +1599,7 @@
 <div class="nav-mobile-menu" id="navMobileMenu">
   <a href="#sobre"    data-i18n="nav.sobre" onclick="cerrarMenu()">Sobre mí</a>
   <a href="#casos"    data-i18n="nav.casos" onclick="cerrarMenu()">Casos de éxito</a>
+  <a href="#sistemas" data-i18n="nav.sis" onclick="cerrarMenu()">Sistemas</a>
   <a href="#marcacion" data-i18n="nav.marc" onclick="cerrarMenu()">Marcación</a>
   <a href="#bi"       data-i18n="nav.bi" onclick="cerrarMenu()">Dashboards</a>
   <a href="#proceso"  data-i18n="nav.proceso" onclick="cerrarMenu()">Proceso</a>
@@ -1862,6 +1907,109 @@
   </div>
 </section>
 
+<!-- SISTEMAS QUE YA CONSTRUÍ (PORTAFOLIO) -->
+<section class="portfolio-section" id="sistemas">
+  <div class="section-header reveal">
+    <span class="section-tag" data-i18n="sis.tag">— Portafolio</span>
+    <h2 data-i18n="sis.title">Sistemas que ya <em style="font-style:normal;color:var(--accent)">construí</em></h2>
+    <p data-i18n="sis.desc">Desde una app de campo hasta un panel conectado a un PLC. Cada proyecto nació de un problema real y se adaptó a la forma de trabajar de cada cliente.</p>
+  </div>
+
+  <div class="pf-grid">
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">📋</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c1.r">Servicios técnicos</div>
+      <h3 data-i18n="sis.c1.h">Órdenes de servicio y facturación</h3>
+      <p data-i18n="sis.c1.p">De la visita en campo a la factura, sin papel: el técnico carga la orden desde el celular, el cliente firma en pantalla y facturación emite el comprobante.</p>
+      <ul data-i18n="sis.c1.li"><li>Firma digital y PDF por WhatsApp o email</li><li>Facturación electrónica AFIP integrada con Xubio</li><li>Roles, calendario de planificación e historial de cambios</li></ul>
+      <div class="pf-tech"><span>PWA</span><span>Firebase</span><span>Xubio</span><span>Apps Script</span></div>
+      <a href="/ordenpro/" target="_blank" rel="noopener" class="pf-link" data-i18n="sis.demo">▶ Ver demo →</a>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🛒</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c2.r">Comercio y e-commerce</div>
+      <h3 data-i18n="sis.c2.h">Tienda online con cobros</h3>
+      <p data-i18n="sis.c2.p">Catálogo con carrito y pago online integrado, más un panel para saber qué se vende y a quién.</p>
+      <ul data-i18n="sis.c2.li"><li>Cobro con Mercado Pago y confirmación automática del pedido</li><li>Catálogo, precios y stock administrables</li><li>Panel de análisis: ventas, % del catálogo vendido y compradores</li></ul>
+      <div class="pf-tech"><span>Mercado Pago</span><span>Cloud Functions</span><span>Webhooks</span><span>Firebase</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🚚</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c3.r">Alimentos y distribución</div>
+      <h3 data-i18n="sis.c3.h">Pedidos y reparto</h3>
+      <p data-i18n="sis.c3.p">Gestión de pedidos de punta a punta, con flota, mapa de reparto y un tablero comercial para decidir con datos.</p>
+      <ul data-i18n="sis.c3.li"><li>Pedidos numerados, con estados y comprobantes</li><li>Vehículos y entregas sobre mapa</li><li>Dashboard de ventas y análisis 360°</li></ul>
+      <div class="pf-tech"><span>Web app</span><span>Apps Script</span><span>Dashboards</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🕒</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c4.r">Recursos humanos</div>
+      <h3 data-i18n="sis.c4.h">Marcación laboral y control de horas</h3>
+      <p data-i18n="sis.c4.p">Cada empleado marca desde su celular; RR.HH. ve las horas y las asigna a proyectos y órdenes de trabajo.</p>
+      <ul data-i18n="sis.c4.li"><li>Geolocalización y verificación opcional por cámara</li><li>Reportes de horas automáticos</li><li>Asignación de horas a proyectos y OT</li><li>Acceso según rol: empleado, supervisor, admin</li></ul>
+      <div class="pf-tech"><span>PWA</span><span>Geolocalización</span><span>Apps Script</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">✂️</span><span class="pf-badge demo" data-i18n="sis.b.demo">Demo</span></div>
+      <div class="pf-rubro" data-i18n="sis.c5.r">Belleza y servicios con agenda</div>
+      <h3 data-i18n="sis.c5.h">Turnos y reservas online</h3>
+      <p data-i18n="sis.c5.p">El cliente reserva desde el celular y el dueño maneja su agenda, con seña y política de cancelación.</p>
+      <ul data-i18n="sis.c5.li"><li>Reserva en pocos toques, sin instalar nada</li><li>Agenda y bloqueos para el dueño</li><li>Seña y cancelación configurables</li><li>Marca blanca: nombre, dirección y WhatsApp propios</li></ul>
+      <div class="pf-tech"><span>Web app</span><span>Mobile first</span><span>Marca blanca</span></div>
+      <a href="/barberpro/" target="_blank" rel="noopener" class="pf-link" data-i18n="sis.demo">▶ Ver demo →</a>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🎉</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c6.r">Eventos y comunidades</div>
+      <h3 data-i18n="sis.c6.h">Gestión de eventos masivos</h3>
+      <p data-i18n="sis.c6.p">Devociones, cobros, planificación y recepción de un evento con mucha gente, en una sola app compartida por todo el equipo.</p>
+      <ul data-i18n="sis.c6.li"><li>Registro de participantes y cobros</li><li>Planificación y recepción el día del evento</li><li>Varios usuarios trabajando en simultáneo</li></ul>
+      <div class="pf-tech"><span>Web app</span><span>Firebase</span><span>Tiempo real</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🏭</span><span class="pf-badge ind" data-i18n="sis.b.ind">Industrial</span></div>
+      <div class="pf-rubro" data-i18n="sis.c7.r">Industria 4.0</div>
+      <h3 data-i18n="sis.c7.h">HMI web conectado a PLC</h3>
+      <p data-i18n="sis.c7.p">Panel tipo SCADA para operar y monitorear equipos industriales desde el navegador, conectado al PLC por OPC UA.</p>
+      <ul data-i18n="sis.c7.li"><li>Monitoreo y comandos de varios shuttles en tiempo real</li><li>Puente PLC Siemens ↔ sistema de gestión (ECS)</li><li>Simuladores para probar sin tocar la planta</li></ul>
+      <div class="pf-tech"><span>Python</span><span>OPC UA</span><span>Siemens PLC</span><span>REST API</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">🛡️</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
+      <div class="pf-rubro" data-i18n="sis.c8.r">Administración</div>
+      <h3 data-i18n="sis.c8.h">Paneles de control y accesos por rol</h3>
+      <p data-i18n="sis.c8.p">Un panel exclusivo para administradores desde donde se gestionan usuarios, permisos y los sistemas de la empresa.</p>
+      <ul data-i18n="sis.c8.li"><li>Login único con acceso según rol</li><li>Alta de usuarios, técnicos y clientes</li><li>Historial de quién modificó qué y cuándo</li></ul>
+      <div class="pf-tech"><span>Web app</span><span>Roles</span><span>Firebase</span></div>
+    </div>
+
+    <div class="pf-card reveal">
+      <div class="pf-top"><span class="pf-icon">💰</span><span class="pf-badge demo" data-i18n="sis.b.tool">Herramienta</span></div>
+      <div class="pf-rubro" data-i18n="sis.c9.r">Finanzas</div>
+      <h3 data-i18n="sis.c9.h">Planificador financiero</h3>
+      <p data-i18n="sis.c9.p">Proyección mensual de ingresos y gastos con alertas y balance acumulado, para saber cómo va a cerrar cada mes.</p>
+      <ul data-i18n="sis.c9.li"><li>Panorama del mes y gastos por categoría</li><li>Alertas y supuestos configurables</li><li>Balance proyectado y ahorro acumulado</li></ul>
+      <div class="pf-tech"><span>Web app</span><span>Gráficos</span><span>Proyecciones</span></div>
+    </div>
+
+  </div>
+
+  <div class="pf-clientes reveal">
+    <h3 data-i18n="sis.cli.h">Para cualquier rubro y cualquier tamaño de negocio</h3>
+    <p data-i18n="sis.cli.p">Si tu proceso hoy vive en Excel, WhatsApp o papel, se puede convertir en un sistema.</p>
+    <div class="pf-chips" data-i18n="sis.cli.chips"><span class="pf-chip">🏭 Industria y manufactura</span><span class="pf-chip">🔧 Servicios técnicos y mantenimiento</span><span class="pf-chip">🛒 Comercios y tiendas online</span><span class="pf-chip">🍽️ Gastronomía y alimentos</span><span class="pf-chip">💈 Belleza y estética</span><span class="pf-chip">🚚 Distribución y logística</span><span class="pf-chip">🎉 Eventos y comunidades</span><span class="pf-chip">🏢 Pymes y estudios profesionales</span><span class="pf-chip">🏥 Salud y consultorios</span><span class="pf-chip">🎓 Educación y capacitación</span><span class="pf-chip">🌱 Emprendedores</span></div>
+    <a href="#contacto" class="sol-cta-btn" data-i18n="sis.cta">Quiero mi sistema →</a>
+  </div>
+</section>
+
 <!-- MARCACIÓN Y CONTROL DE ASISTENCIA -->
 <section class="marcacion-section" id="marcacion">
   <div class="section-header reveal">
@@ -2069,6 +2217,50 @@
         <li>Catálogo de productos con precios y variantes</li>
         <li>Ventas por mostrador, delivery o por mayor</li>
         <li>Reportes de ventas, márgenes y productos más vendidos</li>
+      </ul>
+    </div>
+
+    <div class="sol-card reveal">
+      <div class="sol-icon">💳</div>
+      <h3 data-i18n="sol.c9.h">E-commerce y Cobros Online</h3>
+      <ul data-i18n="sol.c9.li">
+        <li>Tiendas online con carrito propio</li>
+        <li>Integración con Mercado Pago</li>
+        <li>Confirmación automática de pagos</li>
+        <li>Panel de ventas y compradores</li>
+      </ul>
+    </div>
+
+    <div class="sol-card reveal">
+      <div class="sol-icon">📅</div>
+      <h3 data-i18n="sol.c10.h">Turnos y Reservas</h3>
+      <ul data-i18n="sol.c10.li">
+        <li>Reserva online desde el celular</li>
+        <li>Agenda para el negocio</li>
+        <li>Seña y política de cancelación</li>
+        <li>Recordatorios por WhatsApp</li>
+      </ul>
+    </div>
+
+    <div class="sol-card reveal">
+      <div class="sol-icon">🔌</div>
+      <h3 data-i18n="sol.c11.h">Industria 4.0 y Conectividad</h3>
+      <ul data-i18n="sol.c11.li">
+        <li>Paneles HMI / SCADA web</li>
+        <li>Conexión con PLC por OPC UA</li>
+        <li>Puentes entre planta y sistemas de gestión</li>
+        <li>Monitoreo de equipos en tiempo real</li>
+      </ul>
+    </div>
+
+    <div class="sol-card reveal">
+      <div class="sol-icon">🎉</div>
+      <h3 data-i18n="sol.c12.h">Eventos y Comunidades</h3>
+      <ul data-i18n="sol.c12.li">
+        <li>Registro de participantes y cobros</li>
+        <li>Planificación y recepción de eventos</li>
+        <li>Gestión de socios y cuotas</li>
+        <li>Trabajo colaborativo en tiempo real</li>
       </ul>
     </div>
 
@@ -2525,7 +2717,7 @@ const META = {
 
 const I18N = {
   en: {
-    'nav.sobre': 'About', 'nav.casos': 'Success stories', 'nav.marc': 'Attendance', 'nav.bi': 'Dashboards', 'nav.proceso': 'Process', 'nav.contacto': 'Contact',
+    'nav.sobre': 'About', 'nav.casos': 'Success stories', 'nav.sis': 'Systems','nav.marc': 'Attendance', 'nav.bi': 'Dashboards', 'nav.proceso': 'Process', 'nav.contacto': 'Contact',
     'nav.cta': 'Discuss your project', 'nav.cta2': 'Discuss your project →',
 
     'hero.badge': '● Custom Systems · Digital Solutions',
@@ -2620,6 +2812,49 @@ const I18N = {
     'sol.c7.li': '<li>System integration</li><li>Excel and Google Sheets automation</li><li>Automatic report generation</li><li>Digital approval workflows</li><li>Bulk data processing</li>',
     'sol.c8.h': 'Retail & Point of Sale',
     'sol.c8.li': '<li>POS systems for supermarkets and kiosks</li><li>Real-time stock and inventory control</li><li>Cash register and daily closing management</li><li>Product catalog with prices and variants</li><li>Counter, delivery or wholesale sales</li><li>Sales, margin and best-seller reports</li>',
+    'sol.c9.h': 'E-commerce & Online Payments',
+    'sol.c9.li': '<li>Online stores with your own cart</li><li>Mercado Pago integration</li><li>Automatic payment confirmation</li><li>Sales and buyers dashboard</li>',
+    'sol.c10.h': 'Appointments & Bookings',
+    'sol.c10.li': '<li>Online booking from any phone</li><li>Agenda for the business</li><li>Deposits and cancellation policy</li><li>WhatsApp reminders</li>',
+    'sol.c11.h': 'Industry 4.0 & Connectivity',
+    'sol.c11.li': '<li>Web HMI / SCADA panels</li><li>PLC connection via OPC UA</li><li>Bridges between plant floor and management systems</li><li>Real-time equipment monitoring</li>',
+    'sol.c12.h': 'Events & Communities',
+    'sol.c12.li': '<li>Participant registration and payments</li><li>Event planning and reception</li><li>Member and fee management</li><li>Real-time collaborative work</li>',
+
+    'sis.tag': '— Portfolio', 'sis.title': 'Systems I have <em style="font-style:normal;color:var(--accent)">built</em>',
+    'sis.desc': 'From a field service app to a panel connected to a PLC. Every project started from a real problem and was adapted to how each client works.',
+    'sis.b.prod': 'In production', 'sis.b.demo': 'Demo', 'sis.b.ind': 'Industrial', 'sis.b.tool': 'Tool', 'sis.demo': '▶ View demo →',
+    'sis.c1.r': 'Technical services', 'sis.c1.h': 'Service orders & invoicing',
+    'sis.c1.p': 'From the field visit to the invoice, paperless: the technician creates the order on their phone, the client signs on screen and billing issues the receipt.',
+    'sis.c1.li': '<li>Digital signature and PDF via WhatsApp or email</li><li>AFIP e-invoicing integrated with Xubio</li><li>Roles, planning calendar and change history</li>',
+    'sis.c2.r': 'Retail & e-commerce', 'sis.c2.h': 'Online store with payments',
+    'sis.c2.p': 'Catalog with cart and built-in online payment, plus a panel to see what sells and to whom.',
+    'sis.c2.li': '<li>Mercado Pago checkout with automatic order confirmation</li><li>Manageable catalog, prices and stock</li><li>Analytics: sales, % of catalog sold and buyers</li>',
+    'sis.c3.r': 'Food & distribution', 'sis.c3.h': 'Orders & delivery',
+    'sis.c3.p': 'End-to-end order management with fleet, delivery map and a sales dashboard to decide with data.',
+    'sis.c3.li': '<li>Numbered orders with statuses and receipts</li><li>Vehicles and deliveries on a map</li><li>Sales dashboard and 360° analysis</li>',
+    'sis.c4.r': 'Human resources', 'sis.c4.h': 'Time & attendance and hours control',
+    'sis.c4.p': 'Each employee clocks in from their phone; HR sees the hours and assigns them to projects and work orders.',
+    'sis.c4.li': '<li>Geolocation and optional camera verification</li><li>Automatic hours reports</li><li>Hours allocation to projects and work orders</li><li>Role-based access: employee, supervisor, admin</li>',
+    'sis.c5.r': 'Beauty & appointment-based services', 'sis.c5.h': 'Online appointments & bookings',
+    'sis.c5.p': 'Clients book from their phone and the owner manages the agenda, with deposit and cancellation policy.',
+    'sis.c5.li': '<li>Booking in a few taps, nothing to install</li><li>Agenda and time blocking for the owner</li><li>Configurable deposit and cancellation</li><li>White label: your own name, address and WhatsApp</li>',
+    'sis.c6.r': 'Events & communities', 'sis.c6.h': 'Large-event management',
+    'sis.c6.p': 'Registrations, payments, planning and reception for a large event, in a single app shared by the whole team.',
+    'sis.c6.li': '<li>Participant registration and payments</li><li>Planning and on-the-day reception</li><li>Multiple users working simultaneously</li>',
+    'sis.c7.r': 'Industry 4.0', 'sis.c7.h': 'Web HMI connected to a PLC',
+    'sis.c7.p': 'SCADA-style panel to operate and monitor industrial equipment from the browser, connected to the PLC through OPC UA.',
+    'sis.c7.li': '<li>Real-time monitoring and commands for several shuttles</li><li>Siemens PLC ↔ management system (ECS) bridge</li><li>Simulators to test without touching the plant</li>',
+    'sis.c8.r': 'Administration', 'sis.c8.h': 'Control panels and role-based access',
+    'sis.c8.p': 'An admin-only panel to manage users, permissions and the company systems from one place.',
+    'sis.c8.li': '<li>Single login with role-based access</li><li>User, technician and client management</li><li>History of who changed what and when</li>',
+    'sis.c9.r': 'Finance', 'sis.c9.h': 'Financial planner',
+    'sis.c9.p': 'Monthly income and expense projection with alerts and accumulated balance, to know how each month will close.',
+    'sis.c9.li': '<li>Monthly overview and expenses by category</li><li>Configurable alerts and assumptions</li><li>Projected balance and accumulated savings</li>',
+    'sis.cli.h': 'For any industry and any business size',
+    'sis.cli.p': 'If your process lives in Excel, WhatsApp or paper today, it can become a system.',
+    'sis.cli.chips': '<span class="pf-chip">🏭 Industry & manufacturing</span><span class="pf-chip">🔧 Technical services & maintenance</span><span class="pf-chip">🛒 Shops & online stores</span><span class="pf-chip">🍽️ Food & hospitality</span><span class="pf-chip">💈 Beauty & wellness</span><span class="pf-chip">🚚 Distribution & logistics</span><span class="pf-chip">🎉 Events & communities</span><span class="pf-chip">🏢 SMEs & professional firms</span><span class="pf-chip">🏥 Health & clinics</span><span class="pf-chip">🎓 Education & training</span><span class="pf-chip">🌱 Entrepreneurs</span>',
+    'sis.cta': 'I want my system →',
     'sol.ctaTitle': 'Have a different need?',
     'sol.ctaDesc': `Often the best systems are the ones that don't exist yet. If you're currently handling something with Excel, WhatsApp, forms or paper, we can probably turn it into a simple, efficient digital solution.`,
     'sol.ctaBtn': 'Tell me your case →',
@@ -2674,7 +2909,7 @@ const I18N = {
     'wa.title': 'Message on WhatsApp',
   },
   pt: {
-    'nav.sobre': 'Sobre mim', 'nav.casos': 'Casos de sucesso', 'nav.marc': 'Marcação', 'nav.bi': 'Dashboards', 'nav.proceso': 'Processo', 'nav.contacto': 'Contato',
+    'nav.sobre': 'Sobre mim', 'nav.casos': 'Casos de sucesso', 'nav.sis': 'Sistemas','nav.marc': 'Marcação', 'nav.bi': 'Dashboards', 'nav.proceso': 'Processo', 'nav.contacto': 'Contato',
     'nav.cta': 'Consulte seu projeto', 'nav.cta2': 'Consulte seu projeto →',
 
     'hero.badge': '● Sistemas sob medida · Soluções Digitais',
@@ -2769,6 +3004,49 @@ const I18N = {
     'sol.c7.li': '<li>Integração entre sistemas</li><li>Automação de Excel e Google Sheets</li><li>Geração automática de relatórios</li><li>Fluxos de aprovação digital</li><li>Processamento em massa de informações</li>',
     'sol.c8.h': 'Comércio e Ponto de Venda',
     'sol.c8.li': '<li>Sistemas de PDV para supermercados e quiosques</li><li>Controle de estoque em tempo real</li><li>Gestão de caixa e fechamento diário</li><li>Catálogo de produtos com preços e variantes</li><li>Vendas no balcão, delivery ou atacado</li><li>Relatórios de vendas, margens e produtos mais vendidos</li>',
+    'sol.c9.h': 'E-commerce e Pagamentos Online',
+    'sol.c9.li': '<li>Lojas online com carrinho próprio</li><li>Integração com Mercado Pago</li><li>Confirmação automática de pagamentos</li><li>Painel de vendas e compradores</li>',
+    'sol.c10.h': 'Agendamentos e Reservas',
+    'sol.c10.li': '<li>Reserva online pelo celular</li><li>Agenda para o negócio</li><li>Sinal e política de cancelamento</li><li>Lembretes por WhatsApp</li>',
+    'sol.c11.h': 'Indústria 4.0 e Conectividade',
+    'sol.c11.li': '<li>Painéis HMI / SCADA web</li><li>Conexão com CLP via OPC UA</li><li>Pontes entre a fábrica e os sistemas de gestão</li><li>Monitoramento de equipamentos em tempo real</li>',
+    'sol.c12.h': 'Eventos e Comunidades',
+    'sol.c12.li': '<li>Cadastro de participantes e cobranças</li><li>Planejamento e recepção de eventos</li><li>Gestão de sócios e mensalidades</li><li>Trabalho colaborativo em tempo real</li>',
+
+    'sis.tag': '— Portfólio', 'sis.title': 'Sistemas que já <em style="font-style:normal;color:var(--accent)">construí</em>',
+    'sis.desc': 'De um app de campo a um painel conectado a um CLP. Cada projeto nasceu de um problema real e foi adaptado à forma de trabalho de cada cliente.',
+    'sis.b.prod': 'Em produção', 'sis.b.demo': 'Demo', 'sis.b.ind': 'Industrial', 'sis.b.tool': 'Ferramenta', 'sis.demo': '▶ Ver demo →',
+    'sis.c1.r': 'Serviços técnicos', 'sis.c1.h': 'Ordens de serviço e faturamento',
+    'sis.c1.p': 'Da visita em campo à fatura, sem papel: o técnico registra a ordem pelo celular, o cliente assina na tela e o faturamento emite o comprovante.',
+    'sis.c1.li': '<li>Assinatura digital e PDF por WhatsApp ou e-mail</li><li>Faturamento eletrônico AFIP integrado com Xubio</li><li>Perfis, calendário de planejamento e histórico de alterações</li>',
+    'sis.c2.r': 'Comércio e e-commerce', 'sis.c2.h': 'Loja online com pagamentos',
+    'sis.c2.p': 'Catálogo com carrinho e pagamento online integrado, mais um painel para saber o que vende e para quem.',
+    'sis.c2.li': '<li>Pagamento com Mercado Pago e confirmação automática do pedido</li><li>Catálogo, preços e estoque administráveis</li><li>Painel de análise: vendas, % do catálogo vendido e compradores</li>',
+    'sis.c3.r': 'Alimentos e distribuição', 'sis.c3.h': 'Pedidos e entregas',
+    'sis.c3.p': 'Gestão de pedidos de ponta a ponta, com frota, mapa de entregas e um painel comercial para decidir com dados.',
+    'sis.c3.li': '<li>Pedidos numerados, com status e comprovantes</li><li>Veículos e entregas no mapa</li><li>Dashboard de vendas e análise 360°</li>',
+    'sis.c4.r': 'Recursos humanos', 'sis.c4.h': 'Marcação de ponto e controle de horas',
+    'sis.c4.p': 'Cada funcionário registra o ponto pelo celular; o RH vê as horas e as atribui a projetos e ordens de trabalho.',
+    'sis.c4.li': '<li>Geolocalização e verificação opcional por câmera</li><li>Relatórios de horas automáticos</li><li>Atribuição de horas a projetos e OT</li><li>Acesso por perfil: funcionário, supervisor, admin</li>',
+    'sis.c5.r': 'Beleza e serviços com agenda', 'sis.c5.h': 'Agendamentos e reservas online',
+    'sis.c5.p': 'O cliente reserva pelo celular e o dono gerencia a agenda, com sinal e política de cancelamento.',
+    'sis.c5.li': '<li>Reserva em poucos toques, sem instalar nada</li><li>Agenda e bloqueios para o dono</li><li>Sinal e cancelamento configuráveis</li><li>Marca branca: nome, endereço e WhatsApp próprios</li>',
+    'sis.c6.r': 'Eventos e comunidades', 'sis.c6.h': 'Gestão de eventos de grande porte',
+    'sis.c6.p': 'Cadastros, cobranças, planejamento e recepção de um evento com muita gente, em um único app compartilhado por toda a equipe.',
+    'sis.c6.li': '<li>Cadastro de participantes e cobranças</li><li>Planejamento e recepção no dia do evento</li><li>Vários usuários trabalhando ao mesmo tempo</li>',
+    'sis.c7.r': 'Indústria 4.0', 'sis.c7.h': 'HMI web conectado a CLP',
+    'sis.c7.p': 'Painel estilo SCADA para operar e monitorar equipamentos industriais pelo navegador, conectado ao CLP via OPC UA.',
+    'sis.c7.li': '<li>Monitoramento e comandos de vários shuttles em tempo real</li><li>Ponte CLP Siemens ↔ sistema de gestão (ECS)</li><li>Simuladores para testar sem mexer na planta</li>',
+    'sis.c8.r': 'Administração', 'sis.c8.h': 'Painéis de controle e acesso por perfil',
+    'sis.c8.p': 'Um painel exclusivo para administradores, onde se gerenciam usuários, permissões e os sistemas da empresa.',
+    'sis.c8.li': '<li>Login único com acesso por perfil</li><li>Cadastro de usuários, técnicos e clientes</li><li>Histórico de quem alterou o quê e quando</li>',
+    'sis.c9.r': 'Finanças', 'sis.c9.h': 'Planejador financeiro',
+    'sis.c9.p': 'Projeção mensal de receitas e despesas com alertas e saldo acumulado, para saber como cada mês vai fechar.',
+    'sis.c9.li': '<li>Panorama do mês e despesas por categoria</li><li>Alertas e premissas configuráveis</li><li>Saldo projetado e economia acumulada</li>',
+    'sis.cli.h': 'Para qualquer setor e qualquer tamanho de negócio',
+    'sis.cli.p': 'Se o seu processo hoje vive no Excel, no WhatsApp ou no papel, ele pode virar um sistema.',
+    'sis.cli.chips': '<span class="pf-chip">🏭 Indústria e manufatura</span><span class="pf-chip">🔧 Serviços técnicos e manutenção</span><span class="pf-chip">🛒 Lojas e lojas online</span><span class="pf-chip">🍽️ Gastronomia e alimentos</span><span class="pf-chip">💈 Beleza e estética</span><span class="pf-chip">🚚 Distribuição e logística</span><span class="pf-chip">🎉 Eventos e comunidades</span><span class="pf-chip">🏢 PMEs e escritórios profissionais</span><span class="pf-chip">🏥 Saúde e consultórios</span><span class="pf-chip">🎓 Educação e capacitação</span><span class="pf-chip">🌱 Empreendedores</span>',
+    'sis.cta': 'Quero o meu sistema →',
     'sol.ctaTitle': 'Tem outra necessidade?',
     'sol.ctaDesc': 'Muitas vezes os melhores sistemas são os que ainda não existem. Se hoje você controla algo com Excel, WhatsApp, formulários ou papel, provavelmente podemos transformar isso em uma solução digital simples e eficiente.',
     'sol.ctaBtn': 'Conte seu caso →',
