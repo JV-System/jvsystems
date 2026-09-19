@@ -12,19 +12,21 @@
     gtag('config', 'G-4X148BJ408');
   </script>
   <title>JV Systems — Sistemas a Medida | Juan Villanueva</title>
-  <meta name="description" content="Desarrollo sistemas digitales a medida para empresas: gestión de órdenes, facturación, dashboards y automatización de procesos. Casos reales en producción, sin plantillas genéricas." />
+  <meta name="description" content="Desarrollo sistemas a medida para cualquier rubro: órdenes de servicio y facturación, tiendas online con cobros, turnos, marcación laboral, dashboards e integración industrial con PLC. Sistemas reales en producción." />
   <link rel="canonical" href="https://jvsystems.com.ar/" />
   <meta name="theme-color" content="#07101d" />
   <link rel="icon" type="image/png" href="jvs-icon.png" />
   <!-- Open Graph (WhatsApp, Instagram, etc.) -->
   <meta property="og:title" content="JV Systems — Sistemas Digitales a Medida" />
   <meta property="og:description" content="Diseño y desarrollo sistemas digitales adaptados exactamente a como funciona tu empresa. Sin plantillas genéricas." />
-  <meta property="og:image" content="https://jvsystems.com.ar/jvs-logo.png" />
+  <meta property="og:image" content="https://jvsystems.com.ar/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="https://jvsystems.com.ar" />
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="es_AR" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://jvsystems.com.ar/jvs-logo.png" />
+  <meta name="twitter:image" content="https://jvsystems.com.ar/og-image.jpg" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -944,8 +946,8 @@
 
     /* ── PORTAFOLIO DE SISTEMAS ── */
     .portfolio-section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
-    .pf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-    @media (max-width: 1024px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
+    .pf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+    @media (max-width: 1100px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px)  { .pf-grid { grid-template-columns: 1fr; } .portfolio-section { padding: 3.5rem 1.25rem; } }
     .pf-card {
       background: var(--card-bg); border: 1px solid rgba(255,255,255,.06);
@@ -980,6 +982,42 @@
     .pf-clientes h3 { font-size: 1.1rem; font-weight: 900; margin-bottom: .4rem; }
     .pf-clientes > p { font-size: .87rem; color: rgba(255,255,255,.5); margin-bottom: 1.25rem; }
     .pf-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; max-width: 900px; margin: 0 auto 2rem; }
+
+    /* ── CASO DESTACADO ── */
+    .pf-featured {
+      display: grid; grid-template-columns: 1fr 1.15fr; gap: 2rem;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; margin-bottom: 1.25rem;
+    }
+    @media (max-width: 900px) { .pf-featured { grid-template-columns: 1fr; padding: 1.25rem; } }
+    .pf-featured h3 { font-size: 1.35rem; font-weight: 900; margin-bottom: 1rem; }
+    .pf-featured .pf-label { font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 1rem 0 .35rem; }
+    .pf-featured p { font-size: .85rem; color: rgba(255,255,255,.6); line-height: 1.65; }
+    .pf-featured ul { list-style: none; display: flex; flex-direction: column; gap: .4rem; }
+    .pf-featured ul li { font-size: .84rem; color: rgba(255,255,255,.72); padding-left: 1.1rem; position: relative; line-height: 1.45; }
+    .pf-featured ul li::before { content: '✓'; position: absolute; left: 0; color: #34d399; font-weight: 900; }
+    .pf-shots { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; align-content: start; }
+    .pf-shot { margin: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); background: #0c1424; }
+    .pf-shot.main { grid-column: 1 / -1; }
+    .pf-shot a { display: block; }
+    .pf-shot img { width: 100%; height: auto; display: block; }
+    .pf-shot figcaption { font-size: .7rem; padding: .4rem .65rem; color: rgba(255,255,255,.55); }
+    .pf-note { grid-column: 1 / -1; font-size: .7rem; color: rgba(255,255,255,.35); }
+
+    /* ── FAQ ── */
+    .faq-section { padding: 5rem 2rem; max-width: 820px; margin: 0 auto; }
+    @media (max-width: 640px) { .faq-section { padding: 3.5rem 1.25rem; } }
+    .faq-item { background: var(--card-bg); border: 1px solid rgba(255,255,255,.07); border-radius: 12px; margin-bottom: .75rem; }
+    .faq-item[open] { border-color: rgba(255,140,0,.3); }
+    .faq-item summary {
+      list-style: none; cursor: pointer; padding: 1.1rem 1.35rem; font-weight: 700; font-size: .95rem;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after { content: '+'; color: var(--accent); font-size: 1.3rem; font-weight: 400; flex-shrink: 0; }
+    .faq-item[open] summary::after { content: '−'; }
+    .faq-item p { padding: 0 1.35rem 1.2rem; font-size: .88rem; color: rgba(255,255,255,.6); line-height: 1.7; }
+    footer a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
     .pf-chip {
       font-size: .82rem; font-weight: 600; padding: .5rem 1rem; border-radius: 99px;
       background: var(--card-bg); border: 1px solid var(--border); color: rgba(255,255,255,.85);
@@ -1567,7 +1605,6 @@
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
 
 <!-- NAV -->
 <nav>
@@ -1577,7 +1614,6 @@
   </div>
   <div class="nav-links">
     <a href="#sobre" data-i18n="nav.sobre">Sobre mí</a>
-    <a href="#casos" data-i18n="nav.casos">Casos de éxito</a>
     <a href="#sistemas" data-i18n="nav.sis">Sistemas</a>
     <a href="#marcacion" data-i18n="nav.marc">Marcación</a>
     <a href="#bi" data-i18n="nav.bi">Dashboards</a>
@@ -1598,7 +1634,6 @@
 <!-- MENÚ MÓVIL -->
 <div class="nav-mobile-menu" id="navMobileMenu">
   <a href="#sobre"    data-i18n="nav.sobre" onclick="cerrarMenu()">Sobre mí</a>
-  <a href="#casos"    data-i18n="nav.casos" onclick="cerrarMenu()">Casos de éxito</a>
   <a href="#sistemas" data-i18n="nav.sis" onclick="cerrarMenu()">Sistemas</a>
   <a href="#marcacion" data-i18n="nav.marc" onclick="cerrarMenu()">Marcación</a>
   <a href="#bi"       data-i18n="nav.bi" onclick="cerrarMenu()">Dashboards</a>
@@ -1633,104 +1668,6 @@
     </svg>
   </div>
 
-  <!-- ── CÓDIGO DECORATIVO ── -->
-  <div aria-hidden="true" style="position:absolute;right:3%;top:50%;transform:translateY(-50%);z-index:1;opacity:.18;pointer-events:none;font-family:monospace;font-size:1.05rem;line-height:2;color:#fff;text-align:left;white-space:nowrap;user-select:none;display:none" class="code-deco-desktop">
-    <div><span style="color:#7dd3fc">function</span> <span style="color:#86efac">resolverProblema</span>(x) {</div>
-    <div style="padding-left:2rem"><span style="color:#fbbf24">analizar</span>(datos);</div>
-    <div style="padding-left:2rem"><span style="color:#fbbf24">diseñar</span>Solución();</div>
-    <div style="padding-left:2rem"><span style="color:#fbbf24">desarrollar</span>();</div>
-    <div style="padding-left:2rem"><span style="color:#c084fc">return</span> exito;</div>
-    <div>}</div>
-  </div>
-
-  <!-- ── WIDGETS FLOTANTES ── -->
-  <div class="hw-widgets" aria-hidden="true" style="display:none">
-
-    <!-- Widget: Ingresos (izq arriba) -->
-    <div class="hw" style="left:2%;top:15%;animation:hwFloat1 7s ease-in-out infinite">
-      <div class="hw-label">Ingresos</div>
-      <div class="hw-val" style="color:#34d399">$4.6M <span class="hw-badge up">+12.4%</span></div>
-      <div class="hw-sub">vs. período anterior</div>
-      <svg width="120" height="38" viewBox="0 0 120 38" style="margin-top:6px">
-        <defs><linearGradient id="hg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34d399" stop-opacity=".3"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></linearGradient></defs>
-        <polygon points="0,32 15,28 30,22 45,18 60,14 75,10 90,8 105,5 120,2 120,38 0,38" fill="url(#hg1)"/>
-        <polyline points="0,32 15,28 30,22 45,18 60,14 75,10 90,8 105,5 120,2" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="120" cy="2" r="3.5" fill="#34d399"/>
-      </svg>
-    </div>
-
-    <!-- Widget: Conversión (izq abajo) -->
-    <div class="hw" style="left:1%;top:62%;animation:hwFloat2 9s ease-in-out infinite">
-      <div class="hw-label">Conversión</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="20" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
-          <circle cx="26" cy="26" r="20" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round"
-            stroke-dasharray="125.6" stroke-dashoffset="47" transform="rotate(-90 26 26)"
-            style="filter:drop-shadow(0 0 4px #f59e0b88)"/>
-          <text x="26" y="30" text-anchor="middle" font-size="11" font-weight="900" fill="#f59e0b">12.4%</text>
-        </svg>
-        <div><div style="font-size:.7rem;color:#f59e0b;font-weight:700">+1.8 pp</div><div style="font-size:.6rem;color:rgba(255,255,255,.4)">vs anterior</div></div>
-      </div>
-    </div>
-
-    <!-- Widget: Código (izq medio) -->
-    <div class="hw hw-code" style="left:3%;top:38%;animation:hwFloat3 11s ease-in-out infinite">
-      <div class="hw-label">⌨ Sistema JV</div>
-      <div style="font-family:monospace;font-size:.65rem;line-height:1.7;margin-top:4px">
-        <div><span style="color:#60a5fa">function</span> <span style="color:#34d399">resolverProblema</span>(x) {</div>
-        <div style="padding-left:12px"><span style="color:#f59e0b">analizar</span>(datos);</div>
-        <div style="padding-left:12px"><span style="color:#f59e0b">diseñar</span>Solución();</div>
-        <div style="padding-left:12px"><span style="color:#f59e0b">desarrollar</span>();</div>
-        <div style="padding-left:12px"><span style="color:#a78bfa">return</span> exito;</div>
-        <div>}</div>
-      </div>
-    </div>
-
-    <!-- Widget: Análisis de datos (der arriba) -->
-    <div class="hw" style="right:2%;top:12%;animation:hwFloat2 8s ease-in-out infinite;min-width:220px">
-      <div class="hw-label">📊 Análisis de datos</div>
-      <div style="display:flex;align-items:flex-end;gap:4px;height:55px;margin-top:8px">
-        <div class="hw-bar" style="height:40%;background:#1a3a6e"></div>
-        <div class="hw-bar" style="height:55%;background:#1a3a6e"></div>
-        <div class="hw-bar" style="height:65%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
-        <div class="hw-bar" style="height:75%;background:#1a3a6e"></div>
-        <div class="hw-bar" style="height:85%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
-        <div class="hw-bar" style="height:100%;background:#60a5fa;box-shadow:0 0 8px #60a5fa88"></div>
-        <div class="hw-bar" style="height:90%;background:#1a3a6e"></div>
-        <div class="hw-bar" style="height:80%;background:#f59e0b;box-shadow:0 0 8px #f59e0b88"></div>
-        <div style="margin-left:8px;display:flex;flex-direction:column;gap:3px;justify-content:center">
-          <svg width="48" height="48" viewBox="0 0 48 48">
-            <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="6"/>
-            <circle cx="24" cy="24" r="18" fill="none" stroke="#60a5fa" stroke-width="6" stroke-dasharray="113" stroke-dashoffset="28" transform="rotate(-90 24 24)" style="filter:drop-shadow(0 0 4px #60a5fa88)"/>
-            <text x="24" y="28" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">78%</text>
-          </svg>
-          <div style="font-size:.55rem;color:rgba(255,255,255,.4);text-align:center">Obj. alcanz.</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:6px;font-size:.55rem;color:rgba(255,255,255,.4)">
-        <span><span style="display:inline-block;width:8px;height:8px;background:#60a5fa;border-radius:2px;margin-right:3px"></span>Ventas</span>
-        <span><span style="display:inline-block;width:8px;height:2px;background:#f59e0b;border-radius:2px;margin-right:3px;vertical-align:middle"></span>Objetivo</span>
-      </div>
-    </div>
-
-    <!-- Widget: Proceso (der abajo) -->
-    <div class="hw" style="right:1%;top:58%;animation:hwFloat1 10s ease-in-out infinite 1s;min-width:200px">
-      <div class="hw-label">⚡ Flujo de trabajo</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap">
-        <div class="hw-step">🔍<div>Análisis</div></div>
-        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
-        <div class="hw-step">✏️<div>Diseño</div></div>
-        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
-        <div class="hw-step active">💻<div>Desarrollo</div></div>
-        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
-        <div class="hw-step">✅<div>Pruebas</div></div>
-        <div style="color:rgba(255,255,255,.3);font-size:.8rem">→</div>
-        <div class="hw-step">🚀<div>Deploy</div></div>
-      </div>
-    </div>
-
-  </div><!-- /hw-widgets -->
 
   <div class="hero-inner reveal" style="position:relative;z-index:2">
     <div class="logo-atom">
@@ -1750,7 +1687,7 @@
 
 <!-- PILARES: UNIDADES DE NEGOCIO -->
 <div class="pilares reveal">
-  <a href="#proceso" class="pilar">
+  <a href="#sistemas" class="pilar">
     <div class="pilar-icon">🛠️</div>
     <div class="pilar-text">
       <strong data-i18n="pilar.sistemas.t">Sistemas a Medida</strong>
@@ -1775,10 +1712,10 @@
 
 <!-- STATS -->
 <div class="stats reveal">
-  <div class="stat"><div class="stat-num">3+</div><div class="stat-lbl" data-i18n="stats.s1">Sistemas en producción</div></div>
-  <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl" data-i18n="stats.s2">Hechos a medida</div></div>
-  <div class="stat"><div class="stat-num">0</div><div class="stat-lbl" data-i18n="stats.s3">Plantillas genéricas</div></div>
-  <div class="stat"><div class="stat-num">∞</div><div class="stat-lbl" data-i18n="stats.s4">Soporte post-entrega</div></div>
+  <div class="stat"><div class="stat-num">5+</div><div class="stat-lbl" data-i18n="stats.s1">Sistemas en producción</div></div>
+  <div class="stat"><div class="stat-num">6</div><div class="stat-lbl" data-i18n="stats.s2">Rubros distintos</div></div>
+  <div class="stat"><div class="stat-num">+10</div><div class="stat-lbl" data-i18n="stats.s3">Usuarios activos por sistema</div></div>
+  <div class="stat"><div class="stat-num">AFIP</div><div class="stat-lbl" data-i18n="stats.s4">Facturación electrónica</div></div>
 </div>
 
 
@@ -1788,7 +1725,7 @@
     <div class="section-tag" data-i18n="sobre.tag">— Sobre mí</div>
     <h2 data-i18n="sobre.title">Soy Juan Villanueva,<br><em>desarrollador</em> de sistemas a medida</h2>
     <p data-i18n="sobre.p1">Me especializo en construir sistemas digitales que resuelven problemas reales de negocios. Cada proyecto nace de entender cómo opera tu empresa — los campos, los flujos, los problemas del día a día.</p>
-    <p data-i18n="sobre.p2">No vendo software de estantería. Hablo con vos, entiendo tu operatoria y construyo exactamente lo que necesitás, sin pagar por funciones que nunca vas a usar.</p>
+    <p data-i18n="sobre.p2">No vendo software de estantería. Hablo con vos, entiendo tu operatoria, construyo lo que necesitás y te acompaño después de la entrega.</p>
   </div>
   <div class="sobre-card reveal">
     <div class="sobre-card-row">
@@ -1809,7 +1746,7 @@
       <div class="sobre-icon">📱</div>
       <div class="sobre-row-text">
         <strong data-i18n="sobre.row3.t">Funciona en cualquier dispositivo</strong>
-        <span data-i18n="sobre.row3.d">Celular, tablet o computadora, sin instalar nada</span>
+        <span data-i18n="sobre.row3.d">Celular, tablet o computadora. Se instala como app, sin pasar por las tiendas</span>
       </div>
     </div>
     <div class="sobre-card-row">
@@ -1820,88 +1757,10 @@
       </div>
     </div>
     <div class="sobre-card-row">
-      <div class="sobre-icon">📊</div>
+      <div class="sobre-icon">💬</div>
       <div class="sobre-row-text">
-        <strong data-i18n="sobre.row5.t">Datos que importan</strong>
-        <span data-i18n="sobre.row5.d">Dashboards y reportes para tomar mejores decisiones</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CASOS DE ÉXITO -->
-<section class="sistemas-section" id="casos">
-  <div class="section-header reveal">
-    <span class="section-tag" data-i18n="casos.tag">— Casos de éxito</span>
-    <h2 data-i18n="casos.title">Resultados reales, <em style="font-style:normal;color:var(--accent)">no promesas</em></h2>
-    <p data-i18n="casos.desc">Así funciona OrdenPro en producción. Números concretos de una implementación real.</p>
-  </div>
-
-  <div class="reveal" style="max-width:1000px;margin:0 auto">
-    <div class="sistema-card">
-      <div class="sistema-mockup">
-        <div class="mockup-browser">
-          <div class="mockup-bar">
-            <span class="mockup-dot"></span><span class="mockup-dot"></span><span class="mockup-dot"></span>
-            <div class="mockup-url">jvsystems.com.ar/ordenpro</div>
-          </div>
-          <div class="cm-toolbar">
-            <span class="cm-toolbar-title" data-i18n="casos.toolbar">📋 Órdenes de Servicio</span>
-            <span class="cm-badge-live" data-i18n="casos.live">EN VIVO</span>
-          </div>
-          <div class="cm-body">
-            <div class="cm-row">
-              <div class="cm-row-id">#184</div>
-              <div class="cm-row-info"><strong data-i18n="casos.row1.t">Mantenimiento — Torno CNC</strong><span data-i18n="casos.row1.m">Técnico de campo · hoy 09:14</span></div>
-              <div class="cm-status facturada" data-i18n="casos.st.facturada">Facturada</div>
-            </div>
-            <div class="cm-row">
-              <div class="cm-row-id">#183</div>
-              <div class="cm-row-info"><strong data-i18n="casos.row2.t">Reparación — Compresor</strong><span data-i18n="casos.row2.m">Técnico de campo · hoy 08:40</span></div>
-              <div class="cm-status cerrada" data-i18n="casos.st.cerrada">Cerrada</div>
-            </div>
-            <div class="cm-row">
-              <div class="cm-row-id">#182</div>
-              <div class="cm-row-info"><strong data-i18n="casos.row3.t">Instalación — Línea hidráulica</strong><span data-i18n="casos.row3.m">Técnico de campo · ayer 17:05</span></div>
-              <div class="cm-status abierta" data-i18n="casos.st.abierta">En campo</div>
-            </div>
-          </div>
-          <div class="cm-footer">
-            <span class="ok">✓</span> <span data-i18n="casos.footer">Comprobante enviado por WhatsApp · firma digital registrada</span>
-          </div>
-        </div>
-        <div class="mockup-hint" data-i18n="casos.hint">Sistema real en producción</div>
-      </div>
-
-      <div class="sistema-info">
-        <div class="sistema-num" data-i18n="casos.clientLabel">En producción</div>
-        <div class="sistema-title" data-i18n="casos.clientName">Servicio técnico industrial</div>
-        <div class="sistema-client" data-i18n="casos.clientDesc">Mantenimiento y reparación de maquinaria industrial</div>
-
-        <div class="sistema-why">
-          <div class="sistema-why-label" data-i18n="casos.problemLabel">El problema</div>
-          <p data-i18n="casos.problemText">Las órdenes de servicio se manejaban en papel y por WhatsApp entre técnicos. Se perdían órdenes, se facturaba tarde por falta de información y nadie tenía visibilidad real del estado de cada trabajo.</p>
-        </div>
-
-        <ul class="sistema-features" data-i18n="casos.features">
-          <li>Técnicos cargan órdenes desde el celular en campo</li>
-          <li>Comprobante al cliente en segundos por WhatsApp</li>
-          <li>Facturación electrónica integrada con Xubio (AFIP)</li>
-          <li>Firma digital del cliente en el momento del servicio</li>
-          <li>Planificación de visitas con calendario visual</li>
-        </ul>
-
-        <div class="hp-metrics" style="margin-bottom:1.75rem">
-          <div class="hpm"><div class="hpm-val up">0</div><div class="hpm-lbl" data-i18n="casos.m1">Órdenes sin facturar</div></div>
-          <div class="hpm"><div class="hpm-val up">+10</div><div class="hpm-lbl" data-i18n="casos.m2">Usuarios activos</div></div>
-          <div class="hpm"><div class="hpm-val up">100%</div><div class="hpm-lbl" data-i18n="casos.m3">Comprobantes digitales</div></div>
-          <div class="hpm"><div class="hpm-val up" data-i18n="casos.m4val">1 día</div><div class="hpm-lbl" data-i18n="casos.m4">De implementación a producción</div></div>
-        </div>
-
-        <div class="sistema-ctas">
-          <a href="/ordenpro/" target="_blank" rel="noopener" class="sistema-link demo" data-i18n="casos.demo">▶ Probá el demo en vivo →</a>
-          <a href="#contacto" class="sistema-link" data-i18n="casos.cta">Quiero resultados así →</a>
-        </div>
+        <strong data-i18n="sobre.row5.t">Comunicación directa</strong>
+        <span data-i18n="sobre.row5.d">Cambios y ajustes por WhatsApp durante todo el proyecto</span>
       </div>
     </div>
   </div>
@@ -1915,17 +1774,32 @@
     <p data-i18n="sis.desc">Desde una app de campo hasta un panel conectado a un PLC. Cada proyecto nació de un problema real y se adaptó a la forma de trabajar de cada cliente.</p>
   </div>
 
-  <div class="pf-grid">
-
-    <div class="pf-card reveal">
-      <div class="pf-top"><span class="pf-icon">📋</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
-      <div class="pf-rubro" data-i18n="sis.c1.r">Servicios técnicos</div>
-      <h3 data-i18n="sis.c1.h">Órdenes de servicio y facturación</h3>
-      <p data-i18n="sis.c1.p">De la visita en campo a la factura, sin papel: el técnico carga la orden desde el celular, el cliente firma en pantalla y facturación emite el comprobante.</p>
-      <ul data-i18n="sis.c1.li"><li>Firma digital y PDF por WhatsApp o email</li><li>Facturación electrónica AFIP integrada con Xubio</li><li>Roles, calendario de planificación e historial de cambios</li></ul>
-      <div class="pf-tech"><span>PWA</span><span>Firebase</span><span>Xubio</span><span>Apps Script</span></div>
-      <a href="/ordenpro/" target="_blank" rel="noopener" class="pf-link" data-i18n="sis.demo">▶ Ver demo →</a>
+  <div class="pf-featured reveal">
+    <div>
+      <span class="pf-badge" data-i18n="sis.f.badge">Caso destacado · En producción</span>
+      <div class="pf-rubro" style="margin-top:.9rem" data-i18n="sis.f.r">Servicios técnicos industriales</div>
+      <h3 data-i18n="sis.f.h">OrdenPro: órdenes de servicio y facturación</h3>
+      <div class="pf-label" data-i18n="sis.f.pl">El problema</div>
+      <p data-i18n="sis.f.p">Las órdenes de servicio se manejaban en papel y por WhatsApp entre técnicos. Se perdían órdenes, se facturaba tarde por falta de información y nadie tenía visibilidad real del estado de cada trabajo.</p>
+      <div class="pf-label" data-i18n="sis.f.sl">La solución</div>
+      <ul data-i18n="sis.f.li"><li>Los técnicos cargan la orden desde el celular, en el lugar del trabajo</li><li>El cliente firma en pantalla y recibe el comprobante en segundos por WhatsApp o email</li><li>Facturación electrónica AFIP integrada</li><li>Planificación de visitas en calendario e historial de cambios de cada orden</li></ul>
+      <div class="hp-metrics" style="margin:1.5rem 0">
+        <div class="hpm"><div class="hpm-val up">0</div><div class="hpm-lbl" data-i18n="sis.f.m1">Órdenes sin facturar</div></div>
+        <div class="hpm"><div class="hpm-val up">+10</div><div class="hpm-lbl" data-i18n="sis.f.m2">Usuarios activos</div></div>
+        <div class="hpm"><div class="hpm-val up">100%</div><div class="hpm-lbl" data-i18n="sis.f.m3">Comprobantes digitales</div></div>
+        <div class="hpm"><div class="hpm-val up" data-i18n="sis.f.m4v">1 día</div><div class="hpm-lbl" data-i18n="sis.f.m4">De implementación a producción</div></div>
+      </div>
+      <a href="/ordenpro/" target="_blank" rel="noopener" class="sol-cta-btn" style="display:inline-block" data-i18n="sis.f.demo">▶ Probá el demo en vivo →</a>
     </div>
+    <div class="pf-shots">
+      <figure class="pf-shot main"><a href="img/ordenpro-historial.jpg" target="_blank" rel="noopener"><img src="img/ordenpro-historial.jpg" width="1400" height="817" loading="lazy" alt="OrdenPro: historial de órdenes de servicio" /></a><figcaption data-i18n="sis.f.c1">Historial de órdenes con estados y filtros</figcaption></figure>
+      <figure class="pf-shot"><a href="img/ordenpro-facturacion.jpg" target="_blank" rel="noopener"><img src="img/ordenpro-facturacion.jpg" width="1400" height="817" loading="lazy" alt="OrdenPro: panel de facturación" /></a><figcaption data-i18n="sis.f.c2">Panel de facturación y cobranzas</figcaption></figure>
+      <figure class="pf-shot"><a href="img/ordenpro-comprobante.jpg" target="_blank" rel="noopener"><img src="img/ordenpro-comprobante.jpg" width="1400" height="817" loading="lazy" alt="OrdenPro: comprobante de servicio" /></a><figcaption data-i18n="sis.f.c3">Comprobante listo para enviar al cliente</figcaption></figure>
+      <div class="pf-note" data-i18n="sis.f.n">Capturas del demo, con datos de ejemplo.</div>
+    </div>
+  </div>
+
+  <div class="pf-grid">
 
     <div class="pf-card reveal">
       <div class="pf-top"><span class="pf-icon">🛒</span><span class="pf-badge" data-i18n="sis.b.prod">En producción</span></div>
@@ -1933,7 +1807,6 @@
       <h3 data-i18n="sis.c2.h">Tienda online con cobros</h3>
       <p data-i18n="sis.c2.p">Catálogo con carrito y pago online integrado, más un panel para saber qué se vende y a quién.</p>
       <ul data-i18n="sis.c2.li"><li>Cobro con Mercado Pago y confirmación automática del pedido</li><li>Catálogo, precios y stock administrables</li><li>Panel de análisis: ventas, % del catálogo vendido y compradores</li></ul>
-      <div class="pf-tech"><span>Mercado Pago</span><span>Cloud Functions</span><span>Webhooks</span><span>Firebase</span></div>
     </div>
 
     <div class="pf-card reveal">
@@ -1942,7 +1815,6 @@
       <h3 data-i18n="sis.c3.h">Pedidos y reparto</h3>
       <p data-i18n="sis.c3.p">Gestión de pedidos de punta a punta, con flota, mapa de reparto y un tablero comercial para decidir con datos.</p>
       <ul data-i18n="sis.c3.li"><li>Pedidos numerados, con estados y comprobantes</li><li>Vehículos y entregas sobre mapa</li><li>Dashboard de ventas y análisis 360°</li></ul>
-      <div class="pf-tech"><span>Web app</span><span>Apps Script</span><span>Dashboards</span></div>
     </div>
 
     <div class="pf-card reveal">
@@ -1951,7 +1823,6 @@
       <h3 data-i18n="sis.c4.h">Marcación laboral y control de horas</h3>
       <p data-i18n="sis.c4.p">Cada empleado marca desde su celular; RR.HH. ve las horas y las asigna a proyectos y órdenes de trabajo.</p>
       <ul data-i18n="sis.c4.li"><li>Geolocalización y verificación opcional por cámara</li><li>Reportes de horas automáticos</li><li>Asignación de horas a proyectos y OT</li><li>Acceso según rol: empleado, supervisor, admin</li></ul>
-      <div class="pf-tech"><span>PWA</span><span>Geolocalización</span><span>Apps Script</span></div>
     </div>
 
     <div class="pf-card reveal">
@@ -1960,7 +1831,6 @@
       <h3 data-i18n="sis.c5.h">Turnos y reservas online</h3>
       <p data-i18n="sis.c5.p">El cliente reserva desde el celular y el dueño maneja su agenda, con seña y política de cancelación.</p>
       <ul data-i18n="sis.c5.li"><li>Reserva en pocos toques, sin instalar nada</li><li>Agenda y bloqueos para el dueño</li><li>Seña y cancelación configurables</li><li>Marca blanca: nombre, dirección y WhatsApp propios</li></ul>
-      <div class="pf-tech"><span>Web app</span><span>Mobile first</span><span>Marca blanca</span></div>
       <a href="/barberpro/" target="_blank" rel="noopener" class="pf-link" data-i18n="sis.demo">▶ Ver demo →</a>
     </div>
 
@@ -1970,16 +1840,14 @@
       <h3 data-i18n="sis.c6.h">Gestión de eventos masivos</h3>
       <p data-i18n="sis.c6.p">Devociones, cobros, planificación y recepción de un evento con mucha gente, en una sola app compartida por todo el equipo.</p>
       <ul data-i18n="sis.c6.li"><li>Registro de participantes y cobros</li><li>Planificación y recepción el día del evento</li><li>Varios usuarios trabajando en simultáneo</li></ul>
-      <div class="pf-tech"><span>Web app</span><span>Firebase</span><span>Tiempo real</span></div>
     </div>
 
     <div class="pf-card reveal">
       <div class="pf-top"><span class="pf-icon">🏭</span><span class="pf-badge ind" data-i18n="sis.b.ind">Industrial</span></div>
       <div class="pf-rubro" data-i18n="sis.c7.r">Industria 4.0</div>
       <h3 data-i18n="sis.c7.h">HMI web conectado a PLC</h3>
-      <p data-i18n="sis.c7.p">Panel tipo SCADA para operar y monitorear equipos industriales desde el navegador, conectado al PLC por OPC UA.</p>
-      <ul data-i18n="sis.c7.li"><li>Monitoreo y comandos de varios shuttles en tiempo real</li><li>Puente PLC Siemens ↔ sistema de gestión (ECS)</li><li>Simuladores para probar sin tocar la planta</li></ul>
-      <div class="pf-tech"><span>Python</span><span>OPC UA</span><span>Siemens PLC</span><span>REST API</span></div>
+      <p data-i18n="sis.c7.p">Panel tipo SCADA para operar y monitorear equipos industriales desde el navegador, conectado directamente al PLC.</p>
+      <ul data-i18n="sis.c7.li"><li>Monitoreo y comandos de varios equipos en tiempo real</li><li>Integración entre el PLC y el sistema de gestión de la planta</li><li>Modo de prueba para validar sin frenar la producción</li></ul>
     </div>
 
     <div class="pf-card reveal">
@@ -1988,7 +1856,6 @@
       <h3 data-i18n="sis.c8.h">Paneles de control y accesos por rol</h3>
       <p data-i18n="sis.c8.p">Un panel exclusivo para administradores desde donde se gestionan usuarios, permisos y los sistemas de la empresa.</p>
       <ul data-i18n="sis.c8.li"><li>Login único con acceso según rol</li><li>Alta de usuarios, técnicos y clientes</li><li>Historial de quién modificó qué y cuándo</li></ul>
-      <div class="pf-tech"><span>Web app</span><span>Roles</span><span>Firebase</span></div>
     </div>
 
     <div class="pf-card reveal">
@@ -1997,7 +1864,6 @@
       <h3 data-i18n="sis.c9.h">Planificador financiero</h3>
       <p data-i18n="sis.c9.p">Proyección mensual de ingresos y gastos con alertas y balance acumulado, para saber cómo va a cerrar cada mes.</p>
       <ul data-i18n="sis.c9.li"><li>Panorama del mes y gastos por categoría</li><li>Alertas y supuestos configurables</li><li>Balance proyectado y ahorro acumulado</li></ul>
-      <div class="pf-tech"><span>Web app</span><span>Gráficos</span><span>Proyecciones</span></div>
     </div>
 
   </div>
@@ -2006,7 +1872,6 @@
     <h3 data-i18n="sis.cli.h">Para cualquier rubro y cualquier tamaño de negocio</h3>
     <p data-i18n="sis.cli.p">Si tu proceso hoy vive en Excel, WhatsApp o papel, se puede convertir en un sistema.</p>
     <div class="pf-chips" data-i18n="sis.cli.chips"><span class="pf-chip">🏭 Industria y manufactura</span><span class="pf-chip">🔧 Servicios técnicos y mantenimiento</span><span class="pf-chip">🛒 Comercios y tiendas online</span><span class="pf-chip">🍽️ Gastronomía y alimentos</span><span class="pf-chip">💈 Belleza y estética</span><span class="pf-chip">🚚 Distribución y logística</span><span class="pf-chip">🎉 Eventos y comunidades</span><span class="pf-chip">🏢 Pymes y estudios profesionales</span><span class="pf-chip">🏥 Salud y consultorios</span><span class="pf-chip">🎓 Educación y capacitación</span><span class="pf-chip">🌱 Emprendedores</span></div>
-    <a href="#contacto" class="sol-cta-btn" data-i18n="sis.cta">Quiero mi sistema →</a>
   </div>
 </section>
 
@@ -2247,7 +2112,7 @@
       <h3 data-i18n="sol.c11.h">Industria 4.0 y Conectividad</h3>
       <ul data-i18n="sol.c11.li">
         <li>Paneles HMI / SCADA web</li>
-        <li>Conexión con PLC por OPC UA</li>
+        <li>Conexión con PLC y equipos de planta</li>
         <li>Puentes entre planta y sistemas de gestión</li>
         <li>Monitoreo de equipos en tiempo real</li>
       </ul>
@@ -2272,49 +2137,6 @@
       <a href="#contacto" class="sol-cta-btn" data-i18n="sol.ctaBtn">Contame tu caso →</a>
     </div>
 
-  </div>
-</section>
-
-<!-- POR QUÉ A MEDIDA -->
-<section class="porque">
-  <div class="porque-inner">
-    <div class="section-header reveal">
-      <span class="section-tag" data-i18n="porque.tag">— La diferencia</span>
-      <h2 data-i18n="porque.title">¿Por qué un sistema a medida?</h2>
-      <p data-i18n="porque.desc">Los sistemas genéricos te obligan a adaptarte a ellos. El tuyo se adapta a vos.</p>
-    </div>
-    <div class="porque-grid">
-      <div class="porque-card reveal">
-        <div class="porque-icon">🎯</div>
-        <h3 data-i18n="porque.c1.h">Sin funciones que no usás</h3>
-        <p data-i18n="porque.c1.p">Pagás solo por lo que necesitás. Sin módulos extras que ocupan pantalla y confunden a tu equipo.</p>
-      </div>
-      <div class="porque-card reveal">
-        <div class="porque-icon">🔄</div>
-        <h3 data-i18n="porque.c2.h">Flujos como los tuyos</h3>
-        <p data-i18n="porque.c2.p">Si en tu negocio un pedido pasa por 4 estados específicos, el sistema los tiene exactamente así. Sin workarounds.</p>
-      </div>
-      <div class="porque-card reveal">
-        <div class="porque-icon">📱</div>
-        <h3 data-i18n="porque.c3.h">Sin instalaciones</h3>
-        <p data-i18n="porque.c3.p">Funciona en el navegador del celular. Podés instalarlo como app sin pasar por la Play Store ni App Store.</p>
-      </div>
-      <div class="porque-card reveal">
-        <div class="porque-icon">☁️</div>
-        <h3 data-i18n="porque.c4.h">Datos en la nube</h3>
-        <p data-i18n="porque.c4.p">Toda tu información segura y accesible desde cualquier lugar. Sin depender de una sola computadora.</p>
-      </div>
-      <div class="porque-card reveal">
-        <div class="porque-icon">💬</div>
-        <h3 data-i18n="porque.c5.h">Comunicación directa</h3>
-        <p data-i18n="porque.c5.p">Trabajamos juntos durante todo el proceso. Cambios, ajustes y mejoras en tiempo real por WhatsApp.</p>
-      </div>
-      <div class="porque-card reveal">
-        <div class="porque-icon">📈</div>
-        <h3 data-i18n="porque.c6.h">Crece con tu negocio</h3>
-        <p data-i18n="porque.c6.p">El sistema no es un producto terminado. Evoluciona a medida que tu operación cambia y crece.</p>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -2402,9 +2224,9 @@
       <div class="pc-num">8</div>
       <div class="pc-img-wrap"><img loading="lazy" decoding="async" src="proceso/8.png" alt="Resultados" class="pc-img"/></div>
       <div class="pc-body">
-        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b" data-i18n="proceso.s8.tag">📊 Resultados</div>
-        <h3 class="pc-title" data-i18n="proceso.s8.title">Resultados reales</h3>
-        <p class="pc-desc" data-i18n="proceso.s8.desc">+54% ventas, +38% eficiencia, -62% tiempo administrativo. Información en tiempo real para decisiones inteligentes.</p>
+        <div class="pc-tag" style="background:rgba(245,158,11,.15);color:#f59e0b" data-i18n="proceso.s8.tag">📊 Datos</div>
+        <h3 class="pc-title" data-i18n="proceso.s8.title">Decisiones con datos</h3>
+        <p class="pc-desc" data-i18n="proceso.s8.desc">Información en tiempo real: reportes al instante y decisiones basadas en datos, no en intuición.</p>
       </div>
     </div>
 
@@ -2422,6 +2244,22 @@
   </div>
 </section>
 
+<!-- PREGUNTAS FRECUENTES -->
+<section class="faq-section" id="faq">
+  <div class="section-header reveal">
+    <span class="section-tag" data-i18n="faq.tag">— Preguntas frecuentes</span>
+    <h2 data-i18n="faq.title">Antes de escribirme</h2>
+  </div>
+  <div class="reveal">
+    <details class="faq-item"><summary data-i18n="faq.q1">¿Cuánto tarda en estar listo un sistema?</summary><p data-i18n="faq.a1">Depende del alcance. Trabajo por etapas: una primera versión funcional en días, que después se ajusta y se amplía con el uso real de tu equipo.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q2">¿Cuánto cuesta?</summary><p data-i18n="faq.a2">Depende de lo que necesites resolver. Después de una charla inicial te paso un presupuesto por escrito, antes de empezar a trabajar.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q3">¿Necesito instalar algo o comprar equipos?</summary><p data-i18n="faq.a3">No. Funciona desde el navegador del celular, la tablet o la computadora, y se puede instalar como una app. Solo si querés control de asistencia con lector físico se suma un equipo.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q4">¿Pueden trabajar con lo que ya uso (Excel, otro sistema)?</summary><p data-i18n="faq.a4">Sí. Se parte de tus planillas y procesos actuales, y cuando hace falta se conecta con los sistemas que ya tenés, como facturación o bases de datos.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q5">¿Qué pasa después de la entrega?</summary><p data-i18n="faq.a5">El sistema no queda congelado: podés pedir ajustes y funciones nuevas a medida que tu negocio cambia, con contacto directo conmigo por WhatsApp.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q6">¿Hay contrato?</summary><p data-i18n="faq.a6">Sí. Cada proyecto se formaliza con un contrato de servicios donde quedan el alcance, los plazos y las condiciones.</p></details>
+    <details class="faq-item"><summary data-i18n="faq.q7">¿Trabajás con empresas de otras ciudades o países?</summary><p data-i18n="faq.a7">Sí. Trabajo de forma remota: las reuniones son por videollamada o WhatsApp y el sistema se usa desde cualquier lugar.</p></details>
+  </div>
+</section>
 <!-- CONTACTO -->
 <section class="contacto" id="contacto">
   <div class="section-header reveal">
@@ -2446,7 +2284,7 @@
           <div class="contacto-dato-icon">✉️</div>
           <div class="contacto-dato-text">
             <a href="mailto:jvillanueva@jvsystems.com.ar">jvillanueva@jvsystems.com.ar</a>
-            <small data-i18n="contacto.mail.small">Respondo en el día</small>
+            <small data-i18n="contacto.mail.small">Consultas y presupuestos</small>
           </div>
         </div>
         <div class="contacto-dato">
@@ -2484,6 +2322,7 @@
 <footer>
   <p><span data-i18n="footer.copy">© 2026 <span>JV Systems</span> · Juan Villanueva · Soluciones Digitales Inteligentes</span></p>
   <p style="margin-top:.4rem" data-i18n="footer.sub">Todos los sistemas son desarrollos originales a medida.</p>
+  <p style="margin-top:.4rem"><a href="privacidad.html" data-i18n="footer.priv">Política de privacidad</a></p>
 </footer>
 
 <!-- WhatsApp flotante -->
@@ -2499,139 +2338,6 @@
 </nav>
 
 <script>
-// ── FONDO: CODE RAIN + DATA NODES ──
-(function() {
-  const canvas = document.getElementById('bgCanvas');
-  const ctx = canvas.getContext('2d');
-
-  const CODE_CHARS = '01{}[];()=>function const let var return if for while import export class async await true false null undefined SELECT FROM WHERE INSERT UPDATE DELETE .map .filter .reduce fetch JSON API GET POST 200 404 ERROR OK push pop splice length toString parseInt parseFloat Math.floor Date.now console.log typeof instanceof new delete try catch throw'.split(' ');
-  const DATA_SYMBOLS = ['▓','░','▒','█','▄','▀','■','□','●','○','◆','◇','▶','▷','◀','◁','⬡','⬢','∑','∂','∇','≈','≠','∞','π'];
-
-  let W, H, cols, drops, nodes, edges;
-
-  function resize() {
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    cols = Math.floor(W / 22);
-    drops = Array.from({ length: cols }, () => Math.random() * -H / 14);
-    initNodes();
-  }
-
-  // ── Nodos flotantes (red de datos) ──
-  function initNodes() {
-    const count = Math.min(28, Math.floor(W / 55));
-    nodes = Array.from({ length: count }, () => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
-      r: Math.random() * 2.5 + 1.2,
-      pulse: Math.random() * Math.PI * 2,
-      type: Math.random() < 0.3 ? 'accent' : 'blue',
-    }));
-    edges = [];
-    for (let i = 0; i < nodes.length; i++)
-      for (let j = i + 1; j < nodes.length; j++)
-        if (Math.random() < 0.18) edges.push([i, j]);
-  }
-
-  // ── Rain columns ──
-  const COLUMN_CHARS = '{}[]();=>01 const let var if for return async await true false null fetch JSON API'.split(' ');
-
-  function drawRain() {
-    const fontSize = 13;
-    ctx.font = `${fontSize}px 'Courier New', monospace`;
-
-    for (let i = 0; i < drops.length; i++) {
-      const y = drops[i] * fontSize;
-      if (y < 0) { drops[i] += 0.5; continue; }
-
-      const word = COLUMN_CHARS[Math.floor(Math.random() * COLUMN_CHARS.length)];
-      const x = i * 22 + 4;
-
-      // Head glow
-      const head = drops[i] === Math.floor(drops[i]);
-      if (head) {
-        ctx.fillStyle = 'rgba(255,200,80,0.85)';
-        ctx.shadowColor = 'rgba(255,140,0,0.7)';
-        ctx.shadowBlur = 8;
-      } else {
-        const alpha = Math.max(0.03, 0.22 - (drops[i] % 20) * 0.01);
-        ctx.fillStyle = Math.random() < 0.15
-          ? `rgba(255,140,0,${alpha * 1.4})`
-          : `rgba(80,150,255,${alpha})`;
-        ctx.shadowBlur = 0;
-      }
-      ctx.fillText(word, x, y);
-      ctx.shadowBlur = 0;
-
-      drops[i] += 0.4 + Math.random() * 0.3;
-      if (drops[i] * fontSize > H + 200) drops[i] = Math.random() * -60;
-    }
-  }
-
-  function drawNodes(t) {
-    // Edges
-    for (const [a, b] of edges) {
-      const na = nodes[a], nb = nodes[b];
-      const dist = Math.hypot(na.x - nb.x, na.y - nb.y);
-      if (dist > 220) continue;
-      const alpha = (1 - dist / 220) * 0.18;
-      ctx.beginPath();
-      ctx.moveTo(na.x, na.y);
-      ctx.lineTo(nb.x, nb.y);
-      ctx.strokeStyle = `rgba(80,150,255,${alpha})`;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
-    // Nodes
-    for (const n of nodes) {
-      n.x += n.vx; n.y += n.vy;
-      if (n.x < 0 || n.x > W) n.vx *= -1;
-      if (n.y < 0 || n.y > H) n.vy *= -1;
-      n.pulse += 0.02;
-
-      const pulse = 0.3 + 0.15 * Math.sin(n.pulse);
-      const color = n.type === 'accent' ? `rgba(255,140,0,${pulse})` : `rgba(80,150,255,${pulse})`;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r + Math.sin(n.pulse) * 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.shadowColor = n.type === 'accent' ? 'rgba(255,140,0,0.5)' : 'rgba(80,150,255,0.4)';
-      ctx.shadowBlur = 6;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-  }
-
-  // ── Líneas de scaneo ──
-  let scanY = 0;
-  function drawScan(t) {
-    scanY = (scanY + 0.4) % H;
-    const grad = ctx.createLinearGradient(0, scanY - 40, 0, scanY + 40);
-    grad.addColorStop(0, 'transparent');
-    grad.addColorStop(0.5, 'rgba(80,150,255,0.04)');
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, scanY - 40, W, 80);
-  }
-
-  function loop(t) {
-    ctx.clearRect(0, 0, W, H);
-    // Fondo base oscuro
-    ctx.fillStyle = 'rgba(7,16,29,1)';
-    ctx.fillRect(0, 0, W, H);
-
-    drawScan(t);
-    drawRain();
-    drawNodes(t);
-
-    requestAnimationFrame(loop);
-  }
-
-  window.addEventListener('resize', resize);
-  resize();
-  requestAnimationFrame(loop);
-})();
 </script>
 
 <script>
@@ -2729,37 +2435,18 @@ const I18N = {
     'pilar.marc.t': 'Attendance Tracking', 'pilar.marc.d': 'Clock in/out from a phone or with a physical terminal',
     'pilar.bi.t': 'Custom Dashboards', 'pilar.bi.d': 'Your data turned into decisions, in real time',
 
-    'stats.s1': 'Systems in production', 'stats.s2': 'Custom-built', 'stats.s3': 'Generic templates', 'stats.s4': 'Post-delivery support',
+    'stats.s1': 'Systems in production', 'stats.s2': 'Different industries', 'stats.s3': 'Active users per system', 'stats.s4': 'E-invoicing',
 
     'sobre.tag': '— About me',
     'sobre.title': `I'm Juan Villanueva,<br><em>developer</em> of custom systems`,
     'sobre.p1': `I specialize in building digital systems that solve real business problems. Every project starts with understanding how your company operates — the fields, the workflows, the day-to-day problems.`,
-    'sobre.p2': `I don't sell off-the-shelf software. I talk with you, understand how you operate, and build exactly what you need — without paying for features you'll never use.`,
+    'sobre.p2': `I don't sell off-the-shelf software. I talk with you, understand how you operate, build what you need, and stay with you after delivery.`,
     'sobre.row1.t': 'Focused on your business', 'sobre.row1.d': 'The system reflects how you work, not the other way around',
     'sobre.row2.t': 'Fast delivery', 'sobre.row2.d': 'First working versions in days, not months',
-    'sobre.row3.t': 'Works on any device', 'sobre.row3.d': 'Phone, tablet or computer, nothing to install',
+    'sobre.row3.t': 'Works on any device', 'sobre.row3.d': 'Phone, tablet or computer. Installs as an app, no app stores needed',
     'sobre.row4.t': 'Support & evolution', 'sobre.row4.d': 'The system grows with your business',
-    'sobre.row5.t': 'Data that matters', 'sobre.row5.d': 'Dashboards and reports for better decisions',
+    'sobre.row5.t': 'Direct communication', 'sobre.row5.d': 'Changes and tweaks over WhatsApp throughout the project',
 
-    'casos.tag': '— Success stories',
-    'casos.title': `Real results, <em style="font-style:normal;color:var(--accent)">not promises</em>`,
-    'casos.desc': 'This is how OrdenPro runs in production. Concrete numbers from a real deployment.',
-    'casos.toolbar': '📋 Service Orders', 'casos.live': 'LIVE',
-    'casos.row1.t': 'Maintenance — CNC Lathe', 'casos.row1.m': 'Field technician · today 09:14',
-    'casos.row2.t': 'Repair — Compressor', 'casos.row2.m': 'Field technician · today 08:40',
-    'casos.row3.t': 'Installation — Hydraulic line', 'casos.row3.m': 'Field technician · yesterday 17:05',
-    'casos.st.facturada': 'Invoiced', 'casos.st.cerrada': 'Closed', 'casos.st.abierta': 'In the field',
-    'casos.footer': 'Receipt sent via WhatsApp · digital signature on record',
-    'casos.hint': 'Real system in production',
-    'casos.clientLabel': 'In production', 'casos.clientName': 'Industrial field service',
-    'casos.clientDesc': 'Maintenance and repair of industrial machinery',
-    'casos.problemLabel': 'The problem',
-    'casos.problemText': `Service orders were handled on paper and over WhatsApp between technicians. Orders got lost, invoicing was delayed for lack of information, and nobody had real visibility into the status of each job.`,
-    'casos.features': `<li>Technicians log orders from their phone in the field</li><li>Customer receipt sent via WhatsApp in seconds</li><li>Electronic invoicing integrated with Xubio (AFIP)</li><li>Customer's digital signature at the moment of service</li><li>Visit planning with a visual calendar</li>`,
-    'casos.m1': 'Orders left unbilled', 'casos.m2': 'Active users', 'casos.m3': 'Digital receipts',
-    'casos.m4val': '1 day', 'casos.m4': 'From implementation to production',
-    'casos.demo': '▶ Try the live demo →',
-    'casos.cta': 'I want results like this →',
 
     'marc.tag': '— Attendance Control',
     'marc.title': `Time & attendance, <em style="font-style:normal;color:var(--accent)">your way</em>`,
@@ -2817,16 +2504,32 @@ const I18N = {
     'sol.c10.h': 'Appointments & Bookings',
     'sol.c10.li': '<li>Online booking from any phone</li><li>Agenda for the business</li><li>Deposits and cancellation policy</li><li>WhatsApp reminders</li>',
     'sol.c11.h': 'Industry 4.0 & Connectivity',
-    'sol.c11.li': '<li>Web HMI / SCADA panels</li><li>PLC connection via OPC UA</li><li>Bridges between plant floor and management systems</li><li>Real-time equipment monitoring</li>',
+    'sol.c11.li': '<li>Web HMI / SCADA panels</li><li>PLC and plant equipment connection</li><li>Bridges between plant floor and management systems</li><li>Real-time equipment monitoring</li>',
     'sol.c12.h': 'Events & Communities',
     'sol.c12.li': '<li>Participant registration and payments</li><li>Event planning and reception</li><li>Member and fee management</li><li>Real-time collaborative work</li>',
 
+    'sis.f.badge': 'Featured case · In production', 'sis.f.r': 'Industrial technical services',
+    'sis.f.h': 'OrdenPro: service orders & invoicing',
+    'sis.f.pl': 'The problem',
+    'sis.f.p': 'Service orders were handled on paper and over WhatsApp between technicians. Orders got lost, invoicing was delayed for lack of information, and nobody had real visibility into the status of each job.',
+    'sis.f.sl': 'The solution',
+    'sis.f.li': '<li>Technicians log the order from their phone, on the job site</li><li>The customer signs on screen and receives the receipt within seconds by WhatsApp or email</li><li>AFIP electronic invoicing integrated</li><li>Visit planning on a calendar and a change history for every order</li>',
+    'sis.f.m1': 'Orders left unbilled', 'sis.f.m2': 'Active users', 'sis.f.m3': 'Digital receipts', 'sis.f.m4v': '1 day', 'sis.f.m4': 'From implementation to production',
+    'sis.f.demo': '▶ Try the live demo →',
+    'sis.f.c1': 'Order history with statuses and filters', 'sis.f.c2': 'Invoicing and collections panel', 'sis.f.c3': 'Receipt ready to send to the customer',
+    'sis.f.n': 'Demo screenshots with sample data.',
+    'footer.priv': 'Privacy policy',
+    'faq.tag': '— FAQ', 'faq.title': 'Before you write to me',
+    'faq.q1': 'How long does it take to get a system ready?', 'faq.a1': 'It depends on the scope. I work in stages: a first working version within days, then adjusted and expanded with your team’s real use.',
+    'faq.q2': 'How much does it cost?', 'faq.a2': 'It depends on what you need to solve. After an initial conversation I send you a written quote before any work starts.',
+    'faq.q3': 'Do I need to install anything or buy equipment?', 'faq.a3': 'No. It works from the browser on a phone, tablet or computer, and can be installed as an app. Only if you want attendance control with a physical reader is a device added.',
+    'faq.q4': 'Can you work with what I already use (Excel, another system)?', 'faq.a4': 'Yes. We start from your current spreadsheets and processes and, when needed, connect with the systems you already have, such as invoicing or databases.',
+    'faq.q5': 'What happens after delivery?', 'faq.a5': 'The system is not frozen: you can ask for adjustments and new features as your business changes, with direct contact with me over WhatsApp.',
+    'faq.q6': 'Is there a contract?', 'faq.a6': 'Yes. Every project is formalized with a services contract that sets out the scope, deadlines and conditions.',
+    'faq.q7': 'Do you work with companies in other cities or countries?', 'faq.a7': 'Yes. I work remotely: meetings are by video call or WhatsApp, and the system is used from anywhere.',
     'sis.tag': '— Portfolio', 'sis.title': 'Systems I have <em style="font-style:normal;color:var(--accent)">built</em>',
     'sis.desc': 'From a field service app to a panel connected to a PLC. Every project started from a real problem and was adapted to how each client works.',
     'sis.b.prod': 'In production', 'sis.b.demo': 'Demo', 'sis.b.ind': 'Industrial', 'sis.b.tool': 'Tool', 'sis.demo': '▶ View demo →',
-    'sis.c1.r': 'Technical services', 'sis.c1.h': 'Service orders & invoicing',
-    'sis.c1.p': 'From the field visit to the invoice, paperless: the technician creates the order on their phone, the client signs on screen and billing issues the receipt.',
-    'sis.c1.li': '<li>Digital signature and PDF via WhatsApp or email</li><li>AFIP e-invoicing integrated with Xubio</li><li>Roles, planning calendar and change history</li>',
     'sis.c2.r': 'Retail & e-commerce', 'sis.c2.h': 'Online store with payments',
     'sis.c2.p': 'Catalog with cart and built-in online payment, plus a panel to see what sells and to whom.',
     'sis.c2.li': '<li>Mercado Pago checkout with automatic order confirmation</li><li>Manageable catalog, prices and stock</li><li>Analytics: sales, % of catalog sold and buyers</li>',
@@ -2843,8 +2546,8 @@ const I18N = {
     'sis.c6.p': 'Registrations, payments, planning and reception for a large event, in a single app shared by the whole team.',
     'sis.c6.li': '<li>Participant registration and payments</li><li>Planning and on-the-day reception</li><li>Multiple users working simultaneously</li>',
     'sis.c7.r': 'Industry 4.0', 'sis.c7.h': 'Web HMI connected to a PLC',
-    'sis.c7.p': 'SCADA-style panel to operate and monitor industrial equipment from the browser, connected to the PLC through OPC UA.',
-    'sis.c7.li': '<li>Real-time monitoring and commands for several shuttles</li><li>Siemens PLC ↔ management system (ECS) bridge</li><li>Simulators to test without touching the plant</li>',
+    'sis.c7.p': 'SCADA-style panel to operate and monitor industrial equipment from the browser, connected directly to the PLC.',
+    'sis.c7.li': '<li>Real-time monitoring and commands for several machines</li><li>Integration between the PLC and the plant management system</li><li>Test mode to validate without stopping production</li>',
     'sis.c8.r': 'Administration', 'sis.c8.h': 'Control panels and role-based access',
     'sis.c8.p': 'An admin-only panel to manage users, permissions and the company systems from one place.',
     'sis.c8.li': '<li>Single login with role-based access</li><li>User, technician and client management</li><li>History of who changed what and when</li>',
@@ -2854,19 +2557,10 @@ const I18N = {
     'sis.cli.h': 'For any industry and any business size',
     'sis.cli.p': 'If your process lives in Excel, WhatsApp or paper today, it can become a system.',
     'sis.cli.chips': '<span class="pf-chip">🏭 Industry & manufacturing</span><span class="pf-chip">🔧 Technical services & maintenance</span><span class="pf-chip">🛒 Shops & online stores</span><span class="pf-chip">🍽️ Food & hospitality</span><span class="pf-chip">💈 Beauty & wellness</span><span class="pf-chip">🚚 Distribution & logistics</span><span class="pf-chip">🎉 Events & communities</span><span class="pf-chip">🏢 SMEs & professional firms</span><span class="pf-chip">🏥 Health & clinics</span><span class="pf-chip">🎓 Education & training</span><span class="pf-chip">🌱 Entrepreneurs</span>',
-    'sis.cta': 'I want my system →',
     'sol.ctaTitle': 'Have a different need?',
     'sol.ctaDesc': `Often the best systems are the ones that don't exist yet. If you're currently handling something with Excel, WhatsApp, forms or paper, we can probably turn it into a simple, efficient digital solution.`,
     'sol.ctaBtn': 'Tell me your case →',
 
-    'porque.tag': '— The difference', 'porque.title': 'Why a custom system?',
-    'porque.desc': 'Generic systems force you to adapt to them. Yours adapts to you.',
-    'porque.c1.h': `No features you don't use`, 'porque.c1.p': 'You only pay for what you need. No extra modules cluttering the screen and confusing your team.',
-    'porque.c2.h': 'Workflows like yours', 'porque.c2.p': 'If in your business an order goes through 4 specific stages, the system has exactly those. No workarounds.',
-    'porque.c3.h': 'Nothing to install', 'porque.c3.p': `Works right in your phone's browser. You can install it as an app without going through the Play Store or App Store.`,
-    'porque.c4.h': 'Data in the cloud', 'porque.c4.p': 'All your information safe and accessible from anywhere. No dependence on a single computer.',
-    'porque.c5.h': 'Direct communication', 'porque.c5.p': 'We work together throughout the whole process. Changes, tweaks and improvements in real time over WhatsApp.',
-    'porque.c6.h': 'Grows with your business', 'porque.c6.p': `The system isn't a finished product. It evolves as your operation changes and grows.`,
 
     'proceso.tag': '— How I work', 'proceso.title': 'From your problem to the system you need',
     'proceso.desc': 'A story that repeats with every client. Sound familiar?',
@@ -2884,8 +2578,8 @@ const I18N = {
     'proceso.s6.desc': 'A custom system with automation, integration and smart reports. I show you the flow before building it.',
     'proceso.s7.tag': '💻 Development', 'proceso.s7.title': 'Implementation and testing',
     'proceso.s7.desc': 'I build, test, adjust and train. Every detail under control before going live.',
-    'proceso.s8.tag': '📊 Results', 'proceso.s8.title': 'Real results',
-    'proceso.s8.desc': '+54% sales, +38% efficiency, -62% admin time. Real-time information for smart decisions.',
+    'proceso.s8.tag': '📊 Data', 'proceso.s8.title': 'Data-driven decisions',
+    'proceso.s8.desc': 'Real-time information: instant reports and decisions based on data, not gut feeling.',
     'proceso.s9.tag': '🎉 Outcome', 'proceso.s9.title': 'Satisfied clients',
     'proceso.s9.desc': 'When your business grows, we grow too. Organized processes, better management, real growth.',
     'proceso.cta': 'I want my system →',
@@ -2894,7 +2588,7 @@ const I18N = {
     'contacto.desc': `Tell me what your business does and how you run it today. We'll figure out the rest together.`,
     'contacto.infoTag': 'Direct contact',
     'contacto.infoDesc': 'Custom systems developer. I reply fast — usually the same day.',
-    'contacto.wa.small': 'WhatsApp available', 'contacto.mail.small': 'I reply within the day',
+    'contacto.wa.small': 'WhatsApp available', 'contacto.mail.small': 'Inquiries and quotes',
     'contacto.loc.text': 'Remote · Anywhere', 'contacto.loc.small': 'I work with clients from anywhere in the world',
     'contacto.form.name.label': 'Your name', 'contacto.form.name.ph': `What's your name?`,
     'contacto.form.biz.label': 'Your business / company', 'contacto.form.biz.ph': 'What does it do?',
@@ -2921,37 +2615,18 @@ const I18N = {
     'pilar.marc.t': 'Registro de Ponto', 'pilar.marc.d': 'Controle de presença pelo celular ou com terminal físico',
     'pilar.bi.t': 'Dashboards sob Medida', 'pilar.bi.d': 'Seus dados transformados em decisões, em tempo real',
 
-    'stats.s1': 'Sistemas em produção', 'stats.s2': 'Feitos sob medida', 'stats.s3': 'Modelos genéricos', 'stats.s4': 'Suporte pós-entrega',
+    'stats.s1': 'Sistemas em produção', 'stats.s2': 'Setores diferentes', 'stats.s3': 'Usuários ativos por sistema', 'stats.s4': 'Faturamento eletrônico',
 
     'sobre.tag': '— Sobre mim',
     'sobre.title': 'Sou Juan Villanueva,<br><em>desenvolvedor</em> de sistemas sob medida',
     'sobre.p1': 'Sou especializado em construir sistemas digitais que resolvem problemas reais de negócios. Cada projeto nasce de entender como sua empresa opera — os campos, os fluxos, os problemas do dia a dia.',
-    'sobre.p2': 'Não vendo software de prateleira. Converso com você, entendo sua operação e construo exatamente o que você precisa, sem pagar por funções que nunca vai usar.',
+    'sobre.p2': 'Não vendo software de prateleira. Converso com você, entendo sua operação, construo o que você precisa e acompanho depois da entrega.',
     'sobre.row1.t': 'Foco no seu negócio', 'sobre.row1.d': 'O sistema reflete como você trabalha, não o contrário',
     'sobre.row2.t': 'Entrega rápida', 'sobre.row2.d': 'Primeiras versões funcionais em dias, não meses',
-    'sobre.row3.t': 'Funciona em qualquer dispositivo', 'sobre.row3.d': 'Celular, tablet ou computador, sem instalar nada',
+    'sobre.row3.t': 'Funciona em qualquer dispositivo', 'sobre.row3.d': 'Celular, tablet ou computador. Instala-se como app, sem passar pelas lojas',
     'sobre.row4.t': 'Suporte e evolução', 'sobre.row4.d': 'O sistema cresce junto com seu negócio',
-    'sobre.row5.t': 'Dados que importam', 'sobre.row5.d': 'Dashboards e relatórios para tomar melhores decisões',
+    'sobre.row5.t': 'Comunicação direta', 'sobre.row5.d': 'Mudanças e ajustes pelo WhatsApp durante todo o projeto',
 
-    'casos.tag': '— Casos de sucesso',
-    'casos.title': 'Resultados reais, <em style="font-style:normal;color:var(--accent)">não promessas</em>',
-    'casos.desc': 'É assim que o OrdenPro funciona em produção. Números concretos de uma implementação real.',
-    'casos.toolbar': '📋 Ordens de Serviço', 'casos.live': 'AO VIVO',
-    'casos.row1.t': 'Manutenção — Torno CNC', 'casos.row1.m': 'Técnico de campo · hoje 09:14',
-    'casos.row2.t': 'Reparo — Compressor', 'casos.row2.m': 'Técnico de campo · hoje 08:40',
-    'casos.row3.t': 'Instalação — Linha hidráulica', 'casos.row3.m': 'Técnico de campo · ontem 17:05',
-    'casos.st.facturada': 'Faturada', 'casos.st.cerrada': 'Fechada', 'casos.st.abierta': 'Em campo',
-    'casos.footer': 'Comprovante enviado por WhatsApp · assinatura digital registrada',
-    'casos.hint': 'Sistema real em produção',
-    'casos.clientLabel': 'Em produção', 'casos.clientName': 'Serviço técnico industrial',
-    'casos.clientDesc': 'Manutenção e reparo de maquinário industrial',
-    'casos.problemLabel': 'O problema',
-    'casos.problemText': 'As ordens de serviço eram controladas em papel e por WhatsApp entre técnicos. Ordens se perdiam, o faturamento atrasava por falta de informação e ninguém tinha visibilidade real do status de cada trabalho.',
-    'casos.features': '<li>Técnicos registram as ordens pelo celular em campo</li><li>Comprovante enviado ao cliente em segundos por WhatsApp</li><li>Faturamento eletrônico integrado com Xubio (AFIP)</li><li>Assinatura digital do cliente no momento do serviço</li><li>Planejamento de visitas com calendário visual</li>',
-    'casos.m1': 'Ordens sem faturar', 'casos.m2': 'Usuários ativos', 'casos.m3': 'Comprovantes digitais',
-    'casos.m4val': '1 dia', 'casos.m4': 'Da implementação à produção',
-    'casos.demo': '▶ Testar a demo ao vivo →',
-    'casos.cta': 'Quero resultados assim →',
 
     'marc.tag': '— Controle de Ponto',
     'marc.title': 'Marcação de ponto, <em style="font-style:normal;color:var(--accent)">do seu jeito</em>',
@@ -3009,16 +2684,32 @@ const I18N = {
     'sol.c10.h': 'Agendamentos e Reservas',
     'sol.c10.li': '<li>Reserva online pelo celular</li><li>Agenda para o negócio</li><li>Sinal e política de cancelamento</li><li>Lembretes por WhatsApp</li>',
     'sol.c11.h': 'Indústria 4.0 e Conectividade',
-    'sol.c11.li': '<li>Painéis HMI / SCADA web</li><li>Conexão com CLP via OPC UA</li><li>Pontes entre a fábrica e os sistemas de gestão</li><li>Monitoramento de equipamentos em tempo real</li>',
+    'sol.c11.li': '<li>Painéis HMI / SCADA web</li><li>Conexão com CLP e equipamentos da planta</li><li>Pontes entre a fábrica e os sistemas de gestão</li><li>Monitoramento de equipamentos em tempo real</li>',
     'sol.c12.h': 'Eventos e Comunidades',
     'sol.c12.li': '<li>Cadastro de participantes e cobranças</li><li>Planejamento e recepção de eventos</li><li>Gestão de sócios e mensalidades</li><li>Trabalho colaborativo em tempo real</li>',
 
+    'sis.f.badge': 'Caso de destaque · Em produção', 'sis.f.r': 'Serviços técnicos industriais',
+    'sis.f.h': 'OrdenPro: ordens de serviço e faturamento',
+    'sis.f.pl': 'O problema',
+    'sis.f.p': 'As ordens de serviço eram controladas em papel e por WhatsApp entre técnicos. Ordens se perdiam, o faturamento atrasava por falta de informação e ninguém tinha visibilidade real do status de cada trabalho.',
+    'sis.f.sl': 'A solução',
+    'sis.f.li': '<li>Os técnicos registram a ordem pelo celular, no local do trabalho</li><li>O cliente assina na tela e recebe o comprovante em segundos por WhatsApp ou e-mail</li><li>Faturamento eletrônico AFIP integrado</li><li>Planejamento de visitas em calendário e histórico de alterações de cada ordem</li>',
+    'sis.f.m1': 'Ordens sem faturar', 'sis.f.m2': 'Usuários ativos', 'sis.f.m3': 'Comprovantes digitais', 'sis.f.m4v': '1 dia', 'sis.f.m4': 'Da implementação à produção',
+    'sis.f.demo': '▶ Testar a demo ao vivo →',
+    'sis.f.c1': 'Histórico de ordens com status e filtros', 'sis.f.c2': 'Painel de faturamento e cobranças', 'sis.f.c3': 'Comprovante pronto para enviar ao cliente',
+    'sis.f.n': 'Capturas da demo, com dados de exemplo.',
+    'footer.priv': 'Política de privacidade',
+    'faq.tag': '— Perguntas frequentes', 'faq.title': 'Antes de me escrever',
+    'faq.q1': 'Quanto tempo leva para um sistema ficar pronto?', 'faq.a1': 'Depende do escopo. Trabalho em etapas: uma primeira versão funcional em dias, que depois é ajustada e ampliada com o uso real da sua equipe.',
+    'faq.q2': 'Quanto custa?', 'faq.a2': 'Depende do que você precisa resolver. Depois de uma conversa inicial envio um orçamento por escrito, antes de começar a trabalhar.',
+    'faq.q3': 'Preciso instalar algo ou comprar equipamentos?', 'faq.a3': 'Não. Funciona no navegador do celular, tablet ou computador, e pode ser instalado como app. Só se você quiser controle de ponto com leitor físico é que se soma um equipamento.',
+    'faq.q4': 'Vocês conseguem trabalhar com o que eu já uso (Excel, outro sistema)?', 'faq.a4': 'Sim. Partimos das suas planilhas e processos atuais e, quando necessário, conectamos com os sistemas que você já tem, como faturamento ou bancos de dados.',
+    'faq.q5': 'O que acontece depois da entrega?', 'faq.a5': 'O sistema não fica congelado: você pode pedir ajustes e novas funções conforme seu negócio muda, com contato direto comigo pelo WhatsApp.',
+    'faq.q6': 'Existe contrato?', 'faq.a6': 'Sim. Cada projeto é formalizado com um contrato de serviços em que ficam definidos o escopo, os prazos e as condições.',
+    'faq.q7': 'Você trabalha com empresas de outras cidades ou países?', 'faq.a7': 'Sim. Trabalho de forma remota: as reuniões são por videochamada ou WhatsApp e o sistema é usado de qualquer lugar.',
     'sis.tag': '— Portfólio', 'sis.title': 'Sistemas que já <em style="font-style:normal;color:var(--accent)">construí</em>',
     'sis.desc': 'De um app de campo a um painel conectado a um CLP. Cada projeto nasceu de um problema real e foi adaptado à forma de trabalho de cada cliente.',
     'sis.b.prod': 'Em produção', 'sis.b.demo': 'Demo', 'sis.b.ind': 'Industrial', 'sis.b.tool': 'Ferramenta', 'sis.demo': '▶ Ver demo →',
-    'sis.c1.r': 'Serviços técnicos', 'sis.c1.h': 'Ordens de serviço e faturamento',
-    'sis.c1.p': 'Da visita em campo à fatura, sem papel: o técnico registra a ordem pelo celular, o cliente assina na tela e o faturamento emite o comprovante.',
-    'sis.c1.li': '<li>Assinatura digital e PDF por WhatsApp ou e-mail</li><li>Faturamento eletrônico AFIP integrado com Xubio</li><li>Perfis, calendário de planejamento e histórico de alterações</li>',
     'sis.c2.r': 'Comércio e e-commerce', 'sis.c2.h': 'Loja online com pagamentos',
     'sis.c2.p': 'Catálogo com carrinho e pagamento online integrado, mais um painel para saber o que vende e para quem.',
     'sis.c2.li': '<li>Pagamento com Mercado Pago e confirmação automática do pedido</li><li>Catálogo, preços e estoque administráveis</li><li>Painel de análise: vendas, % do catálogo vendido e compradores</li>',
@@ -3035,8 +2726,8 @@ const I18N = {
     'sis.c6.p': 'Cadastros, cobranças, planejamento e recepção de um evento com muita gente, em um único app compartilhado por toda a equipe.',
     'sis.c6.li': '<li>Cadastro de participantes e cobranças</li><li>Planejamento e recepção no dia do evento</li><li>Vários usuários trabalhando ao mesmo tempo</li>',
     'sis.c7.r': 'Indústria 4.0', 'sis.c7.h': 'HMI web conectado a CLP',
-    'sis.c7.p': 'Painel estilo SCADA para operar e monitorar equipamentos industriais pelo navegador, conectado ao CLP via OPC UA.',
-    'sis.c7.li': '<li>Monitoramento e comandos de vários shuttles em tempo real</li><li>Ponte CLP Siemens ↔ sistema de gestão (ECS)</li><li>Simuladores para testar sem mexer na planta</li>',
+    'sis.c7.p': 'Painel estilo SCADA para operar e monitorar equipamentos industriais pelo navegador, conectado diretamente ao CLP.',
+    'sis.c7.li': '<li>Monitoramento e comandos de vários equipamentos em tempo real</li><li>Integração entre o CLP e o sistema de gestão da planta</li><li>Modo de teste para validar sem parar a produção</li>',
     'sis.c8.r': 'Administração', 'sis.c8.h': 'Painéis de controle e acesso por perfil',
     'sis.c8.p': 'Um painel exclusivo para administradores, onde se gerenciam usuários, permissões e os sistemas da empresa.',
     'sis.c8.li': '<li>Login único com acesso por perfil</li><li>Cadastro de usuários, técnicos e clientes</li><li>Histórico de quem alterou o quê e quando</li>',
@@ -3046,19 +2737,10 @@ const I18N = {
     'sis.cli.h': 'Para qualquer setor e qualquer tamanho de negócio',
     'sis.cli.p': 'Se o seu processo hoje vive no Excel, no WhatsApp ou no papel, ele pode virar um sistema.',
     'sis.cli.chips': '<span class="pf-chip">🏭 Indústria e manufatura</span><span class="pf-chip">🔧 Serviços técnicos e manutenção</span><span class="pf-chip">🛒 Lojas e lojas online</span><span class="pf-chip">🍽️ Gastronomia e alimentos</span><span class="pf-chip">💈 Beleza e estética</span><span class="pf-chip">🚚 Distribuição e logística</span><span class="pf-chip">🎉 Eventos e comunidades</span><span class="pf-chip">🏢 PMEs e escritórios profissionais</span><span class="pf-chip">🏥 Saúde e consultórios</span><span class="pf-chip">🎓 Educação e capacitação</span><span class="pf-chip">🌱 Empreendedores</span>',
-    'sis.cta': 'Quero o meu sistema →',
     'sol.ctaTitle': 'Tem outra necessidade?',
     'sol.ctaDesc': 'Muitas vezes os melhores sistemas são os que ainda não existem. Se hoje você controla algo com Excel, WhatsApp, formulários ou papel, provavelmente podemos transformar isso em uma solução digital simples e eficiente.',
     'sol.ctaBtn': 'Conte seu caso →',
 
-    'porque.tag': '— A diferença', 'porque.title': 'Por que um sistema sob medida?',
-    'porque.desc': 'Sistemas genéricos obrigam você a se adaptar a eles. O seu se adapta a você.',
-    'porque.c1.h': 'Sem funções que você não usa', 'porque.c1.p': 'Você paga só pelo que precisa. Sem módulos extras que ocupam tela e confundem sua equipe.',
-    'porque.c2.h': 'Fluxos como os seus', 'porque.c2.p': 'Se no seu negócio um pedido passa por 4 estados específicos, o sistema tem exatamente esses. Sem gambiarras.',
-    'porque.c3.h': 'Sem instalações', 'porque.c3.p': 'Funciona no navegador do celular. Você pode instalar como app sem passar pela Play Store ou App Store.',
-    'porque.c4.h': 'Dados na nuvem', 'porque.c4.p': 'Todas as suas informações seguras e acessíveis de qualquer lugar. Sem depender de um único computador.',
-    'porque.c5.h': 'Comunicação direta', 'porque.c5.p': 'Trabalhamos juntos durante todo o processo. Mudanças, ajustes e melhorias em tempo real pelo WhatsApp.',
-    'porque.c6.h': 'Cresce com seu negócio', 'porque.c6.p': 'O sistema não é um produto pronto. Ele evolui à medida que sua operação muda e cresce.',
 
     'proceso.tag': '— Como trabalho', 'proceso.title': 'Do seu problema ao sistema que você precisa',
     'proceso.desc': 'Uma história que se repete com cada cliente. Você se identifica?',
@@ -3076,8 +2758,8 @@ const I18N = {
     'proceso.s6.desc': 'Sistema sob medida com automação, integração e relatórios inteligentes. Mostro o fluxo antes de construir.',
     'proceso.s7.tag': '💻 Desenvolvimento', 'proceso.s7.title': 'Implementação e testes',
     'proceso.s7.desc': 'Desenvolvo, testo, ajusto e capacito. Cada detalhe sob controle antes de entrar em produção.',
-    'proceso.s8.tag': '📊 Resultados', 'proceso.s8.title': 'Resultados reais',
-    'proceso.s8.desc': '+54% vendas, +38% eficiência, -62% tempo administrativo. Informação em tempo real para decisões inteligentes.',
+    'proceso.s8.tag': '📊 Dados', 'proceso.s8.title': 'Decisões com dados',
+    'proceso.s8.desc': 'Informação em tempo real: relatórios instantâneos e decisões baseadas em dados, não em intuição.',
     'proceso.s9.tag': '🎉 Resultado', 'proceso.s9.title': 'Clientes satisfeitos',
     'proceso.s9.desc': 'Quando seu negócio cresce, nós também crescemos. Processos organizados, melhor gestão, crescimento real.',
     'proceso.cta': 'Quero meu sistema →',
@@ -3086,7 +2768,7 @@ const I18N = {
     'contacto.desc': 'Me conte o que sua empresa faz e como você a gerencia hoje. O resto a gente vê juntos.',
     'contacto.infoTag': 'Contato direto',
     'contacto.infoDesc': 'Desenvolvedor de sistemas sob medida. Respondo rápido — geralmente no mesmo dia.',
-    'contacto.wa.small': 'WhatsApp disponível', 'contacto.mail.small': 'Respondo no mesmo dia',
+    'contacto.wa.small': 'WhatsApp disponível', 'contacto.mail.small': 'Consultas e orçamentos',
     'contacto.loc.text': 'Remoto · Em qualquer lugar', 'contacto.loc.small': 'Trabalho com clientes de qualquer lugar do mundo',
     'contacto.form.name.label': 'Seu nome', 'contacto.form.name.ph': 'Qual é o seu nome?',
     'contacto.form.biz.label': 'Seu negócio / empresa', 'contacto.form.biz.ph': 'O que ela faz?',
