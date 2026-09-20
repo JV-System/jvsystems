@@ -2248,6 +2248,26 @@
   </div>
 </div>
 
+<!-- MODAL ANUNCIO PERSONAS POR VISITA (todos los perfiles, texto segun rol) -->
+<div id="modal-anuncio3" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-bienvenida-card" style="max-width:400px;max-height:90vh;overflow-y:auto;">
+    <div style="background:linear-gradient(135deg,#0A1628 60%,#1a3a6e);padding:26px 24px 18px;text-align:center;">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;border:1.5px solid rgba(255,255,255,0.15);">👥</div>
+      <div style="font-size:10px;font-weight:700;color:#7EB3F7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Novedades para vos</div>
+      <div id="anuncio3-nombre" style="color:#fff;font-size:19px;font-weight:800;line-height:1.25;"></div>
+      <div style="color:#bcd4f7;font-size:12px;margin-top:4px;">Nuevo: personas por visita</div>
+    </div>
+    <div style="padding:20px 22px 22px;">
+      <div id="anuncio3-cuerpo"></div>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0 0 18px;">Tenés el paso a paso en tu instructivo (📖). Cualquier cosa rara que veas, avisame que lo reviso. 🙌</p>
+      <button onclick="cerrarAnuncio3()"
+              style="width:100%;background:#1565D8;color:#fff;font-weight:700;font-size:14px;padding:13px;border-radius:10px;border:none;cursor:pointer;">
+        Entendido →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PANEL INSTRUCTIVO -->
 <div id="panel-instructivo" style="display:none;position:fixed;inset:0;z-index:10000;background:#f2f4f8;flex-direction:column;">
   <iframe id="iframe-instructivo" src="" style="flex:1;border:none;width:100%;height:100%;"></iframe>
@@ -2669,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 43;
+const APP_BUILD = 44;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8092,6 +8112,7 @@ function hideLoginScreen() {
   mostrarBienvenida();
   setTimeout(mostrarAnuncioXubio, 1200);
   setTimeout(mostrarAnuncioGarantiaPV, 1600);
+  setTimeout(mostrarAnuncioPersonas, 2000);
 }
 
 // Aviso de novedades (creación automática de cliente en Xubio) — una sola
@@ -8140,6 +8161,58 @@ function mostrarAnuncioGarantiaPV() {
 function cerrarAnuncio2() {
   const modal = document.getElementById('modal-anuncio2');
   if (modal) modal.style.display = 'none';
+}
+
+// Aviso de novedades: "personas por visita" (20/9). Lo ven TODOS los perfiles,
+// con el texto de cada rol. A diferencia de los avisos anteriores, se marca
+// como visto recien cuando la persona toca "Entendido" (asi si lo cierra sin
+// querer o recarga, le vuelve a aparecer y nadie se lo pierde).
+var _ANUNCIO3_TEXTOS = {
+  tecnico: [
+    'Sumé algo nuevo en la pestaña <b>Tiempos</b> de cada orden: cuántas <b>personas</b> fueron en cada visita.',
+    '👥 Si fueron 2 o más (otro técnico o un ayudante), cambiá el número y te aparece un campo para el <b>nombre de cada persona de más</b>: elegí un técnico de la lista o escribí el nombre del ayudante. Vos figurás solo como la primera persona.',
+    '✅ Cuando el nombre queda guardado aparece un <b>✓ Listo</b> verde al lado.',
+    '⏱ Cargá siempre el <b>tiempo real</b> que trabajaron. El adicional para facturar lo suma Facturación solo.'
+  ],
+  facturacion: [
+    'Cuando en una visita fueron <b>2 o más personas</b>, las horas de Mano de obra ahora se completan solas: se suma <b>media hora por cada hora trabajada y por cada persona de más</b>.',
+    '🧮 Ejemplos: 1 hs con 2 personas → <b>1,5 hs</b> · 2 hs con 2 personas → <b>3 hs</b> · 1 hs con 3 personas → <b>2 hs</b>.',
+    '👥 En el detalle de visitas ves <b>quiénes fueron</b>, y abajo una <b>observación</b> azul que explica el cálculo. Podés editar las horas como siempre.',
+    '🔒 Es solo un dato interno: <b>no cambia nada de lo que se manda a Xubio</b> (va solo el importe, como siempre) ni lo que ve el cliente.'
+  ],
+  admin: [
+    'Sumé el campo <b>Personas</b> en cada visita.',
+    '🔧 <b>Técnicos:</b> en la pestaña Tiempos indican cuántas personas fueron y el nombre de cada persona de más (de la lista o un ayudante), con un <b>✓ Listo</b> verde cuando queda guardado.',
+    '💰 <b>Facturación:</b> las horas de mano de obra se sugieren solas: <b>media hora por cada hora trabajada y por cada persona de más</b> (2 hs con 2 personas → 3 hs), con los nombres y una observación. Se pueden editar.',
+    '🔒 Es un dato interno: no cambia lo que se manda a Xubio ni lo que ve el cliente.'
+  ]
+};
+function mostrarAnuncioPersonas() {
+  const cu = getCurrentUser();
+  if (!cu) return;
+  const key = 'branca_anuncio_personas_' + (cu.username || cu.id || 'user');
+  try { if (localStorage.getItem(key)) return; } catch(e) { return; }
+  // Esperar a que se cierren los otros carteles para no superponerlos
+  const otros = ['modal-bienvenida', 'modal-anuncio', 'modal-anuncio2'];
+  if (otros.some(function(id) { const m = document.getElementById(id); return m && m.style.display === 'flex'; })) {
+    setTimeout(mostrarAnuncioPersonas, 800);
+    return;
+  }
+  const modal = document.getElementById('modal-anuncio3');
+  if (!modal) return;
+  const textos = _ANUNCIO3_TEXTOS[cu.role] || _ANUNCIO3_TEXTOS.admin;
+  const primerNombre = ((cu.nombre || cu.username || '').trim().split(/\s+/)[0]) || cu.username;
+  document.getElementById('anuncio3-nombre').textContent = '¡Hola, ' + primerNombre + '!';
+  document.getElementById('anuncio3-cuerpo').innerHTML = textos.map(function(t) {
+    return '<p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">' + t + '</p>';
+  }).join('');
+  modal.style.display = 'flex';
+}
+function cerrarAnuncio3() {
+  const modal = document.getElementById('modal-anuncio3');
+  if (modal) modal.style.display = 'none';
+  const cu = getCurrentUser();
+  if (cu) { try { localStorage.setItem('branca_anuncio_personas_' + (cu.username || cu.id || 'user'), '1'); } catch(e) {} }
 }
 
 function mostrarBienvenida() {
