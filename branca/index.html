@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 42;
+const APP_BUILD = 43;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -4897,9 +4897,9 @@ function renderTabTiempos() {
             ${(parseInt(v.personas,10) || 1) > 1 ? `
             <tr class="visita-personas-row">
               <td colspan="${locked ? 4 : 5}" style="background:#eff6ff;border-radius:6px;padding:8px 10px;">
-                <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:6px;">👥 ¿Quiénes fueron? <span style="font-weight:500;color:#1565D8;">(1° es el responsable de la planilla; para el resto elegí un técnico de la lista o escribí el nombre de un ayudante)</span></div>
+                <div style="font-size:11px;font-weight:700;color:#1565D8;margin-bottom:6px;">👥 ¿Quiénes fueron? <span style="font-weight:500;color:#1565D8;">(1° es el responsable de la planilla; para el resto elegí un técnico de la lista o escribí el nombre de un ayudante)</span></div>
                 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
-                  <span style="padding:6px 10px;background:#dbeafe;border-radius:6px;font-size:13px;font-weight:600;color:#1e3a8a;">${esc(nombreResponsable(o))}</span>
+                  <span style="padding:6px 10px;background:#dbeafe;border-radius:6px;font-size:13px;font-weight:600;color:#0D47A1;">${esc(nombreResponsable(o))}</span>
                   ${Array.from({length: (parseInt(v.personas,10) || 1) - 1}, (_, j) => `
                   <span style="flex:1;min-width:190px;display:flex;align-items:center;gap:6px;">
                     <input type="text" list="dl-personas-visita" placeholder="Nombre del técnico o ayudante" value="${esc((v.acompanantes && v.acompanantes[j]) || '')}" onchange="updateAcompanante(${i},${j},this.value)" oninput="marcarAcompanante(${i},${j},this,event)" style="flex:1;min-width:0;" ${locked?'readonly':''}>
@@ -5989,7 +5989,7 @@ function renderFactRow(o) {
               }).join('')
             + '</table></div></div>' : '')
           + (hayMultiPers ? '<div id="fact-obs-pers-'+o.id+'" style="padding:8px 16px 0;background:#f8fafc;">'
-            + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px;color:#1e40af;line-height:1.5;">'
+            + '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:12px;color:#1565D8;line-height:1.5;">'
             + '👥 Trabajadas: <strong>' + fmtHs(hsTrabajadas) + '</strong> · Extra por personas: <strong>+' + fmtHs(hsExtraPers) + '</strong> → A facturar: <strong>' + fmtHs(hsTrabajadas + hsExtraPers) + '</strong>'
             + '<div style="font-size:11px;opacity:.8;margin-top:2px;">Se suma ' + fmtHs(HORAS_EXTRA_POR_PERSONA) + ' por cada hora y por cada persona de más. Podés editar las horas. Solo interno: no va a Xubio ni al cliente.</div>'
             + '</div></div>' : '');
