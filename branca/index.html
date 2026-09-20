@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 38;
+const APP_BUILD = 39;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -4894,9 +4894,21 @@ function renderTabTiempos() {
               <td><input type="text" placeholder="descripción" value="${esc(v.causa)}" onchange="updateVisita(${i},'causa',this.value)" ${locked?'readonly':''}></td>
               ${!locked ? `<td><button class="btn-icon" onclick="removeVisita(${i})">✕</button></td>` : ''}
             </tr>
+            ${(parseInt(v.personas,10) || 1) > 1 ? `
+            <tr class="visita-personas-row">
+              <td colspan="${locked ? 4 : 5}" style="background:#f5f3ff;border-radius:6px;padding:8px 10px;">
+                <div style="font-size:11px;font-weight:700;color:#5b21b6;margin-bottom:6px;">👥 ¿Quiénes fueron? <span style="font-weight:500;color:#7c3aed;">(1° es el responsable de la planilla; para el resto elegí un técnico de la lista o escribí el nombre de un ayudante)</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
+                  <span style="padding:6px 10px;background:#ede9fe;border-radius:6px;font-size:13px;font-weight:600;color:#4c1d95;">${esc(nombreResponsable(o))}</span>
+                  ${Array.from({length: (parseInt(v.personas,10) || 1) - 1}, (_, j) => `
+                  <input type="text" list="dl-personas-visita" placeholder="Nombre del técnico o ayudante" value="${esc((v.acompanantes && v.acompanantes[j]) || '')}" onchange="updateAcompanante(${i},${j},this.value)" style="flex:1;min-width:170px;" ${locked?'readonly':''}>`).join('')}
+                </div>
+              </td>
+            </tr>` : ''}
           `).join('')}
         </tbody>
       </table>
+      <datalist id="dl-personas-visita">${getAsignables().filter(t => _normNombre(t.nombre) !== _normNombre(nombreResponsable(o))).map(t => `<option value="${esc(t.nombre)}">`).join('')}</datalist>
       ${!locked ? `<button class="btn-add-row" onclick="addVisita()">+ Agregar visita</button>` : ''}
     </div>
 
@@ -4967,7 +4979,27 @@ function updateVisita(i, field, val) {
   // Personas: siempre un entero >= 1 (vacío o inválido = 1 persona)
   if (field === 'personas') val = Math.max(1, parseInt(val, 10) || 1);
   ordenActual.visitas[i][field] = val;
+  if (field === 'personas') {
+    // Un nombre por cada persona de más (la primera es el responsable de la planilla)
+    var ac = (ordenActual.visitas[i].acompanantes || []).slice(0, val - 1);
+    while (ac.length < val - 1) ac.push('');
+    ordenActual.visitas[i].acompanantes = ac;
+    saveData();
+    renderTab(); // dibuja/quita los campos de nombre
+    return;
+  }
   saveData();
+}
+// Nombre de la persona que se anota en un lugar extra de la visita
+function updateAcompanante(i, j, val) {
+  var v = ordenActual.visitas[i] = ordenActual.visitas[i] || {};
+  v.acompanantes = v.acompanantes || [];
+  v.acompanantes[j] = String(val || '').trim();
+  saveData();
+}
+// Nombre de quien viene haciendo la planilla (1ª persona de cada visita)
+function nombreResponsable(o) {
+  return (o && (o.responsable || o.tecnicoNombre || o.creadorNombre)) || 'Responsable';
 }
 
 // SIGNATURE PADS
@@ -5933,7 +5965,9 @@ function renderFactRow(o) {
                 return '<tr style="border-bottom:1px solid #f3f4f6;">'
                   + '<td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td>'
                   + '<td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td>'
-                  + (hayMultiPers ? '<td style="padding:5px 14px;color:#111;">'+horasVisita(v).personas+(horasVisita(v).extra > 0 ? ' <span style="color:#7c3aed;font-weight:700;">(+'+fmtHs(horasVisita(v).extra)+')</span>' : '')+'</td>' : '')
+                  + (hayMultiPers ? '<td style="padding:5px 14px;color:#111;">'+horasVisita(v).personas+(horasVisita(v).extra > 0 ? ' <span style="color:#7c3aed;font-weight:700;">(+'+fmtHs(horasVisita(v).extra)+')</span>' : '')
+                      +(horasVisita(v).personas > 1 ? '<div style="font-size:10px;color:#6b7280;font-weight:500;line-height:1.35;">'+esc([nombreResponsable(o)].concat((v.acompanantes||[]).slice(0, horasVisita(v).personas-1).filter(Boolean)).join(' + '))+'</div>' : '')
+                      +'</td>' : '')
                   + '<td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td>'
                   + '</tr>';
               }).join('')
