@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 40;
+const APP_BUILD = 41;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5991,7 +5991,7 @@ function renderFactRow(o) {
           + (hayMultiPers ? '<div id="fact-obs-pers-'+o.id+'" style="padding:8px 16px 0;background:#f8fafc;">'
             + '<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;font-size:12px;color:#5b21b6;line-height:1.5;">'
             + '👥 <strong>Observación:</strong> en total se trabajaron ' + fmtHs(hsTrabajadas) + ' y en alguna visita fue más de una persona (técnico y/o ayudante). '
-            + 'Se agregan ' + fmtHs(HORAS_EXTRA_POR_PERSONA) + ' por cada persona adicional en cada visita (+' + fmtHs(hsExtraPers) + '), '
+            + 'Se agrega ' + fmtHs(HORAS_EXTRA_POR_PERSONA) + ' por cada hora trabajada y por cada persona adicional (+' + fmtHs(hsExtraPers) + '), '
             + 'por eso la mano de obra se sugiere en <strong>' + fmtHs(hsTrabajadas + hsExtraPers) + '</strong>. '
             + 'Podés editar las horas. <span style="opacity:.75;">Es solo un dato interno: no se envía a Xubio ni se le muestra al cliente.</span>'
             + '</div></div>' : '');
@@ -6064,18 +6064,19 @@ function parsearHoras(str) {
   return h + m / 60;
 }
 
-// Horas extra a facturar por cada persona de más en una visita (pedido de
-// Ornela, 20/9): trabajaron 1 hs entre 2 personas -> se factura 1:30. Es solo
-// para mostrar/sugerir el valor por defecto en Facturación; NO viaja a Xubio
-// por separado (a Xubio va solo el importe final, como siempre).
-var HORAS_EXTRA_POR_PERSONA = 0.5;
+// Regla (pedido de Ornela, 20/9, aclarada por Juan): por CADA HORA trabajada y
+// por cada persona de más se suma media hora para facturar. Ej: 1 hs con 2
+// personas -> 1,5 hs; 2 hs con 2 personas -> 3 hs; 1 hs con 3 personas -> 2 hs.
+// Es solo para mostrar/sugerir el valor por defecto en Facturación; NO viaja
+// a Xubio por separado (a Xubio va solo el importe final, como siempre).
+var HORAS_EXTRA_POR_PERSONA = 0.5;   // por cada hora trabajada y por cada persona adicional
 // Devuelve el detalle de una visita: horas trabajadas, personas, horas extra
 // por personas adicionales y el total a facturar. Sin dato de personas (todas
 // las órdenes anteriores) se toma 1 persona -> mismo resultado que siempre.
 function horasVisita(v) {
   var base = parsearHoras(v && v.tiempo);
   var personas = Math.max(1, parseInt(v && v.personas, 10) || 1);
-  var extra = base > 0 ? HORAS_EXTRA_POR_PERSONA * (personas - 1) : 0;
+  var extra = base > 0 ? Math.round(HORAS_EXTRA_POR_PERSONA * base * (personas - 1) * 100) / 100 : 0;
   return { base: base, personas: personas, extra: extra, total: base + extra };
 }
 // Formato de horas para mostrar (1 -> "1 hs", 1.5 -> "1,5 hs").
