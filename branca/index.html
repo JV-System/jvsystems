@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 37;
+const APP_BUILD = 38;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -4880,6 +4880,7 @@ function renderTabTiempos() {
           <tr>
             <th>Fecha</th>
             <th>Tiempo</th>
+            <th title="Cantidad de personas que fueron (técnicos o ayudantes)">Personas</th>
             <th>Causa / Acción</th>
             ${!locked ? '<th></th>' : ''}
           </tr>
@@ -4889,6 +4890,7 @@ function renderTabTiempos() {
             <tr>
               <td><input type="date" value="${esc(v.fecha)}" onchange="updateVisita(${i},'fecha',this.value)" ${locked?'readonly':''}></td>
               <td><input type="text" placeholder="ej: 2h 30min" value="${esc(v.tiempo)}" onchange="updateVisita(${i},'tiempo',this.value)" style="width:100px" ${locked?'readonly':''}></td>
+              <td><input type="number" min="1" step="1" inputmode="numeric" value="${esc(String(v.personas||1))}" onchange="updateVisita(${i},'personas',this.value)" style="width:64px;text-align:center" ${locked?'readonly':''}></td>
               <td><input type="text" placeholder="descripción" value="${esc(v.causa)}" onchange="updateVisita(${i},'causa',this.value)" ${locked?'readonly':''}></td>
               ${!locked ? `<td><button class="btn-icon" onclick="removeVisita(${i})">✕</button></td>` : ''}
             </tr>
@@ -4956,11 +4958,17 @@ function renderTabTiempos() {
 
 function addVisita() {
   ordenActual.visitas = ordenActual.visitas || [];
-  ordenActual.visitas.push({ fecha: '', tiempo: '', causa: '' });
+  ordenActual.visitas.push({ fecha: '', tiempo: '', causa: '', personas: 1 });
   saveData(); renderTab();
 }
 function removeVisita(i) { if (ordenActual.visitas.length > 1) { ordenActual.visitas.splice(i, 1); saveData(); renderTab(); } }
-function updateVisita(i, field, val) { ordenActual.visitas[i] = ordenActual.visitas[i] || {}; ordenActual.visitas[i][field] = val; saveData(); }
+function updateVisita(i, field, val) {
+  ordenActual.visitas[i] = ordenActual.visitas[i] || {};
+  // Personas: siempre un entero >= 1 (vacío o inválido = 1 persona)
+  if (field === 'personas') val = Math.max(1, parseInt(val, 10) || 1);
+  ordenActual.visitas[i][field] = val;
+  saveData();
+}
 
 // SIGNATURE PADS
 function initSignaturePad(canvasId) {
@@ -5829,7 +5837,12 @@ function renderFactRow(o) {
         var vis = (o.visitas||[]).filter(function(v){ return v.tiempo; });
         // Preferir las horas editadas a mano (guardadas) sobre las de la visita original,
         // asi no se pisan cada vez que se reabre/guarda la factura.
-        var totalHs = (f.horasManual != null) ? f.horasManual : vis.reduce(function(sum,v){ return sum + parsearHoras(v.tiempo); }, 0);
+        var totalHs = (f.horasManual != null) ? f.horasManual : vis.reduce(function(sum,v){ return sum + horasVisita(v).total; }, 0);
+        // Resumen para la observación (solo informativo, solo se muestra si alguna
+        // visita tuvo más de 1 persona)
+        var hsTrabajadas = vis.reduce(function(sum,v){ return sum + horasVisita(v).base; }, 0);
+        var hsExtraPers  = vis.reduce(function(sum,v){ return sum + horasVisita(v).extra; }, 0);
+        var hayMultiPers = vis.some(function(v){ return horasVisita(v).personas > 1; });
         var hsStr = totalHs > 0 ? (totalHs % 1 === 0 ? totalHs + ' hs' : totalHs.toFixed(1) + ' hs') : '—';
         var moDesc = (o.probDetectado ? 'Problema: '+o.probDetectado : '') + (o.accionRealizada ? (o.probDetectado?' / ':'') + 'Acción: '+o.accionRealizada : '');
         var modoMO = f.modoMO || 'hora';
@@ -5913,15 +5926,25 @@ function renderFactRow(o) {
             + '<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:0;">'
             + '<div style="padding:7px 14px;background:#f1f5f9;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Detalle de visitas</div>'
             + '<table style="width:100%;border-collapse:collapse;font-size:11px;">'
-            + '<tr style="background:#f9fafb;"><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Fecha</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Tiempo</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Causa / Acción</th></tr>'
+            + '<tr style="background:#f9fafb;"><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Fecha</th><th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Tiempo</th>'
+            + (hayMultiPers ? '<th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Personas</th>' : '')
+            + '<th style="padding:5px 14px;text-align:left;color:#9ca3af;font-weight:600;">Causa / Acción</th></tr>'
             + vis.map(function(v){
                 return '<tr style="border-bottom:1px solid #f3f4f6;">'
                   + '<td style="padding:5px 14px;color:#374151;">'+esc(v.fecha||'—')+'</td>'
                   + '<td style="padding:5px 14px;font-weight:600;color:#111;">'+esc(v.tiempo||'—')+'</td>'
+                  + (hayMultiPers ? '<td style="padding:5px 14px;color:#111;">'+horasVisita(v).personas+(horasVisita(v).extra > 0 ? ' <span style="color:#7c3aed;font-weight:700;">(+'+fmtHs(horasVisita(v).extra)+')</span>' : '')+'</td>' : '')
                   + '<td style="padding:5px 14px;color:#6b7280;">'+esc(v.causa||'')+'</td>'
                   + '</tr>';
               }).join('')
-            + '</table></div></div>' : '');
+            + '</table></div></div>' : '')
+          + (hayMultiPers ? '<div id="fact-obs-pers-'+o.id+'" style="padding:8px 16px 0;background:#f8fafc;">'
+            + '<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;font-size:12px;color:#5b21b6;line-height:1.5;">'
+            + '👥 <strong>Observación:</strong> en total se trabajaron ' + fmtHs(hsTrabajadas) + ' y en alguna visita fue más de una persona (técnico y/o ayudante). '
+            + 'Se agregan ' + fmtHs(HORAS_EXTRA_POR_PERSONA) + ' por cada persona adicional en cada visita (+' + fmtHs(hsExtraPers) + '), '
+            + 'por eso la mano de obra se sugiere en <strong>' + fmtHs(hsTrabajadas + hsExtraPers) + '</strong>. '
+            + 'Podés editar las horas. <span style="opacity:.75;">Es solo un dato interno: no se envía a Xubio ni se le muestra al cliente.</span>'
+            + '</div></div>' : '');
       })()
 
     // Descuento + Totales
@@ -5989,6 +6012,25 @@ function parsearHoras(str) {
   if (mm) m = parseInt(mm[1]);
   if (!mh && !mm) h = parseFloat(str.replace(',','.')) || 0;
   return h + m / 60;
+}
+
+// Horas extra a facturar por cada persona de más en una visita (pedido de
+// Ornela, 20/9): trabajaron 1 hs entre 2 personas -> se factura 1:30. Es solo
+// para mostrar/sugerir el valor por defecto en Facturación; NO viaja a Xubio
+// por separado (a Xubio va solo el importe final, como siempre).
+var HORAS_EXTRA_POR_PERSONA = 0.5;
+// Devuelve el detalle de una visita: horas trabajadas, personas, horas extra
+// por personas adicionales y el total a facturar. Sin dato de personas (todas
+// las órdenes anteriores) se toma 1 persona -> mismo resultado que siempre.
+function horasVisita(v) {
+  var base = parsearHoras(v && v.tiempo);
+  var personas = Math.max(1, parseInt(v && v.personas, 10) || 1);
+  var extra = base > 0 ? HORAS_EXTRA_POR_PERSONA * (personas - 1) : 0;
+  return { base: base, personas: personas, extra: extra, total: base + extra };
+}
+// Formato de horas para mostrar (1 -> "1 hs", 1.5 -> "1,5 hs").
+function fmtHs(h) {
+  return (h % 1 === 0 ? String(h) : h.toFixed(2).replace(/0+$/, '').replace('.', ',')) + ' hs';
 }
 
 function recalcMO(oid) {
