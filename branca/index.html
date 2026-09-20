@@ -2669,7 +2669,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 39;
+const APP_BUILD = 40;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -4901,7 +4901,10 @@ function renderTabTiempos() {
                 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
                   <span style="padding:6px 10px;background:#ede9fe;border-radius:6px;font-size:13px;font-weight:600;color:#4c1d95;">${esc(nombreResponsable(o))}</span>
                   ${Array.from({length: (parseInt(v.personas,10) || 1) - 1}, (_, j) => `
-                  <input type="text" list="dl-personas-visita" placeholder="Nombre del técnico o ayudante" value="${esc((v.acompanantes && v.acompanantes[j]) || '')}" onchange="updateAcompanante(${i},${j},this.value)" style="flex:1;min-width:170px;" ${locked?'readonly':''}>`).join('')}
+                  <span style="flex:1;min-width:190px;display:flex;align-items:center;gap:6px;">
+                    <input type="text" list="dl-personas-visita" placeholder="Nombre del técnico o ayudante" value="${esc((v.acompanantes && v.acompanantes[j]) || '')}" onchange="updateAcompanante(${i},${j},this.value)" oninput="marcarAcompanante(${i},${j},this,event)" style="flex:1;min-width:0;" ${locked?'readonly':''}>
+                    <span id="chk-pers-${i}-${j}" style="display:${(v.acompanantes && v.acompanantes[j]) ? 'inline-flex' : 'none'};align-items:center;gap:3px;white-space:nowrap;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;padding:4px 8px;border-radius:12px;">✓ Listo</span>
+                  </span>`).join('')}
                 </div>
               </td>
             </tr>` : ''}
@@ -4996,6 +4999,19 @@ function updateAcompanante(i, j, val) {
   v.acompanantes = v.acompanantes || [];
   v.acompanantes[j] = String(val || '').trim();
   saveData();
+  _mostrarCheckPersona(i, j, !!v.acompanantes[j]);
+}
+// Mientras escribe, se apaga el "✓ Listo" (todavía no confirmó). Si eligió un
+// nombre de la lista desplegable (el navegador lo avisa sin inputType, o con
+// 'insertReplacementText') se confirma al instante, sin esperar a salir del campo.
+function marcarAcompanante(i, j, el, ev) {
+  var tipo = ev && ev.inputType;
+  if (!tipo || tipo === 'insertReplacementText') { updateAcompanante(i, j, el.value); }
+  else { _mostrarCheckPersona(i, j, false); }
+}
+function _mostrarCheckPersona(i, j, si) {
+  var chk = document.getElementById('chk-pers-' + i + '-' + j);
+  if (chk) chk.style.display = si ? 'inline-flex' : 'none';
 }
 // Nombre de quien viene haciendo la planilla (1ª persona de cada visita)
 function nombreResponsable(o) {
