@@ -2689,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 44;
+const APP_BUILD = 45;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -2732,6 +2732,24 @@ function getUsers() {
 function getCurrentUser() {
   const r = sessionStorage.getItem('branca_session_user') || localStorage.getItem('branca_session_user');
   return r ? JSON.parse(r) : null;
+}
+// La sesion guarda una COPIA del nombre al iniciar sesion. Si despues se
+// corrige el nombre del usuario (ej: "Ornella" -> "Ornela", 20/9), la sesion
+// ya abierta seguia mostrando el nombre viejo hasta volver a loguearse. Esto
+// lo pone al dia cada vez que se sincronizan los usuarios.
+function _refrescarNombreSesion() {
+  try {
+    const cu = getCurrentUser();
+    if (!cu || !cu.id) return;
+    const u = getUsers().find(function(x){ return x && x.id === cu.id; });
+    if (!u || !u.nombre || u.nombre === cu.nombre) return;
+    cu.nombre = u.nombre;
+    const raw = JSON.stringify(cu);
+    if (sessionStorage.getItem('branca_session_user')) sessionStorage.setItem('branca_session_user', raw);
+    if (localStorage.getItem('branca_session_user'))   localStorage.setItem('branca_session_user', raw);
+    const el = document.getElementById('header-user-name');
+    if (el) el.textContent = cu.nombre;
+  } catch(e) {}
 }
 function isAdmin()       { const u = getCurrentUser(); return u && u.role === 'admin'; }
 function isTecnico()     { const u = getCurrentUser(); return u && u.role === 'tecnico'; }
@@ -3016,6 +3034,7 @@ async function loadFromCloud() {
     if (Array.isArray(remoteUsuarios) && remoteUsuarios.length) {
       localStorage.setItem('branca_users', JSON.stringify(remoteUsuarios));
       localStorage.setItem('branca_users_cloud_count', String(remoteUsuarios.length));
+      _refrescarNombreSesion();
     }
 
     // MIGRACIÓN: locked sin firma → locked_nosign (corre una vez por dispositivo)
