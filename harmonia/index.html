@@ -352,10 +352,24 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .caja-modal{background:var(--papel);border-radius:18px;width:100%;max-width:480px;max-height:88vh;
   overflow-y:auto;box-shadow:var(--sombra)}
 .caja-modal.ancha{max-width:920px}
-/* el panel de admin ocupa toda la página, no un modal chico */
-.modal.modal-full{padding:0;background:var(--crema)}
+/* el panel de admin ocupa toda la página, no un modal chico — con su propia
+   capa de fondo (igual que la pantalla de carga), para no revelar el catálogo
+   real que sigue atrás */
+.modal.modal-full{padding:0;background:var(--crema);overflow:hidden}
 .modal.modal-full .caja-modal.ancha{max-width:none;width:100%;height:100%;max-height:100%;
-  border-radius:0;box-shadow:none}
+  border-radius:0;box-shadow:none;background:rgba(247,242,231,.72);position:relative}
+.admin-fondo-foto{position:absolute;inset:-8%;
+  background:url('fondo-bg.jpg') center 55% / cover no-repeat;
+  filter:blur(5px) saturate(1.02) brightness(1.02);
+  opacity:.5;animation:fondoBrisa 40s ease-in-out infinite alternate}
+.admin-fondo-tinte{position:absolute;inset:0;background:var(--crema);opacity:.55}
+.admin-fondo-brillo{position:absolute;inset:-60% -20%;
+  background:linear-gradient(112deg, transparent 44%, rgba(255,255,255,.3) 50%, transparent 56%);
+  background-size:220% 220%;mix-blend-mode:soft-light;
+  animation:fondoBrillo 18s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){
+  .admin-fondo-foto,.admin-fondo-brillo{animation:none}
+}
 .modal-cab{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
   border-bottom:1px solid var(--linea);position:sticky;top:0;background:var(--papel);z-index:1}
 .modal-cab h2{margin:0;font-family:"Playfair Display",serif;font-size:18px;font-weight:700}
@@ -469,10 +483,19 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(247,242,231,.9
 .tarjeta-kpi{background:var(--crema-osc);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:5px}
 .valor-kpi{font-family:"Playfair Display",serif;font-size:23px;font-weight:700;color:var(--oliva-osc);word-break:break-word}
 .etiqueta-kpi{font-size:11px;color:var(--tinta-suave);font-weight:600;letter-spacing:.02em}
-.fila-comprador{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--linea);flex-wrap:wrap}
+.fila-comprador{border-bottom:1px solid var(--linea)}
+.fila-comprador summary{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 0;cursor:pointer;list-style:none;flex-wrap:wrap}
+.fila-comprador summary::-webkit-details-marker{display:none}
+.fila-comprador summary::after{content:"▾";color:var(--tinta-suave);font-size:11px;flex:none;transition:transform .15s;margin-left:auto}
+.fila-comprador[open] summary::after{transform:rotate(180deg)}
 .info-comprador{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--tinta-suave)}
 .info-comprador b{color:var(--tinta);font-size:14px}
 .info-comprador .cuando{font-size:11.5px}
+.detalle-compras{padding:0 0 12px 26px}
+.fila-compra-detalle{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--tinta-suave);padding:4px 0}
+.fila-compra-detalle b{color:var(--tinta);font-weight:600;flex:none}
+.fila-compra-detalle .cuando{flex:none;font-size:11px}
 .bloque-oferta[hidden]{display:none}
 .tipo-oferta{display:flex;gap:8px;margin-bottom:12px}
 .tipo-oferta-btn{flex:1;background:var(--papel);border:1.5px solid var(--linea);border-radius:9px;
@@ -748,6 +771,9 @@ footer.pie b{color:var(--tinta)}
 
 <!-- ---------- panel admin (página completa) ---------- -->
 <div class="modal modal-full" id="modalAdmin">
+  <div class="admin-fondo-foto"></div>
+  <div class="admin-fondo-tinte"></div>
+  <div class="admin-fondo-brillo"></div>
   <div class="caja-modal ancha">
     <div class="modal-cab"><h2>Catálogo — Harmonia</h2><button class="cerrar" id="cerrarAdmin" type="button">✕</button></div>
     <div class="modal-cuerpo">
@@ -768,7 +794,7 @@ footer.pie b{color:var(--tinta)}
 
           <div class="fila-foto-campos">
             <label class="foto-media" for="imgProducto">
-              <input type="file" id="imgProducto" accept="image/*" capture="environment" hidden>
+              <input type="file" id="imgProducto" accept="image/*" hidden>
               <div class="preview-img" id="previewImg">
                 <div class="placeholder-foto">
                   <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#8A9A78" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#8A9A78" stroke-width="1.6"/></svg>
@@ -2036,16 +2062,18 @@ function renderAnalisis(){
 
   // Ventas: solo lo pagado por Mercado Pago (no hay registro de lo coordinado por WhatsApp)
   let unidadesVendidas = 0, totalVendido = 0;
-  const compradores = {}; // nombre -> { total, pedidos, ultima }
+  const compradores = {}; // nombre -> { total, pedidos, ultima, compras: [{fecha, total, items}] }
   Object.values(pedidos).forEach(p => {
     if (p.estado !== "pagado") return;
     totalVendido += p.total || 0;
     (p.items || []).forEach(it => { unidadesVendidas += it.cantidad || 0; });
     const nombre = p.cliente || p.pagador || p.pagadorEmail || "Sin nombre";
-    if (!compradores[nombre]) compradores[nombre] = { total: 0, pedidos: 0, ultima: 0 };
+    if (!compradores[nombre]) compradores[nombre] = { total: 0, pedidos: 0, ultima: 0, compras: [] };
     compradores[nombre].total += p.total || 0;
     compradores[nombre].pedidos += 1;
-    compradores[nombre].ultima = Math.max(compradores[nombre].ultima, p.pagadoEn || p.fecha || 0);
+    const fechaCompra = p.pagadoEn || p.fecha || 0;
+    compradores[nombre].ultima = Math.max(compradores[nombre].ultima, fechaCompra);
+    compradores[nombre].compras.push({ fecha: fechaCompra, total: p.total || 0, items: p.items || [] });
   });
 
   const porcentajeVendido = valorCatalogo > 0 ? Math.min(100, (totalVendido / valorCatalogo) * 100) : 0;
@@ -2062,15 +2090,25 @@ function renderAnalisis(){
   const listaCompradores = Object.entries(compradores).sort((a, b) => b[1].ultima - a[1].ultima);
   $("#contadorCompradores").textContent = listaCompradores.length ? `(${listaCompradores.length})` : "";
   $("#listaCompradores").innerHTML = listaCompradores.length
-    ? listaCompradores.map(([nombre, c]) => `
-      <div class="fila-comprador">
-        <span class="pagador-pedido">👤 ${esc(nombre)}</span>
-        <div class="info-comprador">
-          <b>${plata(c.total)}</b>
-          <span>${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"}</span>
-          <span class="cuando">${c.ultima ? new Date(c.ultima).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : ""}</span>
-        </div>
-      </div>`).join("")
+    ? listaCompradores.map(([nombre, c]) => {
+        const compras = c.compras.slice().sort((a, b) => b.fecha - a.fecha).map(compra => {
+          const items = (compra.items || []).map(it => `${esc(it.nombre)} x${it.cantidad}`).join(", ") || "—";
+          const fechaCompra = compra.fecha ? new Date(compra.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : "";
+          return `<div class="fila-compra-detalle"><span>${items}</span><b>${plata(compra.total)}</b><span class="cuando">${fechaCompra}</span></div>`;
+        }).join("");
+        return `
+      <details class="fila-comprador">
+        <summary>
+          <span class="pagador-pedido">👤 ${esc(nombre)}</span>
+          <div class="info-comprador">
+            <b>${plata(c.total)}</b>
+            <span>${c.pedidos} pedido${c.pedidos === 1 ? "" : "s"}</span>
+            <span class="cuando">${c.ultima ? new Date(c.ultima).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : ""}</span>
+          </div>
+        </summary>
+        <div class="detalle-compras">${compras}</div>
+      </details>`;
+      }).join("")
     : `<p style="color:var(--tinta-suave);font-size:13px">Todavía no compró nadie por acá.</p>`;
 }
 
