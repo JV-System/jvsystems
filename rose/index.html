@@ -20,7 +20,7 @@
 <meta name="theme-color" content="#C94B7B" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#C94B7B" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="rose-icon.png" type="image/png">
-<link rel="apple-touch-icon" href="rose-icon.png">
+<link rel="apple-touch-icon" href="rose-og.png">
 <title>Rose · Tu esencia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,7 +106,7 @@ button{font:inherit}
 .carga-logo-wrap{position:relative;width:min(260px,72vw);overflow:hidden;border-radius:0;
   animation:cargaExpandir 1s cubic-bezier(.2,.8,.3,1) both}
 .carga-logo{width:100%;display:block}
-.carga-brillo{position:absolute;inset:0;
+.carga-brillo{position:absolute;inset:0;-webkit-mask:url('rose-logo.png') center/100% 100% no-repeat;mask:url('rose-logo.png') center/100% 100% no-repeat;
   background:linear-gradient(120deg, transparent 35%, rgba(255,255,255,.9) 50%, transparent 65%);
   background-size:250% 250%;mix-blend-mode:overlay;
   animation:cargaBrillo 1.5s ease-in-out .25s 2}
@@ -369,6 +369,9 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(251,243,245,.9
 @media (prefers-reduced-motion:reduce){
   .admin-fondo-foto,.admin-fondo-brillo{animation:none}
 }
+/* pie siempre abajo */
+body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.wrap.catalogo-layout{flex:1 0 auto;width:100%;align-content:start}
 /* sin Mercado Pago: se ocultan las pestañas que solo tienen datos de esos pagos */
 .tab-admin[data-tab="pedidos"],.tab-admin[data-tab="analisis"],#tabPedidos,#tabAnalisis{display:none!important}
 .modal-cab{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
@@ -585,8 +588,8 @@ footer.pie b{color:var(--tinta)}
 <header class="principal">
   <div class="wrap barra-top">
     <div class="marca">
-      <img src="rose-icon.png" alt="Rose" width="40" height="40" style="width:40px;height:auto">
-      <span class="marca-nombre">Rose</span>
+      <img src="rose-logo.png" alt="Rose" style="height:54px;width:auto">
+      
     </div>
     <div class="acciones-header">
       <a href="#" class="btn-admin-header" id="linkAdmin" title="Panel de administración">

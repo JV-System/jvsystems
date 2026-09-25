@@ -40,9 +40,11 @@ CLIENTE = {
     "placeholder_nombre": "Nombre del producto",
     "placeholder_desc": "Detalles del producto…",
     "clave_admin_inicial": "rose2026",  # el admin la cambia desde Ajustes
-    "icono": "rose-icon.png",          # cuadrado, fondo transparente (favicon, header)
-    "logo": "rose-logo.png",           # logo completo, fondo transparente (pantalla de carga)
-    "og": "rose-og.png",               # imagen para compartir link (cuadrada, fondo blanco)
+    # Siempre el MISMO logo completo en todos lados, en tres formatos del mismo dibujo:
+    "logo": "rose-logo.png",           # logo completo, PNG transparente (header y pantalla de carga)
+    "icono": "rose-icon.png",          # el mismo logo centrado en un cuadrado transparente (favicon)
+    "og": "rose-og.png",               # el mismo logo cuadrado sobre blanco (compartir link / iOS)
+    "logo_header_alto": 54,            # alto del logo en el encabezado (px)
     "carga_ancho": "min(260px,72vw)",  # ancho del logo en la pantalla de carga
     # Paleta: color viejo (Harmonia) -> color nuevo
     "colores": {
@@ -102,17 +104,27 @@ def generar(c):
     # pantalla de carga: logo completo; header y favicon: ícono
     s = sub(s, '<img src="harmonia-icon.png" alt="" class="carga-logo">',
             f'<img src="{c["logo"]}" alt="{n}" class="carga-logo">')
+    # header: el MISMO logo completo (ya trae el nombre, por eso se saca el texto)
     s = sub(s, '<img src="harmonia-icon.png" alt="Harmonia" width="42" height="41" style="width:42px;height:auto">',
-            f'<img src="{c["icono"]}" alt="{n}" width="40" height="40" style="width:40px;height:auto">')
-    s = sub(s, 'href="harmonia-icon.png"', f'href="{c["icono"]}"', minimo=2)
+            f'<img src="{c["logo"]}" alt="{n}" style="height:{c["logo_header_alto"]}px;width:auto">')
+    s = sub(s, '<span class="marca-nombre">Harmonia</span>', "")
+    s = sub(s, '<link rel="icon" href="harmonia-icon.png" type="image/png">',
+            f'<link rel="icon" href="{c["icono"]}" type="image/png">')
+    # iOS rellena de negro lo transparente: para el ícono de pantalla de inicio va el fondo blanco
+    s = sub(s, '<link rel="apple-touch-icon" href="harmonia-icon.png">',
+            f'<link rel="apple-touch-icon" href="{c["og"]}">')
     s = sub(s, ".carga-logo-wrap{position:relative;width:104px;overflow:hidden;border-radius:14px;",
             f'.carga-logo-wrap{{position:relative;width:{c["carga_ancho"]};overflow:hidden;border-radius:0;')
+    # el brillo de la pantalla de carga se pinta solo sobre el logo (máscara), no sobre todo
+    # el rectángulo: si no, se ve un cuadrado claro detrás del logo transparente
+    s = sub(s, ".carga-brillo{position:absolute;inset:0;",
+            f".carga-brillo{{position:absolute;inset:0;-webkit-mask:url('{c['logo']}') center/100% 100% no-repeat;"
+            f"mask:url('{c['logo']}') center/100% 100% no-repeat;")
     # el logo ya trae el nombre: se saca el texto y la frase de Harmonia de la pantalla de carga
     s = sub(s, '<span class="carga-nombre">Harmonia</span>', "")
     s = sub(s, r'<p class="carga-frase">.*?</p>', "", regex=True, flags=re.S)
 
     # --- textos de marca --------------------------------------------------
-    s = sub(s, '<span class="marca-nombre">Harmonia</span>', f'<span class="marca-nombre">{n}</span>')
     s = sub(s, "Catálogo de Ropa Blanca · Harmonia", f"Catálogo · {n}")
     s = sub(s, "Catálogo — Harmonia", f"Catálogo — {n}")
     s = sub(s, "Hola Harmonia", f"Hola {n}", minimo=4)
@@ -145,6 +157,13 @@ def generar(c):
     # el interruptor de Ajustes y las pestañas que dependen de pagos MP no se muestran
     s = sub(s, '<div class="campo campo-variantes">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">',
             '<div class="campo campo-variantes" hidden style="display:none">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">')
+    # pie de página siempre abajo, aunque el catálogo tenga pocos productos (la página
+    # se estira a todo el alto de la pantalla y el contenido ocupa el espacio que sobra)
+    s = sub(s, ".modal-cab{",
+            '/* pie siempre abajo */\n'
+            'body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}\n'
+            '.wrap.catalogo-layout{flex:1 0 auto;width:100%;align-content:start}\n'
+            ".modal-cab{")
     s = sub(s, ".modal-cab{",
             '/* sin Mercado Pago: se ocultan las pestañas que solo tienen datos de esos pagos */\n'
             '.tab-admin[data-tab="pedidos"],.tab-admin[data-tab="analisis"],#tabPedidos,#tabAnalisis{display:none!important}\n'
