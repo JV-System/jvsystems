@@ -208,10 +208,10 @@ def generar(c):
 
     # --- carga más rápida y que no se cuelgue ------------------------------
     # Antes la pantalla de carga esperaba hasta 6 s si la base no respondía o rechazaba la
-    # lectura (nunca llegaba el primer dato). Ahora: mínimo 0,9 s, tope 2,5 s, y si la base
+    # lectura (nunca llegaba el primer dato). Ahora: mínimo 2,5 s (a pedido), tope 4,5 s, y si la base
     # devuelve error se sigue de inmediato.
-    s = sub(s, "intentarOcultarCarga(); }, 1150);", "intentarOcultarCarga(); }, 900);")
-    s = sub(s, "}, 6000); // por si falla la conexión", "}, 2500); // por si falla la conexión")
+    s = sub(s, "intentarOcultarCarga(); }, 1150);", "intentarOcultarCarga(); }, 2500);")
+    s = sub(s, "}, 6000); // por si falla la conexión", "}, 4500); // por si falla la conexión")
     s = sub(s, "      cargaDatosListos = true;\n      intentarOcultarCarga();\n    });\n\n    db.ref(`${RUTA}/config`)",
             "      cargaDatosListos = true;\n      intentarOcultarCarga();\n    }, err => {\n"
             "      console.error(\"No se pudieron leer los productos\", err);\n"
