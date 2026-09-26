@@ -2689,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 45;
+const APP_BUILD = 46;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -6321,6 +6321,54 @@ function renderFactTotalesHTML(o, oid) {
     + '<div class="ft-row total"><span>TOTAL</span><span>' + fmt(v.total) + '</span></div>';
 }
 
+// Forma "canónica" de un registro de facturación para compararlo por CONTENIDO:
+// ignora el orden de las claves, las listas vacías/ceros del final, los ceros y
+// los valores por defecto (un dato ausente vale lo mismo que su valor por defecto).
+function _factCanon(f) {
+  var g = Object.assign({}, f || {});
+  g.conIva = g.conIva !== false;
+  if (!g.estadoPago) g.estadoPago = 'pendiente';
+  if (!g.condPago)   g.condPago   = 'Contado';
+  if (!g.modoMO)     g.modoMO     = 'hora';
+  if (!g.gastosCant) g.gastosCant = 1;
+  delete g.nroComprobanteInterno;   // referencia interna, no se edita en la tarjeta
+  var r2 = function(x){ return Math.round((parseFloat(x) || 0) * 100) / 100; };
+  var out = {};
+  Object.keys(g).sort().forEach(function(k) {
+    var v = g[k];
+    if (Array.isArray(v)) {
+      v = v.map(r2);
+      while (v.length && v[v.length - 1] === 0) v.pop();
+      if (!v.length) return;
+    } else if (typeof v === 'number') {
+      v = r2(v);
+      if (v === 0) return;
+    } else if (v == null || v === '') {
+      return;
+    }
+    out[k] = v;
+  });
+  return out;
+}
+// ¿El registro nuevo (lo que hay en pantalla) es equivalente al ya guardado?
+// hsAuto = horas que se sugieren solas desde las visitas (o null).
+function _factSinCambios(prev, nuevo, hsAuto) {
+  var a = Object.assign({}, prev), b = Object.assign({}, nuevo);
+  // Horas: si nunca se editaron a mano y en pantalla están las sugeridas, es lo mismo
+  if (a.horasManual == null && b.horasManual != null && hsAuto != null && Math.abs(b.horasManual - hsAuto) < 0.005) delete b.horasManual;
+  // Precio por hora: si el guardado no lo tenía (o era 0), lo derivado en pantalla
+  // no cuenta (si de verdad cambió, el importe de mano de obra también cambia y
+  // se detecta igual)
+  if (!a.precioHoraUnit) { delete a.precioHoraUnit; delete b.precioHoraUnit; }
+  // Campos de un formato viejo que la pantalla actual ya no puede editar: no
+  // pueden ser un cambio hecho por la persona, así que no se comparan.
+  ['precioHora', 'preciosHora', 'totalesMO'].forEach(function(k){ delete a[k]; delete b[k]; });
+  // Precios de repuestos: solo se comparan si la orden tiene repuestos cargados
+  // (sin repuestos no hay ningún casillero para editarlos)
+  if (!(b.preciosRepuestos || []).length) { delete a.preciosRepuestos; delete b.preciosRepuestos; }
+  return JSON.stringify(_factCanon(a)) === JSON.stringify(_factCanon(b));
+}
+
 function guardarFacturacion(oid, silencioso) {
   const o = ordenes.find(function(x){ return String(x.id) === String(oid); });
   if (!o) return;
@@ -6389,7 +6437,13 @@ function guardarFacturacion(oid, silencioso) {
   // sin tocar nada, generando "guardados automáticos" fantasma en el
   // historial (reportado: "entré como administrador y no lo guardé yo, solo
   // lo abrí y se actualizó eso").
-  if (silencioso && o.facturacion && JSON.stringify(o.facturacion) === JSON.stringify(nuevaFact)) return;
+  // OJO (26/9): comparar el JSON tal cual NO sirve -- Firebase devuelve las
+  // claves ordenadas alfabéticamente y NO guarda las listas vacías, así que el
+  // registro guardado nunca coincidía letra por letra con el que arma la
+  // pantalla y el "no cambió nada" casi nunca se detectaba. Se compara el
+  // CONTENIDO (_factSinCambios).
+  var _hsAuto = (o.visitas || []).filter(function(vv){ return vv.tiempo; }).reduce(function(sm, vv){ return sm + horasVisita(vv).total; }, 0);
+  if (silencioso && o.facturacion && _factSinCambios(o.facturacion, nuevaFact, _hsAuto > 0 ? _hsAuto : null)) return;
   // Registrar quién guardó y cuándo — visible en el timeline de la orden y en
   // la propia tarjeta de facturación (pedido explícito: poder rastrear quién
   // tocó "Guardar" o cambió el estado, sobre todo para casos como el de la
