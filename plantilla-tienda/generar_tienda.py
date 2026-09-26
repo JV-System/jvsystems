@@ -206,6 +206,67 @@ def generar(c):
             '.tab-admin[data-tab="pedidos"],.tab-admin[data-tab="analisis"],#tabPedidos,#tabAnalisis{display:none!important}\n'
             ".modal-cab{")
 
+    # --- carga más rápida y que no se cuelgue ------------------------------
+    # Antes la pantalla de carga esperaba hasta 6 s si la base no respondía o rechazaba la
+    # lectura (nunca llegaba el primer dato). Ahora: mínimo 0,9 s, tope 2,5 s, y si la base
+    # devuelve error se sigue de inmediato.
+    s = sub(s, "intentarOcultarCarga(); }, 1150);", "intentarOcultarCarga(); }, 900);")
+    s = sub(s, "}, 6000); // por si falla la conexión", "}, 2500); // por si falla la conexión")
+    s = sub(s, "      cargaDatosListos = true;\n      intentarOcultarCarga();\n    });\n\n    db.ref(`${RUTA}/config`)",
+            "      cargaDatosListos = true;\n      intentarOcultarCarga();\n    }, err => {\n"
+            "      console.error(\"No se pudieron leer los productos\", err);\n"
+            "      cargaDatosListos = true;\n      intentarOcultarCarga();\n"
+            "      mostrarToast(\"No se pudo cargar el catálogo. Probá de nuevo en un momento.\");\n"
+            "    });\n\n    db.ref(`${RUTA}/config`)")
+    s = sub(s, "let cargaMinCumplida = false, cargaDatosListos = false;",
+            "let cargaMinCumplida = false, cargaDatosListos = false;\nlet usuariosError = false; // la base rechazó/falló la lectura de usuarios")
+    s = sub(s, "      usuarios = snap.val() || {};\n      if (!Object.keys(usuarios).length){",
+            "      usuariosError = false;\n      usuarios = snap.val() || {};\n      if (!Object.keys(usuarios).length){")
+    s = sub(s, "      if ($(\"#modalAdmin\").classList.contains(\"abierto\")) renderListaUsuarios();\n    });\n\n    db.ref(`${RUTA}/historial`)",
+            "      if ($(\"#modalAdmin\").classList.contains(\"abierto\")) renderListaUsuarios();\n"
+            "    }, err => { console.error(\"No se pudieron leer los usuarios\", err); usuariosError = true; });\n\n"
+            "    db.ref(`${RUTA}/historial`)")
+    # login: decir qué pasa en vez de un genérico "clave incorrecta"
+    s = sub(s, "  } else {\n    $(\"#errorLogin\").hidden = false;\n  }\n}\n$(\"#btnIngresarAdmin\").onclick = intentarLogin;",
+            "  } else {\n"
+            "    $(\"#errorLogin\").textContent = usuariosError\n"
+            "      ? \"No se pudo conectar con la base de datos, por eso no se pueden validar los usuarios. Avisale a quien administra el sistema.\"\n"
+            "      : !Object.keys(usuarios).length ? \"Todavía se están cargando los usuarios, probá de nuevo en un momento.\"\n"
+            "      : \"Usuario o clave incorrectos.\";\n"
+            "    $(\"#errorLogin\").hidden = false;\n  }\n}\n$(\"#btnIngresarAdmin\").onclick = intentarLogin;")
+
+    # --- ojito para ver la contraseña -------------------------------------
+    ojo = ('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" '
+           'stroke-linecap="round" stroke-linejoin="round">')
+    s = sub(s, '<div class="campo"><label>Clave</label><input type="password" id="claveAdmin" placeholder="Clave" autocomplete="current-password"></div>',
+            '<div class="campo"><label>Clave</label><div class="campo-clave">'
+            '<input type="password" id="claveAdmin" placeholder="Clave" autocomplete="current-password">'
+            '<button type="button" class="ver-clave" id="verClave" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button>'
+            '</div></div>')
+    s = sub(s, ".modal-cab{",
+            '/* campo de clave con ojito */\n'
+            '.campo input[type=password]{font:inherit;font-size:14px;padding:10px 44px 10px 12px;border-radius:10px;'
+            'border:1px solid var(--linea);background:var(--crema);color:var(--tinta);width:100%;box-sizing:border-box}\n'
+            '.campo-clave{position:relative}\n'
+            '.ver-clave{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:0;'
+            'padding:8px;cursor:pointer;color:var(--tinta-suave);display:flex;align-items:center;border-radius:8px}\n'
+            '.ver-clave:hover{color:var(--oliva-osc)}\n'
+            ".modal-cab{")
+    s = sub(s, '$("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") intentarLogin(); });',
+            '$("#claveAdmin").addEventListener("keydown", e => { if (e.key === "Enter") intentarLogin(); });\n'
+            f'const ICONO_OJO = \'{ojo}<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>\';\n'
+            f'const ICONO_OJO_TACHADO = \'{ojo}<path d="M2 12s3.6-7 10-7c2 0 3.8.6 5.3 1.5M22 12s-3.6 7-10 7c-2 0-3.8-.6-5.3-1.5"/>'
+            '<path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M3 3l18 18"/></svg>\';\n'
+            'function verClave(ver){\n'
+            '  $("#claveAdmin").type = ver ? "text" : "password";\n'
+            '  $("#verClave").innerHTML = ver ? ICONO_OJO_TACHADO : ICONO_OJO;\n'
+            '  $("#verClave").setAttribute("aria-label", ver ? "Ocultar contraseña" : "Mostrar contraseña");\n'
+            '  $("#verClave").title = ver ? "Ocultar contraseña" : "Mostrar contraseña";\n'
+            '}\n'
+            '$("#verClave").onclick = () => { verClave($("#claveAdmin").type === "password"); $("#claveAdmin").focus(); };\n'
+            'verClave(false);')
+    s = sub(s, '  $("#claveAdmin").value = "";', '  $("#claveAdmin").value = "";\n  verClave(false);')
+
     # --- colores ----------------------------------------------------------
     for viejo, nuevo in c["colores"].items():
         s = re.sub(re.escape(viejo), nuevo, s, flags=re.I)
