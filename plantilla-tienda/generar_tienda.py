@@ -44,8 +44,12 @@ CLIENTE = {
     "logo": "rose-logo.png",           # logo completo, PNG transparente (header y pantalla de carga)
     "icono": "rose-icon.png",          # el mismo logo centrado en un cuadrado transparente (favicon)
     "og": "rose-og.png",               # el mismo logo cuadrado sobre blanco (compartir link / iOS)
-    "logo_header_alto": 54,            # alto del logo en el encabezado (px)
-    "carga_ancho": "min(260px,72vw)",  # ancho del logo en la pantalla de carga
+    # Logo animado (opcional): 2 PNG transparentes del MISMO tamaño y encuadre. "marca" queda
+    # fija; "animado" (ej. el colibrí) flota y aletea. Sin esta clave se usa el logo estático.
+    "logo_capas": {"marca": "rose-logo-marca.png", "animado": "rose-logo-colibri.png"},
+    "animado_origen": "62% 44%",       # punto sobre el que pivota el movimiento (cuerpo del colibrí)
+    "logo_header_alto": 62,            # alto del logo en el encabezado (px, incluye el aire transparente)
+    "carga_ancho": "min(330px,82vw)",  # ancho del logo en la pantalla de carga
     # Paleta: color viejo (Harmonia) -> color nuevo
     "colores": {
         "#F7F2E7": "#FBF3F5",  # crema (fondo)
@@ -101,12 +105,25 @@ def generar(c):
     s = sub(s, "https://jvsystems.com.ar/harmonia/", url)
 
     # --- imágenes ---------------------------------------------------------
-    # pantalla de carga: logo completo; header y favicon: ícono
-    s = sub(s, '<img src="harmonia-icon.png" alt="" class="carga-logo">',
-            f'<img src="{c["logo"]}" alt="{n}" class="carga-logo">')
+    capas = c.get("logo_capas")  # {"marca": png, "animado": png} -> el logo con un elemento animado
+    # pantalla de carga: logo completo
+    if capas:
+        s = sub(s, '<img src="harmonia-icon.png" alt="" class="carga-logo">',
+                f'<span class="logo-anim"><img src="{capas["marca"]}" alt="{n}" class="carga-logo">'
+                f'<img src="{capas["animado"]}" alt="" class="logo-animado"></span>')
+    else:
+        s = sub(s, '<img src="harmonia-icon.png" alt="" class="carga-logo">',
+                f'<img src="{c["logo"]}" alt="{n}" class="carga-logo">')
     # header: el MISMO logo completo (ya trae el nombre, por eso se saca el texto)
-    s = sub(s, '<img src="harmonia-icon.png" alt="Harmonia" width="42" height="41" style="width:42px;height:auto">',
-            f'<img src="{c["logo"]}" alt="{n}" style="height:{c["logo_header_alto"]}px;width:auto">')
+    if capas:
+        alto = c["logo_header_alto"]
+        s = sub(s, '<img src="harmonia-icon.png" alt="Harmonia" width="42" height="41" style="width:42px;height:auto">',
+                f'<span class="logo-anim" style="height:{alto}px;margin:-4px -6px">'
+                f'<img src="{capas["marca"]}" alt="{n}" style="height:100%;width:auto">'
+                f'<img src="{capas["animado"]}" alt="" class="logo-animado"></span>')
+    else:
+        s = sub(s, '<img src="harmonia-icon.png" alt="Harmonia" width="42" height="41" style="width:42px;height:auto">',
+                f'<img src="{c["logo"]}" alt="{n}" style="height:{c["logo_header_alto"]}px;width:auto">')
     s = sub(s, '<span class="marca-nombre">Harmonia</span>', "")
     s = sub(s, '<link rel="icon" href="harmonia-icon.png" type="image/png">',
             f'<link rel="icon" href="{c["icono"]}" type="image/png">')
@@ -117,9 +134,10 @@ def generar(c):
             f'.carga-logo-wrap{{position:relative;width:{c["carga_ancho"]};overflow:hidden;border-radius:0;')
     # el brillo de la pantalla de carga se pinta solo sobre el logo (máscara), no sobre todo
     # el rectángulo: si no, se ve un cuadrado claro detrás del logo transparente
+    forma = capas["marca"] if capas else c["logo"]   # el brillo solo sobre la parte fija del logo
     s = sub(s, ".carga-brillo{position:absolute;inset:0;",
-            f".carga-brillo{{position:absolute;inset:0;-webkit-mask:url('{c['logo']}') center/100% 100% no-repeat;"
-            f"mask:url('{c['logo']}') center/100% 100% no-repeat;")
+            f".carga-brillo{{position:absolute;inset:0;-webkit-mask:url('{forma}') center/100% 100% no-repeat;"
+            f"mask:url('{forma}') center/100% 100% no-repeat;")
     # el logo ya trae el nombre: se saca el texto y la frase de Harmonia de la pantalla de carga
     s = sub(s, '<span class="carga-nombre">Harmonia</span>', "")
     s = sub(s, r'<p class="carga-frase">.*?</p>', "", regex=True, flags=re.S)
@@ -159,6 +177,25 @@ def generar(c):
             '<div class="campo campo-variantes" hidden style="display:none">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">')
     # pie de página siempre abajo, aunque el catálogo tenga pocos productos (la página
     # se estira a todo el alto de la pantalla y el contenido ocupa el espacio que sobra)
+    if capas:
+        # el nombre queda fijo y solo la capa animada (PNG transparente, mismo recuadro) se mueve
+        o = c.get("animado_origen", "62% 44%")
+        s = sub(s, ".modal-cab{",
+                '/* logo animado: capa fija + capa que se mueve, ambas PNG transparentes apiladas */\n'
+                '.logo-anim{position:relative;display:inline-block;line-height:0}\n'
+                '.logo-anim>img{display:block}\n'
+                '.logo-animado{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;'
+                f'transform-origin:{o};'
+                'animation:logoEntrada 1.4s cubic-bezier(.2,.8,.3,1) both,'
+                'logoFlota 5s ease-in-out 1.4s infinite,logoAletea .55s ease-in-out infinite}\n'
+                '@keyframes logoEntrada{from{translate:18% -10%;opacity:0}to{translate:0 0;opacity:1}}\n'
+                '@keyframes logoFlota{0%,100%{transform:translate(0,0) rotate(0)}'
+                '22%{transform:translate(1.4%,-3%) rotate(1.6deg)}'
+                '48%{transform:translate(2.2%,-.8%) rotate(-1.2deg)}'
+                '74%{transform:translate(.6%,-3.4%) rotate(1deg)}}\n'
+                '@keyframes logoAletea{0%,100%{scale:1 1}50%{scale:1.012 .982}}\n'
+                '@media (prefers-reduced-motion:reduce){.logo-animado{animation:none}}\n'
+                ".modal-cab{")
     s = sub(s, ".modal-cab{",
             '/* pie siempre abajo */\n'
             'body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}\n'
@@ -183,8 +220,8 @@ def generar(c):
 
 
 if __name__ == "__main__":
-    faltan = [a for a in (CLIENTE["icono"], CLIENTE["logo"], CLIENTE["og"])
-              if not (RAIZ / CLIENTE["carpeta"] / a).exists()]
+    archivos = [CLIENTE["icono"], CLIENTE["logo"], CLIENTE["og"], *CLIENTE.get("logo_capas", {}).values()]
+    faltan = [a for a in archivos if not (RAIZ / CLIENTE["carpeta"] / a).exists()]
     if faltan:
         sys.exit(f"Faltan archivos en {CLIENTE['carpeta']}/: {', '.join(faltan)}")
     print("OK ->", generar(CLIENTE))
