@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="only light">
+<meta name="color-scheme" content="light dark">
 <meta name="description" content="Rose · Tu esencia. Belleza, cosmética y cuidado personal. Mirá el catálogo y hacé tu pedido por WhatsApp.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JV Systems">
@@ -17,8 +17,8 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Rose · Tu esencia">
 <meta name="twitter:image" content="https://jvsystems.com.ar/rose/rose-og.png">
-<meta name="theme-color" content="#C94B7B" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#C94B7B" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EFA3BA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1F1519" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="rose-icon.png" type="image/png">
 <link rel="apple-touch-icon" href="rose-og.png">
 <title>Rose · Tu esencia</title>
@@ -29,15 +29,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
-  color-scheme:only light;
-  --crema:#FBF3F5; --crema-osc:#F6E4EA; --papel:#FFFFFF;
-  --oliva:#C94B7B; --oliva-osc:#A23561; --oliva-cl:#E48AAB; --oliva-pale:#FBE6EE;
-  --taupe:#CDB6BF; --taupe-cl:#EFDDE3;
-  --tinta:#2A2126; --tinta-suave:#85717A;
-  --linea:#EFD9E1;
+  color-scheme:light dark;
+  --crema:#FFF7F9; --crema-osc:#FCE9EF; --papel:#FFFFFF;
+  --oliva:#EFA3BA; --oliva-osc:#B0426A; --oliva-cl:#F3B7CA; --oliva-pale:#FDECF2;
+  --taupe:#D9BFC9; --taupe-cl:#F4E2E8;
+  --tinta:#3B2630; --tinta-suave:#8C7480;
+  --linea:#F3DCE4;
   --wasap:#25D366; --wasap-osc:#1DA851;
   --rojo:#B5473A; --rojo-pale:#F7E6E2;
-  --sombra:0 18px 40px -24px rgba(42,33,38,.35);
+  --sombra:0 18px 40px -24px rgba(59,38,48,.35);
 }
 /* Se repiten los mismos colores claros bajo prefers-color-scheme:dark
    a propósito: le indica al navegador que el sitio "ya piensa" el modo
@@ -45,14 +45,8 @@
    automático (relevante en Chrome/Samsung Internet en Android). */
 @media (prefers-color-scheme:dark){
   :root{
-    color-scheme:only light;
-    --crema:#FBF3F5; --crema-osc:#F6E4EA; --papel:#FFFFFF;
-    --oliva:#C94B7B; --oliva-osc:#A23561; --oliva-cl:#E48AAB; --oliva-pale:#FBE6EE;
-    --taupe:#CDB6BF; --taupe-cl:#EFDDE3;
-    --tinta:#2A2126; --tinta-suave:#85717A;
-    --linea:#EFD9E1;
-    --wasap:#25D366; --wasap-osc:#1DA851;
-    --rojo:#B5473A; --rojo-pale:#F7E6E2;
+    color-scheme:dark;
+    --crema:#1F1519; --crema-osc:#2A1D23; --papel:#2A1E24;--oliva:#EFA3BA; --oliva-osc:#F6BFD0; --oliva-cl:#C97C97; --oliva-pale:#3A2630;--taupe:#8F7280; --taupe-cl:#4A3540; --tinta:#F8EBF0; --tinta-suave:#C9AEB9;--linea:#4A3540; --wasap:#25D366; --wasap-osc:#1DA851; --rojo:#D9604F; --rojo-pale:#4A2C2C;
   }
 }
 *{box-sizing:border-box}
@@ -62,12 +56,12 @@ img{max-width:100%;display:block}
 .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
 .marca-fondo{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:var(--crema)}
 .fondo-foto{position:absolute;inset:-8%;
-  background:radial-gradient(circle at 18% 22%, #F9C9D9 0, transparent 46%),radial-gradient(circle at 82% 68%, #F5B5CB 0, transparent 52%),radial-gradient(circle at 62% 8%, #FBE0EA 0, transparent 42%),#FBF3F5;
+  background:radial-gradient(circle at 18% 22%, #FADCE6 0, transparent 46%),radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9;
   filter:blur(5px) saturate(1.02) brightness(1.02);
   opacity:.7;will-change:transform;
   animation:fondoBrisa 40s ease-in-out infinite alternate}
 .fondo-tinte{position:absolute;inset:0;
-  background:linear-gradient(175deg, rgba(251,243,245,.4) 0%, rgba(251,243,245,.22) 45%, rgba(251,243,245,.5) 100%)}
+  background:linear-gradient(175deg, rgba(255,247,249,.4) 0%, rgba(255,247,249,.22) 45%, rgba(255,247,249,.5) 100%)}
 .fondo-brillo{position:absolute;inset:-60% -20%;
   background:linear-gradient(112deg, transparent 44%, rgba(255,255,255,.28) 50%, transparent 56%);
   background-size:220% 220%;mix-blend-mode:soft-light;
@@ -95,7 +89,7 @@ button{font:inherit}
   transition:opacity .5s ease, visibility .5s}
 .pantalla-carga.oculta{opacity:0;visibility:hidden;pointer-events:none}
 .carga-fondo-foto{position:absolute;inset:-8%;
-  background:radial-gradient(circle at 18% 22%, #F9C9D9 0, transparent 46%),radial-gradient(circle at 82% 68%, #F5B5CB 0, transparent 52%),radial-gradient(circle at 62% 8%, #FBE0EA 0, transparent 42%),#FBF3F5;
+  background:radial-gradient(circle at 18% 22%, #FADCE6 0, transparent 46%),radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9;
   filter:blur(5px) saturate(1.02) brightness(1.02);
   opacity:.55;animation:fondoBrisa 40s ease-in-out infinite alternate}
 .carga-fondo-tinte{position:absolute;inset:0;background:var(--crema);opacity:.78}
@@ -135,7 +129,7 @@ button{font:inherit}
   font-size:25px;letter-spacing:-.01em;color:var(--oliva-osc);line-height:1}
 
 /* ---------- header ---------- */
-header.principal{position:sticky;top:0;z-index:40;background:rgba(251,243,245,.92);
+header.principal{position:sticky;top:0;z-index:40;background:rgba(255,247,249,.92);
   backdrop-filter:blur(8px);border-bottom:1px solid var(--linea)}
 .barra-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0}
 .btn-carrito{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--oliva);
@@ -282,7 +276,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(251,243,245,.9
 .vacio b{display:block;font-family:"Playfair Display",serif;font-size:20px;color:var(--tinta);margin-bottom:6px}
 
 /* ---------- carrito (drawer) ---------- */
-.overlay{position:fixed;inset:0;background:rgba(42,33,38,.45);z-index:60;opacity:0;visibility:hidden;
+.overlay{position:fixed;inset:0;background:rgba(59,38,48,.45);z-index:60;opacity:0;visibility:hidden;
   transition:opacity .25s}
 .overlay.abierto{opacity:1;visibility:visible}
 .carrito{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--papel);z-index:61;
@@ -346,7 +340,7 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(251,243,245,.9
 .btn-admin-header{display:none}
 .btn-admin-header:hover{border-color:var(--oliva-cl);background:var(--oliva-pale);color:var(--oliva-osc)}
 .modal{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
-  padding:20px;opacity:0;visibility:hidden;transition:opacity .2s;background:rgba(42,33,38,.5)}
+  padding:20px;opacity:0;visibility:hidden;transition:opacity .2s;background:rgba(59,38,48,.5)}
 .modal.abierto{opacity:1;visibility:visible}
 .caja-modal{background:var(--papel);border-radius:18px;width:100%;max-width:480px;max-height:88vh;
   overflow-y:auto;box-shadow:var(--sombra)}
@@ -356,9 +350,9 @@ header.principal{position:sticky;top:0;z-index:40;background:rgba(251,243,245,.9
    real que sigue atrás */
 .modal.modal-full{padding:0;background:var(--crema);overflow:hidden}
 .modal.modal-full .caja-modal.ancha{max-width:none;width:100%;height:100%;max-height:100%;
-  border-radius:0;box-shadow:none;background:rgba(251,243,245,.72);position:relative}
+  border-radius:0;box-shadow:none;background:rgba(255,247,249,.72);position:relative}
 .admin-fondo-foto{position:absolute;inset:-8%;
-  background:radial-gradient(circle at 18% 22%, #F9C9D9 0, transparent 46%),radial-gradient(circle at 82% 68%, #F5B5CB 0, transparent 52%),radial-gradient(circle at 62% 8%, #FBE0EA 0, transparent 42%),#FBF3F5;
+  background:radial-gradient(circle at 18% 22%, #FADCE6 0, transparent 46%),radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9;
   filter:blur(5px) saturate(1.02) brightness(1.02);
   opacity:.5;animation:fondoBrisa 40s ease-in-out infinite alternate}
 .admin-fondo-tinte{position:absolute;inset:0;background:var(--crema);opacity:.55}
@@ -577,6 +571,17 @@ footer.pie b{color:var(--tinta)}
   .stepper span{font-size:12px;min-width:20px}
   .btn-agregar{font-size:12px;padding:8px 6px}
 }
+/* botones principales: color de la marca con texto que se lea */
+.btn-carrito,.btn-agregar,.btn-full,.tipo-oferta-btn.activo,.btn-agregar-grande{color:#3B1F2B}
+.btn-carrito:hover,.btn-agregar:hover,.btn-full:hover,.btn-agregar-grande:hover{background:#E58BA8;color:#3B1F2B}
+@media (prefers-color-scheme:dark){
+  header.principal{background:rgba(255,247,249,.96);border-bottom-color:#F3DCE4}
+  .fondo-tinte{background:linear-gradient(175deg,rgba(31,21,25,.5) 0%,rgba(31,21,25,.3) 45%,rgba(31,21,25,.6) 100%)}
+  .fondo-foto,.admin-fondo-foto{background:radial-gradient(circle at 18% 22%, #4A2A38 0, transparent 46%),radial-gradient(circle at 82% 68%, #3B2230 0, transparent 52%),radial-gradient(circle at 62% 8%, #55303F 0, transparent 42%),#1F1519}
+  .modal.modal-full .caja-modal.ancha{background:rgba(31,21,25,.78)}
+  .pantalla-carga,.carga-fondo-tinte{background:#FFF7F9}
+  .toast{color:#3B1F2B}
+}
 </style>
 </head>
 <body>
@@ -640,7 +645,7 @@ footer.pie b{color:var(--tinta)}
 <div class="barra-sticky">
   <div class="wrap fila-controles">
     <div class="buscador">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#85717A" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#85717A" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#8C7480" stroke-width="2"/><path d="m21 21-4.3-4.3" stroke="#8C7480" stroke-width="2" stroke-linecap="round"/></svg>
       <input type="text" id="buscador" placeholder="Buscar producto…" autocomplete="off">
     </div>
     <button type="button" class="btn-filtros" id="btnFiltros">
@@ -688,7 +693,7 @@ footer.pie b{color:var(--tinta)}
 
     <div class="grid" id="grid"></div>
     <div class="vacio" id="vacio" hidden>
-      <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M6 7l1 13h10l1-13M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#CDB6BF" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M6 7l1 13h10l1-13M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" stroke="#D9BFC9" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <b>Todavía no hay productos cargados</b>
       <span>El catálogo se completa desde el panel de administración.</span>
     </div>
@@ -814,7 +819,7 @@ footer.pie b{color:var(--tinta)}
               <input type="file" id="imgProducto" accept="image/*" hidden>
               <div class="preview-img" id="previewImg">
                 <div class="placeholder-foto">
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#E48AAB" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#E48AAB" stroke-width="1.6"/></svg>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#F3B7CA" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#F3B7CA" stroke-width="1.6"/></svg>
                   <span>Tocá para elegir la foto</span>
                 </div>
               </div>
@@ -999,7 +1004,7 @@ let precioDesde = null;
 let precioHasta = null;
 let editandoId = null;
 const CATEGORIAS_SUGERIDAS = ["Maquillaje", "Cuidado de la piel", "Cuidado del cabello", "Perfumería", "Cuidado personal", "Otros"];
-const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#E48AAB" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#E48AAB" stroke-width="1.6"/></svg><span>Tocá para elegir la foto</span></div>`;
+const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#F3B7CA" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#F3B7CA" stroke-width="1.6"/></svg><span>Tocá para elegir la foto</span></div>`;
 function setPreviewFoto(url){
   const el = $("#previewImg");
   if (url){ el.innerHTML = `<img src="${url}">`; el.classList.add("tiene-foto"); }

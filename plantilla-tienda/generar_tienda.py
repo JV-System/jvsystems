@@ -51,28 +51,48 @@ CLIENTE = {
     "animado_origen": "62% 44%",       # punto sobre el que pivota el movimiento (cuerpo del colibrí)
     "logo_header_alto": 62,            # alto del logo en el encabezado (px, incluye el aire transparente)
     "carga_ancho": "min(330px,82vw)",  # ancho del logo en la pantalla de carga
-    # Paleta: color viejo (Harmonia) -> color nuevo
+    # Paleta CLARA (pastel): color viejo (Harmonia) -> color nuevo
     "colores": {
-        "#F7F2E7": "#FBF3F5",  # crema (fondo)
-        "#EFE7D6": "#F6E4EA",  # crema-osc
-        "#4B5A3E": "#C94B7B",  # principal (botones)
-        "#37432E": "#A23561",  # principal oscuro
-        "#8A9A78": "#E48AAB",  # principal claro (íconos, bordes)
-        "#E7EBDF": "#FBE6EE",  # principal pálido
-        "#B9AA97": "#CDB6BF",  # taupe
-        "#E7DDCB": "#EFDDE3",  # taupe claro
-        "#332E22": "#2A2126",  # tinta (texto)
-        "#8A8067": "#85717A",  # tinta suave
-        "#E6DCC8": "#EFD9E1",  # línea
+        "#F7F2E7": "#FFF7F9",  # crema (fondo)
+        "#EFE7D6": "#FCE9EF",  # crema-osc
+        "#4B5A3E": "#EFA3BA",  # principal (botones): rosa pastel
+        "#37432E": "#B0426A",  # principal oscuro (textos de acento, precios)
+        "#8A9A78": "#F3B7CA",  # principal claro (íconos, bordes)
+        "#E7EBDF": "#FDECF2",  # principal pálido
+        "#B9AA97": "#D9BFC9",  # taupe
+        "#E7DDCB": "#F4E2E8",  # taupe claro
+        "#332E22": "#3B2630",  # tinta (texto)
+        "#8A8067": "#8C7480",  # tinta suave
+        "#E6DCC8": "#F3DCE4",  # línea
     },
-    "rgb_crema": ("247,242,231", "251,243,245"),   # rgba(...) del header/velos
-    "rgb_tinta": ("51,46,34", "42,33,38"),         # rgba(...) de sombras/overlays
+    "rgb_crema": ("247,242,231", "255,247,249"),   # rgba(...) del header/velos
+    "rgb_tinta": ("51,46,34", "59,38,48"),         # rgba(...) de sombras/overlays
+    "texto_sobre_principal": "#3B1F2B",  # texto de los botones principales (el pastel pide texto oscuro)
+    "boton_hover": "#E58BA8",
     # Fondo animado: reemplaza la foto del dormitorio de Harmonia por manchas suaves
     "fondo_css": (
-        "radial-gradient(circle at 18% 22%, #F9C9D9 0, transparent 46%),"
-        "radial-gradient(circle at 82% 68%, #F5B5CB 0, transparent 52%),"
-        "radial-gradient(circle at 62% 8%, #FBE0EA 0, transparent 42%),#FBF3F5"
+        "radial-gradient(circle at 18% 22%, #FADCE6 0, transparent 46%),"
+        "radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),"
+        "radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9"
     ),
+    # Tema OSCURO propio (opcional). Si el celular está en modo oscuro se ve este diseño en vez de
+    # que el navegador "invierta" la página por su cuenta (queda ilegible). Sin esta clave la
+    # página sigue siendo solo clara.
+    "tema_oscuro": {
+        "vars": ("--crema:#1F1519; --crema-osc:#2A1D23; --papel:#2A1E24;"
+                 "--oliva:#EFA3BA; --oliva-osc:#F6BFD0; --oliva-cl:#C97C97; --oliva-pale:#3A2630;"
+                 "--taupe:#8F7280; --taupe-cl:#4A3540; --tinta:#F8EBF0; --tinta-suave:#C9AEB9;"
+                 "--linea:#4A3540; --wasap:#25D366; --wasap-osc:#1DA851; --rojo:#D9604F; --rojo-pale:#4A2C2C;"),
+        "fondo": ("radial-gradient(circle at 18% 22%, #4A2A38 0, transparent 46%),"
+                  "radial-gradient(circle at 82% 68%, #3B2230 0, transparent 52%),"
+                  "radial-gradient(circle at 62% 8%, #55303F 0, transparent 42%),#1F1519"),
+        "velo": "31,21,25",              # rgb del velo/encabezado en oscuro
+        # el logo lleva trazo negro: la barra superior y la pantalla de carga se quedan en el color
+        # claro de la marca (sin placas ni cuadrados) y el resto de la página pasa a oscuro
+        "claro": "255,247,249",
+        "carga_clara": "#FFF7F9",
+        "theme_color": "#1F1519",
+    },
 }
 # ---------------------------------------------------------------------------
 
@@ -268,12 +288,43 @@ def generar(c):
             'verClave(false);')
     s = sub(s, '  $("#claveAdmin").value = "";', '  $("#claveAdmin").value = "";\n  verClave(false);')
 
+    # --- tema oscuro propio (antes de tocar colores, opera sobre el texto original) ---
+    td = c.get("tema_oscuro")
+    if td:
+        s = sub(s, '<meta name="color-scheme" content="only light">', '<meta name="color-scheme" content="light dark">')
+        # Harmonia repite la paleta clara bajo "dark" para que el navegador no oscurezca solo;
+        # acá en cambio se declara un tema oscuro de verdad (y así tampoco lo invierte por su cuenta)
+        s = sub(s, r'@media \(prefers-color-scheme:dark\)\{\s*:root\{.*?\}\s*\}',
+                lambda m: ("@media (prefers-color-scheme:dark){\n  :root{\n    color-scheme:dark;\n    "
+                           + td["vars"] + "\n  }\n}"),
+                regex=True, flags=re.S)
+        s = sub(s, "color-scheme:only light;", "color-scheme:light dark;")
+        s = sub(s, '<meta name="theme-color" content="#4B5A3E" media="(prefers-color-scheme: dark)">',
+                f'<meta name="theme-color" content="{td["theme_color"]}" media="(prefers-color-scheme: dark)">')
+
     # --- colores ----------------------------------------------------------
     for viejo, nuevo in c["colores"].items():
         s = re.sub(re.escape(viejo), nuevo, s, flags=re.I)
     s = s.replace(f'rgba({c["rgb_crema"][0]}', f'rgba({c["rgb_crema"][1]}')
     s = s.replace(f'rgba({c["rgb_tinta"][0]}', f'rgba({c["rgb_tinta"][1]}')
     s = sub(s, "url('fondo-bg.jpg') center 55% / cover no-repeat", c["fondo_css"], minimo=3)
+
+    # --- botones principales legibles + reglas del tema oscuro (al final de la hoja de estilos) ---
+    txt, hov = c["texto_sobre_principal"], c["boton_hover"]
+    extra = ("/* botones principales: color de la marca con texto que se lea */\n"
+             f".btn-carrito,.btn-agregar,.btn-full,.tipo-oferta-btn.activo,.btn-agregar-grande{{color:{txt}}}\n"
+             f".btn-carrito:hover,.btn-agregar:hover,.btn-full:hover,.btn-agregar-grande:hover{{background:{hov};color:{txt}}}\n")
+    if td:
+        v = td["velo"]
+        extra += ("@media (prefers-color-scheme:dark){\n"
+                  f"  header.principal{{background:rgba({td['claro']},.96);border-bottom-color:#F3DCE4}}\n"
+                  f"  .fondo-tinte{{background:linear-gradient(175deg,rgba({v},.5) 0%,rgba({v},.3) 45%,rgba({v},.6) 100%)}}\n"
+                  f"  .fondo-foto,.admin-fondo-foto{{background:{td['fondo']}}}\n"
+                  f"  .modal.modal-full .caja-modal.ancha{{background:rgba({v},.78)}}\n"
+                  f"  .pantalla-carga,.carga-fondo-tinte{{background:{td['carga_clara']}}}\n"
+                  f"  .toast{{color:{txt}}}\n"
+                  "}\n")
+    s = sub(s, "</style>", extra + "</style>")
 
     destino = RAIZ / slug
     destino.mkdir(exist_ok=True)
