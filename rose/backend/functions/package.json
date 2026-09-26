@@ -1,0 +1,14 @@
+{
+  "name": "rose-backend",
+  "description": "Backend de pagos (Mercado Pago) para Rose. Codebase propio: no toca las funciones de Harmonia ni el proyecto de branca.",
+  "scripts": {
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^6.0.0"
+  }
+}

@@ -75,6 +75,12 @@ CLIENTE = {
         "radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),"
         "radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9"
     ),
+    # Mercado Pago propio del cliente. None = sin Mercado Pago (WhatsApp + QR estático).
+    # Para activarlo, cuando el cliente entregó su Access Token y se desplegó su backend
+    # (ver rose/backend), reemplazar None por:
+    #   {"backend": "https://us-central1-harmonia-ropa-blanca.cloudfunctions.net",
+    #    "funcion": "crearPreferenciaRose"}
+    "mercado_pago": None,
     # Modo de color: "claro" = siempre cremita (recomendado con logo de trazo negro) o "oscuro-propio".
     "modo_color": "claro",
     # Tema OSCURO propio (solo se usa con modo_color = "oscuro-propio"). Si el celular está en modo oscuro se ve este diseño en vez de
@@ -188,16 +194,29 @@ def generar(c):
     s = sub(s, r'const USUARIOS_INICIALES = \{[^}]*\};',
             f'const USUARIOS_INICIALES = {{ admin: "{c["clave_admin_inicial"]}" }};', regex=True)
 
-    # --- Mercado Pago: apagado del todo ----------------------------------
-    s = sub(s, r'const MP_BACKEND = "[^"]*";',
-            'const MP_BACKEND = ""; // este cliente NO usa Mercado Pago (el backend es de Harmonia)', regex=True)
-    s = sub(s, '$("#btnPagarMP").hidden = !config.mpHabilitado;', '$("#btnPagarMP").hidden = true;')
-    s = sub(s, '$("#btnPagarMP").onclick = async () => {',
-            '$("#btnPagarMP").onclick = async () => {\n  if (!MP_BACKEND) return;')
-    s = sub(s, '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>\n', "")
-    # el interruptor de Ajustes y las pestañas que dependen de pagos MP no se muestran
-    s = sub(s, '<div class="campo campo-variantes">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">',
-            '<div class="campo campo-variantes" hidden style="display:none">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">')
+    # --- Mercado Pago del cliente (opcional) ------------------------------
+    # CLIENTE["mercado_pago"] = None  -> apagado (ver más abajo)
+    # CLIENTE["mercado_pago"] = {"backend": url base de las funciones, "funcion": nombre de la función}
+    #   -> queda activo apuntando a las funciones PROPIAS de ese cliente (su token, su cuenta).
+    mp = c.get("mercado_pago")
+    if mp:
+        s = sub(s, r'const MP_BACKEND = "[^"]*";',
+                f'const MP_BACKEND = "{mp["backend"]}"; // backend PROPIO de este cliente (su cuenta de Mercado Pago)', regex=True)
+        s = sub(s, "${MP_BACKEND}/crearPreferencia`", "${MP_BACKEND}/" + mp["funcion"] + "`")
+        # cada línea se cobra por su subtotal ya calculado: así las promos tipo 3x2 se cobran bien
+        s = sub(s, "      precioUnitario: precioFinal(p)\n    };",
+                "      precioUnitario: precioFinal(p),\n      subtotal: totalLinea(p, carrito[clave])\n    };")
+    # --- Mercado Pago: apagado (clientes sin Mercado Pago) -----------------
+    if not mp:
+        s = sub(s, r'const MP_BACKEND = "[^"]*";',
+                'const MP_BACKEND = ""; // este cliente NO usa Mercado Pago (el backend es de Harmonia)', regex=True)
+        s = sub(s, '$("#btnPagarMP").hidden = !config.mpHabilitado;', '$("#btnPagarMP").hidden = true;')
+        s = sub(s, '$("#btnPagarMP").onclick = async () => {',
+                '$("#btnPagarMP").onclick = async () => {\n  if (!MP_BACKEND) return;')
+        s = sub(s, '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>\n', "")
+        # el interruptor de Ajustes y las pestañas que dependen de pagos MP no se muestran
+        s = sub(s, '<div class="campo campo-variantes">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">',
+                '<div class="campo campo-variantes" hidden style="display:none">\n          <label class="check-oferta" style="text-transform:none;font-weight:600;letter-spacing:0">\n            <input type="checkbox" id="mpHabilitadoConfig">')
     # pie de página siempre abajo, aunque el catálogo tenga pocos productos (la página
     # se estira a todo el alto de la pantalla y el contenido ocupa el espacio que sobra)
     if capas:
@@ -224,10 +243,11 @@ def generar(c):
             'body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}\n'
             '.wrap.catalogo-layout{flex:1 0 auto;width:100%;align-content:start}\n'
             ".modal-cab{")
-    s = sub(s, ".modal-cab{",
-            '/* sin Mercado Pago: se ocultan las pestañas que solo tienen datos de esos pagos */\n'
-            '.tab-admin[data-tab="pedidos"],.tab-admin[data-tab="analisis"],#tabPedidos,#tabAnalisis{display:none!important}\n'
-            ".modal-cab{")
+    if not mp:
+        s = sub(s, ".modal-cab{",
+                '/* sin Mercado Pago: se ocultan las pestañas que solo tienen datos de esos pagos */\n'
+                '.tab-admin[data-tab="pedidos"],.tab-admin[data-tab="analisis"],#tabPedidos,#tabAnalisis{display:none!important}\n'
+                ".modal-cab{")
 
     # --- carga más rápida y que no se cuelgue ------------------------------
     # Antes la pantalla de carga esperaba hasta 6 s si la base no respondía o rechazaba la
