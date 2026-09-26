@@ -18,7 +18,7 @@
 <meta name="twitter:title" content="Rose · Tu esencia">
 <meta name="twitter:image" content="https://jvsystems.com.ar/rose/rose-og.png">
 <meta name="theme-color" content="#EFA3BA" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1F1519" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EFA3BA" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="rose-icon.png" type="image/png">
 <link rel="apple-touch-icon" href="rose-og.png">
 <title>Rose · Tu esencia</title>
@@ -45,8 +45,14 @@
    automático (relevante en Chrome/Samsung Internet en Android). */
 @media (prefers-color-scheme:dark){
   :root{
-    color-scheme:dark;
-    --crema:#1F1519; --crema-osc:#2A1D23; --papel:#2A1E24;--oliva:#EFA3BA; --oliva-osc:#F6BFD0; --oliva-cl:#C97C97; --oliva-pale:#3A2630;--taupe:#8F7280; --taupe-cl:#4A3540; --tinta:#F8EBF0; --tinta-suave:#C9AEB9;--linea:#4A3540; --wasap:#25D366; --wasap-osc:#1DA851; --rojo:#D9604F; --rojo-pale:#4A2C2C;
+    color-scheme:light;
+    --crema:#FFF7F9; --crema-osc:#FCE9EF; --papel:#FFFFFF;
+    --oliva:#EFA3BA; --oliva-osc:#B0426A; --oliva-cl:#F3B7CA; --oliva-pale:#FDECF2;
+    --taupe:#D9BFC9; --taupe-cl:#F4E2E8;
+    --tinta:#3B2630; --tinta-suave:#8C7480;
+    --linea:#F3DCE4;
+    --wasap:#25D366; --wasap-osc:#1DA851;
+    --rojo:#B5473A; --rojo-pale:#F7E6E2;
   }
 }
 *{box-sizing:border-box}
@@ -574,14 +580,6 @@ footer.pie b{color:var(--tinta)}
 /* botones principales: color de la marca con texto que se lea */
 .btn-carrito,.btn-agregar,.btn-full,.tipo-oferta-btn.activo,.btn-agregar-grande{color:#3B1F2B}
 .btn-carrito:hover,.btn-agregar:hover,.btn-full:hover,.btn-agregar-grande:hover{background:#E58BA8;color:#3B1F2B}
-@media (prefers-color-scheme:dark){
-  header.principal{background:rgba(255,247,249,.96);border-bottom-color:#F3DCE4}
-  .fondo-tinte{background:linear-gradient(175deg,rgba(31,21,25,.5) 0%,rgba(31,21,25,.3) 45%,rgba(31,21,25,.6) 100%)}
-  .fondo-foto,.admin-fondo-foto{background:radial-gradient(circle at 18% 22%, #4A2A38 0, transparent 46%),radial-gradient(circle at 82% 68%, #3B2230 0, transparent 52%),radial-gradient(circle at 62% 8%, #55303F 0, transparent 42%),#1F1519}
-  .modal.modal-full .caja-modal.ancha{background:rgba(31,21,25,.78)}
-  .pantalla-carga,.carga-fondo-tinte{background:#FFF7F9}
-  .toast{color:#3B1F2B}
-}
 </style>
 </head>
 <body>

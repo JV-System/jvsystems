@@ -75,7 +75,9 @@ CLIENTE = {
         "radial-gradient(circle at 82% 68%, #F8CFDD 0, transparent 52%),"
         "radial-gradient(circle at 62% 8%, #FFEAF0 0, transparent 42%),#FFF7F9"
     ),
-    # Tema OSCURO propio (opcional). Si el celular está en modo oscuro se ve este diseño en vez de
+    # Modo de color: "claro" = siempre cremita (recomendado con logo de trazo negro) o "oscuro-propio".
+    "modo_color": "claro",
+    # Tema OSCURO propio (solo se usa con modo_color = "oscuro-propio"). Si el celular está en modo oscuro se ve este diseño en vez de
     # que el navegador "invierta" la página por su cuenta (queda ilegible). Sin esta clave la
     # página sigue siendo solo clara.
     "tema_oscuro": {
@@ -289,7 +291,15 @@ def generar(c):
     s = sub(s, '  $("#claveAdmin").value = "";', '  $("#claveAdmin").value = "";\n  verClave(false);')
 
     # --- tema oscuro propio (antes de tocar colores, opera sobre el texto original) ---
-    td = c.get("tema_oscuro")
+    # modo de color: "claro" (siempre cremita, aunque el celu esté en modo oscuro) o "oscuro-propio"
+    td = c.get("tema_oscuro") if c.get("modo_color") == "oscuro-propio" else None
+    if c.get("modo_color", "claro") == "claro":
+        # Se le declara al navegador que la página "maneja" el modo oscuro (así no la invierte por su
+        # cuenta, cosa que dejaba ilegible el logo negro) pero con la MISMA paleta clara y controles
+        # de formulario claros. Con "only light" a secas, Samsung Internet la oscurecía igual.
+        s = sub(s, '<meta name="color-scheme" content="only light">', '<meta name="color-scheme" content="light dark">')
+        s = sub(s, "  color-scheme:only light;\n  --crema", "  color-scheme:light dark;\n  --crema")
+        s = sub(s, "    color-scheme:only light;", "    color-scheme:light;")
     if td:
         s = sub(s, '<meta name="color-scheme" content="only light">', '<meta name="color-scheme" content="light dark">')
         # Harmonia repite la paleta clara bajo "dark" para que el navegador no oscurezca solo;
