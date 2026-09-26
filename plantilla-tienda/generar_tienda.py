@@ -80,7 +80,10 @@ CLIENTE = {
     # (ver rose/backend), reemplazar None por:
     #   {"backend": "https://us-central1-harmonia-ropa-blanca.cloudfunctions.net",
     #    "funcion": "crearPreferenciaRose"}
-    "mercado_pago": None,
+    "mercado_pago": {"backend": "https://us-central1-harmonia-ropa-blanca.cloudfunctions.net",
+                     "funcion": "crearPreferenciaRose"},
+    # True = se saca el QR estático (foto de QR fijo + botón "Pagar con QR"): solo pago automático.
+    "quitar_qr_estatico": True,
     # Modo de color: "claro" = siempre cremita (recomendado con logo de trazo negro) o "oscuro-propio".
     "modo_color": "claro",
     # Tema OSCURO propio (solo se usa con modo_color = "oscuro-propio"). Si el celular está en modo oscuro se ve este diseño en vez de
@@ -193,6 +196,28 @@ def generar(c):
     s = sub(s, "harmonia_usuario", f"{slug}_usuario", minimo=2)
     s = sub(s, r'const USUARIOS_INICIALES = \{[^}]*\};',
             f'const USUARIOS_INICIALES = {{ admin: "{c["clave_admin_inicial"]}" }};', regex=True)
+
+    # --- sin QR estático (opcional) ----------------------------------------
+    # Quita la foto de QR fijo que se sube en Ajustes y el botón "Pagar con QR" del carrito:
+    # el cobro queda solo con el pago automático de Mercado Pago (que muestra su propio QR con
+    # el monto exacto, generado por pedido). El QR de ese pago NO se toca.
+    if c.get("quitar_qr_estatico"):
+        s = sub(s, '    <button class="btn-qr" id="btnPagarQR" type="button" hidden>🔳 Pagar con QR</button>\n', "")
+        s = sub(s, r'<!-- -+ QR de pago -+ -->.*?(?=<!-- -+ pago con Mercado Pago)', "", regex=True, flags=re.S)
+        s = sub(s, r'        <div class="campo campo-variantes">\n          <label>QR para pagos.*?(?=        <div class="campo campo-variantes">\n          <label class="check-oferta")',
+                "", regex=True, flags=re.S)
+        s = sub(s, '  $("#btnPagarQR").hidden = !config.qrPago;\n', "")
+        s = sub(s, '  $("#modalQR").classList.remove("abierto");\n', "")
+        s = sub(s, r'\$\("#btnPagarQR"\)\.onclick = \(\) => \{.*?\$\("#cerrarQR"\)\.onclick = [^\n]*\n\n', "", regex=True, flags=re.S)
+        s = sub(s, '  $("#notaQRConfig").value = config.notaQR || "";\n', "")
+        s = sub(s, "  qrPagoNueva = undefined;\n  setPreviewQR(config.qrPago || null);\n", "")
+        s = sub(s, r'function setPreviewQR\(url\)\{.*?\n\}\n', "", regex=True, flags=re.S)
+        s = sub(s, r'/\* -+ QR de pago -+ \*/\nlet qrPagoNueva;.*?setPreviewQR\(null\);\n\};\n', "", regex=True, flags=re.S)
+        s = sub(s, '  const notaQR = $("#notaQRConfig").value.trim();\n', "")
+        s = sub(s, "saludo, notaQR: notaQR || null, mpHabilitado,", "saludo, mpHabilitado,")
+        s = sub(s, "  if (qrPagoNueva !== undefined) datosAjustes.qrPago = qrPagoNueva;\n", "")
+        s = sub(s, "    qrPagoNueva = undefined;\n", "")
+        s = sub(s, "#previewQRPago img{object-fit:contain;background:#fff}\n", "")
 
     # --- Mercado Pago del cliente (opcional) ------------------------------
     # CLIENTE["mercado_pago"] = None  -> apagado (ver más abajo)
