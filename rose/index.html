@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="Rose · Tu esencia. Mirá el catálogo y hacé tu pedido por WhatsApp.">
+<meta name="description" content="Rose · Tu esencia. Belleza, cosmética y cuidado personal. Mirá el catálogo y hacé tu pedido por WhatsApp.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JV Systems">
 <meta property="og:locale" content="es_AR">
 <meta property="og:title" content="Rose · Tu esencia">
-<meta property="og:description" content="Catálogo online · Pedidos por WhatsApp">
+<meta property="og:description" content="Belleza, cosmética y cuidado personal · Pedidos por WhatsApp">
 <meta property="og:url" content="https://jvsystems.com.ar/rose/">
 <meta property="og:image" content="https://jvsystems.com.ar/rose/rose-og.png">
 <meta property="og:image:width" content="303">
@@ -620,10 +620,10 @@ footer.pie b{color:var(--tinta)}
 <section class="hero">
   <div class="wrap">
     <span class="hero-eyebrow">Tu esencia</span>
-    <h1>Bienvenida a Rose</h1>
+    <h1>Belleza, cosmética y cuidado personal</h1>
     <p>Mirá el catálogo, armá tu pedido y coordinamos todo por WhatsApp: variantes, envío y forma de pago.</p>
     <div class="rasgos">
-      <span class="rasgo">🌸 <b>Catálogo&nbsp;online</b></span>
+      <span class="rasgo">💄 <b>Belleza&nbsp;y&nbsp;cuidado</b></span>
       <span class="rasgo">💬 <b>Pedís por WhatsApp</b></span>
       <span class="rasgo">🚚 <b>Coordinamos envío</b></span>
     </div>
@@ -820,8 +820,8 @@ footer.pie b{color:var(--tinta)}
               </div>
             </label>
             <div class="campos-junto-foto">
-              <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Nombre del producto"></div>
-              <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Detalles del producto…" rows="2"></textarea></div>
+              <div class="campo"><label>Nombre</label><input type="text" id="nombreProducto" placeholder="Ej: Crema hidratante 200 ml"></div>
+              <div class="campo"><label>Descripción</label><textarea id="descProducto" placeholder="Presentación, aroma, tamaño, modo de uso…" rows="2"></textarea></div>
               <div class="fila2">
                 <div class="campo"><label>Valor (ARS)</label><input type="number" id="precioProducto" min="0" step="1" placeholder="45000" inputmode="numeric"></div>
                 <div class="campo"><label>Stock <span style="text-transform:none;font-weight:400;opacity:.7">(opcional)</span></label><input type="number" id="stockProducto" min="0" step="1" placeholder="Sin límite" inputmode="numeric"></div>
@@ -998,7 +998,7 @@ let ordenActivo = "recientes";
 let precioDesde = null;
 let precioHasta = null;
 let editandoId = null;
-const CATEGORIAS_SUGERIDAS = ["Productos", "Otros"];
+const CATEGORIAS_SUGERIDAS = ["Maquillaje", "Cuidado de la piel", "Cuidado del cabello", "Perfumería", "Cuidado personal", "Otros"];
 const PLACEHOLDER_FOTO = `<div class="placeholder-foto"><svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" stroke="#E48AAB" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" stroke="#E48AAB" stroke-width="1.6"/></svg><span>Tocá para elegir la foto</span></div>`;
 function setPreviewFoto(url){
   const el = $("#previewImg");

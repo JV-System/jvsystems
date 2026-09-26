@@ -34,11 +34,12 @@ CLIENTE = {
     "carpeta": "rose",                 # jvsystems.com.ar/<carpeta>/  y  path de Firebase
     "nombre": "Rose",
     "frase": "Tu esencia",             # eyebrow de la portada / og
-    "titulo_portada": "Bienvenida a Rose",
-    "rasgos": ["🌸 <b>Catálogo&nbsp;online</b>", "💬 <b>Pedís por WhatsApp</b>", "🚚 <b>Coordinamos envío</b>"],
-    "categorias": ["Productos", "Otros"],
-    "placeholder_nombre": "Nombre del producto",
-    "placeholder_desc": "Detalles del producto…",
+    "rubro": "Belleza, cosmética y cuidado personal",  # va en la portada y al compartir el link
+    "titulo_portada": "Belleza, cosmética y cuidado personal",
+    "rasgos": ["💄 <b>Belleza&nbsp;y&nbsp;cuidado</b>", "💬 <b>Pedís por WhatsApp</b>", "🚚 <b>Coordinamos envío</b>"],
+    "categorias": ["Maquillaje", "Cuidado de la piel", "Cuidado del cabello", "Perfumería", "Cuidado personal", "Otros"],
+    "placeholder_nombre": "Ej: Crema hidratante 200 ml",
+    "placeholder_desc": "Presentación, aroma, tamaño, modo de uso…",
     "clave_admin_inicial": "rose2026",  # el admin la cambia desde Ajustes
     # Siempre el MISMO logo completo en todos lados, en tres formatos del mismo dibujo:
     "logo": "rose-logo.png",           # logo completo, PNG transparente (header y pantalla de carga)
@@ -96,10 +97,10 @@ def generar(c):
 
     # --- meta / título ---------------------------------------------------
     s = sub(s, r'<meta name="description" content="[^"]*">',
-            f'<meta name="description" content="{n} · {c["frase"]}. Mirá el catálogo y hacé tu pedido por WhatsApp.">',
+            f'<meta name="description" content="{n} · {c["frase"]}. {c.get("rubro", "Catálogo online")}. Mirá el catálogo y hacé tu pedido por WhatsApp.">',
             regex=True)
     s = sub(s, '<meta property="og:description" content="Catálogo de ropa blanca premium · Pedidos por WhatsApp">',
-            f'<meta property="og:description" content="Catálogo online · Pedidos por WhatsApp">')
+            f'<meta property="og:description" content="{c.get("rubro", "Catálogo online")} · Pedidos por WhatsApp">')
     s = sub(s, "Harmonia · Ropa blanca delicada", f'{n} · {c["frase"]}', minimo=3)
     s = sub(s, "https://jvsystems.com.ar/harmonia/harmonia-icon.png", url + c["og"], minimo=2)
     s = sub(s, "https://jvsystems.com.ar/harmonia/", url)
