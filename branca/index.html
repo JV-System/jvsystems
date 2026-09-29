@@ -2268,6 +2268,28 @@
   </div>
 </div>
 
+<!-- MODAL ANUNCIO ARREGLOS FACTURACION 29/9 (solo facturacion) -->
+<div id="modal-anuncio4" style="display:none;position:fixed;inset:0;background:rgba(10,22,40,0.72);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div id="modal-bienvenida-card" style="max-width:400px;">
+    <div style="background:linear-gradient(135deg,#0A1628 60%,#1a3a6e);padding:26px 24px 18px;text-align:center;">
+      <div style="width:52px;height:52px;background:rgba(255,255,255,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;border:1.5px solid rgba(255,255,255,0.15);">🔧</div>
+      <div style="font-size:10px;font-weight:700;color:#7EB3F7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;">Novedades para vos</div>
+      <div id="anuncio4-nombre" style="color:#fff;font-size:19px;font-weight:800;line-height:1.25;"></div>
+    </div>
+    <div style="padding:20px 22px 22px;">
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">Arreglé 3 cositas en Facturación a partir de lo que me contaste:</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 10px;">💾 <b>Guardar</b> ya no hace que la tarjeta desaparezca de la pestaña donde estabas, aunque pase a Cobrado.</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 10px;">🔀 Cambiar el selector <b>Por hora / Por trabajo</b> ya no te mueve el total — se mantiene igual, cambia solo si vos tipeás un número nuevo.</p>
+      <p style="color:#374151;font-size:13px;line-height:1.6;margin:0 0 12px;">⚡ <b>Enviar a Xubio</b> ya guarda bien si facturaste "por hora" o "por trabajo", aunque no hayas tocado Guardar antes.</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.6;margin:0 0 18px;">Cualquier cosa rara que veas, avisame que lo reviso. 🙌</p>
+      <button onclick="cerrarAnuncio4()"
+              style="width:100%;background:#1565D8;color:#fff;font-weight:700;font-size:14px;padding:13px;border-radius:10px;border:none;cursor:pointer;">
+        Entendido →
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- PANEL INSTRUCTIVO -->
 <div id="panel-instructivo" style="display:none;position:fixed;inset:0;z-index:10000;background:#f2f4f8;flex-direction:column;">
   <iframe id="iframe-instructivo" src="" style="flex:1;border:none;width:100%;height:100%;"></iframe>
@@ -2689,7 +2711,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 49;
+const APP_BUILD = 50;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8231,6 +8253,7 @@ function hideLoginScreen() {
   setTimeout(mostrarAnuncioXubio, 1200);
   setTimeout(mostrarAnuncioGarantiaPV, 1600);
   setTimeout(mostrarAnuncioPersonas, 2000);
+  setTimeout(mostrarAnuncioFacturacion49, 2400);
 }
 
 // Aviso de novedades (creación automática de cliente en Xubio) — una sola
@@ -8331,6 +8354,31 @@ function cerrarAnuncio3() {
   if (modal) modal.style.display = 'none';
   const cu = getCurrentUser();
   if (cu) { try { localStorage.setItem('branca_anuncio_personas_' + (cu.username || cu.id || 'user'), '1'); } catch(e) {} }
+}
+
+// Aviso de novedades: 3 arreglos de Facturación (29/9) -- solo rol facturacion.
+// Igual que los anteriores, se marca como visto recién al tocar "Entendido".
+function mostrarAnuncioFacturacion49() {
+  const cu = getCurrentUser();
+  if (!cu || cu.role !== 'facturacion') return;
+  const key = 'branca_anuncio_fact49_' + (cu.username || cu.id || 'user');
+  try { if (localStorage.getItem(key)) return; } catch(e) { return; }
+  const otros = ['modal-bienvenida', 'modal-anuncio', 'modal-anuncio2', 'modal-anuncio3'];
+  if (otros.some(function(id) { const m = document.getElementById(id); return m && m.style.display === 'flex'; })) {
+    setTimeout(mostrarAnuncioFacturacion49, 800);
+    return;
+  }
+  const modal = document.getElementById('modal-anuncio4');
+  if (!modal) return;
+  const primerNombre = ((cu.nombre || cu.username || '').trim().split(/\s+/)[0]) || cu.username;
+  document.getElementById('anuncio4-nombre').textContent = '¡Hola, ' + primerNombre + '!';
+  modal.style.display = 'flex';
+}
+function cerrarAnuncio4() {
+  const modal = document.getElementById('modal-anuncio4');
+  if (modal) modal.style.display = 'none';
+  const cu = getCurrentUser();
+  if (cu) { try { localStorage.setItem('branca_anuncio_fact49_' + (cu.username || cu.id || 'user'), '1'); } catch(e) {} }
 }
 
 function mostrarBienvenida() {
