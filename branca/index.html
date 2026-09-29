@@ -2689,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 47;
+const APP_BUILD = 48;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -9170,6 +9170,22 @@ async function confirmarEnvioXubio(oid) {
       if (payload.condicionPago) o.facturacion.condPago = payload.condicionPago;
       var fechaFactInp = document.getElementById('fact-fecha-' + oid);
       if (fechaFactInp && fechaFactInp.value) o.facturacion.fechaFactura = fechaFactInp.value;
+      // Capturar el modo Por hora/Por trabajo (y las horas/precio tal como
+      // quedaron en la tarjeta) tambien al enviar a Xubio -- si se mandaba
+      // sin pasar antes por "Guardar", esto era lo unico que no se
+      // registraba, y por eso la factura quedaba marcada "Por hora" en el
+      // PDF/historial aunque la tarjeta mostrara "Por trabajo" (con el total
+      // correcto, pero la etiqueta equivocada).
+      var modoElXb = document.getElementById('fact-mo-modo-' + oid);
+      if (modoElXb) {
+        var modoMOXb = modoElXb.value;
+        o.facturacion.modoMO = modoMOXb;
+        var unitInpXb = document.getElementById('fact-mo-unit-' + oid);
+        o.facturacion.precioHoraUnit = modoMOXb === 'hora' ? (parseFloat(unitInpXb && unitInpXb.value) || 0) : 0;
+        var cantInpXb = document.getElementById('fact-mo-cant-' + oid);
+        var cantElXb = cantInpXb ? cantInpXb.querySelector('input') : null;
+        if (modoMOXb === 'hora' && cantElXb && cantElXb.value !== '') o.facturacion.horasManual = parseFloat(cantElXb.value);
+      }
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
@@ -9286,6 +9302,22 @@ async function _enviarPayloadXubio(oid, o, payload, statusEl, sendBtn, _esReinte
       if (payload.condicionPago) o.facturacion.condPago = payload.condicionPago;
       var fechaFactInp = document.getElementById('fact-fecha-' + oid);
       if (fechaFactInp && fechaFactInp.value) o.facturacion.fechaFactura = fechaFactInp.value;
+      // Capturar el modo Por hora/Por trabajo (y las horas/precio tal como
+      // quedaron en la tarjeta) tambien al enviar a Xubio -- si se mandaba
+      // sin pasar antes por "Guardar", esto era lo unico que no se
+      // registraba, y por eso la factura quedaba marcada "Por hora" en el
+      // PDF/historial aunque la tarjeta mostrara "Por trabajo" (con el total
+      // correcto, pero la etiqueta equivocada).
+      var modoElXb = document.getElementById('fact-mo-modo-' + oid);
+      if (modoElXb) {
+        var modoMOXb = modoElXb.value;
+        o.facturacion.modoMO = modoMOXb;
+        var unitInpXb = document.getElementById('fact-mo-unit-' + oid);
+        o.facturacion.precioHoraUnit = modoMOXb === 'hora' ? (parseFloat(unitInpXb && unitInpXb.value) || 0) : 0;
+        var cantInpXb = document.getElementById('fact-mo-cant-' + oid);
+        var cantElXb = cantInpXb ? cantInpXb.querySelector('input') : null;
+        if (modoMOXb === 'hora' && cantElXb && cantElXb.value !== '') o.facturacion.horasManual = parseFloat(cantElXb.value);
+      }
       (function() {
         var moV = parseFloat(document.getElementById('xb-precio-mo') && document.getElementById('xb-precio-mo').value);
         if (!isNaN(moV) && moV >= 0) o.facturacion.manoDeObra = moV;
