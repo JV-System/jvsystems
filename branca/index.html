@@ -2689,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 46;
+const APP_BUILD = 47;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5572,6 +5572,16 @@ function compartirPDFWhatsApp(callback) {
 var _factOpenId = null; // id de la carta actualmente abierta
 
 var _factFiltro = 'todos';
+// A qué pestaña de Facturación pertenece una orden (mismo criterio que
+// _getFactLista) -- se usa para que, al guardar, la tarjeta no desaparezca
+// de la vista si la orden cambia de categoría (ver guardarFacturacion).
+function _factCategoriaDe(o) {
+  var f = o.facturacion || {};
+  if ((o.condicion || []).includes('Garantía')) return 'garantia';
+  if (f.estadoPago === 'pagado') return 'cobrado';
+  if (f.nroFactura) return 'pend';
+  return 'sin';
+}
 var _factBusca  = '';
 var _factSort   = 'fecha-desc'; // 'fecha-desc' | 'fecha-asc' | 'orden-desc' | 'orden-asc'
 var _factDesde  = '';
@@ -6140,6 +6150,17 @@ function toggleModoMO(oid, modo) {
   var detLbl  = document.getElementById('fact-mo-detlbl-'+oid);
   var unitInp = document.getElementById('fact-mo-unit-'+oid);
   var cantEl  = document.getElementById('fact-mo-cant-'+oid);
+  // Guardar el total ANTES de tocar nada -- el fin de esto es que cambiar el
+  // selector nunca mueva el total solo, ni siquiera en una factura ya
+  // enviada a Xubio: se recalcula el campo de precio para que, apenas se
+  // cambia de modo, el total siga mostrando lo mismo que mostraba antes.
+  // Solo cambia si después se retipea un número a propósito. (Antes, lo que
+  // hubiera en ese campo -- ej: una tarifa por hora derivada -- se
+  // reinterpretaba directo como si fuera del modo nuevo, y podía pisar el
+  // importe real.)
+  var hidInp = document.getElementById('fact-mo-'+oid);
+  var totalActual = hidInp ? (parseFloat(hidInp.value) || 0) : 0;
+  var hsActual = cantEl ? (parseFloat(cantEl.dataset.hs) || 0) : 0;
   // Mostrar/ocultar columnas de precio en detalle de visitas
   var thPh = document.getElementById('fact-mo-th-ph-'+oid);
   var thT  = document.getElementById('fact-mo-th-t-'+oid);
@@ -6151,14 +6172,15 @@ function toggleModoMO(oid, modo) {
   if (unitInp) unitInp.placeholder = modo === 'hora' ? '$/hs' : '$ total';
   if (modo === 'total') {
     if (cantEl) cantEl.textContent = '—';
+    if (unitInp) unitInp.value = totalActual || '';
   } else {
     // Volver a "$/hs por visita" tiene que reconstruir el <input> editable de horas
     // (antes solo ponia texto plano, y quedaba trabado sin poder tipear la cantidad).
-    var hs = cantEl ? (parseFloat(cantEl.dataset.hs) || 0) : 0;
     if (cantEl) {
       var inpS = 'border:none;border-bottom:1px solid #d1d5db;padding:4px 6px;font-size:12px;text-align:right;background:transparent;font-family:inherit;';
-      cantEl.innerHTML = '<input type="number" min="0" step="0.5" value="'+hs+'" onclick="event.stopPropagation()" oninput="(function(el){var td=el.closest(\'td\')||el.parentElement;td.dataset.hs=el.value;recalcMOtotal(\''+oid+'\');})(this)" style="'+inpS+'width:60px;text-align:center;font-weight:600;color:#1565D8;"> hs';
+      cantEl.innerHTML = '<input type="number" min="0" step="0.5" value="'+hsActual+'" onclick="event.stopPropagation()" oninput="(function(el){var td=el.closest(\'td\')||el.parentElement;td.dataset.hs=el.value;recalcMOtotal(\''+oid+'\');})(this)" style="'+inpS+'width:60px;text-align:center;font-weight:600;color:#1565D8;"> hs';
     }
+    if (unitInp) unitInp.value = hsActual > 0 ? Math.round(totalActual / hsActual) : '';
   }
   recalcMOtotal(oid);
 }
@@ -6466,6 +6488,16 @@ function guardarFacturacion(oid, silencioso) {
   saveData();
   if (!silencioso) {
     showToast('✅ Factura guardada.');
+    // Si al guardar la orden cambió de categoría (ej: pasó de "Pendiente" a
+    // "Cobrado" por cargarle el N° de factura), no dejar que desaparezca de
+    // la vista -- antes había que ir a buscarla a la otra pestaña para poder
+    // seguir y tocar "Enviar a Xubio", y por eso terminaba salteándose
+    // Guardar e yendo directo a Xubio (causa real de que se perdiera el modo
+    // "Por hora"/"Por trabajo", ver comentario en confirmarEnvioXubio).
+    if (_factFiltro !== 'todos') {
+      var _cat = _factCategoriaDe(o);
+      if (_cat !== _factFiltro) _factFiltro = _cat;
+    }
     setTimeout(renderFacturacion, 300);
   }
 }
