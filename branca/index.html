@@ -2689,7 +2689,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 48;
+const APP_BUILD = 49;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -3331,6 +3331,19 @@ async function eliminarOrden(id) {
   if (!o.numero) {
     const confirmar = await showConfirm('Eliminar borrador', '¿Eliminar este borrador? No tiene número asignado y no se puede recuperar.');
     if (!confirmar) return;
+    // Guardar una copia en la papelera de Firebase ANTES de borrar -- si se
+    // elimina un borrador por error (pasó de verdad: uno de Franco Pedernera
+    // se borró sin querer y no se pudo recuperar, el backup diario ya era de
+    // antes) ahora queda registrado quién y cuándo, y se puede restaurar a
+    // mano desde Firebase. Se purga solo a los 30 días (ver _purgarPapeleraVieja).
+    (function() {
+      var cuDel = getCurrentUser();
+      _fbPut('/db/papelera/' + String(id), {
+        orden: o,
+        borradoPor: cuDel ? cuDel.nombre : 'Sistema',
+        borradoFecha: new Date().toISOString()
+      }).catch(function(){});
+    })();
     _deletedIds.add(String(id));
     localStorage.setItem('branca_ignore_ids', JSON.stringify([..._deletedIds]));
     // Avisar también en Firebase (no solo localmente) que este borrador se
@@ -8510,6 +8523,35 @@ function initRoleUI() {
     if (mobOrdenes) mobOrdenes.style.display = 'none';
     switchView('facturacion');
   }
+  // Purgar la papelera de borradores eliminados hace más de 30 días -- solo
+  // el admin dispara esto, y como mucho una vez por día (guardado en
+  // localStorage), para no pegarle a Firebase en cada apertura de la app.
+  if (isAdmin()) {
+    var _ultimaPurga = localStorage.getItem('branca_ultima_purga_papelera');
+    var _hoy = new Date().toISOString().slice(0,10);
+    if (_ultimaPurga !== _hoy) {
+      localStorage.setItem('branca_ultima_purga_papelera', _hoy);
+      _purgarPapeleraVieja();
+    }
+  }
+}
+
+// Borra de /db/papelera las entradas eliminadas hace más de 30 días.
+// La copia de cada borrador vive ahí (ver eliminarOrden) para poder
+// recuperarla a mano desde Firebase si alguien la borró por error.
+async function _purgarPapeleraVieja() {
+  try {
+    var papelera = await _fbGet('/db/papelera');
+    if (!papelera) return;
+    var limite = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    var aBorrar = {};
+    Object.keys(papelera).forEach(function(k) {
+      var entry = papelera[k];
+      var fecha = entry && entry.borradoFecha ? Date.parse(entry.borradoFecha) : 0;
+      if (!fecha || fecha < limite) aBorrar[k] = null;
+    });
+    if (Object.keys(aBorrar).length) await _fbPatch('/db/papelera', aBorrar);
+  } catch(e) {}
 }
 
 // ══════════════════════════════════════════
