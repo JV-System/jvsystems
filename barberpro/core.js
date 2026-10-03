@@ -456,7 +456,8 @@ function mapsLink(){
 }
 function mapsEmbed(){
   var q = mapsQuery();
-  return q ? "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&z=16&output=embed" : "";
+  // t=k = vista satélite; z=18 = a nivel de cuadra
+  return q ? "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&z=18&t=k&output=embed" : "";
 }
 
 // [{days:"Lun", text:"09:30 a 17:00"}, {days:"Mar a Vie", text:"09:30 a 19:30"}, ...] agrupando días seguidos iguales
