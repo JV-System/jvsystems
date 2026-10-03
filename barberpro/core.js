@@ -24,10 +24,11 @@ function defaultHoursDay(morningActive, afternoonActive){
 // Solo cuentan los textos que no estén vacíos; lo que se guarde desde el panel en un navegador los pisa.
 function fileDefaults(){
   var f = window.BARBERPRO_CONFIG || {}, out = {};
-  ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink","payAlias","payHolder","payMpLink"].forEach(function(k){
+  ["businessName","tagline","address","mapsLink","heroImage","mapboxToken","whatsappDisplay","whatsappLink","payAlias","payHolder","payMpLink"].forEach(function(k){
     if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
   });
   if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
+  if(Array.isArray(f.mapCenter) && f.mapCenter.length === 2 && isFinite(f.mapCenter[0]) && isFinite(f.mapCenter[1])) out.mapCenter = [Number(f.mapCenter[0]), Number(f.mapCenter[1])];
   var h = fileHours(f.hours);
   if(h){ out.hours = h; out.hoursSig = JSON.stringify(f.hours); }
   return out;
@@ -66,6 +67,9 @@ function baseState(){
       payHolder:"",
       payMpLink:"",
       mapsLink:"",
+      heroImage:"",
+      mapboxToken:"",
+      mapCenter:null,
       price:8000,
       priceIsExample:true,
       slotMinutes:30,
@@ -478,4 +482,14 @@ function hoursSummary(){
   return groups.map(function(g){
     return {days: g.from === g.to ? short[g.from] : short[g.from] + " a " + short[g.to], text: g.t};
   });
+}
+
+// Fondo del encabezado: vista satelital inclinada del local (Mapbox Static Images). Necesita mapboxToken y mapCenter [lng, lat] en config.js.
+// Mapbox no tiene bien cargadas todas las calles argentinas, por eso las coordenadas se indican a mano en vez de buscarlas por dirección.
+function heroMapUrl(){
+  var c = state.config;
+  if(c.heroImage) return c.heroImage;      // una foto propia del local tiene prioridad sobre el mapa en vivo
+  if(!c.mapboxToken || !c.mapCenter || c.mapCenter.length !== 2) return "";
+  return "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/" + c.mapCenter[0] + "," + c.mapCenter[1] +
+    ",17,25,55/600x300@2x?attribution=false&access_token=" + encodeURIComponent(c.mapboxToken);
 }

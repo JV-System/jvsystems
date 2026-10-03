@@ -72,8 +72,24 @@ function renderClient(){
   bindClientEvents();
 }
 
+// fondo satelital del encabezado (si no hay token/coordenadas o la imagen falla, queda el encabezado de siempre)
+function applyHeroMap(){
+  var hero = document.getElementById("heroSection"), layer = document.getElementById("heroMap");
+  if(!hero || !layer) return;
+  var url = heroMapUrl(), img = layer.querySelector("img");
+  if(!url){ hero.classList.remove("has-map"); layer.hidden = true; return; }
+  var own = !!state.config.heroImage;               // foto propia: sin atribución de Mapbox y centrada
+  layer.querySelector(".map-attrib").hidden = own;
+  img.style.objectPosition = own ? "center" : "center bottom";
+  if(img.getAttribute("src") === url) return;
+  img.onload = function(){ layer.hidden = false; hero.classList.add("has-map"); img.classList.add("loaded"); };
+  img.onerror = function(){ layer.hidden = true; hero.classList.remove("has-map"); };
+  img.src = url;
+}
+
 function render(){
   applyBranding("Turnos");
+  applyHeroMap();
   renderClient();
 }
 // si el dueño cambia algo en otra pestaña, se actualiza (sin pisar lo que se está escribiendo)
