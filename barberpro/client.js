@@ -6,7 +6,7 @@
 var client = {
   step:1,
   name:"", lastname:"", nickname:"", phone:"", email:"", registered:false,
-  selectedDate:null, selectedTime:null,
+  selectedDate:null, selectedTime:null, calMonth:null,
   payMethod:"local",
   lastBooking:null
 };
@@ -120,18 +120,51 @@ function stepDatos(){
     '</div>';
 }
 
+// ---------- calendario mensual ----------
+var BOOKING_DAYS = 60;   // hasta cuántos días adelante se puede reservar
+
+function calendarHtml(){
+  var today = toISO(new Date()), last = addDays(today, BOOKING_DAYS);
+  if(!client.calMonth) client.calMonth = (client.selectedDate || today).slice(0, 8) + "01";
+  var first = client.calMonth, fd = fromISO(first);
+  var y = fd.getFullYear(), m = fd.getMonth(), dim = new Date(y, m + 1, 0).getDate();
+  var offset = (fd.getDay() === 0 ? 6 : fd.getDay() - 1);        // la semana empieza el lunes
+  var rows = Math.ceil((offset + dim) / 7);
+  var canPrev = first > today.slice(0, 8) + "01";
+  var canNext = addMonths(first, 1) <= last;
+
+  var dows = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"].map(function(d){ return '<div class="cal-dow">'+d+'</div>'; }).join("");
+  var cells = "";
+  for(var i = 0; i < rows * 7; i++){
+    var n = i - offset + 1;
+    if(n < 1 || n > dim){ cells += '<span class="cal-day blank"></span>'; continue; }
+    var iso = y + "-" + pad2(m + 1) + "-" + pad2(n);
+    var inRange = iso >= today && iso <= last;
+    var open = inRange && !isDayFullyClosed(iso);
+    var free = open ? getSlotStatuses(iso).filter(function(s){ return !s.taken; }).length : 0;
+    var cls = "cal-day" + (iso === today ? " today" : "") + (client.selectedDate === iso ? " selected" : "");
+    var dot = "";
+    if(!inRange || !open) cls += " off";
+    else if(free === 0){ cls += " off full"; dot = '<i class="dot full"></i>'; }
+    else dot = '<i class="dot ok"></i>';
+    var pick = (open && free > 0) ? ' data-pick="1" data-date="'+iso+'"' : '';
+    var label = n + (open ? (free ? ", con horarios libres" : ", sin horarios") : ", cerrado");
+    cells += '<button type="button" class="'+cls+'"'+pick+(pick ? '' : ' disabled')+' aria-label="'+label+'"><span>'+n+'</span>'+dot+'</button>';
+  }
+
+  return '<div class="cal">' +
+    '<div class="cal-head">' +
+      '<button type="button" class="cal-nav" data-calnav="-1"'+(canPrev ? '' : ' disabled')+' aria-label="Mes anterior">‹</button>' +
+      '<div class="cal-title">'+MONTHS[m]+' '+y+'</div>' +
+      '<button type="button" class="cal-nav" data-calnav="1"'+(canNext ? '' : ' disabled')+' aria-label="Mes siguiente">›</button>' +
+    '</div>' +
+    '<div class="cal-grid">'+dows+cells+'</div>' +
+    '<div class="cal-legend"><span><i class="dot ok"></i>Libre</span><span><i class="dot full"></i>Completo</span><span><i class="dot none"></i>Cerrado</span></div>' +
+  '</div>';
+}
+
 function stepFecha(){
-  var days = [];
-  for(var i=0;i<21;i++) days.push(addDays(toISO(new Date()), i));
-  var strip = days.map(function(iso){
-    var closed = isDayFullyClosed(iso);
-    var d = fromISO(iso);
-    var sel = client.selectedDate===iso ? " selected" : "";
-    var cls = "date-chip" + sel + (closed?" closed":"");
-    return '<div class="'+cls+'" data-date="'+iso+'"'+(closed?"":' data-pick="1"')+'>' +
-      '<div class="dow">'+DOW_SHORT[DOW_KEYS[d.getDay()]]+'</div>' +
-      '<div class="num">'+d.getDate()+'</div></div>';
-  }).join("");
+  var cal = calendarHtml();
 
   var debt = activeDebtFor(clientKeyOf(client.name, client.lastname, client.phone));
   var debtNotice = debt ? '<div class="notice warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div>Tenés un saldo pendiente de '+money(currentPenalty())+' por una cancelación anterior. Se va a sumar a este turno.</div></div>' : "";
@@ -157,7 +190,7 @@ function stepFecha(){
     '<div class="hello"><div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div>' +
     '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mis datos</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
-    '<div class="date-strip">'+strip+'</div>' +
+    cal +
     slotsHtml +
     '</div>' +
     '<button class="btn btn-primary" id="btnStep2" '+(client.selectedDate&&client.selectedTime?'':'disabled')+'>Continuar</button>';
@@ -219,6 +252,45 @@ function payInstructions(b){
     '<div class="pay-note">Podés abonar en efectivo o como te quede cómodo al llegar.</div></div>';
 }
 
+// ---------- comprobante del turno ----------
+function receiptCode(b){ return String(b.id).slice(-6).toUpperCase(); }
+
+function receiptText(b){
+  var c = state.config, total = bookingTotal(b);
+  var L = [
+    "COMPROBANTE DE TURNO - " + c.businessName,
+    "N° " + receiptCode(b),
+    "",
+    "Cliente: " + b.name + " " + b.lastname,
+    "Fecha: " + formatDateLong(b.date),
+    "Hora: " + b.time + " hs"
+  ];
+  if(c.address) L.push("Lugar: " + c.address);
+  L.push("Corte: " + money(b.price));
+  if(b.debtCharged > 0) L.push("Saldo anterior: " + money(b.debtCharged));
+  L.push("Total: " + money(total));
+  L.push("Pago: " + payMethodLabel(b.payMethod).toLowerCase() + (b.payMethod === "local" ? "" : " (el local confirma el pago al recibirlo)"));
+  L.push("");
+  L.push("Si cancelás el mismo día del turno se cobra el 50% de seña.");
+  return L.join("\n");
+}
+
+function receiptWaLink(b){ return "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(receiptText(b)); }
+function receiptMailLink(b){
+  return "mailto:" + b.email + "?subject=" + encodeURIComponent("Comprobante de tu turno - " + state.config.businessName) +
+    "&body=" + encodeURIComponent(receiptText(b));
+}
+
+function receiptCard(b){
+  return '<div class="card receipt-card"><h2>Tu comprobante</h2>' +
+    '<div class="sub">N° '+receiptCode(b)+' · '+formatDateLong(b.date)+' · '+b.time+' hs</div>' +
+    '<div class="cal-actions">' +
+      (b.phone ? '<a class="btn btn-wa" href="'+receiptWaLink(b)+'" target="_blank" rel="noopener">Recibirlo en mi WhatsApp</a>' : '') +
+      (b.email ? '<a class="btn btn-ghost" href="'+receiptMailLink(b)+'">Recibirlo en mi mail</a>' : '') +
+    '</div>' +
+    '<div class="field-hint" style="margin:10px 0 0;">Se abre con el mensaje ya escrito: solo tocás enviar.</div></div>';
+}
+
 function stepExito(){
   var b = client.lastBooking;
   if(!b) return '<div class="card">Algo salió mal.</div>';
@@ -228,6 +300,7 @@ function stepExito(){
     '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs</div>' +
     payInstructions(b) +
     '</div>' +
+    receiptCard(b) +
     placeCard() +
     '<div class="card"><h2>Que no se te pase</h2>' +
     '<div class="sub">Guardalo en tu calendario y te avisa un día antes y 2 horas antes.</div>' +
@@ -236,7 +309,8 @@ function stepExito(){
       '<a class="btn btn-ghost" href="'+googleCalendarLink(b)+'" target="_blank" rel="noopener">Agregar a Google Calendar</a>' +
     '</div></div>' +
     (state.config.whatsappLink ? '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">Avisar por WhatsApp</a>' : '') +
-    '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>';
+    '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>' +
+    '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir</button>';
 }
 
 // Mapa de "Dónde es": Leaflet (código abierto, guardado en vendor/) con los mapas de OpenStreetMap. Sin claves ni costo.
@@ -261,9 +335,6 @@ function placeCard(){
   var c = state.config, link = mapsLink(), embed = mapsEmbed();
   var hasPin = !!(c.mapCenter && c.mapCenter.length === 2);   // con coordenadas: mapa propio (Leaflet + OpenStreetMap)
   if(!c.address && !c.whatsappLink) return "";
-  var hours = hoursSummary().map(function(h){
-    return '<div class="hours-line'+(h.text==='Cerrado'?' closed':'')+'"><span>'+h.days+'</span><b>'+h.text+'</b></div>';
-  }).join('');
   return '<div class="card place-card"><h2>Dónde es</h2>' +
     '<div class="sub">'+esc(c.businessName)+(c.address ? ' · '+esc(c.address) : '')+'</div>' +
     (hasPin ? '<div class="place-map" id="placeMap"></div>' : embed ? '<div class="map-wrap"><a class="map-fallback" href="'+esc(link)+'" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(c.address)+'</span><i>Ver en Google Maps</i></a>' +
@@ -272,7 +343,7 @@ function placeCard(){
       (link ? '<a class="btn btn-primary" href="'+esc(link)+'" target="_blank" rel="noopener">Cómo llegar</a>' : '') +
       (c.whatsappLink ? '<a class="btn btn-ghost" href="https://wa.me/'+c.whatsappLink+'" target="_blank" rel="noopener">Escribirle al local</a>' : '') +
     '</div>' +
-    '<div class="hours-title">Horarios de atención</div>' + hours + '</div>';
+    '</div>';
 }
 
 function copyText(text){
@@ -321,8 +392,16 @@ function bindClientEvents(){
   var editP = document.getElementById("btnEditProfile");
   if(editP) editP.onclick = function(){ client.step = 1; renderClient(); };
 
-  document.querySelectorAll(".date-chip[data-pick]").forEach(function(el){
-    el.onclick = function(){ client.selectedDate = el.getAttribute("data-date"); client.selectedTime = null; renderClient(); };
+  document.querySelectorAll("[data-calnav]").forEach(function(el){
+    el.onclick = function(){ client.calMonth = addMonths(client.calMonth, parseInt(el.getAttribute("data-calnav"), 10)); renderClient(); };
+  });
+  document.querySelectorAll(".cal-day[data-pick]").forEach(function(el){
+    el.onclick = function(){
+      client.selectedDate = el.getAttribute("data-date"); client.selectedTime = null;
+      client.calMonth = client.selectedDate.slice(0, 8) + "01";
+      renderClient();
+      var g = document.querySelector(".slot-grid"); if(g) g.scrollIntoView({behavior: "smooth", block: "nearest"});
+    };
   });
   document.querySelectorAll(".slot-btn").forEach(function(el){
     el.onclick = function(){ client.selectedTime = el.getAttribute("data-time"); renderClient(); };
@@ -353,7 +432,7 @@ function bindClientEvents(){
   if(cp) cp.onclick = function(){ copyText(state.config.payAlias); };
   var nb = document.getElementById("btnNewBooking");
   if(nb) nb.onclick = function(){
-    client.step=2; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null; client.payMethod="local";
+    client.step=2; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null; client.payMethod="local"; client.calMonth=null;
     renderClient();
   };
 }

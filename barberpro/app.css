@@ -411,3 +411,25 @@ a.btn{text-decoration:none;}
 .place-map .leaflet-control-attribution a{color:var(--accent-1);}
 .place-map .leaflet-bar a{background:var(--surface-2); color:var(--text); border-bottom-color:var(--border);}
 .place-map .leaflet-bar a:hover{background:var(--surface-3);}
+
+/* ---------- calendario mensual (cliente) ---------- */
+.cal{margin:2px 0 14px;}
+.cal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+.cal-title{font-weight:800; font-size:15px; text-transform:capitalize;}
+.cal-nav{width:34px; height:34px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); color:var(--text); font-size:18px; font-weight:800; cursor:pointer; line-height:1;}
+.cal-nav:disabled{opacity:.3; cursor:default;}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px;}
+.cal-dow{font-size:10px; font-weight:800; color:var(--text-faint); text-align:center; padding:2px 0 4px;}
+.cal-day{height:40px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:14px; font-weight:800; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:0; cursor:pointer; font-variant-numeric:tabular-nums;}
+.cal-day.blank{background:none; border:none; cursor:default;}
+.cal-day.off{opacity:.38; cursor:default;}
+.cal-day.today{border-color:var(--accent-2);}
+.cal-day.selected{background:var(--accent-grad); border-color:transparent; color:#fff; opacity:1;}
+.cal-day.selected .dot{background:#fff;}
+.cal .dot{width:5px; height:5px; border-radius:50%; display:inline-block; background:var(--text-faint);}
+.cal .dot.ok{background:var(--success);}
+.cal .dot.full{background:var(--danger);}
+.cal-legend{display:flex; gap:14px; justify-content:center; margin-top:10px; font-size:11px; font-weight:700; color:var(--text-faint);}
+.cal-legend span{display:inline-flex; align-items:center; gap:5px;}
+.cal-legend .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
+.cal-legend .dot.none{background:var(--surface-3); border:1px solid var(--border);}
