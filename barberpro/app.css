@@ -402,3 +402,12 @@ a.btn{text-decoration:none;}
 .hero.has-map .hero-scrim{z-index:1; background:linear-gradient(180deg, rgba(5,8,13,.62) 0%, rgba(5,8,13,.34) 55%, rgba(5,8,13,.08) 100%);}
 .hero.has-map .hero-top-fade{z-index:1;}
 .hero.has-map + .brandline{margin-top:12px;}
+
+/* ---------- mapa propio (Leaflet) ---------- */
+.place-map{position:relative; z-index:0; isolation:isolate; height:210px; margin:2px 0 12px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--surface-2);}
+.place-map .leaflet-tile-pane{filter:invert(1) hue-rotate(195deg) brightness(.88) saturate(.7) contrast(.95);}
+.place-map .pin-icon{background:none; border:0; filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));}
+.place-map .leaflet-control-attribution{background:rgba(5,8,13,.78); color:var(--text-muted); font-size:10px;}
+.place-map .leaflet-control-attribution a{color:var(--accent-1);}
+.place-map .leaflet-bar a{background:var(--surface-2); color:var(--text); border-bottom-color:var(--border);}
+.place-map .leaflet-bar a:hover{background:var(--surface-3);}

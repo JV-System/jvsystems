@@ -70,6 +70,7 @@ function renderClient(){
 
   main.innerHTML = html;
   bindClientEvents();
+  initPlaceMap();
 }
 
 // fondo satelital del encabezado (si no hay token/coordenadas o la imagen falla, queda el encabezado de siempre)
@@ -238,15 +239,34 @@ function stepExito(){
     '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>';
 }
 
+// Mapa de "Dónde es": Leaflet (código abierto, guardado en vendor/) con los mapas de OpenStreetMap. Sin claves ni costo.
+var placeMapInstance = null;
+var PIN_SVG = '<svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43s14-14.2 14-26A14 14 0 0 0 3 17c0 11.8 14 26 14 26Z" fill="#29b6f6" stroke="#ffffff" stroke-width="2.5"/><circle cx="17" cy="17" r="5.5" fill="#ffffff"/></svg>';
+function initPlaceMap(retry){
+  if(placeMapInstance){ try{ placeMapInstance.remove(); }catch(e){} placeMapInstance = null; }
+  var el = document.getElementById("placeMap"), c = state.config;
+  if(!el || !c.mapCenter) return;
+  if(!window.L){ if(!retry) setTimeout(function(){ initPlaceMap(true); }, 700); return; }   // la librería carga con defer
+  var ll = [c.mapCenter[1], c.mapCenter[0]];           // config guarda [longitud, latitud]; Leaflet usa [latitud, longitud]
+  var map = L.map(el, {center: ll, zoom: 17, scrollWheelZoom: false, dragging: !L.Browser.mobile});   // en el celular no se arrastra, para no trabar el scroll de la página
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>'
+  }).addTo(map);
+  L.marker(ll, {icon: L.divIcon({className: "pin-icon", html: PIN_SVG, iconSize: [34, 44], iconAnchor: [17, 42]})}).addTo(map);
+  placeMapInstance = map;
+}
+
 function placeCard(){
   var c = state.config, link = mapsLink(), embed = mapsEmbed();
+  var hasPin = !!(c.mapCenter && c.mapCenter.length === 2);   // con coordenadas: mapa propio (Leaflet + OpenStreetMap)
   if(!c.address && !c.whatsappLink) return "";
   var hours = hoursSummary().map(function(h){
     return '<div class="hours-line'+(h.text==='Cerrado'?' closed':'')+'"><span>'+h.days+'</span><b>'+h.text+'</b></div>';
   }).join('');
   return '<div class="card place-card"><h2>Dónde es</h2>' +
     '<div class="sub">'+esc(c.businessName)+(c.address ? ' · '+esc(c.address) : '')+'</div>' +
-    (embed ? '<div class="map-wrap"><a class="map-fallback" href="'+esc(link)+'" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(c.address)+'</span><i>Ver en Google Maps</i></a>' +
+    (hasPin ? '<div class="place-map" id="placeMap"></div>' : embed ? '<div class="map-wrap"><a class="map-fallback" href="'+esc(link)+'" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(c.address)+'</span><i>Ver en Google Maps</i></a>' +
       '<iframe class="map-embed" src="'+embed+'" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa"></iframe></div>' : '') +
     '<div class="cal-actions">' +
       (link ? '<a class="btn btn-primary" href="'+esc(link)+'" target="_blank" rel="noopener">Cómo llegar</a>' : '') +
