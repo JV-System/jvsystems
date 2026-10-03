@@ -1,7 +1,11 @@
 /* BarberPro Turnos - núcleo compartido: datos, utilidades, disponibilidad y reservas.
    Lo usan la app del cliente (index.html) y el panel (admin.html). */
-var STORAGE_KEY = "barberpro_turnos_v1";
-var PROFILE_KEY = "barberpro_client_profile";
+var STORAGE_KEY = "barberpro_turnos_v2";
+var PROFILE_KEY = "barberpro_client_profile_v2";
+// versiones anteriores (datos de prueba): se borran del dispositivo la primera vez que se abre la app
+["barberpro_turnos_v1","barberpro_client_profile","montal_turnos_v4","montal_client_profile"].forEach(function(k){
+  try{ localStorage.removeItem(k); }catch(e){}
+});
 var OWNER_KEY = "barberpro_owner_authed";
 var INTRO_KEY = "barberpro_intro_seen";
 var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
@@ -16,7 +20,41 @@ function defaultHoursDay(morningActive, afternoonActive){
   };
 }
 
+// Datos de esta barbería que vienen en config.js (viajan a todos los celulares).
+// Solo cuentan los textos que no estén vacíos; lo que se guarde desde el panel en un navegador los pisa.
+function fileDefaults(){
+  var f = window.BARBERPRO_CONFIG || {}, out = {};
+  ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink","payAlias","payHolder","payMpLink"].forEach(function(k){
+    if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
+  });
+  if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
+  var h = fileHours(f.hours);
+  if(h){ out.hours = h; out.hoursSig = JSON.stringify(f.hours); }
+  return out;
+}
+
+// config.js: hours = { mon:[["09:30","17:00"]], ..., sat:[["10:00","12:30"]], sun:[] } (hasta 2 tramos por día)
+function fileHours(spec){
+  if(!spec || typeof spec !== "object") return null;
+  var out = {}, keys = ["sun","mon","tue","wed","thu","fri","sat"];
+  keys.forEach(function(k){
+    var r = Array.isArray(spec[k]) ? spec[k] : [];
+    function shift(i, ds, de){
+      var t = r[i];
+      return t && t[0] && t[1] ? {active:true, start:t[0], end:t[1]} : {active:false, start:ds, end:de};
+    }
+    out[k] = { morning: shift(0,"09:00","13:00"), afternoon: shift(1,"16:00","20:00") };
+  });
+  return out;
+}
+
 function defaultState(){
+  var st = baseState();
+  Object.assign(st.config, fileDefaults());
+  return st;
+}
+
+function baseState(){
   return {
     config:{
       businessName:"Tu Barbería",
@@ -27,6 +65,7 @@ function defaultState(){
       payAlias:"",
       payHolder:"",
       payMpLink:"",
+      mapsLink:"",
       price:8000,
       priceIsExample:true,
       slotMinutes:30,
@@ -60,7 +99,7 @@ function seedExampleData(s){
     return slots;
   }
   function mk(name,lastname,phone,date,time){
-    return {id:uid(), name:name, lastname:lastname, phone:phone||"", date:date, time:time,
+    return {id:uid(), name:name, lastname:lastname, phone:phone||"", email:(name+lastname).toLowerCase().replace(/[^a-z]/g,"")+"@example.com", date:date, time:time,
       price:s.config.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
       seenByOwner:true, clientKey:clientKeyOf(name,lastname,phone), isExample:true};
   }
@@ -125,13 +164,24 @@ function loadState(){
     var raw = localStorage.getItem(STORAGE_KEY);
     if(!raw){
       var fresh = defaultState();
-      seedExampleData(fresh);
+      // arranca vacío; los turnos de ejemplo solo se cargan si config.js pide demoData:true
+      if(window.BARBERPRO_CONFIG && window.BARBERPRO_CONFIG.demoData) seedExampleData(fresh);
       return fresh;
     }
     var parsed = JSON.parse(raw);
     var d = defaultState();
+    var savedSig = (parsed.config || {}).hoursSig;     // la firma que había guardada, antes de mezclar con los valores de fábrica
     parsed.config = Object.assign({}, d.config, parsed.config||{});
+    // un campo vacío en este navegador cae al valor de config.js (si hay)
+    // (también si el navegador sigue con el texto genérico de fábrica, que no cuenta como "personalizado")
+    var fd = fileDefaults(), generic = baseState().config;
+    Object.keys(fd).forEach(function(k){
+      if(k==="hours" || k==="hoursSig") return;
+      if(!parsed.config[k] || parsed.config[k]===generic[k]) parsed.config[k] = fd[k];
+    });
     parsed.config.hours = Object.assign({}, d.config.hours, (parsed.config||{}).hours||{});
+    // si cambiaron los horarios en config.js, se adoptan una vez; los que edite el dueño después se respetan
+    if(fd.hours && savedSig !== fd.hoursSig){ parsed.config.hours = fd.hours; parsed.config.hoursSig = fd.hoursSig; }
     parsed.closures = parsed.closures||[];
     parsed.bookings = parsed.bookings||[];
     parsed.debts = parsed.debts||{};
@@ -164,7 +214,7 @@ function applyBranding(titleSuffix){
   if(wa){ wa.href = "https://wa.me/" + c.whatsappLink; wa.hidden = !c.whatsappLink; }
   if($("whatsAppDisplayText")) $("whatsAppDisplayText").textContent = c.whatsappDisplay;
   if($("addressText")) $("addressText").textContent = c.address;
-  if(ad) ad.hidden = !c.address;
+  if(ad){ ad.hidden = !c.address; ad.href = mapsLink() || "#"; }
   if($("metaRow")) $("metaRow").hidden = !c.whatsappLink && !c.address;
   if($("wordmarkText")) $("wordmarkText").textContent = c.businessName;
   if($("taglineText")){ $("taglineText").textContent = c.tagline; $("taglineText").hidden = !c.tagline; }
@@ -328,3 +378,103 @@ function settleDebt(key){
   showToast("Saldo marcado como pagado.");
 }
 
+// ---------- contacto, recordatorios y calendario ----------
+function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((e||"").trim()); }
+
+// Número listo para wa.me. Los clientes escriben su teléfono local (código de área + número, sin 0 ni 15);
+// se le antepone el prefijo del país (por defecto 549 = Argentina, celular). Se puede cambiar con waCountryPrefix en config.js.
+function waNumber(phone){
+  var d = digitsOnly(phone).replace(/^0+/, "");
+  if(!d) return "";
+  var cc = (window.BARBERPRO_CONFIG && window.BARBERPRO_CONFIG.waCountryPrefix) || "549";
+  if(d.length >= 12) return d;            // ya trae código de país
+  return cc + d;
+}
+
+function reminderText(b){
+  var c = state.config;
+  return "Hola " + (b.nickname || b.name) + "! Te recordamos que mañana " + formatDateLong(b.date) + " a las " + b.time +
+    " hs tenés turno en " + c.businessName + (c.address ? " (" + c.address + ")" : "") +
+    ". Si no podés venir, avisanos con tiempo: cancelar el mismo día tiene una seña del 50%. ¡Te esperamos!";
+}
+function reminderWaLink(b){ return "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(reminderText(b)); }
+function reminderMailLink(b){
+  return "mailto:" + b.email + "?subject=" + encodeURIComponent("Recordatorio de tu turno de mañana en " + state.config.businessName) +
+    "&body=" + encodeURIComponent(reminderText(b));
+}
+
+// fecha/hora local sin zona horaria (el calendario la toma en la zona del teléfono)
+function icsStamp(iso, time, addMin){
+  var p = iso.split("-").map(Number), t = time.split(":").map(Number);
+  var d = new Date(p[0], p[1]-1, p[2], t[0], t[1] + (addMin||0), 0);
+  return d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) + "T" + pad2(d.getHours()) + pad2(d.getMinutes()) + "00";
+}
+function icsEsc(t){ return String(t||"").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+
+function calendarInfo(b){
+  var c = state.config;
+  return {
+    title: "Turno en " + c.businessName,
+    where: c.address || "",
+    details: "Corte " + money(b.price) + (b.debtCharged ? " + saldo anterior " + money(b.debtCharged) : "") +
+      ". Si cancelás el mismo día se cobra el 50% de seña.",
+    start: icsStamp(b.date, b.time, 0),
+    end: icsStamp(b.date, b.time, state.config.slotMinutes)
+  };
+}
+// archivo .ics con aviso 1 día antes y otro 2 horas antes
+function icsDataUri(b){
+  var i = calendarInfo(b), now = new Date();
+  var stamp = now.getUTCFullYear() + pad2(now.getUTCMonth()+1) + pad2(now.getUTCDate()) + "T" + pad2(now.getUTCHours()) + pad2(now.getUTCMinutes()) + pad2(now.getUTCSeconds()) + "Z";
+  var L = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//BarberPro//Turnos//ES","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+    "UID:" + b.id + "@barberpro","DTSTAMP:" + stamp,"DTSTART:" + i.start,"DTEND:" + i.end,
+    "SUMMARY:" + icsEsc(i.title),"LOCATION:" + icsEsc(i.where),"DESCRIPTION:" + icsEsc(i.details),
+    "BEGIN:VALARM","TRIGGER:-P1D","ACTION:DISPLAY","DESCRIPTION:" + icsEsc("Mañana tenés turno en " + state.config.businessName),"END:VALARM",
+    "BEGIN:VALARM","TRIGGER:-PT2H","ACTION:DISPLAY","DESCRIPTION:" + icsEsc("En 2 horas tenés turno en " + state.config.businessName),"END:VALARM",
+    "END:VEVENT","END:VCALENDAR"];
+  return "data:text/calendar;charset=utf-8," + encodeURIComponent(L.join("\r\n"));
+}
+function googleCalendarLink(b){
+  var i = calendarInfo(b);
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent(i.title) +
+    "&dates=" + i.start + "/" + i.end + "&details=" + encodeURIComponent(i.details) + "&location=" + encodeURIComponent(i.where);
+}
+
+// ---------- ubicación y horarios (para mostrarle al cliente todos los datos del lugar) ----------
+// El mapa se arma con nombre + dirección (Google resuelve el local); si config.js trae mapsLink se usa ese.
+function mapsQuery(){
+  var c = state.config;
+  if(!c.address) return "";
+  var named = c.businessName && c.businessName !== "Tu Barbería";
+  return (named ? c.businessName + ", " : "") + c.address;
+}
+function mapsLink(){
+  var c = state.config;
+  if(c.mapsLink) return c.mapsLink;
+  var q = mapsQuery();
+  return q ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q) : "";
+}
+function mapsEmbed(){
+  var q = mapsQuery();
+  return q ? "https://www.google.com/maps?q=" + encodeURIComponent(q) + "&z=16&output=embed" : "";
+}
+
+// [{days:"Lun", text:"09:30 a 17:00"}, {days:"Mar a Vie", text:"09:30 a 19:30"}, ...] agrupando días seguidos iguales
+function hoursSummary(){
+  var order = ["mon","tue","wed","thu","fri","sat","sun"];
+  var short = {mon:"Lun", tue:"Mar", wed:"Mié", thu:"Jue", fri:"Vie", sat:"Sáb", sun:"Dom"};
+  function txt(k){
+    var d = state.config.hours[k], r = [];
+    if(d.morning.active) r.push(d.morning.start + " a " + d.morning.end);
+    if(d.afternoon.active) r.push(d.afternoon.start + " a " + d.afternoon.end);
+    return r.length ? r.join(" y ") : "Cerrado";
+  }
+  var groups = [];
+  order.forEach(function(k){
+    var t = txt(k), g = groups[groups.length-1];
+    if(g && g.t === t) g.to = k; else groups.push({from:k, to:k, t:t});
+  });
+  return groups.map(function(g){
+    return {days: g.from === g.to ? short[g.from] : short[g.from] + " a " + short[g.to], text: g.t};
+  });
+}

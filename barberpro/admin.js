@@ -113,6 +113,8 @@
         '<div>Estás viendo turnos de ejemplo para mostrar cómo se ve la agenda llena. <button id="btnClearExamples" style="background:none; border:none; color:var(--accent-1); font-weight:800; font-family:inherit; font-size:13px; cursor:pointer; padding:0; text-decoration:underline;">Borrarlos</button></div></div>';
     }
 
+    html += reminderCard();
+
     html += '<div class="agenda-subnav">' +
       ['dia','semana','mes'].map(function(v){
         var lbl = v==='dia'?'Día':v==='semana'?'Gantt semanal':'Mes';
@@ -124,6 +126,30 @@
     else html += agendaMes();
 
     return html;
+  }
+
+  // turnos de mañana: un toque por cliente abre WhatsApp o el mail con el recordatorio ya escrito
+  function tomorrowBookings(){
+    var t = addDays(toISO(new Date()), 1);
+    return state.bookings.filter(function(b){ return b.date===t && b.status==="confirmed"; })
+      .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  }
+  function reminderCard(){
+    var list = tomorrowBookings();
+    if(!list.length) return "";
+    var pending = list.filter(function(b){ return !b.reminded; }).length;
+    return '<div class="card remind-card"><h2>Recordatorios de mañana</h2>' +
+      '<div class="sub">'+(pending ? pending+' sin avisar de '+list.length : 'Todos avisados')+' · tocá para mandar el mensaje listo</div>' +
+      list.map(function(b){
+        var who = esc(b.name)+' '+esc(b.lastname);
+        return '<div class="remind-row'+(b.reminded?' done':'')+'">' +
+          '<div class="remind-who"><b>'+b.time+'</b> '+who+(b.reminded?' <span class="remind-ok">✓ avisado</span>':'')+'</div>' +
+          '<div class="remind-btns">' +
+            (b.phone ? '<a class="btn btn-wa btn-sm" data-remind="'+b.id+'" href="'+reminderWaLink(b)+'" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+            (b.email ? '<a class="btn btn-ghost btn-sm" data-remind="'+b.id+'" href="'+reminderMailLink(b)+'">Mail</a>' : '') +
+            (!b.phone && !b.email ? '<span class="remind-none">sin contacto</span>' : '') +
+          '</div></div>';
+      }).join('') + '</div>';
   }
 
   function agendaDia(){
@@ -152,13 +178,14 @@
         (b.paid ? '' : '<button class="btn btn-primary btn-sm" data-paid="'+b.id+'">Cobrado</button>') +
         '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
         '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>' +
-        (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+digitsOnly(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
+        (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
+        (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
     }
     return '<div class="booking-row">' +
       '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
       '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.nickname?' <span class="nick">“'+esc(b.nickname)+'”</span>':'')+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
-      '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
+      '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
       (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de seña)</span>':'') +
       '</div>' + payLine(b) + actions +
       '</div>';
@@ -288,6 +315,13 @@
     document.querySelectorAll(".agendaViewBtn").forEach(function(el){
       el.onclick = function(){ session.agendaView = el.getAttribute("data-v"); renderOwner(); };
     });
+    document.querySelectorAll("[data-remind]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var id = el.getAttribute("data-remind");
+        var b = state.bookings.filter(function(x){ return x.id===id; })[0];
+        if(b && !b.reminded){ b.reminded = true; saveState(); setTimeout(renderOwner, 300); }
+      });
+    });
     document.querySelectorAll("[data-paid]").forEach(function(el){
       el.onclick = function(){ markPaid(el.getAttribute("data-paid")); };
     });
@@ -315,13 +349,13 @@
   }
 
   function ownerHorarios(){
-    var html = '<div class="card"><h2>Horarios de atención</h2><div class="sub">Definí cuándo abrís (podés separar turno mañana y tarde)</div>';
+    var html = '<div class="card"><h2>Horarios de atención</h2><div class="sub">Definí cuándo abrís (si cerrás al mediodía, usá el segundo horario)</div>';
     DOW_KEYS.filter(function(k){ return k!=="sun"; }).concat(["sun"]).forEach(function(k){
       var day = state.config.hours[k];
       html += '<div class="hours-day">' +
         '<div class="dlabel">'+DOW_LABEL[k]+'</div>' +
-        shiftRow(k,"morning","Mañana",day.morning) +
-        shiftRow(k,"afternoon","Tarde",day.afternoon) +
+        shiftRow(k,"morning","Horario",day.morning) +
+        shiftRow(k,"afternoon","Horario 2",day.afternoon) +
         '</div>';
     });
     html += '<button class="btn btn-primary" id="btnSaveHours" style="margin-top:16px;">Guardar horarios</button></div>';
@@ -413,10 +447,23 @@
       '<label>Alias o CBU para transferencias <span class="opt">(opcional)</span></label><input type="text" id="inpPayAlias" value="'+esc(c.payAlias)+'" maxlength="40" placeholder="Ej: barberia.elcorte">' +
       '<label>Titular de la cuenta <span class="opt">(opcional)</span></label><input type="text" id="inpPayHolder" value="'+esc(c.payHolder)+'" maxlength="40" placeholder="Ej: Juan Pérez">' +
       '<label>Link de pago de Mercado Pago <span class="opt">(opcional)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
+      '<div class="field-hint">Creálo en la app de Mercado Pago: Cobrar → Link de pago, por el precio del corte.</div>' +
       '<div class="field-hint">Los pagos los confirmás vos a mano desde la agenda (botón "Cobrado").</div>' +
-      '<button class="btn btn-primary" id="btnSaveCobros">Guardar cobros</button></div>';
+      '<button class="btn btn-primary" id="btnSaveCobros">Guardar cobros</button></div>' +
+      '<div class="card"><h2>Empezar de cero</h2>' +
+      '<div class="sub">Borra todos los turnos, saldos y cierres cargados. No toca tus datos, horarios ni precio. Sirve para limpiar lo que se cargó probando la app.</div>' +
+      '<button class="btn btn-danger" id="btnResetAll">Borrar todos los turnos</button></div>';
   }
   function bindNegocioEvents(){
+    var br = document.getElementById("btnResetAll");
+    if(br) br.onclick = function(){
+      askConfirm("Empezar de cero", "Se borran todos los turnos, saldos y cierres. Esto no se puede deshacer. ¿Seguimos?", function(){
+        state.bookings = []; state.debts = {}; state.closures = [];
+        saveState();
+        renderOwner();
+        showToast("Listo: la agenda quedó vacía.");
+      });
+    };
     var bc = document.getElementById("btnSaveCobros");
     if(bc) bc.onclick = function(){
       var mp = document.getElementById("inpPayMp").value.trim();

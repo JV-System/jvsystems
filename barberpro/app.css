@@ -108,7 +108,7 @@ main{padding:14px 20px 20px;}
 .card .sub{color:var(--text-faint); font-size:12px; margin-bottom:12px; font-weight:600;}
 
 label{display:block; font-size:11.5px; font-weight:700; color:var(--text-muted); margin:0 0 5px; text-transform:uppercase; letter-spacing:.3px;}
-input[type=text],input[type=tel],input[type=number],input[type=date],input[type=password],select{
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=date],input[type=password],select{
   width:100%; background:var(--surface-2); border:1px solid var(--border);
   color:var(--text); font-family:inherit; font-size:15px; font-weight:600;
   padding:10px 13px; border-radius:var(--radius-sm); margin-bottom:10px;
@@ -221,7 +221,7 @@ label .opt{text-transform:none; letter-spacing:0; font-weight:600; color:var(--t
 .booking-row .sub{font-size:12px; color:var(--text-faint); font-weight:600; margin-top:2px;}
 .booking-row .price{font-weight:800; font-variant-numeric:tabular-nums; color:var(--accent-1); font-size:13.5px;}
 .booking-row .debt-tag{color:var(--warn); font-weight:700;}
-.booking-row .actions{display:flex; gap:8px; margin-top:10px;}
+.booking-row .actions{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
 
 .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
 .week-col{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 5px; min-height:90px; cursor:pointer;}
@@ -365,3 +365,29 @@ a{color:var(--accent-1);}
 .adminbar-biz{font-family:'Anton',sans-serif; font-size:20px; line-height:1.05; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .adminbar-sub{font-size:11px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px; margin-top:3px;}
 a.link-btn{text-decoration:none; display:inline-block;}
+
+a.btn{text-decoration:none;}
+.cal-actions{display:grid; gap:8px; margin-top:4px;}
+.remind-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-top:1px solid var(--border-soft);}
+.remind-row:first-of-type{border-top:none;}
+.remind-row.done{opacity:.6;}
+.remind-who{font-size:14px; font-weight:600; min-width:0; overflow-wrap:anywhere;}
+.remind-who b{font-family:'Anton',sans-serif; font-weight:400; letter-spacing:.3px; margin-right:4px;}
+.remind-ok{font-size:11px; color:var(--success); font-weight:800;}
+.remind-btns{display:flex; gap:6px; flex:none;}
+.remind-none{font-size:11.5px; color:var(--text-faint); font-weight:700;}
+
+.place-v{text-align:right; max-width:60%; overflow-wrap:anywhere; font-weight:700;}
+.map-wrap{position:relative; height:190px; margin:2px 0 12px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; background:var(--surface-2);}
+.map-fallback{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:16px; text-align:center; color:var(--text-muted); text-decoration:none; font-weight:700; font-size:13.5px;}
+.map-fallback svg{color:var(--accent-1);}
+.map-fallback i{font-style:normal; font-size:12px; color:var(--accent-1); font-weight:800;}
+.map-embed{position:absolute; inset:0; width:100%; height:100%; border:0; display:block; background:transparent;}
+.hours-title{font-size:12px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:.3px; margin:16px 0 6px;}
+.hours-line{display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-top:1px solid var(--border-soft); font-size:13.5px; color:var(--text-muted); font-weight:600;}
+.hours-line:first-of-type{border-top:none;}
+.hours-line b{color:var(--text); font-variant-numeric:tabular-nums; font-weight:700;}
+.hours-line.closed b{color:var(--text-faint);}
+
+.hello-btns{display:flex; gap:6px; flex:none;}
+.link-out{color:var(--text-muted);}

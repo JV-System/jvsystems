@@ -5,7 +5,7 @@
 
 var client = {
   step:1,
-  name:"", lastname:"", nickname:"", phone:"", registered:false,
+  name:"", lastname:"", nickname:"", phone:"", email:"", registered:false,
   selectedDate:null, selectedTime:null,
   payMethod:"local",
   lastBooking:null
@@ -33,7 +33,7 @@ function createBooking(){
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
   var booking = {
-    id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone,
+    id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
     payMethod:client.payMethod, paid:false,
@@ -91,12 +91,15 @@ function stepDatos(){
       '<div><label>Nombre</label><input type="text" id="inpName" value="'+esc(client.name)+'" placeholder="Juan" autocomplete="given-name"></div>' +
       '<div><label>Apellido</label><input type="text" id="inpLastname" value="'+esc(client.lastname)+'" placeholder="Pérez" autocomplete="family-name"></div>' +
     '</div>' +
-    '<label>Apodo <span class="opt">(opcional)</span></label>' +
-    '<input type="text" id="inpNickname" value="'+esc(client.nickname)+'" placeholder="Cómo te dicen" maxlength="20">' +
-    '<label>Teléfono</label>' +
-    '<input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="Ej: 11 2345 6789" autocomplete="tel">' +
-    '<div class="field-hint">Te identifica si volvés y sirve para avisarte cambios de turno.</div>' +
+    '<div class="row2">' +
+      '<div><label>Apodo <span class="opt">(opcional)</span></label><input type="text" id="inpNickname" value="'+esc(client.nickname)+'" placeholder="Cómo te dicen" maxlength="20"></div>' +
+      '<div><label>Teléfono</label><input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel"></div>' +
+    '</div>' +
+    '<label>Mail</label>' +
+    '<input type="email" id="inpEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
+    '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local los usa para confirmarte el turno y recordártelo.</div>' +
     '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Registrarme y continuar')+'</button>' +
+    (editing ? '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>' : '') +
     '</div>';
 }
 
@@ -135,7 +138,7 @@ function stepFecha(){
   var who = client.nickname || client.name;
   return '<div class="card">' +
     '<div class="hello"><div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div>' +
-    '<button class="link-btn" id="btnEditProfile">Mis datos</button></div>' +
+    '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mis datos</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
     '<div class="date-strip">'+strip+'</div>' +
     slotsHtml +
@@ -163,6 +166,7 @@ function stepConfirmacion(){
     '<div class="sub">Revisá los datos antes de reservar</div>' +
     '<div class="summary-row"><span class="k">Fecha</span><span class="v">'+formatDateLong(client.selectedDate)+'</span></div>' +
     '<div class="summary-row"><span class="k">Horario</span><span class="v">'+client.selectedTime+' hs</span></div>' +
+    (state.config.address ? '<div class="summary-row"><span class="k">Lugar</span><span class="v place-v">'+esc(state.config.address)+'</span></div>' : '') +
     '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(state.config.price)+'</span></div>' +
     (debtAmount ? '<div class="summary-row"><span class="k">Saldo anterior</span><span class="v" style="color:var(--warn)">'+money(debtAmount)+'</span></div>' : "") +
     '<div class="summary-row total"><span class="k">Total</span><span class="v">'+money(total)+'</span></div>' +
@@ -189,9 +193,10 @@ function payInstructions(b){
       '<div class="pay-note">El local confirma tu pago al recibirlo. Si podés, mandá el comprobante por WhatsApp.</div></div>';
   }
   if(b.payMethod==="mp"){
-    return '<div class="pay-box"><div class="pay-box-title">Pagá '+total+' online</div>' +
+    return '<div class="pay-box"><div class="pay-box-title">Pagá '+money(b.price)+' online</div>' +
       '<a class="btn btn-mp" href="'+esc(c.payMpLink)+'" target="_blank" rel="noopener">Pagar con Mercado Pago</a>' +
-      '<div class="pay-note">El local confirma tu pago cuando le llega.</div></div>';
+      (b.debtCharged>0 ? '<div class="pay-note">El link cubre el corte ('+money(b.price)+'). Los '+money(b.debtCharged)+' de tu saldo anterior los abonás en el local.</div>' : '') +
+      '<div class="pay-note">Se abre Mercado Pago en otra pestaña. El local confirma tu pago cuando le llega.</div></div>';
   }
   return '<div class="pay-box"><div class="pay-box-title">Pagás '+total+' en el local</div>' +
     '<div class="pay-note">Podés abonar en efectivo o como te quede cómodo al llegar.</div></div>';
@@ -206,8 +211,32 @@ function stepExito(){
     '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs</div>' +
     payInstructions(b) +
     '</div>' +
+    placeCard() +
+    '<div class="card"><h2>Que no se te pase</h2>' +
+    '<div class="sub">Guardalo en tu calendario y te avisa un día antes y 2 horas antes.</div>' +
+    '<div class="cal-actions">' +
+      '<a class="btn btn-primary" href="'+icsDataUri(b)+'" download="turno-'+b.date+'.ics">Guardar en mi calendario</a>' +
+      '<a class="btn btn-ghost" href="'+googleCalendarLink(b)+'" target="_blank" rel="noopener">Agregar a Google Calendar</a>' +
+    '</div></div>' +
     (state.config.whatsappLink ? '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">Avisar por WhatsApp</a>' : '') +
     '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>';
+}
+
+function placeCard(){
+  var c = state.config, link = mapsLink(), embed = mapsEmbed();
+  if(!c.address && !c.whatsappLink) return "";
+  var hours = hoursSummary().map(function(h){
+    return '<div class="hours-line'+(h.text==='Cerrado'?' closed':'')+'"><span>'+h.days+'</span><b>'+h.text+'</b></div>';
+  }).join('');
+  return '<div class="card place-card"><h2>Dónde es</h2>' +
+    '<div class="sub">'+esc(c.businessName)+(c.address ? ' · '+esc(c.address) : '')+'</div>' +
+    (embed ? '<div class="map-wrap"><a class="map-fallback" href="'+esc(link)+'" target="_blank" rel="noopener"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg><span>'+esc(c.address)+'</span><i>Ver en Google Maps</i></a>' +
+      '<iframe class="map-embed" src="'+embed+'" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa"></iframe></div>' : '') +
+    '<div class="cal-actions">' +
+      (link ? '<a class="btn btn-primary" href="'+esc(link)+'" target="_blank" rel="noopener">Cómo llegar</a>' : '') +
+      (c.whatsappLink ? '<a class="btn btn-ghost" href="https://wa.me/'+c.whatsappLink+'" target="_blank" rel="noopener">Escribirle al local</a>' : '') +
+    '</div>' +
+    '<div class="hours-title">Horarios de atención</div>' + hours + '</div>';
 }
 
 function copyText(text){
@@ -224,7 +253,19 @@ function copyText(text){
   } else fallback();
 }
 
+function logoutClient(){
+  askConfirm("Salir", "Vas a tener que volver a registrarte para reservar. Los turnos que ya reservaste no se borran.", function(){
+    try{ localStorage.removeItem(PROFILE_KEY); }catch(e){}
+    client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = "";
+    client.registered = false; client.step = 1;
+    client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";
+    renderClient();
+    showToast("Saliste de la cuenta.");
+  });
+}
+
 function bindClientEvents(){
+  document.querySelectorAll("[data-logout]").forEach(function(el){ el.onclick = logoutClient; });
   var b1 = document.getElementById("btnStep1");
   if(b1) b1.onclick = function(){
     var name = document.getElementById("inpName").value.trim();
@@ -233,9 +274,11 @@ function bindClientEvents(){
     var phone = document.getElementById("inpPhone").value.trim();
     if(!name || !lastname){ showToast("Completá nombre y apellido."); return; }
     if(digitsOnly(phone).length < 8){ showToast("Ingresá un teléfono válido (mínimo 8 dígitos)."); return; }
-    client.name = name; client.lastname = lastname; client.nickname = nickname; client.phone = phone;
+    var email = document.getElementById("inpEmail").value.trim();
+    if(!isValidEmail(email)){ showToast("Ingresá un mail válido, por ejemplo tunombre@gmail.com."); return; }
+    client.name = name; client.lastname = lastname; client.nickname = nickname; client.phone = phone; client.email = email;
     client.registered = true;
-    try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({name:name,lastname:lastname,nickname:nickname,phone:phone})); }catch(e){}
+    try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({name:name,lastname:lastname,nickname:nickname,phone:phone,email:email})); }catch(e){}
     client.step = 2;
     renderClient();
   };
@@ -286,8 +329,9 @@ function bindClientEvents(){
     if(raw){
       var p = JSON.parse(raw);
       if(p && p.name && p.lastname && digitsOnly(p.phone||"").length >= 8){
-        client.name=p.name; client.lastname=p.lastname; client.nickname=p.nickname||""; client.phone=p.phone;
-        client.registered = true; client.step = 2;
+        client.name=p.name; client.lastname=p.lastname; client.nickname=p.nickname||""; client.phone=p.phone; client.email=p.email||"";
+        // perfiles guardados antes de pedir el mail: se completa el dato y recién ahí se sigue
+        if(isValidEmail(client.email)){ client.registered = true; client.step = 2; }
       }
     }
   }catch(e){}
