@@ -9,7 +9,7 @@
     localRole: _lv && _lv.indexOf("emp:") === 0 ? "employee" : "owner",
     localBarber: _lv && _lv.indexOf("emp:") === 0 ? _lv.slice(4) : null,
     agendaBarber: "all",
-    ownerTab: "agenda",
+    ownerTab: "hoy",          // al abrir el panel se ven las novedades del día
     agendaView: "dia",
     agendaDate: toISO(new Date()),
     monthCursor: toISO(new Date()),
@@ -32,7 +32,7 @@
     applyBranding("Administración");
     if(!session.ownerAuthed) return;
     var t = session.ownerTab;
-    if(t==="agenda" || t==="saldos" || t==="cobros") renderOwner();
+    if(t==="agenda" || t==="saldos" || t==="cobros" || t==="hoy") renderOwner();
     else if(t==="equipo"){ var ae = document.activeElement; if(!(ae && ae.closest && ae.closest(".owner-content"))) renderOwner(); }
     else if(t==="clientes" && document.activeElement !== document.getElementById("inpClientSearch")) renderOwner();
     else if(t==="pagos" && document.activeElement !== document.getElementById("inpPaySearch")) renderOwner();
@@ -53,14 +53,15 @@
       return;
     }
 
-    if(isEmployee() && EMP_TABS.indexOf(session.ownerTab) < 0) session.ownerTab = "agenda";
+    if(isEmployee() && EMP_TABS.indexOf(session.ownerTab) < 0) session.ownerTab = "hoy";
     var unseen = bk().filter(function(b){ return !b.seenByOwner && b.status==="confirmed"; }).length;
     var cobrosCount = isEmployee() ? bk().filter(function(b){
       return b.status !== "cancelled" && ((b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed" || (turnoEnded(b) && balanceDue(b) > 0));
     }).length : 0;
+    var hoyBadge = hoyAttentionCount();
     var navHtml = isEmployee()
-      ? navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("config","Mi cuenta")
-      : navBtn("agenda","Agenda", unseen) +
+      ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("config","Mi cuenta")
+      : navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Agenda", unseen) +
         navBtn("clientes","Clientes") +
         navBtn("pagos","Pagos") +
         navBtn("equipo","Equipo") +
@@ -77,7 +78,8 @@
       '</div>';
 
     html += '<div class="owner-content tab-' + session.ownerTab + '">';
-    if(session.ownerTab==="agenda") html += ownerAgenda();
+    if(session.ownerTab==="hoy") html += ownerHoy();
+    else if(session.ownerTab==="agenda") html += ownerAgenda();
     else if(session.ownerTab==="horarios") html += ownerHorarios();
     else if(session.ownerTab==="cierres") html += ownerCierres();
     else if(session.ownerTab==="negocio") html += ownerNegocio();
@@ -97,7 +99,8 @@
       el.onclick = function(){ loadExampleData(); renderOwner(); };
     });
 
-    if(session.ownerTab==="agenda"){
+    if(session.ownerTab==="hoy") bindHoyEvents();
+    else if(session.ownerTab==="agenda"){
       markAllSeen();
       bindAgendaEvents();
     } else if(session.ownerTab==="horarios") bindHorariosEvents();
@@ -1336,7 +1339,7 @@
   }
 
   // ================= EQUIPO Y ROLES =================
-  var EMP_TABS = ["agenda", "cobros", "config"];       // lo que ve un empleado: su agenda, sus cobros y su cuenta
+  var EMP_TABS = ["hoy", "agenda", "cobros", "config"];       // lo que ve un empleado: su agenda, sus cobros y su cuenta
   function curRole(){ return CLOUD ? (cloudAuth.role() || "owner") : session.localRole; }
   function myBarber(){ return CLOUD ? cloudAuth.barberId() : session.localBarber; }
   function isEmployee(){ return curRole() === "employee"; }
@@ -1608,6 +1611,171 @@
         done();
       }
     };
+  }
+
+  // ================= NOVEDADES DEL DÍA =================
+  // Primera pestaña al abrir el panel: todo lo que hay que tener en cuenta hoy. El empleado ve lo de su barbero; el dueño, todo.
+  function myBookings(){
+    if(isEmployee()){ var me = myBarber(); return state.bookings.filter(function(b){ return barberOfBooking(b) === me; }); }
+    return state.bookings;
+  }
+
+  function hoyData(){
+    var now = new Date(), today = toISO(now), tomorrow = addDays(today, 1), ago = function(n){ return addDays(today, -n); };
+    var byTime = function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; };
+    var all = myBookings(), active = all.filter(function(b){ return b.status !== "cancelled"; });
+    var d = {today: today, tomorrow: tomorrow};
+    d.hoy = active.filter(function(b){ return b.date === today; }).sort(byTime);
+    d.proximo = d.hoy.filter(function(b){ return b.status === "confirmed" && !turnoEnded(b); })[0] || null;
+    d.informados = active.filter(function(b){ return (b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed"; }).sort(byTime);
+    d.sinCerrar = active.filter(function(b){ return b.status === "confirmed" && turnoEnded(b) && b.date >= ago(30); }).sort(byTime);
+    d.saldos = active.filter(function(b){
+      return turnoEnded(b) && balanceDue(b) > 0 && b.date >= ago(60) && d.informados.indexOf(b) < 0 && d.sinCerrar.indexOf(b) < 0;
+    }).sort(byTime);
+    d.senas = active.filter(function(b){ return b.status === "confirmed" && b.deposit > 0 && depState(b) === "pending" && (b.date === today || b.date === tomorrow); }).sort(byTime);
+    d.nuevas = active.filter(function(b){ return !b.seenByOwner && b.status === "confirmed"; }).sort(byTime);
+    d.cancelados = all.filter(function(b){ return b.status === "cancelled" && b.date >= ago(1) && b.date <= addDays(today, 7); }).sort(byTime);
+    d.cambios = active.filter(function(b){ return b.rescheduled && b.date >= today && b.date <= addDays(today, 7); }).sort(byTime);
+    d.conCargo = d.hoy.filter(function(b){ return b.debtCharged > 0 || (!isEmployee() && state.debts[b.clientKey]); });
+    d.devolver = isEmployee() ? [] : all.filter(function(b){ return b.status === "cancelled" && !b.lateCancel && depositKept(b); }).sort(byTime);
+    // requieren atención = pagos por confirmar + turnos pasados sin cerrar + saldos por cobrar (sin repetir)
+    var seen = {}, att = [];
+    [d.informados, d.sinCerrar, d.saldos].forEach(function(list){ list.forEach(function(b){ if(!seen[b.id]){ seen[b.id] = 1; att.push(b); } }); });
+    d.atencion = att.sort(byTime);
+    return d;
+  }
+
+  function hoyAttentionCount(){
+    var d = hoyData();
+    return d.atencion.length + d.nuevas.length + d.devolver.length;
+  }
+
+  function newsWho(b){
+    return esc(b.name) + ' ' + esc(b.lastname) +
+      (!isEmployee() && activeBarbers().length > 1 && barberNameOf(b) ? ' <small>· ' + esc(barberNameOf(b)) + '</small>' : '');
+  }
+  // fila compacta: toque = abre ese día en la agenda
+  function newsLine(b, chip, showDate){
+    return '<button type="button" class="news-line" data-jump="'+b.date+'">' +
+      '<span class="nl-time"><b>'+b.time+'</b>'+(showDate ? '<i>'+(b.date === toISO(new Date()) ? 'Hoy' : formatDateLong(b.date))+'</i>' : '')+'</span>' +
+      '<span class="nl-who">'+newsWho(b)+(b.walkIn ? ' <em>⚡ orden de llegada</em>' : '')+'</span>' +
+      (chip ? '<span class="nl-chip">'+chip+'</span>' : '') + '</button>';
+  }
+  function newsCard(title, sub, count, body, tone){
+    return '<div class="card news-card'+(tone ? ' tone-'+tone : '')+'"><h2>'+title+' <span class="count-pill">'+count+'</span></h2>' +
+      (sub ? '<div class="sub">'+sub+'</div>' : '') + body + '</div>';
+  }
+  function attentionReasons(b, d){
+    var r = [];
+    if(d.informados.indexOf(b) >= 0) r.push('<span class="pchip seal">Avisó que pagó: confirmalo</span>');
+    if(d.sinCerrar.indexOf(b) >= 0) r.push('<span class="pchip warn">Pasó sin cerrar: completalo o marcá "No vino"</span>');
+    if(d.saldos.indexOf(b) >= 0) r.push('<span class="pchip due">Saldo por cobrar '+money(balanceDue(b))+'</span>');
+    return '<div class="news-reasons"><span class="cobro-date" style="margin:0 8px 0 0;">'+formatDateLong(b.date)+'</span>'+r.join("")+'</div>';
+  }
+
+  function ownerHoy(){
+    var d = hoyData(), today = d.today, owner = !isEmployee();
+    var open = getRangesForDate(today), crew = activeBarbers().filter(function(m){ return barberWorks(m, today); });
+    var off = activeBarbers().filter(function(m){ return !barberWorks(m, today); });
+
+    // ----- columna lateral: resumen, estado del local y avisos -----
+    var toCollectToday = d.hoy.reduce(function(s, b){ return s + balanceDue(b); }, 0);
+    var tiles = '<div class="stat-row">' +
+      '<div class="stat-tile"><div class="num">'+d.hoy.length+'</div><div class="lbl">Turnos hoy</div></div>' +
+      '<div class="stat-tile"><div class="num">'+(d.proximo ? d.proximo.time : '—')+'</div><div class="lbl">Próximo turno</div></div>' +
+      '<div class="stat-tile'+(d.atencion.length ? ' is-warn' : '')+'"><div class="num">'+d.atencion.length+'</div><div class="lbl">Requieren atención</div></div>' +
+      '<div class="stat-tile"><div class="num">'+d.nuevas.length+'</div><div class="lbl">Reservas nuevas</div></div>' +
+      (owner ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
+      '</div>';
+    var local = '<div class="card news-card"><h2>El local hoy</h2>' +
+      (open.length ? '<div class="summary-row"><span class="k">Horario</span><span class="v">'+open.map(function(r){ return r.start+' a '+r.end; }).join(' y ')+'</span></div>'
+                   : '<div class="notice warn"><div>El local está cerrado hoy.</div></div>') +
+      (activeBarbers().length > 1 && open.length ? '<div class="summary-row"><span class="k">Atienden</span><span class="v">'+(crew.length ? crew.map(function(m){ return esc(m.name); }).join(", ") : 'nadie')+'</span></div>' +
+        (off.length ? '<div class="summary-row"><span class="k">No atienden hoy</span><span class="v">'+off.map(function(m){ return esc(m.name); }).join(", ")+'</span></div>' : '') : '') +
+      '</div>';
+    var avisos = [];
+    if(owner){
+      var debts = Object.keys(state.debts).length;
+      if(debts) avisos.push('<div class="news-row tone-warn"><span>💰</span><div><b>'+debts+(debts === 1 ? ' cliente con cargo pendiente' : ' clientes con cargo pendiente')+'</b><i>Por cancelar el mismo día o no venir sin haber pagado la seña</i></div><button class="btn btn-ghost btn-sm" data-goto="saldos">Ver saldos</button></div>');
+      if(!state.config.payAlias && !state.config.payMpLink) avisos.push('<div class="news-row tone-warn"><span>🔗</span><div><b>Falta cargar un medio de pago online</b><i>Sin alias ni link de Mercado Pago el cliente no puede pagar desde la app</i></div><button class="btn btn-ghost btn-sm" data-goto="negocio">Cargar</button></div>');
+      var sinWa = teamList().filter(function(m){ return m.active !== false && !m.whatsapp; });
+      if(sinWa.length && activeBarbers().length > 1) avisos.push('<div class="news-row tone-info"><span>📱</span><div><b>Falta el WhatsApp de '+sinWa.map(function(m){ return esc(m.name); }).join(", ")+'</b><i>Con el número, el aviso del turno le llega directo</i></div><button class="btn btn-ghost btn-sm" data-goto="equipo">Cargar</button></div>');
+      if(state.config.priceIsExample) avisos.push('<div class="news-row tone-info"><span>🏷️</span><div><b>El precio del corte es el de ejemplo</b><i>Cargá el precio real</i></div><button class="btn btn-ghost btn-sm" data-goto="precios">Cambiar</button></div>');
+    }
+    var side = tiles + local + (avisos.length ? '<div class="card news-card"><h2>Avisos <span class="count-pill">'+avisos.length+'</span></h2>'+avisos.join("")+'</div>' : '');
+
+    // ----- columna principal -----
+    var main = "";
+    main += newsCard("Turnos de hoy", d.hoy.length ? formatDateLong(today) : "Hoy no hay turnos reservados", d.hoy.length,
+      d.hoy.length ? d.hoy.map(function(b){
+        var chip = b.status === "completed" ? '<span class="paystate ok">Completado</span>'
+          : (d.proximo && d.proximo.id === b.id ? '<span class="pchip seal">Próximo</span>' : (turnoEnded(b) ? '<span class="pchip warn">Ya pasó</span>' : ''));
+        return newsLine(b, chip);
+      }).join("") : '<div class="empty-note">Sin turnos para hoy.</div>');
+
+    main += newsCard("Requieren tu atención", "Pagos por confirmar, turnos que pasaron sin cerrar y saldos por cobrar", d.atencion.length,
+      d.atencion.length ? d.atencion.map(function(b){ return attentionReasons(b, d) + bookingRow(b); }).join("") : '<div class="empty-note">Todo en orden por acá. ✓</div>', d.atencion.length ? "warn" : "");
+
+    if(d.nuevas.length){
+      main += newsCard("Reservas nuevas", "Todavía no las viste", d.nuevas.length,
+        d.nuevas.slice(0, 8).map(function(b){ return newsLine(b, '', true); }).join("") +
+        '<button class="btn btn-ghost btn-sm" type="button" data-seen="1" style="margin-top:6px;">Marcar como vistas</button>', "info");
+    }
+    if(d.conCargo.length){
+      main += newsCard("Vienen hoy con un cargo", "Tienen un saldo anterior sumado a este turno", d.conCargo.length,
+        d.conCargo.map(function(b){ return newsLine(b, '<span class="pchip warn">'+(b.debtCharged ? '+'+money(b.debtCharged) : 'Debe cargo')+'</span>'); }).join(""), "warn");
+    }
+    if(d.senas.length){
+      main += newsCard("Señas pendientes", "Turnos de hoy y mañana que todavía no pagaron la seña", d.senas.length,
+        d.senas.map(function(b){ return newsLine(b, '<span class="pchip warn">'+money(b.deposit)+'</span>', true); }).join(""));
+    }
+    if(d.cancelados.length){
+      main += newsCard("Cancelaciones y suspensiones", "De ayer a los próximos 7 días", d.cancelados.length,
+        d.cancelados.map(function(b){
+          var chip = b.lateCancel ? '<span class="pchip due">Suspendido'+(depositKept(b) ? ' · seña retenida' : '')+'</span>' : '<span class="pchip none">Cancelado con aviso</span>';
+          return newsLine(b, chip, true);
+        }).join(""));
+    }
+    if(d.devolver.length){
+      main += newsCard("Señas a devolver", "Cancelaron con aviso: devolvé la seña y marcala", d.devolver.length,
+        d.devolver.map(function(b){
+          return '<div class="news-line static"><span class="nl-time"><b>'+money(b.deposit)+'</b></span><span class="nl-who">'+newsWho(b)+'<small> · turno del '+formatDateLong(b.date)+'</small></span>' +
+            '<button class="btn btn-primary btn-sm" type="button" data-refund="'+b.id+'">Seña devuelta</button></div>';
+        }).join(""), "warn");
+    }
+    if(d.cambios.length){
+      main += newsCard("Cambios de día", "Turnos que el cliente movió (próximos 7 días)", d.cambios.length,
+        d.cambios.map(function(b){ return newsLine(b, '<span class="pchip none">antes: '+shortDate(b.originalDate)+' '+esc(b.originalTime || "")+'</span>', true); }).join(""));
+    }
+    main += reminderCard();
+
+    return '<div class="hoy-banner"><div><h2>Novedades de hoy</h2><div class="sub">'+formatDateLong(today)+(isEmployee() ? ' · tus turnos' : '')+'</div></div>' +
+      '<button class="btn btn-ghost btn-sm" data-goto="agenda" type="button">Ir a la agenda</button></div>' +
+      '<div class="hoy-layout"><section class="hoy-main">'+main+'</section><aside class="hoy-side">'+side+'</aside></div>';
+  }
+
+  function bindHoyEvents(){
+    bindPayActions();
+    document.querySelectorAll("[data-goto]").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-goto"); session.clientDetail = null; renderOwner(); window.scrollTo(0, 0); };
+    });
+    document.querySelectorAll("[data-jump]").forEach(function(el){
+      el.onclick = function(){ session.agendaDate = el.getAttribute("data-jump"); session.agendaView = "dia"; session.ownerTab = "agenda"; renderOwner(); window.scrollTo(0, 0); };
+    });
+    document.querySelectorAll("[data-complete]").forEach(function(el){ el.onclick = function(){ completeBooking(el.getAttribute("data-complete")); }; });
+    document.querySelectorAll("[data-cancel]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-cancel");
+        askConfirm("Cancelar turno", "¿Cancelar este turno? Si es el mismo día, se aplican las reglas de seña y cargo.", function(){ cancelBooking(id); });
+      };
+    });
+    document.querySelectorAll("[data-remind]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var id = el.getAttribute("data-remind"), b = findBooking(id);
+        if(b && !b.reminded) updateBooking(id, {reminded: true});
+      });
+    });
+    document.querySelectorAll("[data-seen]").forEach(function(el){ el.onclick = function(){ markAllSeen(); renderOwner(); }; });
   }
 
   // ================= CONFIGURACIÓN =================
