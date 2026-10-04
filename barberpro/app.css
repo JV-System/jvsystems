@@ -629,7 +629,7 @@ input[readonly]{opacity:.7;}
   .app-admin .adminbar{padding:14px 40px;}
   .app-admin #main{padding:0 40px;}
   #main.is-owner{grid-template-columns:220px minmax(0,1fr); gap:36px;}
-  .owner-content:not(.tab-agenda):not(.tab-clientes){max-width:1100px;}
+  .owner-content:not(.tab-agenda):not(.tab-clientes):not(.tab-pagos){max-width:1100px;}
   .gantt-wrap{max-height:calc(100vh - 230px);}
 }
 @media (min-width:1400px){
@@ -745,4 +745,37 @@ input[readonly]{opacity:.7;}
 @media (min-width:1000px) and (max-width:1279px){
   .pay-charts{grid-template-columns:1fr 1fr;}
   .pay-charts .card:first-child{grid-column:1 / -1;}
+}
+
+/* ---------- panel del dueño: fondo con relieve suave y la marca como marca de agua ---------- */
+.backdrop-admin::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(118deg, transparent 0 30%, rgba(41,182,246,.055) 40%, transparent 50%),
+    linear-gradient(118deg, transparent 0 56%, rgba(33,150,243,.045) 63%, transparent 71%),
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 1.6px) 0 0 / 26px 26px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 75% at 62% 42%, #000 28%, transparent 88%);
+          mask-image:radial-gradient(ellipse 80% 75% at 62% 42%, #000 28%, transparent 88%);
+}
+.backdrop-admin::after{
+  content:""; position:absolute; right:-3vw; bottom:-8vh; width:min(64vw, 920px); aspect-ratio:1; pointer-events:none;
+  background:url(barberpro-logo.png) center / contain no-repeat;
+  opacity:.085; filter:blur(1.2px) saturate(.85);
+  -webkit-mask-image:radial-gradient(circle, #000 42%, transparent 70%);
+          mask-image:radial-gradient(circle, #000 42%, transparent 70%);
+}
+/* tarjetas con un poco de relieve y transparencia para que el fondo se asome */
+.app-admin .card,.app-admin .stat-tile{
+  background:linear-gradient(180deg, rgba(27,35,45,.80), rgba(17,23,30,.84));
+  -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055), inset 0 -1px 0 rgba(0,0,0,.25), 0 14px 34px -16px rgba(0,0,0,.7);
+}
+.app-admin .owner-nav button,.app-admin .btn-logout{
+  background:linear-gradient(180deg, rgba(27,35,45,.75), rgba(17,23,30,.8));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.app-admin .owner-nav button.active{box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(41,182,246,.25), 0 8px 24px -10px rgba(41,182,246,.45);}
+@media (min-width:1000px){
+  .pay-grid{grid-template-columns:repeat(auto-fit, minmax(205px, 1fr));}
+  .stat-grid{grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));}
 }
