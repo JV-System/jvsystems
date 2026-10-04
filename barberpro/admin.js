@@ -71,6 +71,9 @@
     main.innerHTML = html;
     bindOwnerNav();
     bindPwEyes();
+    document.querySelectorAll("[data-demo-on]").forEach(function(el){
+      el.onclick = function(){ loadExampleData(); renderOwner(); };
+    });
 
     if(session.ownerTab==="agenda"){
       markAllSeen();
@@ -192,12 +195,20 @@
     };
   }
 
+  // cuando todavía no hay turnos: invita a cargar los datos de ejemplo para ver el panel con actividad
+  function demoCta(){
+    if(state.bookings.length || hasExampleData()) return "";
+    return '<div class="card demo-cta"><h2>Todavía no hay turnos</h2>' +
+      '<div class="sub">¿Querés ver cómo se ve el panel con actividad? Cargá clientes y turnos de ejemplo' + (CLOUD ? ' (solo en este navegador, no se guardan en tu base).' : '.') + '</div>' +
+      '<button class="btn btn-primary" data-demo-on="1">Cargar datos de ejemplo</button></div>';
+  }
+
   function ownerAgenda(){
     var todayISO = toISO(new Date());
     var todays = state.bookings.filter(function(b){ return b.date===todayISO && b.status!=="cancelled"; });
     var toCollect = todays.filter(function(b){ return !b.paid; }).reduce(function(s,b){ return s + b.price + (b.debtCharged||0); }, 0);
 
-    var html = '<div class="agenda-layout"><aside class="agenda-side"><div class="stat-row">' +
+    var html = '<div class="agenda-layout"><aside class="agenda-side">' + demoCta() + '<div class="stat-row">' +
       '<div class="stat-tile"><div class="num">'+todays.length+'</div><div class="lbl">Turnos hoy</div></div>' +
       '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' +
       '</div>';
@@ -761,6 +772,7 @@
       session.clientDetail = null;
     }
     var all = allClients();
+    var cta = demoCta();
     var turnosTot = all.reduce(function(s, c){ return s + c.turnos; }, 0);
     var cancTot = all.reduce(function(s, c){ return s + c.cancelled; }, 0);
     var facturado = all.reduce(function(s, c){ return s + c.spent; }, 0);
@@ -770,7 +782,7 @@
     var top = all.filter(function(c){ return c.turnos > 0; }).sort(function(a, b){ return (b.turnos - a.turnos) || (b.done - a.done); }).slice(0, 5);
     var max = top.length ? top[0].turnos : 1;
 
-    var html = '<div class="stat-grid">' +
+    var html = cta + '<div class="stat-grid">' +
       '<div class="stat-tile"><div class="num">'+all.length+'</div><div class="lbl">Clientes</div></div>' +
       '<div class="stat-tile"><div class="num">'+turnosTot+'</div><div class="lbl">Turnos (sin cancelados)</div></div>' +
       '<div class="stat-tile"><div class="num">'+money(facturado)+'</div><div class="lbl">Cobrado en total</div></div>' +
