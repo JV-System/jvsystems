@@ -624,7 +624,7 @@ input[readonly]{opacity:.7;}
   .app-admin .adminbar{padding:14px 40px;}
   .app-admin #main{padding:0 40px;}
   #main.is-owner{grid-template-columns:220px minmax(0,1fr); gap:36px;}
-  .owner-content:not(.tab-agenda):not(.tab-clientes):not(.tab-pagos){max-width:1100px;}
+  .owner-content:not(.tab-agenda):not(.tab-clientes):not(.tab-pagos):not(.tab-hoy){max-width:1100px;}
   .gantt-wrap{max-height:calc(100vh - 230px);}
 }
 @media (min-width:1400px){
@@ -956,3 +956,36 @@ input[readonly]{opacity:.7;}
 .mpl-needs .no{background:var(--warn-bg); color:var(--warn);}
 .mpl-row{display:grid; grid-template-columns:110px 1fr auto; gap:8px; align-items:start;}
 .mpl-row input{margin-bottom:8px;}
+
+/* novedades del día: ancho completo y una tarjeta por barbero */
+.hoy-top .stat-row{grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); margin-bottom:16px;}
+.hoy-team-head{margin:4px 0 10px;}
+.hoy-team-head h2{margin:0; font-size:18px;}
+.hoy-team-head .sub{margin:2px 0 0;}
+.hoy-team{display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:16px; margin-bottom:18px; align-items:start;}
+.bcard.off{opacity:.7;}
+.bcard-head{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+.bcard-head > div{flex:1; min-width:0;}
+.bcard-head b{display:block; font-size:16px;}
+.bcard-head i{font-style:normal; font-size:12px; color:var(--text-faint); font-weight:700;}
+.bcard-cap{margin-bottom:12px;}
+.bcard-cap-top{display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text-muted); margin-bottom:5px;}
+.bcard-cap-top b{color:var(--text);}
+.bcard-cap .occ-track{height:8px;}
+.bcard-stats{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:12px;}
+.bcard-stats div{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:10px; padding:8px 10px;}
+.bcard-stats b{display:block; font-size:17px; font-variant-numeric:tabular-nums;}
+.bcard-stats span{font-size:10.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
+.bcard-alerts{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+.bcard-line{max-height:340px; overflow:auto; padding-right:2px;}
+.hoy-cols{display:block;}
+.att-grid{display:block;}
+@media (min-width:1000px){
+  .hoy-cols{display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:20px; align-items:start;}
+  .hoy-col{min-width:0;}
+  .hoy-top .stat-tile .num{font-size:30px;}
+}
+@media (min-width:1500px){
+  .att-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 14px; align-items:start;}
+  .hoy-cols{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);}
+}

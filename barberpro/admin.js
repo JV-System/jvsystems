@@ -1766,6 +1766,46 @@
     return '<div class="news-reasons"><span class="cobro-date" style="margin:0 8px 0 0;">'+formatDateLong(b.date)+'</span>'+r.join("")+'</div>';
   }
 
+  // cómo está cargado cada barbero hoy: capacidad, turnos, lo que le falta cobrar y su línea de tiempo del día
+  function barberDayCards(d, owner){
+    var today = d.today, ago60 = addDays(today, -60);
+    var byTime = function(a, b){ return a.time < b.time ? -1 : 1; };
+    var members = isEmployee() ? viewBarbers() : activeBarbers();
+    return '<div class="hoy-team-head"><h2>Cómo está cada barbero hoy</h2><div class="sub">Capacidad según la jornada de cada uno · tocá un turno para abrir su día</div></div>' +
+      '<div class="hoy-team">' + members.map(function(m){
+        var mine = myBookings().filter(function(b){ return barberOfBooking(b) === m.id; });
+        var live = mine.filter(function(b){ return b.status !== "cancelled"; });
+        var hoy = live.filter(function(b){ return b.date === today; }).sort(byTime);
+        var works = barberWorks(m, today), cap = barberDayCapacity(m, today);
+        var hechos = hoy.filter(function(b){ return b.status === "completed"; }).length;
+        var porVenir = hoy.filter(function(b){ return b.status === "confirmed" && !turnoEnded(b); }).length;
+        var manana = live.filter(function(b){ return b.date === d.tomorrow; }).length;
+        var porConfirmar = live.filter(function(b){ return (b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed"; }).length;
+        var saldos = live.filter(function(b){ return turnoEnded(b) && balanceDue(b) > 0 && b.date >= ago60; }).length;
+        var cobrado = owner ? paySummary(hoy, today).paid : 0, aCobrar = owner ? hoy.reduce(function(t, b){ return t + balanceDue(b); }, 0) : 0;
+        var pct = cap ? Math.min(100, Math.round(hoy.length * 100 / cap)) : 0, level = pct >= 85 ? "high" : pct >= 50 ? "mid" : "low";
+        var next = hoy.filter(function(b){ return b.status === "confirmed" && !turnoEnded(b); })[0];
+        var hours = barberRanges(today, m).map(function(r){ return r.start + ' a ' + r.end; }).join(' y ');
+        return '<div class="card bcard'+(works ? '' : ' off')+'">' +
+          '<div class="bcard-head">' + barberAvatar(m.id, "") + '<div><b>'+esc(m.name)+'</b><i>'+(works ? 'Hoy de '+hours : 'No atiende hoy')+'</i></div>' +
+            (next ? '<span class="pchip seal">Próximo '+next.time+'</span>' : '') + '</div>' +
+          (works ? '<div class="bcard-cap"><div class="bcard-cap-top"><span>'+hoy.length+' de '+cap+' turnos</span><b>'+pct+'%</b></div>' +
+            '<span class="occ-track"><i class="occ-fill '+level+'" style="width:'+pct+'%"></i></span></div>' : '') +
+          '<div class="bcard-stats">' +
+            '<div><b>'+hechos+'</b><span>Cortes hechos</span></div><div><b>'+porVenir+'</b><span>Por venir</span></div><div><b>'+manana+'</b><span>Mañana</span></div>' +
+            (owner ? '<div><b>'+money(cobrado)+'</b><span>Cobrado hoy</span></div><div><b>'+money(aCobrar)+'</b><span>A cobrar hoy</span></div>' : '') +
+          '</div>' +
+          ((porConfirmar || saldos) ? '<div class="bcard-alerts">' + (porConfirmar ? '<span class="pchip seal">'+porConfirmar+' pago'+(porConfirmar === 1 ? '' : 's')+' por confirmar</span>' : '') +
+            (saldos ? '<span class="pchip due">'+saldos+' saldo'+(saldos === 1 ? '' : 's')+' por cobrar</span>' : '') + '</div>' : '') +
+          '<div class="bcard-line">' + (hoy.length ? hoy.map(function(b){
+            var chip = b.status === "completed" ? '<span class="paystate ok">Completado</span>'
+              : (next && next.id === b.id ? '<span class="pchip seal">Próximo</span>' : (turnoEnded(b) ? '<span class="pchip warn">Ya pasó</span>' : ''));
+            return newsLine(b, chip);
+          }).join("") : '<div class="empty-note">'+(works ? 'Sin turnos hoy.' : 'Hoy no trabaja.')+'</div>') + '</div>' +
+          '</div>';
+      }).join("") + '</div>';
+  }
+
   function ownerHoy(){
     var d = hoyData(), today = d.today, owner = !isEmployee();
     var team = isEmployee() ? viewBarbers() : activeBarbers();
@@ -1781,6 +1821,8 @@
       '<div class="stat-tile"><div class="num">'+d.nuevas.length+'</div><div class="lbl">Reservas nuevas</div></div>' +
       (owner ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
       '</div>';
+    var teamView = activeBarbers().length > 1;
+    var closedNote = (!teamView || crew.length) ? '' : '<div class="notice warn" style="margin-bottom:14px;"><div>El local está cerrado hoy: ningún barbero atiende.</div></div>';
     var local = '<div class="card news-card"><h2>El local hoy</h2>' +
       (crew.length ? crew.map(function(m){ return '<div class="summary-row"><span class="k">'+(team.length > 1 ? esc(m.name) : 'Horario')+'</span><span class="v">'+hoursOf(m)+'</span></div>'; }).join("")
                    : '<div class="notice warn"><div>El local está cerrado hoy.</div></div>') +
@@ -1795,56 +1837,62 @@
       if(sinWa.length && activeBarbers().length > 1) avisos.push('<div class="news-row tone-info"><span>📱</span><div><b>Falta el WhatsApp de '+sinWa.map(function(m){ return esc(m.name); }).join(", ")+'</b><i>Con el número, el aviso del turno le llega directo</i></div><button class="btn btn-ghost btn-sm" data-goto="equipo">Cargar</button></div>');
       if(state.config.priceIsExample) avisos.push('<div class="news-row tone-info"><span>🏷️</span><div><b>El precio del corte es el de ejemplo</b><i>Cargá el precio real</i></div><button class="btn btn-ghost btn-sm" data-goto="precios">Cambiar</button></div>');
     }
-    var side = tiles + local + (avisos.length ? '<div class="card news-card"><h2>Avisos <span class="count-pill">'+avisos.length+'</span></h2>'+avisos.join("")+'</div>' : '');
+    var side = (teamView ? '' : local) + (avisos.length ? '<div class="card news-card"><h2>Avisos <span class="count-pill">'+avisos.length+'</span></h2>'+avisos.join("")+'</div>' : '');
 
     // ----- columna principal -----
-    var main = "";
-    main += newsCard("Turnos de hoy", d.hoy.length ? formatDateLong(today) : "Hoy no hay turnos reservados", d.hoy.length,
+    var left = "", right = "";
+    var turnosHoyCard = newsCard("Turnos de hoy", d.hoy.length ? formatDateLong(today) : "Hoy no hay turnos reservados", d.hoy.length,
       d.hoy.length ? d.hoy.map(function(b){
         var chip = b.status === "completed" ? '<span class="paystate ok">Completado</span>'
           : (d.proximo && d.proximo.id === b.id ? '<span class="pchip seal">Próximo</span>' : (turnoEnded(b) ? '<span class="pchip warn">Ya pasó</span>' : ''));
         return newsLine(b, chip);
       }).join("") : '<div class="empty-note">Sin turnos para hoy.</div>');
 
-    main += newsCard("Requieren tu atención", "Pagos por confirmar, turnos que pasaron sin cerrar y saldos por cobrar", d.atencion.length,
-      d.atencion.length ? d.atencion.map(function(b){ return attentionReasons(b, d) + bookingRow(b); }).join("") : '<div class="empty-note">Todo en orden por acá. ✓</div>', d.atencion.length ? "warn" : "");
+    left += newsCard("Requieren tu atención", "Pagos por confirmar, turnos que pasaron sin cerrar y saldos por cobrar", d.atencion.length,
+      d.atencion.length ? '<div class="att-grid">' + d.atencion.map(function(b){ return '<div class="att-item">' + attentionReasons(b, d) + bookingRow(b) + '</div>'; }).join("") + '</div>'
+                        : '<div class="empty-note">Todo en orden por acá. ✓</div>', d.atencion.length ? "warn" : "");
 
     if(d.nuevas.length){
-      main += newsCard("Reservas nuevas", "Todavía no las viste", d.nuevas.length,
+      left += newsCard("Reservas nuevas", "Todavía no las viste", d.nuevas.length,
         d.nuevas.slice(0, 8).map(function(b){ return newsLine(b, '', true); }).join("") +
         '<button class="btn btn-ghost btn-sm" type="button" data-seen="1" style="margin-top:6px;">Marcar como vistas</button>', "info");
     }
     if(d.conCargo.length){
-      main += newsCard("Vienen hoy con un cargo", "Tienen un saldo anterior sumado a este turno", d.conCargo.length,
+      left += newsCard("Vienen hoy con un cargo", "Tienen un saldo anterior sumado a este turno", d.conCargo.length,
         d.conCargo.map(function(b){ return newsLine(b, '<span class="pchip warn">'+(b.debtCharged ? '+'+money(b.debtCharged) : 'Debe cargo')+'</span>'); }).join(""), "warn");
     }
     if(d.senas.length){
-      main += newsCard("Señas pendientes", "Turnos de hoy y mañana que todavía no pagaron la seña", d.senas.length,
+      right += newsCard("Señas pendientes", "Turnos de hoy y mañana que todavía no pagaron la seña", d.senas.length,
         d.senas.map(function(b){ return newsLine(b, '<span class="pchip warn">'+money(b.deposit)+'</span>', true); }).join(""));
     }
     if(d.cancelados.length){
-      main += newsCard("Cancelaciones y suspensiones", "De ayer a los próximos 7 días", d.cancelados.length,
+      right += newsCard("Cancelaciones y suspensiones", "De ayer a los próximos 7 días", d.cancelados.length,
         d.cancelados.map(function(b){
           var chip = b.lateCancel ? '<span class="pchip due">Suspendido'+(depositKept(b) ? ' · seña retenida' : '')+'</span>' : '<span class="pchip none">Cancelado con aviso</span>';
           return newsLine(b, chip, true);
         }).join(""));
     }
     if(d.devolver.length){
-      main += newsCard("Señas a devolver", "Cancelaron con aviso: devolvé la seña y marcala", d.devolver.length,
+      left += newsCard("Señas a devolver", "Cancelaron con aviso: devolvé la seña y marcala", d.devolver.length,
         d.devolver.map(function(b){
           return '<div class="news-line static"><span class="nl-time"><b>'+money(b.deposit)+'</b></span><span class="nl-who">'+newsWho(b)+'<small> · turno del '+formatDateLong(b.date)+'</small></span>' +
             '<button class="btn btn-primary btn-sm" type="button" data-refund="'+b.id+'">Seña devuelta</button></div>';
         }).join(""), "warn");
     }
     if(d.cambios.length){
-      main += newsCard("Cambios de día", "Turnos que el cliente movió (próximos 7 días)", d.cambios.length,
+      right += newsCard("Cambios de día", "Turnos que el cliente movió (próximos 7 días)", d.cambios.length,
         d.cambios.map(function(b){ return newsLine(b, '<span class="pchip none">antes: '+shortDate(b.originalDate)+' '+esc(b.originalTime || "")+'</span>', true); }).join(""));
     }
-    main += reminderCard();
+    right += reminderCard();
+    if(!teamView) left = turnosHoyCard + left;
+    right += side;
 
     return '<div class="hoy-banner"><div><h2>Novedades de hoy</h2><div class="sub">'+formatDateLong(today)+(isEmployee() ? ' · tus turnos' : '')+'</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-goto="agenda" type="button">Ir a la agenda</button></div>' +
-      '<div class="hoy-layout"><section class="hoy-main">'+main+'</section><aside class="hoy-side">'+side+'</aside></div>';
+      closedNote +
+      '<div class="hoy-top">' + tiles + '</div>' +
+      (teamView ? barberDayCards(d, owner) : '') +
+      '<div class="hoy-cols"><section class="hoy-col">'+left+'</section><section class="hoy-col">'+right+'</section></div>';
   }
 
   function bindHoyEvents(){
