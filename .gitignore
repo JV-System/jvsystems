@@ -4,3 +4,6 @@ branca/xubio_inject.js
 branca/index_xubio_dev.html
 branca/index_dev.html
 *.env
+
+# dependencias de las funciones
+node_modules/

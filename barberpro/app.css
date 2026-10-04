@@ -444,3 +444,10 @@ a.btn{text-decoration:none;}
 .myt-sub{font-size:12px; color:var(--text-muted);}
 .myt-hist{margin-top:4px;}
 .myt-hist summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--text-muted); padding:6px 0 10px;}
+
+/* campo de contraseña con ojito */
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:46px;}
+.pw-eye{position:absolute; right:4px; top:0; height:calc(100% - 10px); width:42px; display:flex; align-items:center; justify-content:center; background:none; border:none; color:var(--text-muted); cursor:pointer; border-radius:8px;}
+.pw-eye:hover,.pw-eye[aria-pressed=true]{color:var(--accent-1);}
+.lockcard .checkline{margin:2px 0 14px;}

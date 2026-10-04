@@ -168,7 +168,13 @@
     available: !!auth,
     isReady: function(){ return authReady || !auth; },
     user: function(){ return auth ? auth.currentUser : null; },
-    login: function(email, pass){ return auth.signInWithEmailAndPassword(email, pass); },
+    // remember: la sesión queda en este dispositivo (sigue al cerrar el navegador) o solo mientras la pestaña esté abierta
+    login: function(email, pass, remember){
+      var P = firebase.auth.Auth.Persistence;
+      return auth.setPersistence(remember === false ? P.SESSION : P.LOCAL).then(function(){
+        return auth.signInWithEmailAndPassword(email, pass);
+      });
+    },
     logout: function(){ return auth.signOut(); },
     resetPassword: function(email){ return auth.sendPasswordResetEmail(email); }
   };

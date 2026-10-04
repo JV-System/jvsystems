@@ -124,6 +124,7 @@ function stepLogin(){
     '<input type="tel" id="inpLoginPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel">' +
     '<label>Mail</label>' +
     '<input type="email" id="inpLoginEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
+    '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>' +
     '<button class="btn btn-primary" id="btnLogin">Entrar</button>' +
     '<button class="btn btn-ghost" id="btnLoginBack" style="margin-top:10px;">Volver</button>' +
     '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Todavía no tenés cuenta? <button class="link-btn" id="btnLoginToRegister" type="button">Registrate</button></div>' +
@@ -424,7 +425,7 @@ function copyText(text){
 
 function logoutClient(){
   askConfirm("Salir", "Vas a tener que volver a registrarte para reservar. Los turnos que ya reservaste no se borran.", function(){
-    try{ localStorage.removeItem(PROFILE_KEY); }catch(e){}
+    try{ localStorage.removeItem(PROFILE_KEY); sessionStorage.removeItem(PROFILE_KEY); }catch(e){}
     stopWatchTurnos(); client.watching = null;
     client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = "";
     client.registered = false; client.step = 0;
@@ -466,7 +467,12 @@ function bindClientEvents(){
           return;
         }
         applyProfile(p);
-        try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(cleanProfile(p))); }catch(e){}
+        // "Recordar en este dispositivo": con la tilde queda guardado; sin ella solo mientras esta pestaña siga abierta
+        try{
+          var keep = document.getElementById("inpRemember").checked;
+          (keep ? localStorage : sessionStorage).setItem(PROFILE_KEY, JSON.stringify(cleanProfile(p)));
+          (keep ? sessionStorage : localStorage).removeItem(PROFILE_KEY);
+        }catch(e){}
         client.step = 2; renderClient();
       }).catch(function(e){
         console.error(e);
@@ -560,7 +566,7 @@ function bindClientEvents(){
 // si el cliente ya se registró en este dispositivo, entra directo a elegir fecha
 (function(){
   try{
-    var raw = localStorage.getItem(PROFILE_KEY);
+    var raw = localStorage.getItem(PROFILE_KEY) || sessionStorage.getItem(PROFILE_KEY);
     if(raw){
       var p = JSON.parse(raw);
       if(p && p.name && p.lastname && digitsOnly(p.phone||"").length >= 8){

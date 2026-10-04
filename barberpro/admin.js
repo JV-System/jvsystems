@@ -82,6 +82,11 @@
     return "No se pudo iniciar sesión. Intentá de nuevo.";
   }
 
+  var EYE_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_OFF_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a17.6 17.6 0 0 1 4.1-4.9M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-2.2 3.2M1 1l22 22"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  var OWNER_EMAIL_KEY = "barberpro_owner_email";
+  function rememberedOwnerEmail(){ try{ return localStorage.getItem(OWNER_EMAIL_KEY) || ""; }catch(e){ return ""; } }
+
   function ownerLogin(){
     if(CLOUD){
       if(!cloudAuth.isReady()){
@@ -91,8 +96,10 @@
         '<div class="lockicon">🔒</div>' +
         '<h2>Acceso del dueño</h2>' +
         '<div class="sub">Ingresá con tu mail y contraseña</div>' +
-        '<input type="email" id="inpOwnerEmail" placeholder="tu@mail.com" autocomplete="username" autocapitalize="off" style="text-align:center;">' +
-        '<input type="password" id="inpOwnerPass" placeholder="Contraseña" autocomplete="current-password" style="text-align:center;">' +
+        '<input type="email" id="inpOwnerEmail" placeholder="tu@mail.com" autocomplete="username" autocapitalize="off" value="'+esc(rememberedOwnerEmail())+'" style="text-align:center;">' +
+        '<div class="pw-wrap"><input type="password" id="inpOwnerPass" placeholder="Contraseña" autocomplete="current-password" style="text-align:center;">' +
+          '<button type="button" class="pw-eye" id="btnPwEye" aria-label="Mostrar contraseña" aria-pressed="false">' + EYE_SVG + '</button></div>' +
+        '<label class="checkline" style="justify-content:center;"><input type="checkbox" id="inpOwnerRemember" checked><span>Recordar en este dispositivo</span></label>' +
         '<button class="btn btn-primary" id="btnOwnerLogin" style="max-width:240px; margin:0 auto;">Ingresar</button>' +
         '<button class="link-btn" id="btnOwnerReset" type="button" style="margin-top:14px;">Olvidé mi contraseña</button>' +
         '</div>';
@@ -114,13 +121,23 @@
       var emailEl = document.getElementById("inpOwnerEmail"), passEl = document.getElementById("inpOwnerPass");
       function go(){
         var email = emailEl.value.trim(), pass = passEl.value;
+        var remember = document.getElementById("inpOwnerRemember").checked;
         if(!email || !pass){ showToast("Escribí tu mail y tu contraseña."); return; }
         btn.disabled = true; btn.textContent = "Ingresando...";
-        cloudAuth.login(email, pass).catch(function(e){
+        try{ if(remember) localStorage.setItem(OWNER_EMAIL_KEY, email); else localStorage.removeItem(OWNER_EMAIL_KEY); }catch(e){}
+        cloudAuth.login(email, pass, remember).catch(function(e){
           btn.disabled = false; btn.textContent = "Ingresar";
           showToast(authErrorMsg(e));
         });
       }
+      var eye = document.getElementById("btnPwEye");
+      eye.onclick = function(){
+        var show = passEl.type === "password";
+        passEl.type = show ? "text" : "password";
+        eye.innerHTML = show ? EYE_OFF_SVG : EYE_SVG;
+        eye.setAttribute("aria-pressed", show ? "true" : "false");
+        eye.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+      };
       btn.onclick = go;
       passEl.onkeydown = function(e){ if(e.key === "Enter") go(); };
       document.getElementById("btnOwnerReset").onclick = function(){
