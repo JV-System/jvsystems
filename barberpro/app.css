@@ -451,3 +451,13 @@ a.btn{text-decoration:none;}
 .pw-eye{position:absolute; right:4px; top:0; height:calc(100% - 10px); width:42px; display:flex; align-items:center; justify-content:center; background:none; border:none; color:var(--text-muted); cursor:pointer; border-radius:8px;}
 .pw-eye:hover,.pw-eye[aria-pressed=true]{color:var(--accent-1);}
 .lockcard .checkline{margin:2px 0 14px;}
+
+/* perfil del cliente: foto */
+.avatar{width:44px; height:44px; border-radius:50%; object-fit:cover; flex:none; background:var(--accent-grad); color:#fff; font-weight:800; font-size:18px; display:inline-flex; align-items:center; justify-content:center; border:2px solid var(--border);}
+.avatar.lg{width:72px; height:72px; font-size:28px;}
+.hello-who{display:flex; align-items:center; gap:12px; min-width:0;}
+.hello-who h2{margin-bottom:2px;}
+.avatar-edit{display:flex; align-items:center; gap:14px; margin-bottom:14px;}
+.avatar-btns{display:flex; flex-wrap:wrap; gap:8px;}
+.link-btn.plain{border:none; background:none; color:var(--text-muted); text-decoration:underline; font-weight:600;}
+input[readonly]{opacity:.7;}

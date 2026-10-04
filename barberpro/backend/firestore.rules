@@ -7,9 +7,9 @@ rules_version = '2';
 //                        Cualquiera puede crearla UNA vez: si el documento ya existe no se puede pisar, así dos personas
 //                        no reservan el mismo horario. Solo el dueño la borra (al cancelar).
 //  - bookings/{id}    la reserva completa (nombre, teléfono, mail): el cliente solo puede CREARLA; leerla es del dueño.
-//  - clients/{hash}   ficha del cliente registrado (nombre, apodo, teléfono, mail). El id es un hash del teléfono + mail, así que solo
-//                     se puede abrir sabiendo los dos datos; no se puede listar. Sirve para "Iniciar sesión" desde otro celular.
-//  - clients/{hash}/turnos/{id}  copia resumida de cada reserva del cliente (fecha, hora, precio, estado) para "Mis turnos".
+//  - clients/{uid}    perfil del cliente (nombre, apodo, teléfono, mail, foto). El cliente entra con mail y contraseña (Firebase
+//                     Authentication) y solo puede ver y editar el suyo; el dueño los ve todos.
+//  - clients/{uid}/turnos/{id}  copia resumida de cada reserva del cliente (fecha, hora, precio, estado) para "Tus turnos".
 //  - debtFlags/{key}  aviso de "tiene un saldo pendiente": se consulta de a uno (get), no se puede listar.
 //  - debts/{key}      detalle de saldos pendientes: solo el dueño.
 //
@@ -20,6 +20,10 @@ service cloud.firestore {
 
     function isOwner() {
       return request.auth != null && request.auth.uid in ['RQIEHKxHKwPAZXguUzxO2vd6s8k1'];
+    }
+
+    function signedIn() {
+      return request.auth != null;
     }
 
     function isStr(v, max) {
@@ -47,7 +51,8 @@ service cloud.firestore {
     // ---------- horarios ocupados ----------
     match /slots/{id} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['date', 'time', 'bid'])
+      allow create: if signedIn()
+                    && request.resource.data.keys().hasOnly(['date', 'time', 'bid'])
                     && request.resource.data.keys().hasAll(['date', 'time', 'bid'])
                     && validDate(request.resource.data.date)
                     && validTime(request.resource.data.time)
@@ -60,14 +65,14 @@ service cloud.firestore {
     // ---------- reservas ----------
     match /bookings/{bid} {
       allow read, update, delete: if isOwner();
-      allow create: if validBooking(bid, request.resource.data);
+      allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
     function validBooking(bid, d) {
       return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
                                'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey', 'cid'])
           && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
-                              'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey'])
+                              'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey', 'cid'])
           && d.id == bid
           && isStr(d.name, 60) && d.name.size() > 0
           && isStr(d.lastname, 60) && d.lastname.size() > 0
@@ -85,35 +90,36 @@ service cloud.firestore {
           && d.createdAt is number
           && (!('seenByOwner' in d) || d.seenByOwner == false)
           && isStr(d.clientKey, 80)
-          && (!('cid' in d) || (isStr(d.cid, 64) && d.cid.matches('^[0-9a-f]{64}$')))
+          && isStr(d.cid, 128)
           // la reserva tiene que venir junto con la marca de horario ocupado (se escriben en un mismo lote)
           && existsAfter(/databases/$(database)/documents/slots/$(slotId(d)));
     }
 
-    // ---------- fichas de clientes ----------
+    // ---------- perfiles de clientes ----------
+    // la foto de perfil es un JPEG chico guardado como texto (data:image/jpeg;base64,...)
     function validClient(d) {
-      return d.keys().hasOnly(['name', 'lastname', 'nickname', 'phone', 'email'])
+      return d.keys().hasOnly(['name', 'lastname', 'nickname', 'phone', 'email', 'photo'])
           && d.keys().hasAll(['name', 'lastname', 'phone', 'email'])
           && isStr(d.name, 60) && d.name.size() > 0
           && isStr(d.lastname, 60) && d.lastname.size() > 0
           && (!('nickname' in d) || isStr(d.nickname, 30))
           && isStr(d.phone, 40) && d.phone.size() >= 6
-          && isStr(d.email, 120) && d.email.matches('.+@.+[.].+');
+          && isStr(d.email, 120) && d.email.matches('.+@.+[.].+')
+          && (!('photo' in d) || (isStr(d.photo, 60000) && d.photo.matches('^data:image/jpeg;base64,.*')));
     }
 
     match /clients/{id} {
-      allow get: if true;
-      allow list, delete: if isOwner();
-      allow create: if id.matches('^[0-9a-f]{64}$') && validClient(request.resource.data);
-      // se puede corregir el nombre o el apodo; el teléfono y el mail (que forman el id) no cambian
-      allow update: if validClient(request.resource.data)
-                    && request.resource.data.phone == resource.data.phone
+      allow read: if isOwner() || (signedIn() && request.auth.uid == id);
+      allow create: if signedIn() && request.auth.uid == id && validClient(request.resource.data);
+      // se puede corregir todo menos el mail (que es el usuario)
+      allow update: if signedIn() && request.auth.uid == id && validClient(request.resource.data)
                     && request.resource.data.email == resource.data.email;
+      allow delete: if isOwner() || (signedIn() && request.auth.uid == id);
     }
 
     // ---------- "mis turnos" del cliente ----------
-    // copia resumida de cada reserva (sin nombre, teléfono ni mail) bajo la ficha del cliente: el cliente la crea junto con la
-    // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). Se lee sabiendo el id de la ficha.
+    // copia resumida de cada reserva (sin nombre, teléfono ni mail) bajo el perfil del cliente: el cliente la crea junto con la
+    // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). La lee ese cliente o el dueño.
     function validTurno(tid, d) {
       return d.keys().hasOnly(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
           && d.keys().hasAll(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
@@ -128,9 +134,9 @@ service cloud.firestore {
     }
 
     match /clients/{id}/turnos/{tid} {
-      allow read: if true;
+      allow read: if isOwner() || (signedIn() && request.auth.uid == id);
       allow create: if isOwner()
-                    || (id.matches('^[0-9a-f]{64}$') && validTurno(tid, request.resource.data)
+                    || (signedIn() && request.auth.uid == id && validTurno(tid, request.resource.data)
                         && existsAfter(/databases/$(database)/documents/bookings/$(tid)));
       allow update, delete: if isOwner();
     }
@@ -141,7 +147,7 @@ service cloud.firestore {
       allow list, create, delete: if isOwner();
       // el cliente solo puede marcar que ese saldo ya se sumó a su turno (una vez, sin tocar nada más)
       allow update: if isOwner()
-                    || (resource.data.get('chargedBy', null) == null
+                    || (signedIn() && resource.data.get('chargedBy', null) == null
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chargedBy'])
                         && isStr(request.resource.data.chargedBy, 40));
     }

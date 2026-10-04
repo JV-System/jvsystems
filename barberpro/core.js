@@ -385,8 +385,9 @@ function resetAllData(){
 // ¿este cliente tiene un saldo pendiente? (en local ya está cargado en state.debts)
 function loadDebtFlag(key){ return Promise.resolve(); }
 
-// ---------- fichas de clientes (para "Iniciar sesión") ----------
-// La ficha se guarda con un id que es el hash (SHA-256) del teléfono + el mail: para abrirla hay que saber los dos datos.
+// ---------- cuentas de clientes (usuario = mail + contraseña) ----------
+// Una cuenta tiene: name, lastname, nickname, phone, email y una foto de perfil opcional (JPEG chico en formato data:).
+// Versión LOCAL (demo): las cuentas quedan en este navegador. cloud.js las reemplaza por Firebase Authentication + Firestore.
 function sha256Hex(text){
   if(window.crypto && crypto.subtle && window.TextEncoder){
     return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function(buf){
@@ -395,31 +396,100 @@ function sha256Hex(text){
   }
   return Promise.reject(new Error("sin-crypto"));
 }
-function clientDocId(phone, email){
-  return sha256Hex(digitsOnly(phone) + "|" + String(email || "").trim().toLowerCase());
-}
 function cleanProfile(p){
-  return {name: p.name, lastname: p.lastname, nickname: p.nickname || "", phone: p.phone, email: p.email};
+  var out = {name: p.name, lastname: p.lastname, nickname: p.nickname || "", phone: p.phone, email: String(p.email || "").trim().toLowerCase()};
+  if(p.photo) out.photo = p.photo;
+  return out;
+}
+function authErr(code){ var e = new Error(code); e.code = code; return e; }
+
+var ACCOUNTS_KEY = "barberpro_accounts_v2";
+function localAccounts(){ try{ return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "{}"); }catch(e){ return {}; } }
+function saveLocalAccounts(m){ try{ localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(m)); }catch(e){} }
+function withUid(p){ var o = cleanProfile(p); o.uid = o.email; return o; }
+function setLocalSession(email, remember){
+  try{
+    (remember ? localStorage : sessionStorage).setItem(PROFILE_KEY, email);
+    (remember ? sessionStorage : localStorage).removeItem(PROFILE_KEY);
+  }catch(e){}
 }
 
-// Versión LOCAL (demo): las fichas quedan en este navegador. cloud.js las reemplaza por Firestore.
-var CLIENTS_KEY = "barberpro_clients_v2";
-function localClients(){ try{ return JSON.parse(localStorage.getItem(CLIENTS_KEY) || "{}"); }catch(e){ return {}; } }
-function findClient(phone, email){
-  return clientDocId(phone, email).then(function(id){ return localClients()[id] || null; });
+var clientAuth = {
+  // ¿hay una sesión abierta en este dispositivo? -> promesa con el perfil o null
+  restore: function(){
+    var email = null;
+    try{ email = localStorage.getItem(PROFILE_KEY) || sessionStorage.getItem(PROFILE_KEY); }catch(e){}
+    var acc = email && localAccounts()[email];
+    return Promise.resolve(acc ? withUid(acc.profile) : null);
+  },
+  register: function(p, password, remember){
+    var email = String(p.email || "").trim().toLowerCase(), m = localAccounts();
+    if(m[email]) return Promise.reject(authErr("auth/email-already-in-use"));
+    if(String(password).length < 6) return Promise.reject(authErr("auth/weak-password"));
+    return sha256Hex(password).then(function(h){
+      m[email] = {profile: cleanProfile(p), hash: h};
+      saveLocalAccounts(m); setLocalSession(email, remember);
+      return withUid(m[email].profile);
+    });
+  },
+  login: function(email, password, remember){
+    email = String(email || "").trim().toLowerCase();
+    var acc = localAccounts()[email];
+    return sha256Hex(password).then(function(h){
+      if(!acc || acc.hash !== h) throw authErr("auth/invalid-credential");
+      setLocalSession(email, remember);
+      return withUid(acc.profile);
+    });
+  },
+  logout: function(){
+    try{ localStorage.removeItem(PROFILE_KEY); sessionStorage.removeItem(PROFILE_KEY); }catch(e){}
+    return Promise.resolve();
+  },
+  update: function(p){
+    var m = localAccounts(), email = String(p.email || "").trim().toLowerCase();
+    if(!m[email]) return Promise.reject(authErr("auth/user-not-found"));
+    m[email].profile = cleanProfile(p); saveLocalAccounts(m);
+    return Promise.resolve(withUid(m[email].profile));
+  },
+  resetPassword: function(){ return Promise.reject(authErr("local-mode")); }
+};
+
+function authMessage(e){
+  var code = e && e.code ? e.code : "";
+  if(code === "auth/email-already-in-use") return "Ya hay una cuenta con ese mail. Iniciá sesión.";
+  if(code === "auth/weak-password") return "La contraseña tiene que tener al menos 6 caracteres.";
+  if(code === "auth/invalid-email") return "Ese mail no es válido.";
+  if(code === "auth/too-many-requests") return "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
+  if(code === "auth/network-request-failed") return "Sin conexión. Revisá tu internet.";
+  if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") return "Mail o contraseña incorrectos.";
+  if(code === "local-mode") return "En la versión de prueba no se puede recuperar la contraseña.";
+  return "No se pudo completar. Intentá de nuevo.";
 }
-function saveClientProfile(p){
-  return clientDocId(p.phone, p.email).then(function(id){
-    var m = localClients(); m[id] = cleanProfile(p);
-    try{ localStorage.setItem(CLIENTS_KEY, JSON.stringify(m)); }catch(e){}
+
+// Ícono de ojo para mostrar / ocultar contraseñas
+var PW_EYE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+var PW_EYE_OFF = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a17.6 17.6 0 0 1 4.1-4.9M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-2.2 3.2M1 1l22 22"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+function pwField(id, placeholder, autocomplete){
+  return '<div class="pw-wrap"><input type="password" id="'+id+'" placeholder="'+placeholder+'" autocomplete="'+autocomplete+'">' +
+    '<button type="button" class="pw-eye" data-eye="'+id+'" aria-label="Mostrar contraseña" aria-pressed="false">'+PW_EYE+'</button></div>';
+}
+function bindPwEyes(){
+  document.querySelectorAll("[data-eye]").forEach(function(btn){
+    btn.onclick = function(){
+      var inp = document.getElementById(btn.getAttribute("data-eye")), show = inp.type === "password";
+      inp.type = show ? "text" : "password";
+      btn.innerHTML = show ? PW_EYE_OFF : PW_EYE;
+      btn.setAttribute("aria-pressed", show ? "true" : "false");
+      btn.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+    };
   });
 }
 
-// "Mis turnos" del cliente. Local: sus reservas guardadas en este navegador. cloud.js las reemplaza por Firestore.
-function watchMyTurnos(phone, email){}
+// "Tus turnos" del cliente. Local: sus reservas guardadas en este navegador. cloud.js las reemplaza por Firestore.
+function watchMyTurnos(profile){}
 function stopWatchTurnos(){}
-function myTurnos(phone, email){
-  var d = digitsOnly(phone), m = String(email || "").trim().toLowerCase();
+function myTurnos(profile){
+  var d = digitsOnly(profile.phone), m = String(profile.email || "").trim().toLowerCase();
   return state.bookings.filter(function(b){ return digitsOnly(b.phone) === d && String(b.email || "").trim().toLowerCase() === m; });
 }
 

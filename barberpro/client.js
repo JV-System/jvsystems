@@ -4,8 +4,8 @@
 "use strict";
 
 var client = {
-  step:0,   // 0 inicio (iniciar sesión / registrarse), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
-  name:"", lastname:"", nickname:"", phone:"", email:"", registered:false,
+  step:6,   // 6 cargando sesión, 0 inicio (iniciar sesión / crear cuenta), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
+  name:"", lastname:"", nickname:"", phone:"", email:"", photo:"", uid:"", registered:false,
   selectedDate:null, selectedTime:null, calMonth:null,
   payMethod:"local",
   lastBooking:null
@@ -38,7 +38,7 @@ function buildBooking(){
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
     payMethod:client.payMethod, paid:false,
-    status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key
+    status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
 }
 
@@ -56,11 +56,12 @@ function buildWaLink(b){
 // ================= VISTA =================
 function renderClient(){
   var main = document.getElementById("main");
-  var html = (client.step === 0 || client.step === 5) ? '' : '<div class="stepper">' +
+  var html = (client.step === 0 || client.step === 5 || client.step === 6) ? '' : '<div class="stepper">' +
     [1,2,3,4].map(function(n){ return '<div class="dot'+(client.step>=n?' done':'')+'"></div>'; }).join("") +
     '</div>';
 
-  if(client.step===0) html += stepInicio();
+  if(client.step===6) html += '<div class="card lockcard"><div class="lockicon">⏳</div><h2>Un momento...</h2></div>';
+  else if(client.step===0) html += stepInicio();
   else if(client.step===5) html += stepLogin();
   else if(client.step===1) html += stepDatos();
   else if(client.step===2) html += stepFecha();
@@ -69,11 +70,9 @@ function renderClient(){
 
   main.innerHTML = html;
   bindClientEvents();
+  bindPwEyes();
   initPlaceMap();
-  if(client.registered){
-    var wkey = digitsOnly(client.phone) + "|" + client.email.toLowerCase();
-    if(client.watching !== wkey){ client.watching = wkey; watchMyTurnos(client.phone, client.email); }
-  }
+  if(client.registered && client.watching !== client.uid){ client.watching = client.uid; watchMyTurnos(client); }
   if(CLOUD && client.registered){
     var dkey = clientKeyOf(client.name, client.lastname, client.phone);
     if(!state.debtFlagsLoaded[dkey]){ state.debtFlagsLoaded[dkey] = true; loadDebtFlag(dkey); }
@@ -106,36 +105,49 @@ hooks.refresh = function(){
   if(client.step !== 1 && client.step !== 5) renderClient();   // sin pisar lo que se está escribiendo
 };
 
+// foto de perfil: la imagen elegida o, si no hay, un círculo con la inicial
+function avatarHtml(size){
+  var cls = "avatar" + (size ? " " + size : "");
+  if(client.photo) return '<img class="'+cls+'" src="'+esc(client.photo)+'" alt="Tu foto de perfil">';
+  var ini = (client.nickname || client.name || "?").trim().charAt(0).toUpperCase();
+  return '<span class="'+cls+'">'+esc(ini)+'</span>';
+}
+
 function stepInicio(){
   return '<div class="card welcome">' +
     '<h2>Reservá tu turno</h2>' +
     '<div class="sub">Elegí fecha y horario en un minuto</div>' +
     '<button class="btn btn-primary" id="btnGoLogin">Iniciar sesión</button>' +
-    '<button class="btn btn-ghost" id="btnGoRegister" style="margin-top:10px;">Registrarme</button>' +
-    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Ya reservaste antes? Iniciá sesión con tu teléfono y tu mail.</div>' +
+    '<button class="btn btn-ghost" id="btnGoRegister" style="margin-top:10px;">Crear cuenta</button>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">Tu usuario es tu mail. Con tu cuenta ves tus turnos y reservás con un toque.</div>' +
     '</div>';
 }
 
 function stepLogin(){
   return '<div class="card">' +
     '<h2>Iniciar sesión</h2>' +
-    '<div class="sub">Con el teléfono y el mail con los que te registraste</div>' +
-    '<label>Teléfono</label>' +
-    '<input type="tel" id="inpLoginPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel">' +
+    '<div class="sub">Con tu mail y tu contraseña</div>' +
     '<label>Mail</label>' +
-    '<input type="email" id="inpLoginEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
+    '<input type="email" id="inpLoginEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="username" autocapitalize="off">' +
+    '<label>Contraseña</label>' +
+    pwField("inpLoginPass", "Tu contraseña", "current-password") +
     '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>' +
     '<button class="btn btn-primary" id="btnLogin">Entrar</button>' +
+    '<button class="link-btn plain" id="btnForgot" type="button" style="display:block; margin:12px auto 0;">Olvidé mi contraseña</button>' +
     '<button class="btn btn-ghost" id="btnLoginBack" style="margin-top:10px;">Volver</button>' +
-    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Todavía no tenés cuenta? <button class="link-btn" id="btnLoginToRegister" type="button">Registrate</button></div>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Todavía no tenés cuenta? <button class="link-btn" id="btnLoginToRegister" type="button">Crear cuenta</button></div>' +
     '</div>';
 }
 
 function stepDatos(){
   var editing = client.registered;
   return '<div class="card">' +
-    '<h2>'+(editing ? 'Tus datos' : 'Registrate para reservar')+'</h2>' +
-    '<div class="sub">'+(editing ? 'Podés corregirlos cuando quieras' : 'Una sola vez · después reservás con un toque')+'</div>' +
+    '<h2>'+(editing ? 'Tu perfil' : 'Creá tu cuenta')+'</h2>' +
+    '<div class="sub">'+(editing ? 'Podés corregirlo cuando quieras' : 'Una sola vez · después reservás con un toque')+'</div>' +
+    '<div class="avatar-edit"><div id="avatarPreview">'+avatarHtml("lg")+'</div>' +
+      '<div class="avatar-btns"><button class="link-btn" id="btnPhoto" type="button">'+(client.photo ? 'Cambiar foto' : 'Agregar foto')+'</button>' +
+      (client.photo ? '<button class="link-btn link-out" id="btnPhotoDel" type="button">Quitar</button>' : '') +
+      '<input type="file" id="inpPhoto" accept="image/*" hidden></div></div>' +
     '<div class="row2">' +
       '<div><label>Nombre</label><input type="text" id="inpName" value="'+esc(client.name)+'" placeholder="Juan" autocomplete="given-name"></div>' +
       '<div><label>Apellido</label><input type="text" id="inpLastname" value="'+esc(client.lastname)+'" placeholder="Pérez" autocomplete="family-name"></div>' +
@@ -144,11 +156,15 @@ function stepDatos(){
       '<div><label>Apodo <span class="opt">(opcional)</span></label><input type="text" id="inpNickname" value="'+esc(client.nickname)+'" placeholder="Cómo te dicen" maxlength="20"></div>' +
       '<div><label>Teléfono</label><input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel"></div>' +
     '</div>' +
-    '<label>Mail</label>' +
-    '<input type="email" id="inpEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
-    '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local los usa para confirmarte el turno y recordártelo.</div>' +
-    '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Registrarme y continuar')+'</button>' +
-    (editing ? '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>'
+    '<label>Mail <span class="opt">(es tu usuario)</span></label>' +
+    '<input type="email" id="inpEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="username" autocapitalize="off"'+(editing ? ' readonly' : '')+'>' +
+    (editing ? '' :
+      '<label>Contraseña</label>' + pwField("inpPass", "Mínimo 6 caracteres", "new-password") +
+      '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>') +
+    '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local lo usa para confirmarte el turno y recordártelo.</div>' +
+    '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Crear cuenta y continuar')+'</button>' +
+    (editing ? '<button class="btn btn-ghost" id="btnChangePass" type="button" style="margin-top:10px;">Cambiar contraseña</button>' +
+               '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>'
              : '<button class="btn btn-ghost" id="btnRegBack" style="margin-top:10px;">Volver</button>') +
     '</div>';
 }
@@ -212,7 +228,7 @@ function turnoRow(t){
 
 function misTurnosHtml(){
   var today = toISO(new Date());
-  var all = myTurnos(client.phone, client.email);
+  var all = myTurnos(client);
   if(!all.length) return "";
   var next = all.filter(function(t){ return t.status === "confirmed" && t.date >= today; })
     .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
@@ -249,8 +265,8 @@ function stepFecha(){
 
   var who = client.nickname || client.name;
   return '<div class="card">' +
-    '<div class="hello"><div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div>' +
-    '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mis datos</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
+    '<div class="hello"><div class="hello-who">'+avatarHtml("")+'<div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div></div>' +
+    '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mi perfil</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
     misTurnosHtml() +
     cal +
@@ -424,20 +440,43 @@ function copyText(text){
 }
 
 function logoutClient(){
-  askConfirm("Salir", "Vas a tener que volver a registrarte para reservar. Los turnos que ya reservaste no se borran.", function(){
-    try{ localStorage.removeItem(PROFILE_KEY); sessionStorage.removeItem(PROFILE_KEY); }catch(e){}
-    stopWatchTurnos(); client.watching = null;
-    client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = "";
-    client.registered = false; client.step = 0;
-    client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";
-    renderClient();
-    showToast("Saliste de la cuenta.");
+  askConfirm("Salir", "Vas a tener que volver a iniciar sesión para reservar. Los turnos que ya reservaste no se borran.", function(){
+    clientAuth.logout().catch(function(e){ console.error(e); }).then(function(){
+      stopWatchTurnos(); client.watching = null;
+      client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = ""; client.photo = ""; client.uid = "";
+      client.registered = false; client.step = 0;
+      client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";
+      renderClient();
+      showToast("Saliste de la cuenta.");
+    });
   });
 }
 
 function applyProfile(p){
   client.name = p.name; client.lastname = p.lastname; client.nickname = p.nickname || ""; client.phone = p.phone; client.email = p.email;
+  client.photo = p.photo || ""; client.uid = p.uid || p.email;
   client.registered = true;
+}
+
+// achica la foto elegida a un cuadrado de 192 px (JPEG) para que pese poco y entre en el perfil del cliente
+function readPhoto(file){
+  return new Promise(function(resolve, reject){
+    var fr = new FileReader();
+    fr.onerror = function(){ reject(new Error("lectura")); };
+    fr.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error("imagen")); };
+      img.onload = function(){
+        var S = 192, cv = document.createElement("canvas"); cv.width = S; cv.height = S;
+        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        var ctx = cv.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, S, S);
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, S, S);
+        resolve(cv.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
 }
 
 function bindClientEvents(){
@@ -452,54 +491,86 @@ function bindClientEvents(){
   if(lb) lb.onclick = function(){ client.step = 0; renderClient(); };
   var rb = document.getElementById("btnRegBack");
   if(rb) rb.onclick = function(){ client.step = 0; renderClient(); };
+
   var bl = document.getElementById("btnLogin");
   if(bl){
+    var passEl = document.getElementById("inpLoginPass"), mailEl = document.getElementById("inpLoginEmail");
     var doLogin = function(){
-      var phone = document.getElementById("inpLoginPhone").value.trim();
-      var email = document.getElementById("inpLoginEmail").value.trim();
-      if(digitsOnly(phone).length < 8){ showToast("Ingresá tu teléfono."); return; }
-      if(!isValidEmail(email)){ showToast("Ingresá el mail con el que te registraste."); return; }
-      bl.disabled = true; bl.textContent = "Buscando...";
-      findClient(phone, email).then(function(p){
-        if(!p){
-          showToast("No encontramos esa cuenta. Revisá el teléfono y el mail, o registrate.");
-          bl.disabled = false; bl.textContent = "Entrar";
-          return;
-        }
-        applyProfile(p);
-        // "Recordar en este dispositivo": con la tilde queda guardado; sin ella solo mientras esta pestaña siga abierta
-        try{
-          var keep = document.getElementById("inpRemember").checked;
-          (keep ? localStorage : sessionStorage).setItem(PROFILE_KEY, JSON.stringify(cleanProfile(p)));
-          (keep ? sessionStorage : localStorage).removeItem(PROFILE_KEY);
-        }catch(e){}
-        client.step = 2; renderClient();
+      var email = mailEl.value.trim(), pass = passEl.value;
+      if(!isValidEmail(email)){ showToast("Ingresá tu mail."); return; }
+      if(!pass){ showToast("Ingresá tu contraseña."); return; }
+      bl.disabled = true; bl.textContent = "Ingresando...";
+      clientAuth.login(email, pass, document.getElementById("inpRemember").checked).then(function(p){
+        applyProfile(p); client.step = 2; renderClient();
       }).catch(function(e){
         console.error(e);
-        showToast("No pudimos iniciar sesión. Revisá tu conexión e intentá de nuevo.");
+        showToast(authMessage(e));
         bl.disabled = false; bl.textContent = "Entrar";
       });
     };
     bl.onclick = doLogin;
-    document.getElementById("inpLoginEmail").onkeydown = function(e){ if(e.key === "Enter") doLogin(); };
+    passEl.onkeydown = function(e){ if(e.key === "Enter") doLogin(); };
   }
+  var forgot = document.getElementById("btnForgot");
+  if(forgot) forgot.onclick = function(){
+    var email = document.getElementById("inpLoginEmail").value.trim();
+    if(!isValidEmail(email)){ showToast("Escribí tu mail arriba y volvé a tocar este botón."); return; }
+    clientAuth.resetPassword(email).then(function(){
+      showToast("Si ese mail tiene cuenta, te mandamos un correo para cambiar la contraseña.");
+    }).catch(function(e){ showToast(e && e.code === "local-mode" ? authMessage(e) : "No se pudo enviar el correo. Revisá el mail e intentá de nuevo."); });
+  };
+  var chp = document.getElementById("btnChangePass");
+  if(chp) chp.onclick = function(){
+    clientAuth.resetPassword(client.email).then(function(){
+      showToast("Te mandamos un correo a " + client.email + " para cambiar la contraseña.");
+    }).catch(function(e){ showToast(authMessage(e)); });
+  };
+
+  // foto de perfil (se ve al instante; se guarda con el botón de abajo)
+  var photoBtn = document.getElementById("btnPhoto"), photoInp = document.getElementById("inpPhoto");
+  if(photoBtn){
+    photoBtn.onclick = function(){ photoInp.click(); };
+    photoInp.onchange = function(){
+      var f = photoInp.files && photoInp.files[0];
+      if(!f) return;
+      if(f.type && f.type.indexOf("image/") !== 0){ showToast("Elegí una imagen (JPG o PNG)."); return; }
+      readPhoto(f).then(function(url){
+        client.photo = url;
+        document.getElementById("avatarPreview").innerHTML = avatarHtml("lg");
+        photoBtn.textContent = "Cambiar foto";
+      }).catch(function(){ showToast("No pudimos leer esa imagen. Probá con otra."); });
+    };
+  }
+  var photoDel = document.getElementById("btnPhotoDel");
+  if(photoDel) photoDel.onclick = function(){
+    client.photo = "";
+    document.getElementById("avatarPreview").innerHTML = avatarHtml("lg");
+    photoDel.hidden = true; photoBtn.textContent = "Agregar foto";
+  };
+
   var b1 = document.getElementById("btnStep1");
   if(b1) b1.onclick = function(){
     var name = document.getElementById("inpName").value.trim();
     var lastname = document.getElementById("inpLastname").value.trim();
     var nickname = document.getElementById("inpNickname").value.trim();
     var phone = document.getElementById("inpPhone").value.trim();
+    var email = document.getElementById("inpEmail").value.trim();
     if(!name || !lastname){ showToast("Completá nombre y apellido."); return; }
     if(digitsOnly(phone).length < 8){ showToast("Ingresá un teléfono válido (mínimo 8 dígitos)."); return; }
-    var email = document.getElementById("inpEmail").value.trim();
     if(!isValidEmail(email)){ showToast("Ingresá un mail válido, por ejemplo tunombre@gmail.com."); return; }
-    client.name = name; client.lastname = lastname; client.nickname = nickname; client.phone = phone; client.email = email;
-    client.registered = true;
-    try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({name:name,lastname:lastname,nickname:nickname,phone:phone,email:email})); }catch(e){}
-    // la ficha queda guardada para poder iniciar sesión desde otro celular; si falla, el registro sigue igual
-    saveClientProfile(cleanProfile(client)).catch(function(e){ console.error("ficha", e); });
-    client.step = 2;
-    renderClient();
+    var profile = {name:name, lastname:lastname, nickname:nickname, phone:phone, email:email, photo:client.photo};
+    var label = b1.textContent;
+    var done = function(p){ applyProfile(p); client.step = 2; renderClient(); };
+    var fail = function(msg){ return function(e){ console.error(e); showToast(msg || authMessage(e)); b1.disabled = false; b1.textContent = label; }; };
+    if(client.registered){
+      b1.disabled = true; b1.textContent = "Guardando...";
+      clientAuth.update(Object.assign({}, profile, {email: client.email})).then(done).catch(fail("No pudimos guardar los cambios. Intentá de nuevo."));
+    } else {
+      var pass = document.getElementById("inpPass").value;
+      if(pass.length < 6){ showToast("La contraseña tiene que tener al menos 6 caracteres."); return; }
+      b1.disabled = true; b1.textContent = "Creando cuenta...";
+      clientAuth.register(profile, pass, document.getElementById("inpRemember").checked).then(done).catch(fail());
+    }
   };
   var editP = document.getElementById("btnEditProfile");
   if(editP) editP.onclick = function(){ client.step = 1; renderClient(); };
@@ -563,20 +634,10 @@ function bindClientEvents(){
   };
 }
 
-// si el cliente ya se registró en este dispositivo, entra directo a elegir fecha
-(function(){
-  try{
-    var raw = localStorage.getItem(PROFILE_KEY) || sessionStorage.getItem(PROFILE_KEY);
-    if(raw){
-      var p = JSON.parse(raw);
-      if(p && p.name && p.lastname && digitsOnly(p.phone||"").length >= 8){
-        client.name=p.name; client.lastname=p.lastname; client.nickname=p.nickname||""; client.phone=p.phone; client.email=p.email||"";
-        // perfiles guardados antes de pedir el mail: se completa el dato y recién ahí se sigue
-        if(isValidEmail(client.email)){ client.registered = true; client.step = 2; }
-      }
-    }
-  }catch(e){}
-})();
-
+// ¿ya hay una sesión abierta en este dispositivo? Entra directo a elegir fecha; si no, pantalla de inicio
 render();
+clientAuth.restore().then(function(p){
+  if(p){ applyProfile(p); client.step = 2; } else { client.step = 0; }
+  renderClient();
+}).catch(function(e){ console.error(e); client.step = 0; renderClient(); });
 })();

@@ -15,9 +15,12 @@
   if(!cfg.firebase || !window.firebase || !firebase.firestore) return;   // sin Firebase: queda el modo local
 
   CLOUD = true;
-  firebase.initializeApp(cfg.firebase);
-  var db = firebase.firestore();
-  var auth = firebase.auth ? firebase.auth() : null;      // solo lo carga la página del panel
+  // El panel del dueño y la app del cliente usan sesiones SEPARADAS: la app del cliente corre en una app de Firebase aparte
+  // ("cliente"), así que el dueño logueado en el panel no queda logueado como cliente (ni al revés) en el mismo navegador.
+  var isAdminPage = window.BARBERPRO_PAGE === "admin";
+  var fbApp = isAdminPage ? firebase.initializeApp(cfg.firebase) : firebase.initializeApp(cfg.firebase, "cliente");
+  var db = fbApp.firestore();
+  var auth = firebase.auth ? fbApp.auth() : null;
 
   // el estado en la nube arranca con los valores de fábrica + config.js y se completa con lo que llega de Firestore
   state = defaultState();
@@ -68,9 +71,8 @@
             paid: b.paid, status: b.status, createdAt: b.createdAt};
   }
   persistBooking = function(b){
-    return clientDocId(b.phone, b.email).catch(function(){ return null; }).then(function(cid){
+    return Promise.resolve(b.cid).then(function(cid){
       var batch = db.batch();
-      if(cid) b.cid = cid;
       batch.set(db.doc("slots/" + slotDocId(b)), {date: b.date, time: b.time, bid: b.id});
       batch.set(db.doc("bookings/" + b.id), b);
       if(cid) batch.set(db.doc("clients/" + cid + "/turnos/" + b.id), turnoCopy(b));
@@ -86,15 +88,14 @@
     if(unsubTurnos){ try{ unsubTurnos(); }catch(e){} unsubTurnos = null; }
     state.myTurnos = [];
   };
-  watchMyTurnos = function(phone, email){
+  watchMyTurnos = function(profile){
     stopWatchTurnos();
-    clientDocId(phone, email).then(function(cid){
-      unsubTurnos = db.collection("clients/" + cid + "/turnos").onSnapshot(function(snap){
-        var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
-        state.myTurnos = arr;
-        hooks.refresh();
-      }, function(e){ console.error("turnos", e); });
-    }).catch(function(e){ console.error("turnos", e); });
+    if(!profile || !profile.uid) return;
+    unsubTurnos = db.collection("clients/" + profile.uid + "/turnos").onSnapshot(function(snap){
+      var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
+      state.myTurnos = arr;
+      hooks.refresh();
+    }, function(e){ console.error("turnos", e); });
   };
   myTurnos = function(){ return state.myTurnos.slice(); };
 
@@ -112,14 +113,54 @@
     return (f && !f.chargedBy) ? f : null;
   };
 
-  // fichas de clientes (id = hash de teléfono + mail): permiten "Iniciar sesión" desde otro celular
-  findClient = function(phone, email){
-    return clientDocId(phone, email).then(function(id){ return db.doc("clients/" + id).get(); })
-      .then(function(snap){ return snap.exists ? snap.data() : null; });
-  };
-  saveClientProfile = function(p){
-    return clientDocId(p.phone, p.email).then(function(id){ return db.doc("clients/" + id).set(cleanProfile(p)); });
-  };
+  // cuentas de clientes: mail + contraseña (Firebase Authentication); el perfil (con foto) vive en clients/{uid}
+  if(!isAdminPage && auth){
+    var persist = function(remember){
+      var P = firebase.auth.Auth.Persistence;
+      return auth.setPersistence(remember === false ? P.SESSION : P.LOCAL);
+    };
+    var loadProfile = function(u){
+      return db.doc("clients/" + u.uid).get().then(function(snap){
+        return snap.exists ? Object.assign({uid: u.uid}, snap.data()) : null;
+      });
+    };
+    clientAuth = {
+      restore: function(){
+        return new Promise(function(resolve){
+          var un = auth.onAuthStateChanged(function(u){
+            un();
+            if(!u) return resolve(null);
+            loadProfile(u).then(resolve).catch(function(){ resolve(null); });
+          });
+        });
+      },
+      register: function(p, password, remember){
+        var prof = cleanProfile(p);
+        return persist(remember).then(function(){ return auth.createUserWithEmailAndPassword(prof.email, password); })
+          .then(function(cred){
+            var u = cred.user;
+            return db.doc("clients/" + u.uid).set(prof).then(function(){ return Object.assign({uid: u.uid}, prof); })
+              .catch(function(e){ u.delete().catch(function(){}); throw e; });   // sin perfil no queda cuenta a medias
+          });
+      },
+      login: function(email, password, remember){
+        return persist(remember).then(function(){ return auth.signInWithEmailAndPassword(String(email).trim(), password); })
+          .then(function(cred){
+            return loadProfile(cred.user).then(function(p){
+              if(!p){ auth.signOut(); throw authErr("auth/user-not-found"); }
+              return p;
+            });
+          });
+      },
+      logout: function(){ return auth.signOut(); },
+      update: function(p){
+        var u = auth.currentUser, prof = cleanProfile(p);
+        if(!u) return Promise.reject(authErr("auth/user-not-found"));
+        return db.doc("clients/" + u.uid).set(prof).then(function(){ return Object.assign({uid: u.uid}, prof); });
+      },
+      resetPassword: function(email){ return auth.sendPasswordResetEmail(String(email).trim()); }
+    };
+  }
 
   reloadState = function(){};            // los datos ya llegan en vivo
   hasExampleData = function(){ return false; };
@@ -155,7 +196,7 @@
   }
 
   var authReady = false;
-  if(auth){
+  if(auth && isAdminPage){
     auth.onAuthStateChanged(function(u){
       authReady = true;
       if(u){ startAdminListeners(); }
@@ -189,8 +230,7 @@
 
   // referencia a la copia "Mis turnos" de una reserva (las reservas viejas no traen cid: se calcula)
   function turnoRefFor(b){
-    var p = b.cid ? Promise.resolve(b.cid) : clientDocId(b.phone, b.email);
-    return p.then(function(cid){ return db.doc("clients/" + cid + "/turnos/" + b.id); }).catch(function(){ return null; });
+    return Promise.resolve(b.cid ? db.doc("clients/" + b.cid + "/turnos/" + b.id) : null);
   }
   // cambios que el cliente tiene que ver reflejados en su lista
   function turnoPatch(patch){
