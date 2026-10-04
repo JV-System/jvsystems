@@ -31,7 +31,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
+                     "payAlias","payHolder","payMpLink","payMpLinks","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
 
   function docKey(k){ return String(k).replace(/[^A-Za-z0-9:_-]/g, "_"); }
   function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", "") + (b.barberId ? "_" + b.barberId : ""); }

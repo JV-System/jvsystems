@@ -947,3 +947,12 @@ input[readonly]{opacity:.7;}
 /* horario de cada barbero */
 .tm-hours{margin:4px 0 14px; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:10px 12px;}
 .tm-hours summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--accent-1); padding:2px 0 8px;}
+
+/* links de Mercado Pago por monto */
+.mpl-needs{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px;}
+.mpl-needs span{font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:999px; background:var(--surface-3); color:var(--text-faint);}
+.mpl-needs .ok{background:var(--success-bg); color:var(--success);}
+.mpl-needs .gen{background:rgba(41,182,246,.14); color:var(--accent-1);}
+.mpl-needs .no{background:var(--warn-bg); color:var(--warn);}
+.mpl-row{display:grid; grid-template-columns:110px 1fr auto; gap:8px; align-items:start;}
+.mpl-row input{margin-bottom:8px;}

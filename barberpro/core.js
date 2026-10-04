@@ -206,6 +206,7 @@ function baseState(){
       payAlias:"",
       payHolder:"",
       payMpLink:"",
+      payMpLinks:[],            // links de Mercado Pago por monto: [{amount, url}] (la app usa el que coincide con lo que hay que cobrar)
       mapsLink:"",
       heroImage:"",
       mapboxToken:"",
@@ -504,6 +505,17 @@ function payMethods(){
   if(c.payMpLink) m.push({id:"mp", label:"Mercado Pago", hint:"Pagás online con un link"});
   return m;
 }
+// ---------- links de Mercado Pago ----------
+// Un link de Mercado Pago cobra un monto fijo. Se pueden cargar varios (seña, saldo, total) y la app usa el que coincide con lo que
+// el cliente tiene que pagar; si no hay uno de ese monto, usa el link general (el de cualquier monto), si lo hay.
+function mpLinkFor(amount){
+  var list = Array.isArray(state.config.payMpLinks) ? state.config.payMpLinks : [];
+  var a = Math.round(Number(amount));
+  var m = list.filter(function(l){ return Math.round(Number(l.amount)) === a && l.url; })[0];
+  return m ? m.url : (state.config.payMpLink || "");
+}
+function hasMpLinks(){ return !!(state.config.payMpLink || (Array.isArray(state.config.payMpLinks) && state.config.payMpLinks.length)); }
+
 // ---------- seña y saldo ----------
 // Un turno se paga en dos partes: la SEÑA al reservar y el SALDO al terminar el corte. Cada parte pasa por
 // "pendiente" -> "informado" (el cliente avisó que pagó) -> "pagado" (el local lo confirmó o lo cobró en efectivo).

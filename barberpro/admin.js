@@ -690,15 +690,48 @@
       '<div class="sub">Cómo pueden pagar tus clientes al reservar (el pago en el local siempre está)</div>' +
       '<label>Alias o CBU para transferencias <span class="opt">(opcional)</span></label><input type="text" id="inpPayAlias" value="'+esc(c.payAlias)+'" maxlength="40" placeholder="Ej: barberia.elcorte">' +
       '<label>Titular de la cuenta <span class="opt">(opcional)</span></label><input type="text" id="inpPayHolder" value="'+esc(c.payHolder)+'" maxlength="40" placeholder="Ej: Juan Pérez">' +
-      '<label>Link de pago de Mercado Pago <span class="opt">(opcional · por el monto de la seña / saldo)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
-      '<div class="field-hint">Creálo en la app de Mercado Pago: Cobrar → Link de pago, por el precio del corte.</div>' +
+      '<label>Link general de Mercado Pago <span class="opt">(opcional · se usa si no hay uno del monto exacto)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
+      '<div class="field-hint">Un link de Mercado Pago cobra un monto fijo. Por eso abajo podés cargar uno por cada monto y la app le muestra al cliente el que coincide.</div>' +
+      mpLinksHtml() +
       '<div class="field-hint">Los pagos los confirmás vos a mano desde la agenda (botón "Cobrado").</div>' +
       '<button class="btn btn-primary" id="btnSaveCobros">Guardar cobros</button></div>' +
       '<div class="card"><h2>Empezar de cero</h2>' +
       '<div class="sub">Borra todos los turnos, saldos y cierres cargados. No toca tus datos, horarios ni precio. Sirve para limpiar lo que se cargó probando la app.</div>' +
       '<button class="btn btn-danger" id="btnResetAll">Borrar todos los turnos</button></div>';
   }
+  // links de Mercado Pago por monto, con los montos que hoy se cobran (seña, saldo y total) y si tienen link
+  function mpLinksHtml(){
+    var c = state.config, list = (Array.isArray(c.payMpLinks) ? c.payMpLinks : []).slice();
+    var dep = depositFor(c.price), needs = [];
+    if(dep > 0) needs.push(['Seña', dep]);
+    needs.push([dep > 0 ? 'Saldo' : 'Total', c.price - dep]);
+    if(dep > 0) needs.push(['Total (orden de llegada)', c.price]);
+    var has = function(a){ return list.some(function(l){ return Math.round(Number(l.amount)) === a && l.url; }); };
+    var html = '<label>Links de Mercado Pago por monto <span class="opt">(opcional)</span></label>' +
+      '<div class="mpl-needs">' + needs.map(function(n){
+        return '<span class="'+(has(n[1]) ? 'ok' : (c.payMpLink ? 'gen' : 'no'))+'">'+n[0]+' '+money(n[1])+' · '+(has(n[1]) ? 'link cargado' : (c.payMpLink ? 'usa el general' : 'sin link'))+'</span>';
+      }).join('') + '</div><div id="mplRows">';
+    if(!list.length) list.push({amount: "", url: ""});
+    html += list.map(mplRow).join('') + '</div>' +
+      '<button class="link-btn" type="button" id="btnMplAdd" style="margin:2px 0 10px;">+ Agregar otro link</button>';
+    return html;
+  }
+  function mplRow(l){
+    return '<div class="mpl-row"><input type="number" min="1" data-mpl-amount placeholder="Monto $" value="'+esc(String(l.amount === undefined || l.amount === null ? "" : l.amount))+'">' +
+      '<input type="text" data-mpl-url placeholder="https://mpago.la/..." value="'+esc(l.url)+'">' +
+      '<button type="button" class="link-btn link-out" data-mpl-del aria-label="Quitar">✕</button></div>';
+  }
+  function bindMplRows(){
+    document.querySelectorAll("[data-mpl-del]").forEach(function(b){ b.onclick = function(){ b.closest(".mpl-row").remove(); }; });
+  }
+
   function bindNegocioEvents(){
+    bindMplRows();
+    var addL = document.getElementById("btnMplAdd");
+    if(addL) addL.onclick = function(){
+      var t = document.createElement("div"); t.innerHTML = mplRow({amount: "", url: ""});
+      document.getElementById("mplRows").appendChild(t.firstChild); bindMplRows();
+    };
     var br = document.getElementById("btnResetAll");
     if(br) br.onclick = function(){
       askConfirm("Empezar de cero", "Se borran todos los turnos, saldos y cierres. Esto no se puede deshacer. ¿Seguimos?", function(){
@@ -714,8 +747,18 @@
       if(mp && !/^https:\/\//i.test(mp)){ showToast("El link de Mercado Pago tiene que empezar con https://"); return; }
       state.config.payAlias = document.getElementById("inpPayAlias").value.trim();
       state.config.payHolder = document.getElementById("inpPayHolder").value.trim();
+      var links = [], badLink = false;
+      document.querySelectorAll(".mpl-row").forEach(function(r){
+        var amt = parseInt(r.querySelector("[data-mpl-amount]").value, 10), url = r.querySelector("[data-mpl-url]").value.trim();
+        if(!url && !amt) return;
+        if(!(amt > 0) || !/^https:\/\//i.test(url)){ badLink = true; return; }
+        links.push({amount: amt, url: url});
+      });
+      if(badLink){ showToast("Cada link necesita un monto y empezar con https://"); return; }
       state.config.payMpLink = mp;
+      state.config.payMpLinks = links;
       saveState();
+      renderOwner();
       showToast("Cobros guardados.");
     };
     var btn = document.getElementById("btnSaveNegocio");
@@ -1747,7 +1790,7 @@
     if(owner){
       var debts = Object.keys(state.debts).length;
       if(debts) avisos.push('<div class="news-row tone-warn"><span>💰</span><div><b>'+debts+(debts === 1 ? ' cliente con cargo pendiente' : ' clientes con cargo pendiente')+'</b><i>Por cancelar el mismo día o no venir sin haber pagado la seña</i></div><button class="btn btn-ghost btn-sm" data-goto="saldos">Ver saldos</button></div>');
-      if(!state.config.payAlias && !state.config.payMpLink) avisos.push('<div class="news-row tone-warn"><span>🔗</span><div><b>Falta cargar un medio de pago online</b><i>Sin alias ni link de Mercado Pago el cliente no puede pagar desde la app</i></div><button class="btn btn-ghost btn-sm" data-goto="negocio">Cargar</button></div>');
+      if(!state.config.payAlias && !hasMpLinks()) avisos.push('<div class="news-row tone-warn"><span>🔗</span><div><b>Falta cargar un medio de pago online</b><i>Sin alias ni link de Mercado Pago el cliente no puede pagar desde la app</i></div><button class="btn btn-ghost btn-sm" data-goto="negocio">Cargar</button></div>');
       var sinWa = teamList().filter(function(m){ return m.active !== false && !m.whatsapp; });
       if(sinWa.length && activeBarbers().length > 1) avisos.push('<div class="news-row tone-info"><span>📱</span><div><b>Falta el WhatsApp de '+sinWa.map(function(m){ return esc(m.name); }).join(", ")+'</b><i>Con el número, el aviso del turno le llega directo</i></div><button class="btn btn-ghost btn-sm" data-goto="equipo">Cargar</button></div>');
       if(state.config.priceIsExample) avisos.push('<div class="news-row tone-info"><span>🏷️</span><div><b>El precio del corte es el de ejemplo</b><i>Cargá el precio real</i></div><button class="btn btn-ghost btn-sm" data-goto="precios">Cambiar</button></div>');

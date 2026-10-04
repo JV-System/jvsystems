@@ -415,7 +415,7 @@ function stepFecha(){
 // método con el que se propone pagar la seña (después puede elegir otro al avisar que pagó)
 function defaultPayMethod(){
   var c = state.config;
-  return c.payMpLink ? "mp" : c.payAlias ? "transfer" : "local";
+  return hasMpLinks() ? "mp" : c.payAlias ? "transfer" : "local";
 }
 
 function stateChip(st){
@@ -470,8 +470,9 @@ function payBox(t, kind, titleOverride){
   if(st === "paid") return '<div class="pay-box ok"><div class="pay-box-title">'+(deposit ? 'Seña' : 'Saldo')+' pagado ✓</div></div>';
   if(st === "informed") return '<div class="pay-box"><div class="pay-box-title">Avisaste que pagaste '+money(amount)+'</div><div class="pay-note">El local lo confirma apenas lo vea. No hace falta que hagas nada más.</div></div>';
   var opts = "";
-  if(c.payMpLink){
-    opts += '<div class="pay-opt-block"><a class="btn btn-mp" href="'+esc(c.payMpLink)+'" target="_blank" rel="noopener">Pagar '+money(amount)+' con Mercado Pago</a>' +
+  var mpUrl = mpLinkFor(amount);
+  if(mpUrl){
+    opts += '<div class="pay-opt-block"><a class="btn btn-mp" href="'+esc(mpUrl)+'" target="_blank" rel="noopener">Pagar '+money(amount)+' con Mercado Pago</a>' +
       '<button class="link-btn plain" type="button" data-inform="'+kind+'|mp|'+esc(t.id)+'">Ya pagué con Mercado Pago</button></div>';
   }
   if(c.payAlias){
