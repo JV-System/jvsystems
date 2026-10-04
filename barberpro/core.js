@@ -351,6 +351,16 @@ window.addEventListener("storage", function(e){
 });
 
 // pinta nombre, frase, dirección, WhatsApp y título según la configuración del negocio
+// nombre del local como logotipo: "Parisi Barbers Rosario" -> Parisi (plata) Barbers (degradé) y ROSARIO como subtítulo con líneas
+function brandMarkup(name){
+  var w = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if(!w.length) return "";
+  var top = w.length === 1 ? '<span class="bm-second">' + esc(w[0]) + '</span>'
+    : '<span class="bm-first">' + esc(w[0]) + '</span> <span class="bm-second">' + esc(w[1]) + '</span>';
+  var rest = w.slice(2).join(" ");
+  return '<span class="bm-top">' + top + '</span>' + (rest ? '<span class="bm-sub"><i></i><span>' + esc(rest) + '</span><i></i></span>' : '');
+}
+
 function applyBranding(titleSuffix){
   var c = state.config;
   function $(id){ return document.getElementById(id); }
@@ -360,7 +370,11 @@ function applyBranding(titleSuffix){
   if($("addressText")) $("addressText").textContent = c.address;
   if(ad){ ad.hidden = !c.address; ad.href = mapsLink() || "#"; }
   if($("metaRow")) $("metaRow").hidden = !c.whatsappLink && !c.address;
-  if($("wordmarkText")) $("wordmarkText").textContent = c.businessName;
+  if($("wordmarkText")){
+    var wm = $("wordmarkText");
+    if(wm.classList.contains("wordmark")){ var mk = brandMarkup(c.businessName); if(wm.getAttribute("data-bm") !== mk){ wm.innerHTML = mk; wm.setAttribute("data-bm", mk); } wm.setAttribute("aria-label", c.businessName); }
+    else wm.textContent = c.businessName;
+  }
   if($("taglineText")){ $("taglineText").textContent = c.tagline; $("taglineText").hidden = !c.tagline; }
   if($("footerText")) $("footerText").textContent = c.businessName + " · " + titleSuffix;
   document.title = c.businessName + " · " + titleSuffix;

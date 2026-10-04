@@ -22,7 +22,7 @@ var client = {
   } else {
     // bienvenida con el nombre de la barbería; un toque la saltea
     var nm = document.getElementById("introName"), tg = document.getElementById("introTag");
-    if(nm) nm.textContent = state.config.businessName || "";
+    if(nm){ nm.innerHTML = brandMarkup(state.config.businessName || ""); nm.setAttribute("aria-label", state.config.businessName || ""); }
     if(tg) tg.textContent = state.config.tagline || "";
     var closeIntro = function(){
       overlay.classList.add("hide");
