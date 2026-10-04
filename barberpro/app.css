@@ -878,3 +878,18 @@ input[readonly]{opacity:.7;}
   .sl-grid{grid-template-columns:repeat(3, minmax(0,1fr)); gap:0 16px; align-items:start;}
   .sl-grid .card{margin-bottom:16px;}
 }
+
+/* cortes por barbero y fotos */
+.avatar.xs{width:22px; height:22px; font-size:11px; border-width:1px; vertical-align:-6px;}
+.rk-who{display:inline-flex; align-items:center; gap:6px;}
+.team-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0 14px;}
+.tcard-head{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+.tcard-head b{display:block; font-size:16px;}
+.tcard-head i{font-style:normal; font-size:12px; color:var(--text-faint); font-weight:700;}
+.tcard-num{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+.tcard-num .num{font-family:'Anton',sans-serif; font-size:44px; background:var(--accent-grad); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1;}
+.tcard-num .lbl{font-size:12px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.4px;}
+.tcard-num .delta{font-size:12px; margin-left:auto;}
+@media (min-width:1000px){
+  .owner-content.tab-equipo{max-width:1320px;}
+}

@@ -48,6 +48,36 @@ function teamList(){
   return Array.isArray(t) && t.length ? t : [{id: "dueno", name: "Dueño", role: "owner", whatsapp: "", active: true}];
 }
 function activeBarbers(){ return teamList().filter(function(m){ return m.active !== false; }); }
+// foto de perfil de un barbero (o "" si no cargó)
+function barberPhoto(id){ return (state.barberPhotos || {})[id] || ""; }
+// guarda o quita la foto de un barbero (photo = "" la quita). Local: en este navegador; cloud.js lo reemplaza por Firestore.
+function saveBarberPhoto(id, photo){
+  state.barberPhotos = state.barberPhotos || {};
+  if(photo) state.barberPhotos[id] = photo; else delete state.barberPhotos[id];
+  saveState();
+  hooks.refresh();
+  return Promise.resolve();
+}
+// achica la foto elegida a un cuadrado de 192 px (JPEG) para que pese poco
+function readPhoto(file){
+  return new Promise(function(resolve, reject){
+    var fr = new FileReader();
+    fr.onerror = function(){ reject(new Error("lectura")); };
+    fr.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error("imagen")); };
+      img.onload = function(){
+        var S = 192, cv = document.createElement("canvas"); cv.width = S; cv.height = S;
+        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        var ctx = cv.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, S, S);
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, S, S);
+        resolve(cv.toDataURL("image/jpeg", 0.82));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
 // ¿ese barbero atiende ese día de la semana?
 function barberWorks(m, iso){ return !m || !Array.isArray(m.days) || m.days.indexOf(fromISO(iso).getDay()) >= 0; }
 function barberById(id){ return teamList().filter(function(m){ return m.id === id; })[0] || null; }
@@ -120,7 +150,8 @@ function baseState(){
     },
     closures:[],
     bookings:[],
-    debts:{}
+    debts:{},
+    barberPhotos:{}         // { idBarbero: "data:image/jpeg;base64,..." } foto de perfil de cada barbero
   };
 }
 
@@ -339,6 +370,7 @@ function loadState(){
     parsed.closures = parsed.closures||[];
     parsed.bookings = parsed.bookings||[];
     parsed.debts = parsed.debts||{};
+    parsed.barberPhotos = parsed.barberPhotos||{};
     return parsed;
   }catch(e){ return defaultState(); }
 }

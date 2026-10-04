@@ -67,7 +67,7 @@ function barberPickerHtml(){
   return '<div class="barber-pick"><div class="myt-title">¿Con quién te querés cortar?</div><div class="barber-opts">' + a.map(function(m){
     var on = m.id === cur;
     return '<button type="button" class="barber-opt'+(on ? ' on' : '')+'" data-barber="'+esc(m.id)+'" aria-pressed="'+on+'">' +
-      '<span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>' +
+      (barberPhoto(m.id) ? '<img class="avatar" src="'+esc(barberPhoto(m.id))+'" alt="">' : '<span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>') +
       '<b>'+esc(m.name)+'</b><i>'+(m.role === "owner" ? 'Dueño' : 'Barbero')+'</i></button>';
   }).join("") + '</div></div>';
 }
@@ -529,27 +529,6 @@ function applyProfile(p){
   client.name = p.name; client.lastname = p.lastname; client.nickname = p.nickname || ""; client.phone = p.phone; client.email = p.email;
   client.photo = p.photo || ""; client.uid = p.uid || p.email;
   client.registered = true;
-}
-
-// achica la foto elegida a un cuadrado de 192 px (JPEG) para que pese poco y entre en el perfil del cliente
-function readPhoto(file){
-  return new Promise(function(resolve, reject){
-    var fr = new FileReader();
-    fr.onerror = function(){ reject(new Error("lectura")); };
-    fr.onload = function(){
-      var img = new Image();
-      img.onerror = function(){ reject(new Error("imagen")); };
-      img.onload = function(){
-        var S = 192, cv = document.createElement("canvas"); cv.width = S; cv.height = S;
-        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-        var ctx = cv.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, S, S);
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, S, S);
-        resolve(cv.toDataURL("image/jpeg", 0.82));
-      };
-      img.src = fr.result;
-    };
-    fr.readAsDataURL(file);
-  });
 }
 
 function bindClientEvents(){

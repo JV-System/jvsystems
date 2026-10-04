@@ -18,6 +18,7 @@
     clientQuery: "",
     clientSort: "turnos",
     payRange: "mes",
+    teamRange: "mes",
     paySort: "pagado",
     payQuery: ""
   };
@@ -70,7 +71,7 @@
         navBtn("saldos","Saldos", Object.keys(state.debts).length) +
         navBtn("config","Configuración");
     var html = '<div class="owner-nav-row">' +
-      (isEmployee() ? '<div class="whoami"><span class="avatar">'+esc(((barberById(myBarber()) || {}).name || "?").charAt(0).toUpperCase())+'</span><div><b>'+esc((barberById(myBarber()) || {}).name || "Empleado")+'</b><i>Empleado</i></div></div>' : '') +
+      (isEmployee() ? '<div class="whoami">'+barberAvatar(myBarber(), "")+'<div><b>'+esc((barberById(myBarber()) || {}).name || "Empleado")+'</b><i>Empleado</i></div></div>' : '') +
       '<div class="owner-nav-scroll"><div class="owner-nav">' + navHtml + '</div></div>' +
       '<button class="btn-logout" id="btnLogout">Salir</button>' +
       '</div>';
@@ -1353,6 +1354,92 @@
     }).join("") + '</div>';
   }
 
+  // avatar de un barbero: su foto o la inicial
+  function barberAvatar(id, size){
+    var m = barberById(id), cls = "avatar" + (size ? " " + size : ""), photo = barberPhoto(id);
+    if(photo) return '<img class="'+cls+'" src="'+esc(photo)+'" alt="">';
+    return '<span class="'+cls+'">'+esc(((m && m.name) || "?").trim().charAt(0).toUpperCase())+'</span>';
+  }
+
+  // bloque para cambiar la foto (la ven el equipo y los clientes al elegir con quién cortarse)
+  function photoEditHtml(id, title){
+    var has = !!barberPhoto(id);
+    return '<div class="avatar-edit">' + barberAvatar(id, "lg") +
+      '<div class="avatar-btns"><button class="link-btn" type="button" data-photo-pick="'+esc(id)+'">'+(has ? 'Cambiar foto' : 'Agregar foto')+'</button>' +
+      (has ? '<button class="link-btn link-out" type="button" data-photo-del="'+esc(id)+'">Quitar</button>' : '') +
+      '<input type="file" accept="image/*" hidden data-photo-file="'+esc(id)+'"></div></div>';
+  }
+
+  function bindPhotoControls(){
+    document.querySelectorAll("[data-photo-pick]").forEach(function(el){
+      el.onclick = function(){ var f = document.querySelector('[data-photo-file="'+el.getAttribute("data-photo-pick")+'"]'); if(f) f.click(); };
+    });
+    document.querySelectorAll("[data-photo-file]").forEach(function(inp){
+      inp.onchange = function(){
+        var id = inp.getAttribute("data-photo-file"), f = inp.files && inp.files[0];
+        if(!f) return;
+        if(f.type && f.type.indexOf("image/") !== 0){ showToast("Elegí una imagen (JPG o PNG)."); return; }
+        readPhoto(f).then(function(url){ return saveBarberPhoto(id, url); })
+          .then(function(){ showToast("Foto guardada."); renderOwner(); })
+          .catch(function(e){ console.error(e); showToast("No se pudo guardar la foto. Probá con otra imagen."); });
+      };
+    });
+    document.querySelectorAll("[data-photo-del]").forEach(function(el){
+      el.onclick = function(){
+        saveBarberPhoto(el.getAttribute("data-photo-del"), "").then(function(){ showToast("Foto quitada."); renderOwner(); })
+          .catch(function(e){ console.error(e); showToast("No se pudo quitar la foto."); });
+      };
+    });
+  }
+
+  // ---------- cortes por barbero (dueño) ----------
+  function teamStatsHtml(){
+    var b = payBounds(session.teamRange), today = b.today;
+    var done = function(x){ return x.status === "completed"; };
+    var rows = teamList().map(function(m){
+      var mine = function(x){ return barberOfBooking(x) === m.id; };
+      var list = state.bookings.filter(function(x){ return mine(x) && inRange(x, b.cur); });
+      var prev = b.prev ? state.bookings.filter(function(x){ return mine(x) && inRange(x, b.prev); }) : null;
+      var sm = paySummary(list, today);
+      return {m: m, cortes: list.filter(done).length, prev: prev ? prev.filter(done).length : null,
+        porVenir: list.filter(function(x){ return x.status === "confirmed" && !turnoEnded(x); }).length,
+        sinCerrar: list.filter(function(x){ return x.status === "confirmed" && turnoEnded(x); }).length,
+        aviso: list.filter(function(x){ return x.status === "cancelled" && !x.lateCancel; }).length,
+        susp: list.filter(function(x){ return x.status === "cancelled" && x.lateCancel; }).length,
+        cobrado: sm.paid, ticket: sm.count ? Math.round(sm.paid / sm.count) : 0};
+    });
+    var total = rows.reduce(function(t, r){ return t + r.cortes; }, 0);
+    var max = rows.reduce(function(t, r){ return Math.max(t, r.cortes); }, 0);
+    var ranked = rows.slice().sort(function(x, y){ return y.cortes - x.cortes; });
+
+    var html = '<div class="chips pay-ranges">' + PAY_RANGES.map(function(r){
+      return '<button type="button" class="chip'+(session.teamRange === r.id ? ' on' : '')+'" data-trange="'+r.id+'">'+r.label+'</button>';
+    }).join("") + '</div>';
+
+    html += '<div class="card"><h2>Cortes por barbero</h2><div class="sub">Turnos completados en el período · '+total+(total === 1 ? ' corte' : ' cortes')+' en total</div>' +
+      (total ? '<div class="hbars">' + ranked.map(function(r, i){
+        var p = total ? Math.round(r.cortes * 100 / total) : 0;
+        return '<div class="hbar"><div class="hbar-top"><span class="rk-who">'+(i === 0 && r.cortes ? '🏆 ' : '')+barberAvatar(r.m.id, "xs")+' '+esc(r.m.name)+'</span><b>'+r.cortes+' <small>'+p+'%</small></b></div>' +
+          '<span class="hbar-track"><i class="hbar-fill" style="width:'+Math.max(r.cortes ? 3 : 0, max ? Math.round(r.cortes * 100 / max) : 0)+'%"></i></span></div>';
+      }).join("") + '</div>' : '<div class="empty-note">Todavía no hay cortes completados en este período.</div>') + '</div>';
+
+    html += '<div class="team-grid">' + rows.map(function(r){
+      var delta = r.prev === null ? null : pctChange(r.cortes, r.prev);
+      return '<div class="card tcard">' +
+        '<div class="tcard-head">' + barberAvatar(r.m.id, "") + '<div><b>'+esc(r.m.name)+'</b><i>'+(r.m.role === "owner" ? 'Dueño' : 'Empleado')+(r.m.active === false ? ' · no atiende' : '')+'</i></div></div>' +
+        '<div class="tcard-num"><span class="num">'+r.cortes+'</span><span class="lbl">cortes</span>' +
+          (delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs anterior</span>') + '</div>' +
+        '<div class="summary-row"><span class="k">Turnos por venir</span><span class="v">'+r.porVenir+'</span></div>' +
+        (r.sinCerrar ? '<div class="summary-row"><span class="k">Pasaron sin cerrar</span><span class="v" style="color:var(--warn)">'+r.sinCerrar+'</span></div>' : '') +
+        '<div class="summary-row"><span class="k">Cancelados con aviso</span><span class="v">'+r.aviso+'</span></div>' +
+        '<div class="summary-row"><span class="k">Suspendidos</span><span class="v">'+r.susp+'</span></div>' +
+        '<div class="summary-row"><span class="k">Cobrado</span><span class="v">'+money(r.cobrado)+'</span></div>' +
+        '<div class="summary-row"><span class="k">Ticket promedio</span><span class="v">'+money(r.ticket)+'</span></div>' +
+        '</div>';
+    }).join("") + '</div>';
+    return html;
+  }
+
   // ---------- cobros pendientes (empleado) ----------
   function ownerCobros(){
     var list = bk().filter(function(b){ return b.status !== "cancelled"; });
@@ -1380,7 +1467,7 @@
 
   function ownerEquipo(){
     var team = teamList();
-    var html = '<div class="card"><h2>Equipo</h2>' +
+    var html = teamStatsHtml() + '<div class="card"><h2>Equipo</h2>' +
       '<div class="sub">Quiénes atienden. El cliente elige con quién cortarse al reservar y el aviso del turno le llega al WhatsApp de ese barbero. ' +
       'Los empleados entran al panel con su usuario y ven solo su agenda, sus cobros pendientes y su cuenta (no ven el análisis de dinero ni nada del dueño).</div>';
     html += team.map(function(m){
@@ -1400,11 +1487,12 @@
         }
       }
       return '<div class="tm-row" data-tm="'+esc(m.id)+'">' +
-        '<div class="tm-head"><span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>' +
+        '<div class="tm-head">' + barberAvatar(m.id, "") +
           '<div><b>'+esc(m.name)+'</b><span class="tm-role">'+(emp ? 'Empleado' : 'Dueño · administrador')+'</span></div>' +
           '<label class="checkline tm-active"><input type="checkbox" data-tm-active="'+esc(m.id)+'" '+(m.active !== false ? 'checked' : '')+'><span>Atiende</span></label></div>' +
         '<div class="row2"><div><label>Nombre</label><input type="text" data-tm-name="'+esc(m.id)+'" value="'+esc(m.name)+'" maxlength="40"></div>' +
           '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" data-tm-wa="'+esc(m.id)+'" value="'+esc(m.whatsapp || "")+'" placeholder="5493415551234"></div></div>' +
+        '<label>Foto de perfil</label>' + photoEditHtml(m.id) +
         '<label>Días que atiende</label><div class="day-toggles">' + [[1,"L"],[2,"M"],[3,"X"],[4,"J"],[5,"V"],[6,"S"],[0,"D"]].map(function(d){
           var on = !Array.isArray(m.days) || m.days.indexOf(d[0]) >= 0;
           return '<label class="day-chip"><input type="checkbox" data-tm-day="'+esc(m.id)+'|'+d[0]+'" '+(on ? 'checked' : '')+'><span>'+d[1]+'</span></label>';
@@ -1437,6 +1525,10 @@
   }
 
   function bindEquipoEvents(){
+    bindPhotoControls();
+    document.querySelectorAll("[data-trange]").forEach(function(el){
+      el.onclick = function(){ session.teamRange = el.getAttribute("data-trange"); renderOwner(); };
+    });
     var val = function(attr, id){ var el = document.querySelector('['+attr+'="'+id+'"]'); return el ? el.value.trim() : ""; };
     document.querySelectorAll("[data-tm-save]").forEach(function(el){
       el.onclick = function(){
@@ -1525,6 +1617,8 @@
     }
     html += '</div>';
 
+    var myId = isEmployee() ? myBarber() : ownerBarber().id;
+    html += '<div class="card"><h2>Mi foto de perfil</h2><div class="sub">La ven tu equipo y los clientes cuando eligen con quién cortarse.</div>' + photoEditHtml(myId) + '</div>';
     html += '<div class="card"><h2>Sesión</h2>' +
       '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +
       '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
@@ -1550,6 +1644,7 @@
   }
 
   function bindConfigEvents(){
+    bindPhotoControls();
     var dOn = document.getElementById("btnDemoOn");
     if(dOn) dOn.onclick = function(){ loadExampleData(); renderOwner(); };
     var dOff = document.getElementById("btnDemoOff");

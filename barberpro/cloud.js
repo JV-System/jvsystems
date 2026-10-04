@@ -26,6 +26,7 @@
   state = defaultState();
   state.slots = {};              // { "2026-10-13": { "10:00": true } }  horarios ocupados (público)
   state.debtFlags = {};          // saldos pendientes consultados (lado cliente)
+  state.barberPhotos = {};       // fotos de perfil de los barberos (públicas)
   state.debtFlagsLoaded = {};
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
@@ -57,6 +58,16 @@
     state.slots = m;
     hooks.refresh();
   }, function(e){ console.error("slots", e); });
+
+  // fotos de perfil de los barberos: las ve cualquiera (el cliente las ve al elegir con quién cortarse)
+  db.collection("barbers").onSnapshot(function(snap){
+    var m = {}; snap.forEach(function(d){ var p = d.data().photo; if(p) m[d.id] = p; });
+    state.barberPhotos = m;
+    hooks.refresh();
+  }, function(e){ console.error("barbers", e); });
+  saveBarberPhoto = function(id, photo){
+    return (photo ? db.doc("barbers/" + id).set({photo: photo}) : db.doc("barbers/" + id).delete());
+  };
 
   takenTimes = function(iso, barber){
     var out = {}, day = state.slots[iso];

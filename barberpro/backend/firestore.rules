@@ -80,6 +80,17 @@ service cloud.firestore {
       allow write: if isOwner();
     }
 
+    // ---------- foto de perfil de los barberos ----------
+    // pública (la ve el cliente al elegir con quién cortarse); la cambia el dueño o el propio empleado en su barbero
+    match /barbers/{id} {
+      allow read: if true;
+      allow create, update: if (isOwner() || (isStaff() && staffBarber() == id))
+                            && request.resource.data.keys().hasOnly(['photo'])
+                            && isStr(request.resource.data.photo, 60000)
+                            && request.resource.data.photo.matches('^data:image/jpeg;base64,.*');
+      allow delete: if isOwner() || (isStaff() && staffBarber() == id);
+    }
+
     // ---------- datos del negocio ----------
     match /config/{docId} {
       allow read: if true;
