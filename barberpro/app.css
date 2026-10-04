@@ -678,3 +678,71 @@ input[readonly]{opacity:.7;}
   .agenda-side .stat-row{max-width:520px;}
   .agenda-main{margin-top:6px;}
 }
+
+/* ---------- pagos (panel del dueño) ---------- */
+.pay-ranges{margin-bottom:14px;}
+.pay-tile .pay-sub{font-size:11.5px; color:var(--text-faint); font-weight:600; margin-top:5px; line-height:1.3;}
+.pay-tile.pay-main{border-color:var(--accent-2);}
+.pay-tile.is-warn .num{background:none; -webkit-background-clip:initial; background-clip:initial; color:var(--warn);}
+.delta{font-weight:800;}
+.delta.up{color:var(--success);}
+.delta.down{color:var(--danger);}
+.lg{display:inline-block; width:10px; height:10px; border-radius:3px; margin:0 4px 0 8px; vertical-align:-1px;}
+.lg-main{background:var(--accent-1);}
+.lg-seal{background:var(--warn);}
+
+.pay-charts{display:grid; grid-template-columns:1fr; gap:0;}
+.bars{display:flex; align-items:flex-end; gap:8px; height:190px; padding-top:8px;}
+.bar-col{flex:1; min-width:0; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px;}
+.bar-val{font-size:10px; font-weight:800; color:var(--text-muted); height:12px; white-space:nowrap; font-variant-numeric:tabular-nums;}
+.bar-stack{width:100%; max-width:46px; display:flex; flex-direction:column-reverse; border-radius:7px 7px 3px 3px; overflow:hidden; flex:none; margin-top:auto;}
+.bar-col{position:relative;}
+.bar-main{display:block; width:100%; background:var(--accent-grad);}
+.bar-seal{display:block; width:100%; background:var(--warn);}
+.bar-lbl{font-size:11px; font-weight:700; color:var(--text-faint); height:14px;}
+.hbars{display:flex; flex-direction:column; gap:14px; padding-top:4px;}
+.hbar-top{display:flex; justify-content:space-between; align-items:baseline; font-size:13.5px; font-weight:700; margin-bottom:6px;}
+.hbar-top small{color:var(--text-faint); font-weight:700; margin-left:4px;}
+.hbar-track{display:block; height:10px; background:var(--surface-3); border-radius:999px; overflow:hidden;}
+.hbar-fill{display:block; height:100%; border-radius:999px; background:var(--accent-grad);}
+.hbar-fill.m-transfer{background:linear-gradient(90deg, #4fae83, #2f8f66);}
+.hbar-fill.m-mp{background:linear-gradient(90deg, #29b6f6, #1e7fd1);}
+.hbar-fill.m-local{background:linear-gradient(90deg, #e8b23d, #c98f1f);}
+
+.plist-head{display:none;}
+.plist-total{display:none;}
+.prow{display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; width:100%; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:11px 12px; margin-bottom:8px; cursor:pointer; color:var(--text); font-family:inherit; text-align:left;}
+.prow:hover{border-color:var(--accent-2);}
+.prow .crow-who{grid-column:1 / -1;}
+.prow .pchips{grid-column:1 / -1;}
+.pchips{display:flex; flex-wrap:wrap; gap:6px;}
+.pchips::before{display:none !important;}
+.pchip{display:inline-block; font-size:11px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap;}
+.pchip.ok{background:var(--success-bg); color:var(--success);}
+.pchip.seal{background:rgba(41,182,246,.14); color:var(--accent-1);}
+.pchip.warn{background:var(--warn-bg); color:var(--warn);}
+.pchip.due{background:var(--danger-bg); color:var(--danger);}
+.pchip.none{background:var(--surface-3); color:var(--text-faint);}
+
+@media (min-width:700px){
+  .pay-charts{grid-template-columns:1fr 1fr;}
+  .pay-charts .card:first-child{grid-column:1 / -1;}
+}
+@media (min-width:1000px){
+  .pay-grid{grid-template-columns:repeat(4,1fr);}
+  .pay-grid .stat-tile .num{font-size:30px;}
+  .pay-charts{grid-template-columns:1.4fr 1fr 1fr; gap:0 16px;}
+  .pay-charts .card:first-child{grid-column:auto;}
+  .plist-head,.prow,.plist-total{display:grid; grid-template-columns:minmax(0,2.2fr) 1fr 1fr 1fr 1fr minmax(0,1.9fr); gap:12px; align-items:center;}
+  .plist-head{padding:0 12px 8px; font-size:11px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
+  .prow .crow-who{grid-column:auto;}
+  .prow .pchips{grid-column:auto;}
+  .plist-total{padding:12px 12px 0; margin-top:4px; border-top:1px solid var(--border); font-weight:800; font-size:14px; font-variant-numeric:tabular-nums;}
+  .plist-total span:first-child{color:var(--text-muted); font-size:12.5px;}
+  .owner-content.tab-pagos{max-width:none;}
+  .owner-content.tab-pagos > .card{padding:22px 24px;}
+}
+@media (min-width:1000px) and (max-width:1279px){
+  .pay-charts{grid-template-columns:1fr 1fr;}
+  .pay-charts .card:first-child{grid-column:1 / -1;}
+}

@@ -11,7 +11,10 @@
     weekCursor: toISO(new Date()),
     clientDetail: null,      // clave del cliente cuya ficha se está viendo
     clientQuery: "",
-    clientSort: "turnos"
+    clientSort: "turnos",
+    payRange: "mes",
+    paySort: "pagado",
+    payQuery: ""
   };
 
   function render(){
@@ -25,6 +28,7 @@
     var t = session.ownerTab;
     if(t==="agenda" || t==="saldos") renderOwner();
     else if(t==="clientes" && document.activeElement !== document.getElementById("inpClientSearch")) renderOwner();
+    else if(t==="pagos" && document.activeElement !== document.getElementById("inpPaySearch")) renderOwner();
   };
 
   // inició o cerró sesión (Firebase Authentication)
@@ -47,6 +51,7 @@
       '<div class="owner-nav-scroll"><div class="owner-nav">' +
         navBtn("agenda","Agenda", unseen) +
         navBtn("clientes","Clientes") +
+        navBtn("pagos","Pagos") +
         navBtn("horarios","Horarios") +
         navBtn("cierres","Cierres") +
         navBtn("negocio","Negocio", needsSetup() ? "!" : 0) +
@@ -64,6 +69,7 @@
     else if(session.ownerTab==="negocio") html += ownerNegocio();
     else if(session.ownerTab==="precios") html += ownerPrecios();
     else if(session.ownerTab==="clientes") html += ownerClientes();
+    else if(session.ownerTab==="pagos") html += ownerPagos();
     else if(session.ownerTab==="config") html += ownerConfig();
     else html += ownerSaldos();
     html += '</div>';
@@ -83,6 +89,7 @@
     else if(session.ownerTab==="negocio") bindNegocioEvents();
     else if(session.ownerTab==="precios") bindPreciosEvents();
     else if(session.ownerTab==="clientes") bindClientesEvents();
+    else if(session.ownerTab==="pagos") bindPagosEvents();
     else if(session.ownerTab==="config") bindConfigEvents();
     else bindSaldosEvents();
   }
@@ -681,16 +688,18 @@
   // Junta los perfiles (cuentas) con las reservas de cada uno. La clave es el id de la cuenta (cid) o, en reservas viejas, el mail.
   function emailKey(s){ return String(s || "").trim().toLowerCase(); }
 
-  function allClients(){
+  // pred (opcional): se queda solo con las reservas que cumplen (ej. las de un período); los saldos pendientes no dependen de eso
+  function allClients(pred){
     var map = {}, byEmail = {};
     ownerClientProfiles().forEach(function(p){
-      map[p.uid] = {key: p.uid, profile: p, bookings: []};
+      map[p.uid] = {key: p.uid, profile: p, bookings: [], clientKeys: {}};
       if(p.email) byEmail[emailKey(p.email)] = p.uid;
     });
     state.bookings.forEach(function(b){
       var k = b.cid && map[b.cid] ? b.cid : (byEmail[emailKey(b.email)] || b.cid || emailKey(b.email) || b.clientKey);
-      if(!map[k]) map[k] = {key: k, profile: {uid: k, name: b.name, lastname: b.lastname, nickname: b.nickname, phone: b.phone, email: b.email}, bookings: []};
-      map[k].bookings.push(b);
+      if(!map[k]) map[k] = {key: k, profile: {uid: k, name: b.name, lastname: b.lastname, nickname: b.nickname, phone: b.phone, email: b.email}, bookings: [], clientKeys: {}};
+      if(b.clientKey) map[k].clientKeys[b.clientKey] = 1;
+      if(!pred || pred(b)) map[k].bookings.push(b);
     });
     return Object.keys(map).map(function(k){ return clientStats(map[k]); });
   }
@@ -718,16 +727,17 @@
       gap = Math.round(sum / (dates.length - 1));
     }
 
-    var keys = {};
-    c.bookings.forEach(function(b){ if(b.clientKey) keys[b.clientKey] = 1; });
-    var debtKeys = Object.keys(keys).filter(function(k){ return !!state.debts[k]; });
+    var debtKeys = Object.keys(c.clientKeys || {}).filter(function(k){ return !!state.debts[k]; });
 
     c.turnos = valid.length;
     c.done = c.bookings.filter(function(b){ return b.status === "completed"; }).length;
     c.cancelled = c.bookings.length - valid.length;
     c.last = past.length ? past[past.length - 1] : null;
     c.next = upcoming.length ? upcoming[0] : null;
-    c.spent = valid.filter(function(b){ return b.paid; }).reduce(function(s, b){ return s + amount(b); }, 0);
+    var paidList = valid.filter(function(b){ return b.paid; });
+    c.paidCount = paidList.length;
+    c.sealPaid = paidList.reduce(function(s, b){ return s + (b.debtCharged || 0); }, 0);
+    c.spent = paidList.reduce(function(s, b){ return s + amount(b); }, 0);
     c.toCollect = past.filter(function(b){ return !b.paid; }).reduce(function(s, b){ return s + amount(b); }, 0);
     c.debtKeys = debtKeys;
     c.debt = debtKeys.length * currentPenalty();
@@ -920,6 +930,224 @@
     });
     document.querySelectorAll("[data-settle]").forEach(function(el){
       el.onclick = function(){ settleDebt(el.getAttribute("data-settle")); };
+    });
+  }
+
+  // ================= PAGOS =================
+  var PAY_RANGES = [
+    {id: "mes",     label: "Este mes"},
+    {id: "mesprev", label: "Mes anterior"},
+    {id: "30d",     label: "Últimos 30 días"},
+    {id: "90d",     label: "Últimos 90 días"},
+    {id: "anio",    label: "Este año"},
+    {id: "todo",    label: "Todo"}
+  ];
+  var PAY_METHOD_NAMES = {local: "En el local", transfer: "Transferencia", mp: "Mercado Pago"};
+  var DOW_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
+  function monthBounds(y, m){   // m = 0..11 (puede salirse de rango: se normaliza)
+    var first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
+    return {from: toISO(first), to: toISO(last)};
+  }
+
+  // períodos para comparar: el elegido y el anterior equivalente
+  function payBounds(id){
+    var now = new Date(), today = toISO(now), y = now.getFullYear(), m = now.getMonth(), cur, prev = null;
+    // el mes en curso se compara con el mismo tramo (mismos días transcurridos) del mes anterior, no con el mes entero
+    if(id === "mes"){
+      cur = monthBounds(y, m); prev = monthBounds(y, m - 1);
+      var pm = fromISO(prev.from), plast = new Date(pm.getFullYear(), pm.getMonth() + 1, 0).getDate();
+      prev.to = toISO(new Date(pm.getFullYear(), pm.getMonth(), Math.min(now.getDate(), plast)));
+    }
+    else if(id === "mesprev"){ cur = monthBounds(y, m - 1); prev = monthBounds(y, m - 2); }
+    else if(id === "30d"){ cur = {from: addDays(today, -29), to: today}; prev = {from: addDays(today, -59), to: addDays(today, -30)}; }
+    else if(id === "90d"){ cur = {from: addDays(today, -89), to: today}; prev = {from: addDays(today, -179), to: addDays(today, -90)}; }
+    else if(id === "anio"){ cur = {from: y + "-01-01", to: y + "-12-31"}; prev = {from: (y - 1) + "-01-01", to: toISO(new Date(y - 1, m, now.getDate()))}; }
+    else cur = {from: "0000-01-01", to: "9999-12-31"};
+    return {cur: cur, prev: prev, today: today};
+  }
+
+  function inRange(b, r){ return b.date >= r.from && b.date <= r.to; }
+  function bTotal(b){ return b.price + (b.debtCharged || 0); }
+
+  // totales de un conjunto de turnos
+  function paySummary(list, today){
+    var s = {paid: 0, cortes: 0, senas: 0, count: 0, toCollect: 0, toCollectCount: 0, byMethod: {local: 0, transfer: 0, mp: 0}, byDow: [0, 0, 0, 0, 0, 0, 0]};
+    list.forEach(function(b){
+      if(b.status === "cancelled") return;
+      if(b.paid){
+        s.paid += bTotal(b); s.cortes += b.price; s.senas += (b.debtCharged || 0); s.count++;
+        s.byMethod[b.payMethod || "local"] = (s.byMethod[b.payMethod || "local"] || 0) + bTotal(b);
+        s.byDow[fromISO(b.date).getDay()] += bTotal(b);
+      } else if(b.date <= today){
+        s.toCollect += bTotal(b); s.toCollectCount++;
+      }
+    });
+    return s;
+  }
+
+  function pctChange(now, before){
+    if(!before) return null;
+    return Math.round((now - before) * 100 / before);
+  }
+
+  function payTile(num, lbl, sub, cls){
+    return '<div class="stat-tile pay-tile'+(cls ? ' '+cls : '')+'"><div class="num">'+num+'</div><div class="lbl">'+lbl+'</div>'+(sub ? '<div class="pay-sub">'+sub+'</div>' : '')+'</div>';
+  }
+
+  // barras verticales: items = [{label, a, b}] (a = cortes, b = señas) apiladas
+  function barChart(items, unit){
+    var max = 0;
+    items.forEach(function(it){ max = Math.max(max, it.a + (it.b || 0)); });
+    if(!max) return '<div class="empty-note">Todavía no hay pagos para mostrar.</div>';
+    return '<div class="bars">' + items.map(function(it){
+      var tot = it.a + (it.b || 0), h = Math.round(tot * 100 / max), hb = tot ? Math.round((it.b || 0) * 100 / tot) : 0;
+      return '<div class="bar-col" title="'+esc(it.label)+': '+money(tot)+(it.b ? ' (señas '+money(it.b)+')' : '')+'">' +
+        '<span class="bar-val">'+(tot ? money(tot).replace(/\.000$/, "k") : '')+'</span>' +
+        '<span class="bar-stack" style="height:calc((100% - 38px) * '+(Math.max(h, tot ? 3 : 0) / 100)+')">' +
+          (it.b ? '<i class="bar-seal" style="height:'+hb+'%"></i>' : '') + '<i class="bar-main" style="height:'+(100 - hb)+'%"></i></span>' +
+        '<span class="bar-lbl">'+esc(it.label)+'</span></div>';
+    }).join("") + '</div>';
+  }
+
+  function methodBars(byMethod, total){
+    var keys = ["local", "transfer", "mp"];
+    if(!total) return '<div class="empty-note">Todavía no hay pagos para mostrar.</div>';
+    return '<div class="hbars">' + keys.map(function(k){
+      var v = byMethod[k] || 0, p = Math.round(v * 100 / total);
+      return '<div class="hbar"><div class="hbar-top"><span>'+PAY_METHOD_NAMES[k]+'</span><b>'+money(v)+' <small>'+p+'%</small></b></div>' +
+        '<span class="hbar-track"><i class="hbar-fill m-'+k+'" style="width:'+Math.max(p, v ? 2 : 0)+'%"></i></span></div>';
+    }).join("") + '</div>';
+  }
+
+  function payChips(c){
+    var chips = [];
+    if(c.paidCount && !c.toCollect) chips.push('<span class="pchip ok">Pagado</span>');
+    if(c.sealPaid) chips.push('<span class="pchip seal">Seña cobrada</span>');
+    if(c.debt) chips.push('<span class="pchip warn">Señado · pendiente</span>');
+    if(c.toCollect) chips.push('<span class="pchip due">Por cobrar</span>');
+    return chips.length ? chips.join("") : '<span class="pchip none">Sin pagos</span>';
+  }
+
+  function ownerPagos(){
+    var b = payBounds(session.payRange), today = b.today;
+    var inCur = state.bookings.filter(function(x){ return inRange(x, b.cur); });
+    var cur = paySummary(inCur, today);
+    var prev = b.prev ? paySummary(state.bookings.filter(function(x){ return inRange(x, b.prev); }), today) : null;
+    var delta = prev ? pctChange(cur.paid, prev.paid) : null;
+
+    var pendingSeals = Object.keys(state.debts).length, pendingSealAmt = pendingSeals * currentPenalty();
+    var totalDue = cur.paid + cur.toCollect;
+    var collectRate = totalDue ? Math.round(cur.paid * 100 / totalDue) : 0;
+    var avg = cur.count ? Math.round(cur.paid / cur.count) : 0;
+
+    var html = '<div class="chips pay-ranges">' + PAY_RANGES.map(function(r){
+      return '<button type="button" class="chip'+(session.payRange === r.id ? ' on' : '')+'" data-prange="'+r.id+'">'+r.label+'</button>';
+    }).join("") + '</div>';
+
+    html += '<div class="stat-grid pay-grid">' +
+      payTile(money(cur.paid), 'Cobrado', delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs '+(session.payRange === 'mes' || session.payRange === 'anio' ? 'mismo tramo anterior' : 'período anterior')+'</span>', 'pay-main') +
+      payTile(money(cur.cortes), 'Cortes cobrados', cur.count + ' turnos pagados') +
+      payTile(money(cur.senas), 'Señas cobradas', 'sumadas a turnos pagados') +
+      payTile(money(cur.toCollect), 'Por cobrar', cur.toCollectCount + ' turnos ya realizados sin pagar', cur.toCollect ? 'is-warn' : '') +
+      payTile(money(pendingSealAmt), 'Señas pendientes', pendingSeals + (pendingSeals === 1 ? ' cliente' : ' clientes') + ' por cancelar el mismo día', pendingSeals ? 'is-warn' : '') +
+      payTile(money(avg), 'Ticket promedio', 'por turno pagado') +
+      payTile(collectRate + '%', 'Tasa de cobro', 'cobrado sobre lo que ya correspondía') +
+      payTile(String(cur.count), 'Turnos cobrados', inCur.filter(function(x){ return x.status === "cancelled"; }).length + ' cancelados en el período') +
+      '</div>';
+
+    // evolución de los últimos 6 meses (no depende del período elegido)
+    var now = new Date(), months = [];
+    for(var i = 5; i >= 0; i--){
+      var mb = monthBounds(now.getFullYear(), now.getMonth() - i), md = fromISO(mb.from);
+      var sm = paySummary(state.bookings.filter(function(x){ return inRange(x, mb); }), today);
+      months.push({label: MONTHS[md.getMonth()].slice(0, 3), a: sm.cortes, b: sm.senas});
+    }
+    var dows = [1, 2, 3, 4, 5, 6, 0].map(function(d){ return {label: DOW_SHORT[d], a: cur.byDow[d], b: 0}; });
+
+    html += '<div class="pay-charts">' +
+      '<div class="card"><h2>Cobrado por mes</h2><div class="sub">Últimos 6 meses · <i class="lg lg-main"></i>cortes <i class="lg lg-seal"></i>señas</div>' + barChart(months) + '</div>' +
+      '<div class="card"><h2>Medios de pago</h2><div class="sub">Cómo pagan en el período elegido</div>' + methodBars(cur.byMethod, cur.paid) + '</div>' +
+      '<div class="card"><h2>Por día de la semana</h2><div class="sub">Cuándo se cobra más</div>' + barChart(dows) + '</div>' +
+      '</div>';
+
+    // detalle por persona
+    var all = allClients(function(x){ return inRange(x, b.cur); });
+    var q = session.payQuery.trim().toLowerCase();
+    var list = all.filter(function(c){
+      if(q){
+        var p = c.profile, hay = (p.name + " " + p.lastname + " " + (p.nickname || "") + " " + (p.email || "")).toLowerCase();
+        return hay.indexOf(q) >= 0 || (digitsOnly(q).length >= 3 && digitsOnly(p.phone).indexOf(digitsOnly(q)) >= 0);
+      }
+      return c.paidCount || c.toCollect || c.debt || c.sealPaid;
+    });
+    html += '<div class="card"><h2>Pagos por persona</h2><div class="sub">Qué pagó, qué señó y qué debe cada cliente en el período elegido (las señas pendientes son las de hoy)</div>' +
+      '<input type="text" id="inpPaySearch" placeholder="Buscar por nombre, teléfono o mail" value="'+esc(session.payQuery)+'" autocomplete="off">' +
+      '<div class="chips">' + [{id: "pagado", l: "Más pagó"}, {id: "debe", l: "Más debe"}, {id: "nombre", l: "A–Z"}].map(function(s){
+        return '<button type="button" class="chip'+(session.paySort === s.id ? ' on' : '')+'" data-psort="'+s.id+'">'+s.l+'</button>';
+      }).join("") + '</div>' +
+      '<div id="payList">' + payListHtml(list) + '</div></div>';
+    return html;
+  }
+
+  function payListHtml(list){
+    var s = session.paySort;
+    list = list.slice().sort(function(a, b){
+      if(s === "nombre") return a.sortName < b.sortName ? -1 : 1;
+      if(s === "debe") return ((b.debt + b.toCollect) - (a.debt + a.toCollect)) || (b.spent - a.spent);
+      return (b.spent - a.spent) || (b.paidCount - a.paidCount);
+    });
+    if(!list.length) return '<div class="empty-note">No hay pagos para ese período o búsqueda.</div>';
+    var tot = list.reduce(function(t, c){ t.spent += c.spent; t.seal += c.sealPaid; t.debt += c.debt; t.due += c.toCollect; return t; }, {spent: 0, seal: 0, debt: 0, due: 0});
+    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Seña cobrada</span><span>Seña pendiente</span><span>Por cobrar</span><span>Estado</span></div>' +
+      list.map(function(c){
+        var p = c.profile;
+        return '<button type="button" class="prow" data-pclient="'+esc(c.key)+'">' +
+          '<span class="crow-who">'+clientAvatar(p, "sm")+'<span class="crow-txt"><b>'+esc(p.name)+' '+esc(p.lastname)+'</b>' +
+            (p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '') + '<i>'+c.paidCount+' '+(c.paidCount === 1 ? 'turno pagado' : 'turnos pagados')+'</i></span></span>' +
+          '<span class="crow-c" data-l="Pagado">'+money(c.spent)+'</span>' +
+          '<span class="crow-c" data-l="Seña cobrada">'+(c.sealPaid ? money(c.sealPaid) : '—')+'</span>' +
+          '<span class="crow-c" data-l="Seña pendiente">'+(c.debt ? '<span class="owe">'+money(c.debt)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Por cobrar">'+(c.toCollect ? '<span class="owe">'+money(c.toCollect)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c pchips" data-l="Estado">'+payChips(c)+'</span></button>';
+      }).join("") +
+      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.seal)+'</span><span>'+money(tot.debt)+'</span><span>'+money(tot.due)+'</span><span></span></div>';
+  }
+
+  function bindPagosEvents(){
+    document.querySelectorAll("[data-prange]").forEach(function(el){
+      el.onclick = function(){ session.payRange = el.getAttribute("data-prange"); renderOwner(); };
+    });
+    document.querySelectorAll("[data-psort]").forEach(function(el){
+      el.onclick = function(){ session.paySort = el.getAttribute("data-psort"); renderOwner(); };
+    });
+    var bindRows = function(root){
+      root.querySelectorAll("[data-pclient]").forEach(function(el){
+        el.onclick = function(){ session.ownerTab = "clientes"; session.clientDetail = el.getAttribute("data-pclient"); renderOwner(); window.scrollTo(0, 0); };
+      });
+    };
+    bindRows(document);
+    var search = document.getElementById("inpPaySearch");
+    if(search) search.oninput = function(){
+      session.payQuery = search.value;
+      renderOwnerPaysList();
+    };
+  }
+  // vuelve a dibujar solo la lista (sin perder el foco del buscador)
+  function renderOwnerPaysList(){
+    var box = document.getElementById("payList");
+    if(!box) return;
+    var b = payBounds(session.payRange), q = session.payQuery.trim().toLowerCase();
+    var list = allClients(function(x){ return inRange(x, b.cur); }).filter(function(c){
+      if(q){
+        var p = c.profile, hay = (p.name + " " + p.lastname + " " + (p.nickname || "") + " " + (p.email || "")).toLowerCase();
+        return hay.indexOf(q) >= 0 || (digitsOnly(q).length >= 3 && digitsOnly(p.phone).indexOf(digitsOnly(q)) >= 0);
+      }
+      return c.paidCount || c.toCollect || c.debt || c.sealPaid;
+    });
+    box.innerHTML = payListHtml(list);
+    box.querySelectorAll("[data-pclient]").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = "clientes"; session.clientDetail = el.getAttribute("data-pclient"); renderOwner(); window.scrollTo(0, 0); };
     });
   }
 
