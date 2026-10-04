@@ -415,6 +415,14 @@ function saveClientProfile(p){
   });
 }
 
+// "Mis turnos" del cliente. Local: sus reservas guardadas en este navegador. cloud.js las reemplaza por Firestore.
+function watchMyTurnos(phone, email){}
+function stopWatchTurnos(){}
+function myTurnos(phone, email){
+  var d = digitsOnly(phone), m = String(email || "").trim().toLowerCase();
+  return state.bookings.filter(function(b){ return digitsOnly(b.phone) === d && String(b.email || "").trim().toLowerCase() === m; });
+}
+
 // ---------- booking ops ----------
 function activeDebtFor(key){ return state.debts[key] || null; }
 function currentPenalty(){ return Math.round(state.config.price/2); }

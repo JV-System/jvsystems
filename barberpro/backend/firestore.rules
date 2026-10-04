@@ -9,6 +9,7 @@ rules_version = '2';
 //  - bookings/{id}    la reserva completa (nombre, teléfono, mail): el cliente solo puede CREARLA; leerla es del dueño.
 //  - clients/{hash}   ficha del cliente registrado (nombre, apodo, teléfono, mail). El id es un hash del teléfono + mail, así que solo
 //                     se puede abrir sabiendo los dos datos; no se puede listar. Sirve para "Iniciar sesión" desde otro celular.
+//  - clients/{hash}/turnos/{id}  copia resumida de cada reserva del cliente (fecha, hora, precio, estado) para "Mis turnos".
 //  - debtFlags/{key}  aviso de "tiene un saldo pendiente": se consulta de a uno (get), no se puede listar.
 //  - debts/{key}      detalle de saldos pendientes: solo el dueño.
 //
@@ -64,7 +65,7 @@ service cloud.firestore {
 
     function validBooking(bid, d) {
       return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
-                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey'])
+                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey', 'cid'])
           && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey'])
           && d.id == bid
@@ -84,6 +85,7 @@ service cloud.firestore {
           && d.createdAt is number
           && (!('seenByOwner' in d) || d.seenByOwner == false)
           && isStr(d.clientKey, 80)
+          && (!('cid' in d) || (isStr(d.cid, 64) && d.cid.matches('^[0-9a-f]{64}$')))
           // la reserva tiene que venir junto con la marca de horario ocupado (se escriben en un mismo lote)
           && existsAfter(/databases/$(database)/documents/slots/$(slotId(d)));
     }
@@ -107,6 +109,30 @@ service cloud.firestore {
       allow update: if validClient(request.resource.data)
                     && request.resource.data.phone == resource.data.phone
                     && request.resource.data.email == resource.data.email;
+    }
+
+    // ---------- "mis turnos" del cliente ----------
+    // copia resumida de cada reserva (sin nombre, teléfono ni mail) bajo la ficha del cliente: el cliente la crea junto con la
+    // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). Se lee sabiendo el id de la ficha.
+    function validTurno(tid, d) {
+      return d.keys().hasOnly(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
+          && d.keys().hasAll(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
+          && d.id == tid
+          && validDate(d.date) && validTime(d.time)
+          && d.price is number && d.price > 0 && d.price <= 10000000
+          && d.debtCharged is number && d.debtCharged >= 0 && d.debtCharged <= d.price
+          && d.payMethod in ['local', 'transfer', 'mp']
+          && d.paid == false
+          && d.status == 'confirmed'
+          && d.createdAt is number;
+    }
+
+    match /clients/{id}/turnos/{tid} {
+      allow read: if true;
+      allow create: if isOwner()
+                    || (id.matches('^[0-9a-f]{64}$') && validTurno(tid, request.resource.data)
+                        && existsAfter(/databases/$(database)/documents/bookings/$(tid)));
+      allow update, delete: if isOwner();
     }
 
     // ---------- saldos pendientes ----------

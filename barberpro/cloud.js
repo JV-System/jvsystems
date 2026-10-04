@@ -62,13 +62,41 @@
 
   // ---------- el cliente reserva ----------
   // reserva + marca de horario ocupado en un mismo lote; si alguien tomó el horario antes, Firestore lo rechaza
+  // además se guarda una copia resumida bajo la ficha del cliente (clients/{id}/turnos) para su lista "Mis turnos"
+  function turnoCopy(b){
+    return {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
+            paid: b.paid, status: b.status, createdAt: b.createdAt};
+  }
   persistBooking = function(b){
-    var batch = db.batch();
-    batch.set(db.doc("slots/" + slotDocId(b)), {date: b.date, time: b.time, bid: b.id});
-    batch.set(db.doc("bookings/" + b.id), b);
-    if(b.debtCharged > 0) batch.update(db.doc("debtFlags/" + docKey(b.clientKey)), {chargedBy: b.id});   // el saldo ya se sumó a este turno
-    return batch.commit().then(function(){ return b; });
+    return clientDocId(b.phone, b.email).catch(function(){ return null; }).then(function(cid){
+      var batch = db.batch();
+      if(cid) b.cid = cid;
+      batch.set(db.doc("slots/" + slotDocId(b)), {date: b.date, time: b.time, bid: b.id});
+      batch.set(db.doc("bookings/" + b.id), b);
+      if(cid) batch.set(db.doc("clients/" + cid + "/turnos/" + b.id), turnoCopy(b));
+      if(b.debtCharged > 0) batch.update(db.doc("debtFlags/" + docKey(b.clientKey)), {chargedBy: b.id});   // el saldo ya se sumó a este turno
+      return batch.commit().then(function(){ return b; });
+    });
   };
+
+  // "Mis turnos": el cliente ve sus reservas y el estado en vivo (el dueño actualiza la copia al cancelar / completar / cobrar)
+  var unsubTurnos = null;
+  state.myTurnos = [];
+  stopWatchTurnos = function(){
+    if(unsubTurnos){ try{ unsubTurnos(); }catch(e){} unsubTurnos = null; }
+    state.myTurnos = [];
+  };
+  watchMyTurnos = function(phone, email){
+    stopWatchTurnos();
+    clientDocId(phone, email).then(function(cid){
+      unsubTurnos = db.collection("clients/" + cid + "/turnos").onSnapshot(function(snap){
+        var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
+        state.myTurnos = arr;
+        hooks.refresh();
+      }, function(e){ console.error("turnos", e); });
+    }).catch(function(e){ console.error("turnos", e); });
+  };
+  myTurnos = function(){ return state.myTurnos.slice(); };
 
   // ¿tiene un saldo pendiente? (se consulta de a uno; no se pueden listar)
   loadDebtFlag = function(key){
@@ -153,8 +181,27 @@
     return db.doc("config/main").set(out).catch(function(e){ fail(e, "No se pudo guardar. ¿Iniciaste sesión como dueño?"); });
   };
 
+  // referencia a la copia "Mis turnos" de una reserva (las reservas viejas no traen cid: se calcula)
+  function turnoRefFor(b){
+    var p = b.cid ? Promise.resolve(b.cid) : clientDocId(b.phone, b.email);
+    return p.then(function(cid){ return db.doc("clients/" + cid + "/turnos/" + b.id); }).catch(function(){ return null; });
+  }
+  // cambios que el cliente tiene que ver reflejados en su lista
+  function turnoPatch(patch){
+    var out = {}, any = false;
+    ["status", "paid"].forEach(function(k){ if(patch[k] !== undefined){ out[k] = patch[k]; any = true; } });
+    return any ? out : null;
+  }
+
   updateBooking = function(id, patch){
-    return db.doc("bookings/" + id).update(patch).catch(function(e){ fail(e); });
+    var b = state.bookings.filter(function(x){ return x.id === id; })[0], tp = turnoPatch(patch);
+    if(!b || !tp) return db.doc("bookings/" + id).update(patch).catch(function(e){ fail(e); });
+    return turnoRefFor(b).then(function(ref){
+      var batch = db.batch();
+      batch.update(db.doc("bookings/" + id), patch);
+      if(ref) batch.set(ref, Object.assign(turnoCopy(b), tp), {merge: true});
+      return batch.commit();
+    }).catch(function(e){ fail(e); });
   };
 
   markAllSeen = function(){
@@ -169,15 +216,18 @@
     var b = state.bookings.filter(function(x){ return x.id === id; })[0];
     if(!b) return;
     var penalized = (b.date === toISO(new Date()) && b.status === "confirmed");
-    var batch = db.batch();
-    batch.update(db.doc("bookings/" + id), {status: "cancelled"});
-    batch.delete(db.doc("slots/" + slotDocId(b)));                    // el horario vuelve a quedar libre
-    if(penalized){
-      var k = docKey(b.clientKey);
-      batch.set(db.doc("debts/" + k), {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now()});
-      batch.set(db.doc("debtFlags/" + k), {since: Date.now()});
-    }
-    batch.commit().then(function(){
+    turnoRefFor(b).then(function(ref){
+      var batch = db.batch();
+      batch.update(db.doc("bookings/" + id), {status: "cancelled"});
+      if(ref) batch.set(ref, Object.assign(turnoCopy(b), {status: "cancelled"}), {merge: true});
+      batch.delete(db.doc("slots/" + slotDocId(b)));                    // el horario vuelve a quedar libre
+      if(penalized){
+        var k = docKey(b.clientKey);
+        batch.set(db.doc("debts/" + k), {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now()});
+        batch.set(db.doc("debtFlags/" + k), {since: Date.now()});
+      }
+      return batch.commit();
+    }).then(function(){
       showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
     }).catch(function(e){ fail(e); });
   };
@@ -193,9 +243,13 @@
 
   resetAllData = function(){
     var names = ["bookings", "slots", "debts", "debtFlags"];
-    return Promise.all(names.map(function(n){ return db.collection(n).get(); })).then(function(snaps){
+    var turnos = db.collection("clients").get().then(function(cs){
+      return Promise.all(cs.docs.map(function(c){ return c.ref.collection("turnos").get(); }));
+    });
+    return Promise.all(names.map(function(n){ return db.collection(n).get(); }).concat([turnos])).then(function(snaps){
       var refs = [];
-      snaps.forEach(function(s){ s.forEach(function(d){ refs.push(d.ref); }); });
+      snaps.slice(0, names.length).forEach(function(s){ s.forEach(function(d){ refs.push(d.ref); }); });
+      snaps[names.length].forEach(function(s){ s.forEach(function(d){ refs.push(d.ref); }); });
       var jobs = [];
       for(var i = 0; i < refs.length; i += 400){
         var batch = db.batch();

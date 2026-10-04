@@ -70,6 +70,10 @@ function renderClient(){
   main.innerHTML = html;
   bindClientEvents();
   initPlaceMap();
+  if(client.registered){
+    var wkey = digitsOnly(client.phone) + "|" + client.email.toLowerCase();
+    if(client.watching !== wkey){ client.watching = wkey; watchMyTurnos(client.phone, client.email); }
+  }
   if(CLOUD && client.registered){
     var dkey = clientKeyOf(client.name, client.lastname, client.phone);
     if(!state.debtFlagsLoaded[dkey]){ state.debtFlagsLoaded[dkey] = true; loadDebtFlag(dkey); }
@@ -191,6 +195,35 @@ function calendarHtml(){
   '</div>';
 }
 
+// ---------- mis turnos ----------
+var TURNO_STATE = {confirmed:"Confirmado", completed:"Realizado", cancelled:"Cancelado"};
+
+function turnoRow(t){
+  var past = t.date < toISO(new Date()) && t.status === "confirmed";
+  var label = past ? "Pasado" : (TURNO_STATE[t.status] || t.status);
+  var total = t.price + (t.debtCharged || 0);
+  var pay = t.status === "cancelled" ? "" : (t.paid ? '<span class="paystate ok">Pagado</span>' : '<span class="paystate pend">Pago pendiente</span>');
+  return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
+    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' +
+      '<span class="myt-sub">'+money(total)+' · '+payMethodLabel(t.payMethod)+(pay ? ' · ' : '')+pay+'</span></div>' +
+    '<span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span></div>';
+}
+
+function misTurnosHtml(){
+  var today = toISO(new Date());
+  var all = myTurnos(client.phone, client.email);
+  if(!all.length) return "";
+  var next = all.filter(function(t){ return t.status === "confirmed" && t.date >= today; })
+    .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+  var hist = all.filter(function(t){ return next.indexOf(t) < 0; })
+    .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? 1 : -1; });
+  return '<div class="myt">' +
+    '<div class="myt-title">Tus turnos</div>' +
+    (next.length ? next.map(turnoRow).join("") : '<div class="field-hint" style="margin:0 0 8px;">No tenés turnos próximos.</div>') +
+    (hist.length ? '<details class="myt-hist"><summary>Historial ('+hist.length+')</summary>' + hist.slice(0, 10).map(turnoRow).join("") + '</details>' : '') +
+    '</div>';
+}
+
 function stepFecha(){
   var cal = calendarHtml();
 
@@ -218,6 +251,7 @@ function stepFecha(){
     '<div class="hello"><div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div>' +
     '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mis datos</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
+    misTurnosHtml() +
     cal +
     slotsHtml +
     '</div>' +
@@ -391,6 +425,7 @@ function copyText(text){
 function logoutClient(){
   askConfirm("Salir", "Vas a tener que volver a registrarte para reservar. Los turnos que ya reservaste no se borran.", function(){
     try{ localStorage.removeItem(PROFILE_KEY); }catch(e){}
+    stopWatchTurnos(); client.watching = null;
     client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = "";
     client.registered = false; client.step = 0;
     client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";

@@ -433,3 +433,14 @@ a.btn{text-decoration:none;}
 .cal-legend span{display:inline-flex; align-items:center; gap:5px;}
 .cal-legend .dot{width:7px; height:7px; border-radius:50%; display:inline-block;}
 .cal-legend .dot.none{background:var(--surface-3); border:1px solid var(--border);}
+
+/* mis turnos (cliente) */
+.myt{margin:4px 0 16px; padding-bottom:14px; border-bottom:1px solid var(--border, rgba(255,255,255,.08));}
+.myt-title{font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;}
+.myt-row{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--surface-3); border-radius:12px; padding:10px 12px; margin-bottom:8px;}
+.myt-row.off{opacity:.6;}
+.myt-main{display:flex; flex-direction:column; gap:2px; min-width:0; font-size:14px;}
+.myt-main b{font-weight:700;}
+.myt-sub{font-size:12px; color:var(--text-muted);}
+.myt-hist{margin-top:4px;}
+.myt-hist summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--text-muted); padding:6px 0 10px;}
