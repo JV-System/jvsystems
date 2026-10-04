@@ -34,6 +34,12 @@
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
                      "payAlias","payHolder","payMpLink","payMpLinks","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
 
+  // movimiento suelto (ej. "recordatorio enviado"); los turnos de ejemplo no se registran en la base
+  logMovement = function(b, type, text){
+    if(b.isExample) return Promise.resolve();
+    return db.collection("movements").add(moveEntry(b, type, text)).catch(function(e){ console.error("movimiento", e); });
+  };
+
   // agrega al lote un registro de movimiento (quién, cuándo y qué pasó con un turno)
   function moveSet(batch, b, type, text, extra){
     batch.set(db.collection("movements").doc(), moveEntry(b, type, text, extra));

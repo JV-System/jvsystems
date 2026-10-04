@@ -70,7 +70,7 @@ function activeBarbers(){ return teamList().filter(function(m){ return m.active 
 // ---------- movimientos ----------
 // Cada cosa que pasa con un turno deja un registro (quién, cuándo, qué). Las pantallas definen quién actúa con `actor`.
 var actor = function(){ return {role: "owner", name: ""}; };
-var MOVE_TYPES = {reserva: "Reserva", pago: "Pago", completado: "Completado", cancelacion: "Cancelación", suspension: "Suspendido", cambio_dia: "Cambio de día", transferencia: "Transferencia"};
+var MOVE_TYPES = {reserva: "Reserva", pago: "Pago", completado: "Completado", cancelacion: "Cancelación", suspension: "Suspendido", cambio_dia: "Cambio de día", transferencia: "Transferencia", recordatorio: "Recordatorio"};
 function moveEntry(b, type, text, extra){
   var a = actor();
   var who = b.name ? (String(b.name) + " " + String(b.lastname || "")).trim() : String(a.name || "");
@@ -80,6 +80,12 @@ function moveEntry(b, type, text, extra){
   return m;
 }
 // versión local: se guarda en este navegador (cloud.js escribe el registro en Firestore, dentro del mismo lote que la acción)
+// deja un movimiento suelto en el registro (ej. "recordatorio enviado"). cloud.js lo reemplaza por Firestore.
+function logMovement(b, type, text){
+  logMove(b, type, text);
+  saveState();
+  return Promise.resolve();
+}
 function logMove(b, type, text, extra){
   state.movements = state.movements || [];
   state.movements.push(moveEntry(b, type, text, extra));
@@ -1001,7 +1007,7 @@ function waNumber(phone){
 function reminderText(b){
   var c = state.config;
   return "Hola " + (b.nickname || b.name) + "! Te recordamos que mañana " + formatDateLong(b.date) + " a las " + b.time +
-    " hs tenés turno en " + c.businessName + (c.address ? " (" + c.address + ")" : "") +
+    " hs tenés turno" + (activeBarbers().length > 1 && b.barberName ? " con " + b.barberName : "") + " en " + c.businessName + (c.address ? " (" + c.address + ")" : "") +
     ". Si no podés venir, avisanos con tiempo: cancelar el mismo día tiene una seña del 50%. ¡Te esperamos!";
 }
 function reminderWaLink(b){ return "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(reminderText(b)); }

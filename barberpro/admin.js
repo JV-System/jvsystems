@@ -304,13 +304,14 @@
     var pending = list.filter(function(b){ return !b.reminded; }).length;
     return '<div class="card remind-card"><h2>Recordatorios de mañana</h2>' +
       '<div class="sub">'+(pending ? pending+' sin avisar de '+list.length : 'Todos avisados')+' · tocá para mandar el mensaje listo</div>' +
+      '<button class="btn btn-primary" type="button" data-remind-all="1" style="margin-bottom:10px;">'+(pending ? 'Enviar recordatorios a todos ('+pending+')' : 'Volver a enviar a todos')+'</button>' +
       list.map(function(b){
         var who = esc(b.name)+' '+esc(b.lastname);
         return '<div class="remind-row'+(b.reminded?' done':'')+'">' +
           '<div class="remind-who"><b>'+b.time+'</b> '+who+(b.reminded?' <span class="remind-ok">✓ avisado</span>':'')+'</div>' +
           '<div class="remind-btns">' +
-            (b.phone ? '<a class="btn btn-wa btn-sm" data-remind="'+b.id+'" href="'+reminderWaLink(b)+'" target="_blank" rel="noopener">WhatsApp</a>' : '') +
-            (b.email ? '<a class="btn btn-ghost btn-sm" data-remind="'+b.id+'" href="'+reminderMailLink(b)+'">Mail</a>' : '') +
+            (b.phone ? '<a class="btn btn-wa btn-sm" data-remind="'+b.id+'" data-rch="wa" href="'+reminderWaLink(b)+'" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+            (b.email ? '<a class="btn btn-ghost btn-sm" data-remind="'+b.id+'" data-rch="mail" href="'+reminderMailLink(b)+'">Mail</a>' : '') +
             (!b.phone && !b.email ? '<span class="remind-none">sin contacto</span>' : '') +
           '</div></div>';
       }).join('') + '</div>';
@@ -569,13 +570,7 @@
     document.querySelectorAll(".agendaViewBtn").forEach(function(el){
       el.onclick = function(){ session.agendaView = el.getAttribute("data-v"); renderOwner(); };
     });
-    document.querySelectorAll("[data-remind]").forEach(function(el){
-      el.addEventListener("click", function(){
-        var id = el.getAttribute("data-remind");
-        var b = state.bookings.filter(function(x){ return x.id===id; })[0];
-        if(b && !b.reminded) updateBooking(id, {reminded: true});
-      });
-    });
+    bindReminders();
     bindPayActions();
     document.querySelectorAll("[data-complete]").forEach(function(el){
       el.onclick = function(){ completeBooking(el.getAttribute("data-complete")); };
@@ -1918,12 +1913,7 @@
         askConfirm("Cancelar turno", "¿Cancelar este turno? Si es el mismo día, se aplican las reglas de seña y cargo.", function(){ cancelBooking(id); });
       };
     });
-    document.querySelectorAll("[data-remind]").forEach(function(el){
-      el.addEventListener("click", function(){
-        var id = el.getAttribute("data-remind"), b = findBooking(id);
-        if(b && !b.reminded) updateBooking(id, {reminded: true});
-      });
-    });
+    bindReminders();
     document.querySelectorAll("[data-seen]").forEach(function(el){ el.onclick = function(){ markAllSeen(); renderOwner(); }; });
   }
 
@@ -1978,7 +1968,8 @@
     {id: "cancel", label: "Cancelaciones", types: ["cancelacion", "suspension"]},
     {id: "cambio", label: "Cambios de día", types: ["cambio_dia"]},
     {id: "reserva", label: "Reservas", types: ["reserva"]},
-    {id: "completado", label: "Completados", types: ["completado"]}
+    {id: "completado", label: "Completados", types: ["completado"]},
+    {id: "recordatorio", label: "Recordatorios", types: ["recordatorio"]}
   ];
   var MOVE_ROLE = {owner: "Dueño", staff: "Empleado", client: "Cliente"};
 
@@ -2026,6 +2017,94 @@
     });
     var s = document.getElementById("inpMoveSearch");
     if(s) s.oninput = function(){ session.moveQuery = s.value; document.getElementById("moveList").innerHTML = movesHtml(visibleMovements()); };
+  }
+
+  // ================= RECORDATORIOS: ENVÍO GUIADO =================
+  // Un solo botón arma la cola de recordatorios de mañana (WhatsApp y/o mail). Ningún navegador puede mandar un WhatsApp o un mail por sí
+  // solo (eso requiere un servicio de pago), así que cada paso abre el mensaje ya escrito con un toque y la app lo va marcando como avisado
+  // y dejándolo en el registro de movimientos. Quien manda solo toca "Enviar" en WhatsApp o en su mail.
+  function markReminded(id, channel){
+    var b = findBooking(id);
+    if(!b) return;
+    logMovement(b, "recordatorio", "Recordatorio enviado por " + (channel === "wa" ? "WhatsApp" : "mail"));
+    if(!b.reminded) updateBooking(id, {reminded: true});
+  }
+
+  function bindReminders(){
+    document.querySelectorAll("[data-remind]").forEach(function(el){
+      el.addEventListener("click", function(){ markReminded(el.getAttribute("data-remind"), el.getAttribute("data-rch")); });
+    });
+    document.querySelectorAll("[data-remind-all]").forEach(function(el){ el.onclick = remindFlow; });
+  }
+
+  var rem = null;       // estado del envío guiado: {steps, i, sent, clients}
+
+  function remindOverlay(){
+    var ov = document.getElementById("remindOverlay");
+    if(!ov){
+      ov = document.createElement("div"); ov.id = "remindOverlay"; ov.className = "modal-overlay";
+      ov.innerHTML = '<div class="modal-box remind-box" id="remindBox"></div>';
+      document.body.appendChild(ov);
+    }
+    return ov;
+  }
+  function closeRemind(){ remindOverlay().classList.remove("show"); rem = null; renderOwner(); }
+
+  function remindFlow(){
+    var all = tomorrowBookings();
+    if(!all.length){ showToast("No hay turnos mañana."); return; }
+    var todo = all.filter(function(b){ return !b.reminded; });
+    var repeat = !todo.length;
+    if(repeat) todo = all;
+    rem = {todo: todo, steps: [], i: 0, sent: 0, done: {}};
+    var nWa = todo.filter(function(b){ return b.phone; }).length, nMail = todo.filter(function(b){ return b.email; }).length;
+    var box = document.getElementById("remindBox") || (remindOverlay(), document.getElementById("remindBox"));
+    box.innerHTML = '<h3>Enviar recordatorios de mañana</h3>' +
+      '<p>'+(repeat ? 'Todos ya estaban avisados: se manda de nuevo a los ' : 'Faltan avisar ')+todo.length+(todo.length === 1 ? ' cliente' : ' clientes')+'. Elegí por dónde:</p>' +
+      '<label class="checkline"><input type="checkbox" id="rmWa" '+(nWa ? 'checked' : 'disabled')+'><span>WhatsApp ('+nWa+')</span></label>' +
+      '<label class="checkline"><input type="checkbox" id="rmMail" '+(nMail ? 'checked' : 'disabled')+'><span>Mail ('+nMail+')</span></label>' +
+      '<div class="field-hint" style="margin:2px 0 12px;">Te voy abriendo cada mensaje ya escrito, uno por uno: solo tocás Enviar en WhatsApp o en tu mail. Lo que mandes queda marcado como avisado.</div>' +
+      '<div class="btn-row"><button class="btn btn-ghost" id="rmCancel">Cancelar</button><button class="btn btn-primary" id="rmStart">Empezar</button></div>';
+    remindOverlay().classList.add("show");
+    document.getElementById("rmCancel").onclick = closeRemind;
+    document.getElementById("rmStart").onclick = function(){
+      var wa = document.getElementById("rmWa").checked, mail = document.getElementById("rmMail").checked;
+      if(!wa && !mail){ showToast("Elegí WhatsApp, mail o los dos."); return; }
+      todo.forEach(function(b){
+        if(wa && b.phone) rem.steps.push({b: b, ch: "wa"});
+        if(mail && b.email) rem.steps.push({b: b, ch: "mail"});
+      });
+      if(!rem.steps.length){ showToast("Esos clientes no tienen ese dato de contacto."); return; }
+      remindStep();
+    };
+  }
+
+  function remindStep(){
+    var box = document.getElementById("remindBox");
+    if(!rem) return;
+    if(rem.i >= rem.steps.length){
+      var clients = Object.keys(rem.done).length;
+      box.innerHTML = '<h3>¡Listo!</h3><p>Mandaste '+rem.sent+(rem.sent === 1 ? ' recordatorio' : ' recordatorios')+' a '+clients+(clients === 1 ? ' cliente' : ' clientes')+'. Quedaron marcados como avisados y registrados en Movimientos.</p>' +
+        '<button class="btn btn-primary" id="rmEnd">Cerrar</button>';
+      document.getElementById("rmEnd").onclick = closeRemind;
+      return;
+    }
+    var st = rem.steps[rem.i], b = st.b, wa = st.ch === "wa", n = rem.steps.length;
+    var href = wa ? reminderWaLink(b) : reminderMailLink(b);
+    box.innerHTML = '<div class="rm-progress"><i style="width:'+Math.round(rem.i * 100 / n)+'%"></i></div>' +
+      '<div class="rm-step">Paso '+(rem.i + 1)+' de '+n+'</div>' +
+      '<h3>'+(wa ? 'WhatsApp' : 'Mail')+' a '+esc(b.name)+' '+esc(b.lastname)+'</h3>' +
+      '<p><b>'+b.time+' hs</b>'+(activeBarbers().length > 1 && barberNameOf(b) ? ' · con '+esc(barberNameOf(b)) : '')+' · '+esc(wa ? b.phone : b.email)+'</p>' +
+      '<div class="rm-preview">'+esc(reminderText(b))+'</div>' +
+      '<a class="btn '+(wa ? 'btn-wa' : 'btn-primary')+'" id="rmGo" href="'+esc(href)+'" target="_blank" rel="noopener">'+(wa ? 'Abrir WhatsApp y enviar' : 'Abrir mail y enviar')+'</a>' +
+      '<div class="btn-row" style="margin-top:10px;"><button class="btn btn-ghost" id="rmSkip">Saltar</button><button class="btn btn-ghost" id="rmStop">Cerrar</button></div>';
+    document.getElementById("rmGo").onclick = function(){
+      markReminded(b.id, st.ch);
+      rem.sent++; rem.done[b.id] = 1; rem.i++;
+      setTimeout(remindStep, 350);            // el mensaje se abre en otra pestaña o app; acá pasa al siguiente
+    };
+    document.getElementById("rmSkip").onclick = function(){ rem.i++; remindStep(); };
+    document.getElementById("rmStop").onclick = closeRemind;
   }
 
   // ================= CONFIGURACIÓN =================

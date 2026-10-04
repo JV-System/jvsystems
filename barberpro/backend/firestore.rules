@@ -98,7 +98,7 @@ service cloud.firestore {
           && d.keys().hasAll(['bid', 'barbers', 'clientName', 'date', 'time', 'type', 'text', 'at', 'byRole', 'byName'])
           && isStr(d.bid, 40) && d.barbers is list && d.barbers.size() >= 1 && d.barbers.size() <= 2
           && isStr(d.clientName, 130) && validDate(d.date) && validTime(d.time)
-          && d.type in ['reserva', 'pago', 'completado', 'cancelacion', 'suspension', 'cambio_dia', 'transferencia']
+          && d.type in ['reserva', 'pago', 'completado', 'cancelacion', 'suspension', 'cambio_dia', 'transferencia', 'recordatorio']
           && isStr(d.text, 220) && d.at is number && d.byRole in ['owner', 'staff', 'client'] && isStr(d.byName, 60)
           && (!('fromName' in d) || isStr(d.fromName, 60)) && (!('toName' in d) || isStr(d.toName, 60));
     }
