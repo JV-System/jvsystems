@@ -485,6 +485,12 @@ function bindPwEyes(){
   });
 }
 
+// perfiles de los clientes para el panel del dueño (local: las cuentas de este navegador; cloud.js los trae de Firestore)
+function ownerClientProfiles(){
+  var m = localAccounts();
+  return Object.keys(m).map(function(k){ return withUid(m[k].profile); });
+}
+
 // "Tus turnos" del cliente. Local: sus reservas guardadas en este navegador. cloud.js las reemplaza por Firestore.
 function watchMyTurnos(profile){}
 function stopWatchTurnos(){}

@@ -461,3 +461,114 @@ a.btn{text-decoration:none;}
 .avatar-btns{display:flex; flex-wrap:wrap; gap:8px;}
 .link-btn.plain{border:none; background:none; color:var(--text-muted); text-decoration:underline; font-weight:600;}
 input[readonly]{opacity:.7;}
+
+/* ---------- panel del dueño en escritorio ---------- */
+.agenda-layout{display:block;}
+.booking-list{display:block;}
+
+@media (min-width:1000px){
+  .app-admin{max-width:1320px; padding-bottom:48px;}
+  .app-admin .adminbar{padding:14px 32px;}
+  .app-admin .adminlogo{width:44px; height:44px;}
+  .app-admin .adminbar-biz{font-size:24px;}
+  .app-admin #main{padding:0 32px;}
+
+  /* acceso: tarjeta centrada */
+  .app-admin #main:not(.is-owner) > .lockcard{max-width:440px; margin:72px auto 0;}
+
+  /* menú lateral + contenido */
+  #main.is-owner{display:grid; grid-template-columns:210px minmax(0,1fr); gap:32px; align-items:start; margin-top:24px;}
+  #main.is-owner .owner-nav-row{position:sticky; top:84px; flex-direction:column; align-items:stretch; gap:14px; margin:0;}
+  #main.is-owner .owner-nav-scroll::after{display:none;}
+  #main.is-owner .owner-nav{flex-direction:column; overflow:visible; gap:6px;}
+  #main.is-owner .owner-nav button{display:flex; justify-content:space-between; align-items:center; text-align:left; font-size:14px; padding:12px 16px; border-radius:12px;}
+  #main.is-owner .btn-logout{font-size:14px; padding:11px 16px; border-radius:12px; text-align:left;}
+  #main.is-owner .owner-content{min-width:0;}
+
+  /* formularios (horarios, cierres, negocio, precios, saldos): ancho cómodo, en dos columnas cuando hay varias tarjetas */
+  .owner-content:not(.tab-agenda){max-width:920px;}
+  .owner-content:not(.tab-agenda) .card{padding:22px 24px;}
+
+  /* agenda: vistas a la izquierda, resumen y recordatorios a la derecha */
+  .agenda-layout{display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:28px; align-items:start;}
+  .agenda-main{grid-column:1; grid-row:1; min-width:0;}
+  .agenda-side{grid-column:2; grid-row:1; position:sticky; top:84px;}
+  .agenda-side .stat-tile .num{font-size:34px;}
+  .agenda-subnav{max-width:520px;}
+
+  /* Gantt semanal: ocupa todo el ancho, sin deslizar, y toma el alto de la pantalla */
+  .gantt{min-width:0;}
+  .gantt-row{grid-template-columns:70px repeat(7,1fr);}
+  .gantt-wrap{max-height:calc(100vh - 290px); min-height:420px;}
+  .gantt-outer::after{display:none;}
+  .gantt-hint{display:none;}
+  .gantt-cell{min-height:34px;}
+  .gantt-time{font-size:11.5px; padding:9px 8px;}
+  .gantt-col-head{font-size:11px; padding:10px 2px;}
+  .gantt-col-head span{font-size:15px;}
+  .gantt-name{font-size:11px;}
+
+  /* día: los turnos en dos columnas */
+  .booking-list{display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start;}
+  .booking-list > *{margin:0;}
+
+  /* mes: casillas más anchas que altas */
+  .month-grid{gap:8px;}
+  .month-cell{aspect-ratio:1.5;}
+  .month-cell .dn{font-size:17px;}
+}
+
+@media (min-width:1400px){
+  .agenda-layout{grid-template-columns:minmax(0,1fr) 360px;}
+  #main.is-owner{grid-template-columns:230px minmax(0,1fr);}
+}
+
+/* ---------- clientes (panel del dueño) ---------- */
+.stat-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:16px;}
+.avatar.sm{width:36px; height:36px; font-size:15px;}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 14px;}
+.chip{background:var(--surface-2); border:1px solid var(--border); color:var(--text-muted); font-family:inherit; font-weight:700; font-size:12.5px; padding:7px 13px; border-radius:999px; cursor:pointer;}
+.chip.on{background:var(--surface-3); color:var(--text); border-color:var(--accent-2);}
+
+.rank{display:flex; flex-direction:column; gap:8px;}
+.rank-row{display:flex; align-items:center; gap:10px; width:100%; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:9px 12px; cursor:pointer; color:var(--text); font-family:inherit; text-align:left;}
+.rank-row:hover,.crow:hover{border-color:var(--accent-2);}
+.rank-pos{font-family:'Anton',sans-serif; font-size:18px; width:20px; text-align:center; color:var(--text-faint);}
+.rank-row:first-child .rank-pos{color:var(--warn);}
+.rank-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;}
+.rank-name{font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.rank-bar{display:block; height:6px; background:var(--surface-3); border-radius:999px; overflow:hidden;}
+.rank-bar i{display:block; height:100%; background:var(--accent-grad); border-radius:999px;}
+.rank-n{font-family:'Anton',sans-serif; font-size:20px; min-width:28px; text-align:right;}
+
+.clist-head{display:none;}
+.crow{display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; width:100%; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:11px 12px; margin-bottom:8px; cursor:pointer; color:var(--text); font-family:inherit; text-align:left;}
+.crow-who{grid-column:1 / -1; display:flex; align-items:center; gap:10px; min-width:0;}
+.crow-txt{display:flex; flex-direction:column; min-width:0; font-size:14px;}
+.crow-txt b{font-weight:700;}
+.crow-txt i{font-style:normal; font-size:12px; color:var(--text-faint); font-weight:600;}
+.crow-c{font-size:13px; font-weight:700; font-variant-numeric:tabular-nums;}
+.crow-c::before{content:attr(data-l); display:block; font-size:10px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
+.crow-c small{color:var(--text-faint); font-weight:600;}
+.owe{color:var(--warn);}
+
+.cdetail-head{display:flex; align-items:center; gap:16px;}
+.cdetail-who{min-width:0; flex:1;}
+.cdetail-who h2{margin-bottom:2px;}
+.hist-row{display:grid; grid-template-columns:1fr auto; gap:6px 10px; align-items:center; padding:11px 0; border-top:1px solid var(--border-soft);}
+.hist-row:first-child{border-top:none;}
+.hist-row.off{opacity:.6;}
+.hist-when{font-size:14px;}
+.hist-pay{grid-column:1 / -1; font-size:12.5px; color:var(--text-muted); font-weight:600;}
+.hist-row .btn{grid-column:1 / -1; justify-self:start;}
+
+@media (min-width:1000px){
+  .stat-grid{grid-template-columns:repeat(6,1fr);}
+  .stat-grid .stat-tile .num{font-size:26px;}
+  .clist-head,.crow{display:grid; grid-template-columns:minmax(0,2.4fr) .8fr 1.1fr 1fr 1fr; gap:12px; align-items:center;}
+  .clist-head{padding:0 12px 8px; font-size:11px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
+  .crow-who{grid-column:auto;}
+  .crow-c::before{display:none;}
+  .owner-content.tab-clientes{max-width:none;}
+  .owner-content.tab-clientes > .card{padding:22px 24px;}
+}

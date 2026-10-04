@@ -8,7 +8,10 @@
     agendaView: "dia",
     agendaDate: toISO(new Date()),
     monthCursor: toISO(new Date()),
-    weekCursor: toISO(new Date())
+    weekCursor: toISO(new Date()),
+    clientDetail: null,      // clave del cliente cuya ficha se está viendo
+    clientQuery: "",
+    clientSort: "turnos"
   };
 
   function render(){
@@ -18,7 +21,10 @@
   // un cliente reservó desde otra pestaña: refrescar la agenda sin pisar formularios abiertos
   hooks.refresh = function(){
     applyBranding("Administración");
-    if(session.ownerAuthed && (session.ownerTab==="agenda" || session.ownerTab==="saldos")) renderOwner();
+    if(!session.ownerAuthed) return;
+    var t = session.ownerTab;
+    if(t==="agenda" || t==="saldos") renderOwner();
+    else if(t==="clientes" && document.activeElement !== document.getElementById("inpClientSearch")) renderOwner();
   };
 
   // inició o cerró sesión (Firebase Authentication)
@@ -29,6 +35,7 @@
 
   function renderOwner(){
     var main = document.getElementById("main");
+    main.className = session.ownerAuthed ? "is-owner" : "";
     if(!session.ownerAuthed){
       main.innerHTML = ownerLogin();
       bindOwnerLogin();
@@ -39,24 +46,31 @@
     var html = '<div class="owner-nav-row">' +
       '<div class="owner-nav-scroll"><div class="owner-nav">' +
         navBtn("agenda","Agenda", unseen) +
+        navBtn("clientes","Clientes") +
         navBtn("horarios","Horarios") +
         navBtn("cierres","Cierres") +
         navBtn("negocio","Negocio", needsSetup() ? "!" : 0) +
         navBtn("precios","Precios") +
         navBtn("saldos","Saldos", Object.keys(state.debts).length) +
+        navBtn("config","Configuración") +
       '</div></div>' +
       '<button class="btn-logout" id="btnLogout">Salir</button>' +
       '</div>';
 
+    html += '<div class="owner-content tab-' + session.ownerTab + '">';
     if(session.ownerTab==="agenda") html += ownerAgenda();
     else if(session.ownerTab==="horarios") html += ownerHorarios();
     else if(session.ownerTab==="cierres") html += ownerCierres();
     else if(session.ownerTab==="negocio") html += ownerNegocio();
     else if(session.ownerTab==="precios") html += ownerPrecios();
+    else if(session.ownerTab==="clientes") html += ownerClientes();
+    else if(session.ownerTab==="config") html += ownerConfig();
     else html += ownerSaldos();
+    html += '</div>';
 
     main.innerHTML = html;
     bindOwnerNav();
+    bindPwEyes();
 
     if(session.ownerTab==="agenda"){
       markAllSeen();
@@ -65,6 +79,8 @@
     else if(session.ownerTab==="cierres") bindCierresEvents();
     else if(session.ownerTab==="negocio") bindNegocioEvents();
     else if(session.ownerTab==="precios") bindPreciosEvents();
+    else if(session.ownerTab==="clientes") bindClientesEvents();
+    else if(session.ownerTab==="config") bindConfigEvents();
     else bindSaldosEvents();
   }
 
@@ -167,7 +183,7 @@
 
   function bindOwnerNav(){
     document.querySelectorAll(".ownerNavBtn").forEach(function(el){
-      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); renderOwner(); };
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); session.clientDetail = null; renderOwner(); };
     });
     var lo = document.getElementById("btnLogout");
     if(lo) lo.onclick = function(){
@@ -181,7 +197,7 @@
     var todays = state.bookings.filter(function(b){ return b.date===todayISO && b.status!=="cancelled"; });
     var toCollect = todays.filter(function(b){ return !b.paid; }).reduce(function(s,b){ return s + b.price + (b.debtCharged||0); }, 0);
 
-    var html = '<div class="stat-row">' +
+    var html = '<div class="agenda-layout"><aside class="agenda-side"><div class="stat-row">' +
       '<div class="stat-tile"><div class="num">'+todays.length+'</div><div class="lbl">Turnos hoy</div></div>' +
       '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' +
       '</div>';
@@ -192,6 +208,7 @@
     }
 
     html += reminderCard();
+    html += '</aside><section class="agenda-main">';
 
     html += '<div class="agenda-subnav">' +
       ['dia','semana','mes'].map(function(v){
@@ -203,7 +220,7 @@
     else if(session.agendaView==="semana") html += agendaSemana();
     else html += agendaMes();
 
-    return html;
+    return html + '</section></div>';
   }
 
   // turnos de mañana: un toque por cliente abre WhatsApp o el mail con el recordatorio ya escrito
@@ -241,7 +258,7 @@
     if(list.length===0){
       html += '<div class="empty-note">Sin turnos este día'+(isDayFullyClosed(iso)?' · Local cerrado':'')+'.</div>';
     } else {
-      html += list.map(bookingRow).join("");
+      html += '<div class="booking-list">' + list.map(bookingRow).join("") + '</div>';
     }
     return html;
   }
@@ -616,6 +633,306 @@
     document.querySelectorAll("[data-settle]").forEach(function(el){
       el.onclick = function(){ settleDebt(el.getAttribute("data-settle")); };
     });
+  }
+
+  // ================= CLIENTES =================
+  // Junta los perfiles (cuentas) con las reservas de cada uno. La clave es el id de la cuenta (cid) o, en reservas viejas, el mail.
+  function emailKey(s){ return String(s || "").trim().toLowerCase(); }
+
+  function allClients(){
+    var map = {}, byEmail = {};
+    ownerClientProfiles().forEach(function(p){
+      map[p.uid] = {key: p.uid, profile: p, bookings: []};
+      if(p.email) byEmail[emailKey(p.email)] = p.uid;
+    });
+    state.bookings.forEach(function(b){
+      var k = b.cid && map[b.cid] ? b.cid : (byEmail[emailKey(b.email)] || b.cid || emailKey(b.email) || b.clientKey);
+      if(!map[k]) map[k] = {key: k, profile: {uid: k, name: b.name, lastname: b.lastname, nickname: b.nickname, phone: b.phone, email: b.email}, bookings: []};
+      map[k].bookings.push(b);
+    });
+    return Object.keys(map).map(function(k){ return clientStats(map[k]); });
+  }
+
+  function mostFrequent(list){
+    var c = {}, best = null;
+    list.forEach(function(x){ c[x] = (c[x] || 0) + 1; if(best === null || c[x] > c[best]) best = x; });
+    return best;
+  }
+
+  function clientStats(c){
+    var today = toISO(new Date());
+    var valid = c.bookings.filter(function(b){ return b.status !== "cancelled"; });
+    var past = valid.filter(function(b){ return b.date <= today; }).sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+    var upcoming = valid.filter(function(b){ return b.date > today || (b.date === today && b.status === "confirmed"); })
+      .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
+    var amount = function(b){ return b.price + (b.debtCharged || 0); };
+
+    var dates = [], seen = {};
+    past.forEach(function(b){ if(!seen[b.date]){ seen[b.date] = 1; dates.push(b.date); } });
+    var gap = null;
+    if(dates.length >= 2){
+      var sum = 0;
+      for(var i = 1; i < dates.length; i++) sum += (fromISO(dates[i]) - fromISO(dates[i - 1])) / 86400000;
+      gap = Math.round(sum / (dates.length - 1));
+    }
+
+    var keys = {};
+    c.bookings.forEach(function(b){ if(b.clientKey) keys[b.clientKey] = 1; });
+    var debtKeys = Object.keys(keys).filter(function(k){ return !!state.debts[k]; });
+
+    c.turnos = valid.length;
+    c.done = c.bookings.filter(function(b){ return b.status === "completed"; }).length;
+    c.cancelled = c.bookings.length - valid.length;
+    c.last = past.length ? past[past.length - 1] : null;
+    c.next = upcoming.length ? upcoming[0] : null;
+    c.spent = valid.filter(function(b){ return b.paid; }).reduce(function(s, b){ return s + amount(b); }, 0);
+    c.toCollect = past.filter(function(b){ return !b.paid; }).reduce(function(s, b){ return s + amount(b); }, 0);
+    c.debtKeys = debtKeys;
+    c.debt = debtKeys.length * currentPenalty();
+    c.gap = gap;
+    c.favPay = mostFrequent(valid.map(function(b){ return b.payMethod || "local"; }));
+    c.favTime = mostFrequent(valid.map(function(b){ return b.time; }));
+    c.sortName = (c.profile.name + " " + c.profile.lastname).toLowerCase();
+    return c;
+  }
+
+  function clientAvatar(p, size){
+    var cls = "avatar" + (size ? " " + size : "");
+    if(p.photo) return '<img class="'+cls+'" src="'+esc(p.photo)+'" alt="">';
+    return '<span class="'+cls+'">'+esc(((p.nickname || p.name || "?") + "").trim().charAt(0).toUpperCase())+'</span>';
+  }
+
+  function shortDate(iso){
+    var d = fromISO(iso);
+    return d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3).toLowerCase() + " " + String(d.getFullYear()).slice(2);
+  }
+
+  var CLIENT_SORTS = [
+    {id: "turnos", label: "Más turnos"},
+    {id: "ultimo", label: "Última visita"},
+    {id: "gasto",  label: "Más gastó"},
+    {id: "deuda",  label: "Con deuda"},
+    {id: "nombre", label: "A–Z"}
+  ];
+
+  function sortClients(list){
+    var s = session.clientSort;
+    return list.slice().sort(function(a, b){
+      if(s === "nombre") return a.sortName < b.sortName ? -1 : 1;
+      if(s === "ultimo") return ((b.last ? b.last.date : "") < (a.last ? a.last.date : "")) ? -1 : ((b.last ? b.last.date : "") > (a.last ? a.last.date : "") ? 1 : 0);
+      if(s === "gasto") return (b.spent - a.spent) || (b.turnos - a.turnos);
+      if(s === "deuda") return ((b.debt + b.toCollect) - (a.debt + a.toCollect)) || (b.turnos - a.turnos);
+      return (b.turnos - a.turnos) || (b.done - a.done) || (a.sortName < b.sortName ? -1 : 1);
+    });
+  }
+
+  function filterClients(list){
+    var q = session.clientQuery.trim().toLowerCase();
+    if(!q) return list;
+    var qd = digitsOnly(q);
+    return list.filter(function(c){
+      var p = c.profile;
+      var hay = (p.name + " " + p.lastname + " " + (p.nickname || "") + " " + (p.email || "")).toLowerCase();
+      return hay.indexOf(q) >= 0 || (qd.length >= 3 && digitsOnly(p.phone).indexOf(qd) >= 0);
+    });
+  }
+
+  function ownerClientes(){
+    if(session.clientDetail){
+      var one = allClients().filter(function(c){ return c.key === session.clientDetail; })[0];
+      if(one) return clienteDetalle(one);
+      session.clientDetail = null;
+    }
+    var all = allClients();
+    var turnosTot = all.reduce(function(s, c){ return s + c.turnos; }, 0);
+    var cancTot = all.reduce(function(s, c){ return s + c.cancelled; }, 0);
+    var facturado = all.reduce(function(s, c){ return s + c.spent; }, 0);
+    var conDeuda = all.filter(function(c){ return c.debt > 0 || c.toCollect > 0; }).length;
+    var recurrentes = all.filter(function(c){ return c.turnos >= 2; }).length;
+
+    var top = all.filter(function(c){ return c.turnos > 0; }).sort(function(a, b){ return (b.turnos - a.turnos) || (b.done - a.done); }).slice(0, 5);
+    var max = top.length ? top[0].turnos : 1;
+
+    var html = '<div class="stat-grid">' +
+      '<div class="stat-tile"><div class="num">'+all.length+'</div><div class="lbl">Clientes</div></div>' +
+      '<div class="stat-tile"><div class="num">'+turnosTot+'</div><div class="lbl">Turnos (sin cancelados)</div></div>' +
+      '<div class="stat-tile"><div class="num">'+money(facturado)+'</div><div class="lbl">Cobrado en total</div></div>' +
+      '<div class="stat-tile"><div class="num">'+recurrentes+'</div><div class="lbl">Vuelven (2+ turnos)</div></div>' +
+      '<div class="stat-tile"><div class="num">'+conDeuda+'</div><div class="lbl">Con deuda o por cobrar</div></div>' +
+      '<div class="stat-tile"><div class="num">'+(turnosTot + cancTot ? Math.round(cancTot * 100 / (turnosTot + cancTot)) : 0)+'%</div><div class="lbl">Cancelaciones</div></div>' +
+      '</div>';
+
+    html += '<div class="card"><h2>Los que más se cortan</h2><div class="sub">Ranking por cantidad de turnos (sin contar cancelados)</div>' +
+      (top.length ? '<div class="rank">' + top.map(function(c, i){
+        return '<button class="rank-row" type="button" data-client="'+esc(c.key)+'">' +
+          '<span class="rank-pos">'+(i + 1)+'</span>' + clientAvatar(c.profile, "sm") +
+          '<span class="rank-body"><span class="rank-name">'+esc(c.profile.name)+' '+esc(c.profile.lastname)+'</span>' +
+          '<span class="rank-bar"><i style="width:'+Math.max(6, Math.round(c.turnos * 100 / max))+'%"></i></span></span>' +
+          '<span class="rank-n">'+c.turnos+'</span></button>';
+      }).join("") + '</div>' : '<div class="empty-note">Todavía no hay turnos para armar el ranking.</div>') +
+      '</div>';
+
+    html += '<div class="card"><h2>Lista de clientes</h2>' +
+      '<input type="text" id="inpClientSearch" placeholder="Buscar por nombre, teléfono o mail" value="'+esc(session.clientQuery)+'" autocomplete="off">' +
+      '<div class="chips">' + CLIENT_SORTS.map(function(s){
+        return '<button type="button" class="chip'+(session.clientSort === s.id ? ' on' : '')+'" data-csort="'+s.id+'">'+s.label+'</button>';
+      }).join("") + '</div>' +
+      '<div id="clientList">'+clientListHtml(all)+'</div></div>';
+    return html;
+  }
+
+  function clientListHtml(all){
+    var list = sortClients(filterClients(all || allClients()));
+    if(!list.length) return '<div class="empty-note">'+(session.clientQuery ? 'Ningún cliente coincide con la búsqueda.' : 'Todavía no hay clientes registrados.')+'</div>';
+    return '<div class="clist-head"><span>Cliente</span><span>Turnos</span><span>Última visita</span><span>Cobrado</span><span>Deuda</span></div>' +
+      list.map(function(c){
+        var p = c.profile, owes = c.debt + c.toCollect;
+        return '<button type="button" class="crow" data-client="'+esc(c.key)+'">' +
+          '<span class="crow-who">'+clientAvatar(p, "sm")+'<span class="crow-txt"><b>'+esc(p.name)+' '+esc(p.lastname)+'</b>' +
+            (p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '') +
+            '<i>'+esc(p.phone || p.email || "")+'</i></span></span>' +
+          '<span class="crow-c" data-l="Turnos">'+c.turnos+(c.cancelled ? ' <small>('+c.cancelled+' canc.)</small>' : '')+'</span>' +
+          '<span class="crow-c" data-l="Última visita">'+(c.last ? shortDate(c.last.date) : (c.next ? 'Próximo '+shortDate(c.next.date) : '—'))+'</span>' +
+          '<span class="crow-c" data-l="Cobrado">'+money(c.spent)+'</span>' +
+          '<span class="crow-c" data-l="Deuda">'+(owes ? '<span class="owe">'+money(owes)+'</span>' : '—')+'</span>' +
+          '</button>';
+      }).join("");
+  }
+
+  function clienteDetalle(c){
+    var p = c.profile;
+    var tile = function(n, l){ return '<div class="stat-tile"><div class="num">'+n+'</div><div class="lbl">'+l+'</div></div>'; };
+    var hist = c.bookings.slice().sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? 1 : -1; });
+    var line = function(k, v){ return v ? '<div class="summary-row"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>' : ''; };
+
+    var html = '<button class="link-btn" id="btnClientBack" type="button" style="margin-bottom:14px;">‹ Volver a clientes</button>' +
+      '<div class="card cdetail-head">' + clientAvatar(p, "lg") +
+        '<div class="cdetail-who"><h2>'+esc(p.name)+' '+esc(p.lastname)+(p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '')+'</h2>' +
+        '<div class="sub">'+(p.phone ? esc(p.phone)+' · ' : '')+esc(p.email || "")+'</div>' +
+        '<div class="cal-actions" style="justify-content:flex-start;">' +
+          (p.phone ? '<a class="btn btn-wa btn-sm" href="https://wa.me/'+waNumber(p.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+          (p.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(p.email)+'">Mail</a>' : '') +
+        '</div></div></div>';
+
+    html += '<div class="stat-grid">' +
+      tile(c.turnos, 'Turnos') + tile(c.done, 'Realizados') + tile(c.cancelled, 'Cancelados') +
+      tile(money(c.spent), 'Cobrado') + tile(money(c.toCollect), 'Por cobrar') + tile(money(c.debt), 'Deuda por cancelación') +
+      '</div>';
+
+    if(c.debtKeys.length){
+      html += '<div class="debt-item"><div><div class="n">Tiene una seña pendiente por cancelar el mismo día</div>' +
+        '<div class="cr" style="font-size:12px;color:var(--text-faint);">Se suma al próximo turno que reserve</div></div>' +
+        '<div style="text-align:right;"><div class="amt">'+money(c.debt)+'</div>' +
+        '<button class="btn btn-ghost btn-sm" style="margin-top:6px;" data-settle="'+esc(c.debtKeys[0])+'">Marcar pagado</button></div></div>';
+    }
+
+    html += '<div class="card"><h2>Hábitos</h2>' +
+      line('Última visita', c.last ? formatDateLong(c.last.date) + ' · ' + c.last.time + ' hs' : '') +
+      line('Próximo turno', c.next ? formatDateLong(c.next.date) + ' · ' + c.next.time + ' hs' : '') +
+      line('Cada cuánto viene', c.gap ? 'cada ' + c.gap + ' días' : '') +
+      line('Horario preferido', c.favTime ? c.favTime + ' hs' : '') +
+      line('Medio de pago habitual', c.favPay ? payMethodLabel(c.favPay) : '') +
+      (!c.turnos ? '<div class="empty-note">Todavía no reservó ningún turno.</div>' : '') +
+      '</div>';
+
+    html += '<div class="card"><h2>Historial de turnos</h2><div class="sub">'+hist.length+' en total</div>' +
+      (hist.length ? '<div class="hist">' + hist.map(function(b){
+        var label = b.status === "confirmed" ? "Confirmado" : b.status === "cancelled" ? "Cancelado" : "Completado";
+        var total = b.price + (b.debtCharged || 0);
+        return '<div class="hist-row'+(b.status === "cancelled" ? ' off' : '')+'">' +
+          '<div class="hist-when"><b>'+formatDateLong(b.date)+'</b> · '+b.time+' hs</div>' +
+          '<span class="badge '+b.status+'">'+label+'</span>' +
+          '<div class="hist-pay">'+money(total)+' · '+payMethodLabel(b.payMethod || "local") +
+            (b.status === "cancelled" ? '' : ' · <span class="paystate '+(b.paid ? 'ok' : 'pend')+'">'+(b.paid ? 'Pagado' : 'Pago pendiente')+'</span>') +
+            (b.debtCharged ? ' · <span class="debt-tag">incluye '+money(b.debtCharged)+' de seña</span>' : '') + '</div>' +
+          (b.status !== "cancelled" && !b.paid ? '<button class="btn btn-primary btn-sm" data-paid="'+b.id+'">Cobrado</button>' : '') +
+          '</div>';
+      }).join("") + '</div>' : '<div class="empty-note">Sin turnos.</div>') +
+      '</div>';
+    return html;
+  }
+
+  function bindClientRows(root){
+    (root || document).querySelectorAll("[data-client]").forEach(function(el){
+      el.onclick = function(){ session.clientDetail = el.getAttribute("data-client"); renderOwner(); window.scrollTo(0, 0); };
+    });
+  }
+
+  function bindClientesEvents(){
+    bindClientRows();
+    var back = document.getElementById("btnClientBack");
+    if(back) back.onclick = function(){ session.clientDetail = null; renderOwner(); };
+    var search = document.getElementById("inpClientSearch");
+    if(search) search.oninput = function(){
+      session.clientQuery = search.value;
+      var box = document.getElementById("clientList");
+      box.innerHTML = clientListHtml();
+      bindClientRows(box);
+    };
+    document.querySelectorAll("[data-csort]").forEach(function(el){
+      el.onclick = function(){ session.clientSort = el.getAttribute("data-csort"); renderOwner(); };
+    });
+    document.querySelectorAll("[data-paid]").forEach(function(el){
+      el.onclick = function(){ markPaid(el.getAttribute("data-paid")); };
+    });
+    document.querySelectorAll("[data-settle]").forEach(function(el){
+      el.onclick = function(){ settleDebt(el.getAttribute("data-settle")); };
+    });
+  }
+
+  // ================= CONFIGURACIÓN =================
+  function ownerConfig(){
+    var user = CLOUD && window.cloudAuth ? cloudAuth.user() : null;
+    var html = '<div class="card"><h2>Tu cuenta</h2>';
+    if(CLOUD){
+      html += '<div class="summary-row"><span class="k">Usuario</span><span class="v">'+esc(user ? user.email : "")+'</span></div>' +
+        '<div class="sub" style="margin-top:14px;">Cambiar contraseña</div>' +
+        '<label>Contraseña actual</label>' + pwField("inpPassCur", "Tu contraseña actual", "current-password") +
+        '<label>Contraseña nueva</label>' + pwField("inpPassNew", "Mínimo 6 caracteres", "new-password") +
+        '<label>Repetir contraseña nueva</label>' + pwField("inpPassNew2", "Repetila", "new-password") +
+        '<button class="btn btn-primary" id="btnChangePass">Cambiar contraseña</button>' +
+        '<div class="field-hint" style="margin-top:10px;">Si no te acordás de la actual, cerrá sesión y usá “Olvidé mi contraseña” en la pantalla de acceso.</div>';
+    } else {
+      html += '<div class="sub">Versión de prueba: se entra con un PIN. Podés cambiarlo en Precios → Acceso.</div>';
+    }
+    html += '</div>';
+
+    html += '<div class="card"><h2>Sesión</h2>' +
+      '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +
+      '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
+
+    html += '<div class="card"><h2>Más ajustes</h2>' +
+      '<div class="sub">Datos del local, horarios, precio y cierres se cambian desde sus secciones del menú.</div>' +
+      '<div class="cal-actions" style="justify-content:flex-start;">' +
+        '<button class="btn btn-ghost btn-sm" data-tab-go="negocio">Datos del local</button>' +
+        '<button class="btn btn-ghost btn-sm" data-tab-go="horarios">Horarios</button>' +
+        '<button class="btn btn-ghost btn-sm" data-tab-go="precios">Precio</button>' +
+        '<a class="btn btn-ghost btn-sm" href="index.html" target="_blank" rel="noopener">Ver la app del cliente</a>' +
+      '</div></div>';
+    return html;
+  }
+
+  function bindConfigEvents(){
+    var lo = document.getElementById("btnConfigLogout");
+    if(lo) lo.onclick = function(){ var b = document.getElementById("btnLogout"); if(b) b.click(); };
+    document.querySelectorAll("[data-tab-go]").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab-go"); renderOwner(); };
+    });
+    var cp = document.getElementById("btnChangePass");
+    if(cp) cp.onclick = function(){
+      var cur = document.getElementById("inpPassCur").value, nw = document.getElementById("inpPassNew").value, nw2 = document.getElementById("inpPassNew2").value;
+      if(!cur){ showToast("Escribí tu contraseña actual."); return; }
+      if(nw.length < 6){ showToast("La contraseña nueva tiene que tener al menos 6 caracteres."); return; }
+      if(nw !== nw2){ showToast("Las contraseñas nuevas no coinciden."); return; }
+      if(nw === cur){ showToast("La nueva tiene que ser distinta de la actual."); return; }
+      cp.disabled = true; cp.textContent = "Cambiando...";
+      cloudAuth.changePassword(cur, nw).then(function(){
+        showToast("Contraseña cambiada.");
+        ["inpPassCur", "inpPassNew", "inpPassNew2"].forEach(function(id){ document.getElementById(id).value = ""; });
+      }).catch(function(e){
+        showToast(e && (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") ? "La contraseña actual no es correcta." : authMessage(e));
+      }).then(function(){ cp.disabled = false; cp.textContent = "Cambiar contraseña"; });
+    };
   }
 
   render();

@@ -186,6 +186,11 @@
       state.bookings = arr;
       hooks.refresh();
     }, adminError));
+    unsubAdmin.push(db.collection("clients").onSnapshot(function(snap){
+      var arr = []; snap.forEach(function(d){ arr.push(Object.assign({uid: d.id}, d.data())); });
+      state.clients = arr;
+      hooks.refresh();
+    }, adminError));
     unsubAdmin.push(db.collection("debts").onSnapshot(function(snap){
       var m = {}; snap.forEach(function(d){ m[d.id] = d.data(); });
       state.debts = m;
@@ -217,8 +222,17 @@
       });
     },
     logout: function(){ return auth.signOut(); },
-    resetPassword: function(email){ return auth.sendPasswordResetEmail(email); }
+    resetPassword: function(email){ return auth.sendPasswordResetEmail(email); },
+    // cambiar la contraseña: se confirma primero la actual (Firebase lo exige para operaciones sensibles)
+    changePassword: function(current, next){
+      var u = auth.currentUser;
+      if(!u) return Promise.reject(authErr("auth/user-not-found"));
+      var cred = firebase.auth.EmailAuthProvider.credential(u.email, current);
+      return u.reauthenticateWithCredential(cred).then(function(){ return u.updatePassword(next); });
+    }
   };
+  state.clients = [];
+  ownerClientProfiles = function(){ return state.clients; };
 
   // en la nube lo único que se guarda "en bloque" es la configuración; las reservas se actualizan una por una
   saveState = function(){
