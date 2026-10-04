@@ -39,19 +39,19 @@ function buildBooking(){
   var key = myDebtKey();
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
+  var dep = depositFor(state.config.price);
   return {
     id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
-    payMethod:client.payMethod, paid:false,
+    payMethod:defaultPayMethod(), paid:false,
+    deposit:dep, depositState:dep > 0 ? "pending" : "paid", balanceState:"pending",
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
 }
 
 // clave del saldo pendiente del cliente: en la nube es el id de su cuenta
 function myDebtKey(){ return CLOUD ? client.uid : clientKeyOf(client.name, client.lastname, client.phone); }
-
-function bookingTotal(b){ return b.price + (b.debtCharged||0); }
 
 function buildWaLink(b){
   var msg = "Hola! Soy "+b.name+" "+b.lastname+(b.nickname?" ("+b.nickname+")":"")+". Reservé un turno en "+state.config.businessName+
@@ -228,10 +228,17 @@ function turnoRow(t){
   var past = t.date < toISO(new Date()) && t.status === "confirmed";
   var label = past ? "Pasado" : (TURNO_STATE[t.status] || t.status);
   var total = t.price + (t.debtCharged || 0);
-  var pay = t.status === "cancelled" ? "" : (t.paid ? '<span class="paystate ok">Pagado</span>' : '<span class="paystate pend">Pago pendiente</span>');
+  var pay = "";
+  if(t.status !== "cancelled"){
+    if(t.paid) pay = '<span class="paystate ok">Pagado</span>';
+    else if(t.deposit > 0) pay = 'Seña '+money(t.deposit)+' '+stateChip(depState(t)) + (depState(t) === "paid" || balState(t) !== "pending" || turnoEnded(t) ? ' · Saldo '+money(balanceDue(t))+' '+stateChip(balState(t)) : '');
+    else pay = '<span class="paystate pend">Pago pendiente</span>';
+  } else if(depositKept(t)){
+    pay = t.lateCancel ? '<span class="paystate pend">Seña retenida</span>' : '<span class="paystate info">Seña a devolver</span>';
+  }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
     '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' +
-      '<span class="myt-sub">'+money(total)+' · '+payMethodLabel(t.payMethod)+(pay ? ' · ' : '')+pay+'</span></div>' +
+      '<span class="myt-sub">'+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
       (canCancelTurno(t) ? '<button type="button" class="myt-cancel" data-cancel-turno="'+t.id+'">Cancelar</button>' : '') + '</span></div>';
 }
@@ -246,10 +253,13 @@ function canCancelTurno(t){
 function cancelTurnoFlow(id){
   var t = myTurnos(client).filter(function(x){ return x.id === id; })[0];
   if(!t || !canCancelTurno(t)) return;
-  var late = (t.date === toISO(new Date()));
+  var late = (t.date === toISO(new Date())), kept = depositKept(t);
   var msg = late
-    ? "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña del 50% (" + money(currentPenalty()) + "): queda a tu nombre y se suma a tu próximo turno."
-    : "Vas a cancelar el turno del " + formatDateLong(t.date) + " a las " + t.time + " hs. No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.";
+    ? (kept ? "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña que ya pagaste (" + money(t.deposit) + "): queda en el local."
+            : "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña del 50% (" + money(currentPenalty()) + "): queda a tu nombre y se suma a tu próximo turno.")
+    : "Vas a cancelar el turno del " + formatDateLong(t.date) + " a las " + t.time + " hs. " +
+      (kept ? "Como cancelás antes del día del turno, el local te devuelve la seña (" + money(t.deposit) + ")."
+            : "No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.");
   if(t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
   askConfirm(late ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
     cancelMyTurno(t, client).then(function(){ renderClient(); }).catch(function(e){
@@ -257,6 +267,21 @@ function cancelTurnoFlow(id){
       showToast("No pudimos cancelar el turno. Revisá tu conexión e intentá de nuevo.");
     });
   });
+}
+
+// tarjetas de pago: la seña de un turno que todavía no la pagó y el saldo de un turno que ya terminó
+function pagosPendientesHtml(all){
+  var cards = [];
+  all.forEach(function(t){
+    if(t.status === "cancelled") return;
+    if(t.status === "confirmed" && t.deposit > 0 && depState(t) === "pending" && !turnoEnded(t)){
+      cards.push('<div class="card pay-card"><h2>Seña de tu turno</h2><div class="sub">'+formatDateLong(t.date)+' · '+t.time+' hs</div>'+payBox(t, "deposit")+'</div>');
+    }
+    if((t.status === "confirmed" || t.status === "completed") && turnoEnded(t) && balState(t) !== "paid" && balanceDue(t) > 0){
+      cards.push('<div class="card pay-card due"><h2>¡Terminó tu turno!</h2><div class="sub">'+formatDateLong(t.date)+' · '+t.time+' hs · realizá el pago acá</div>'+payBox(t, "balance")+'</div>');
+    }
+  });
+  return cards.join("");
 }
 
 function misTurnosHtml(){
@@ -267,7 +292,7 @@ function misTurnosHtml(){
     .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; });
   var hist = all.filter(function(t){ return next.indexOf(t) < 0; })
     .sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? 1 : -1; });
-  return '<div class="myt">' +
+  return pagosPendientesHtml(all) + '<div class="myt">' +
     '<div class="myt-title">Tus turnos</div>' +
     (next.length ? next.map(turnoRow).join("") : '<div class="field-hint" style="margin:0 0 8px;">No tenés turnos próximos.</div>') +
     (hist.length ? '<details class="myt-hist"><summary>Historial ('+hist.length+')</summary>' + hist.slice(0, 10).map(turnoRow).join("") + '</details>' : '') +
@@ -308,60 +333,83 @@ function stepFecha(){
     '<button class="btn btn-primary" id="btnStep2" '+(client.selectedDate&&client.selectedTime?'':'disabled')+'>Continuar</button>';
 }
 
-function payOptions(){
-  var methods = payMethods();
-  if(!methods.some(function(m){ return m.id===client.payMethod; })) client.payMethod = "local";
-  return '<div class="pay-title">¿Cómo querés pagar?</div>' +
-    '<div class="pay-opts">' + methods.map(function(m){
-      var on = client.payMethod===m.id;
-      return '<button type="button" class="pay-opt'+(on?' on':'')+'" data-pay="'+m.id+'" aria-pressed="'+on+'">' +
-        '<span class="pay-radio"></span><span class="pay-txt"><b>'+m.label+'</b><i>'+esc(m.hint)+'</i></span></button>';
-    }).join('') + '</div>';
+// ---------- seña y saldo ----------
+// método con el que se propone pagar la seña (después puede elegir otro al avisar que pagó)
+function defaultPayMethod(){
+  var c = state.config;
+  return c.payMpLink ? "mp" : c.payAlias ? "transfer" : "local";
+}
+
+function stateChip(st){
+  return st === "paid" ? '<span class="paystate ok">pagada</span>' : st === "informed" ? '<span class="paystate info">avisada, la confirma el local</span>' : '<span class="paystate pend">pendiente</span>';
 }
 
 function stepConfirmacion(){
   var debt = activeDebtFor(myDebtKey());
   var debtAmount = debt ? currentPenalty() : 0;
-  var total = state.config.price + debtAmount;
+  var price = state.config.price, total = price + debtAmount;
+  var dep = depositFor(price);
   return '<div class="card">' +
-    '<h2>Confirmá y pagá</h2>' +
+    '<h2>Confirmá tu turno</h2>' +
     '<div class="sub">Revisá los datos antes de reservar</div>' +
     '<div class="summary-row"><span class="k">Fecha</span><span class="v">'+formatDateLong(client.selectedDate)+'</span></div>' +
     '<div class="summary-row"><span class="k">Horario</span><span class="v">'+client.selectedTime+' hs</span></div>' +
     (state.config.address ? '<div class="summary-row"><span class="k">Lugar</span><span class="v place-v">'+esc(state.config.address)+'</span></div>' : '') +
-    '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(state.config.price)+'</span></div>' +
+    '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(price)+'</span></div>' +
     (debtAmount ? '<div class="summary-row"><span class="k">Saldo anterior</span><span class="v" style="color:var(--warn)">'+money(debtAmount)+'</span></div>' : "") +
     '<div class="summary-row total"><span class="k">Total</span><span class="v">'+money(total)+'</span></div>' +
-    payOptions() +
+    (dep > 0
+      ? '<div class="pay-split">' +
+          '<div class="pay-split-item"><span>1. Seña para reservar</span><b>'+money(dep)+'</b><i>Se paga ahora, después de confirmar</i></div>' +
+          '<div class="pay-split-item"><span>2. Saldo al terminar</span><b>'+money(total - dep)+'</b><i>Lo pagás desde la app o en efectivo</i></div>' +
+        '</div>'
+      : '<div class="notice info"><div>Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.</div></div>') +
     '</div>' +
-    cancelPolicyNote() +
+    cancelPolicyNote(dep) +
     '<div class="btn-row">' +
       '<button class="btn btn-ghost" id="btnBack2">Atrás</button>' +
       '<button class="btn btn-primary" id="btnConfirm">Confirmar turno</button>' +
     '</div>';
 }
 
-function cancelPolicyNote(){
+function cancelPolicyNote(dep){
+  var txt = dep > 0
+    ? 'Política de cancelación: la seña ('+money(dep)+') asegura tu horario. Si cancelás antes del día del turno te la devolvemos; si cancelás el mismo día, queda en el local.'
+    : 'Política de cancelación: si cancelás el mismo día del turno, se cobra el 50% como seña y queda registrado a tu nombre para el próximo turno.';
   return '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>' +
-    '<div>Política de cancelación: si cancelás el mismo día del turno, se cobra el 50% como seña y queda registrado a tu nombre para el próximo turno.</div></div>';
+    '<div>'+txt+'</div></div>';
 }
 
-function payInstructions(b){
-  var c = state.config, total = money(bookingTotal(b));
-  if(b.payMethod==="transfer"){
-    return '<div class="pay-box"><div class="pay-box-title">Transferí '+total+'</div>' +
-      '<div class="pay-alias"><span>'+esc(c.payAlias)+'</span><button class="link-btn" id="btnCopyAlias" type="button">Copiar</button></div>' +
+// cuadro para pagar una parte (seña o saldo): link de Mercado Pago, alias para copiar (transferencia, MODO, billeteras) y avisar que pagó
+function payBox(t, kind){
+  var c = state.config, deposit = kind === "deposit";
+  var amount = deposit ? (t.deposit || 0) : balanceDue(t);
+  var st = deposit ? depState(t) : balState(t);
+  var title = deposit ? 'Pagá la seña de '+money(amount) : 'Pagá el saldo de '+money(amount);
+  if(st === "paid") return '<div class="pay-box ok"><div class="pay-box-title">'+(deposit ? 'Seña' : 'Saldo')+' pagado ✓</div></div>';
+  if(st === "informed") return '<div class="pay-box"><div class="pay-box-title">Avisaste que pagaste '+money(amount)+'</div><div class="pay-note">El local lo confirma apenas lo vea. No hace falta que hagas nada más.</div></div>';
+  var opts = "";
+  if(c.payMpLink){
+    opts += '<div class="pay-opt-block"><a class="btn btn-mp" href="'+esc(c.payMpLink)+'" target="_blank" rel="noopener">Pagar '+money(amount)+' con Mercado Pago</a>' +
+      '<button class="link-btn plain" type="button" data-inform="'+kind+'|mp|'+esc(t.id)+'">Ya pagué con Mercado Pago</button></div>';
+  }
+  if(c.payAlias){
+    opts += '<div class="pay-opt-block"><div class="pay-note" style="margin:0 0 6px;">O transferí '+money(amount)+' (también sirve MODO o tu billetera):</div>' +
+      '<div class="pay-alias"><span>'+esc(c.payAlias)+'</span><button class="link-btn" data-copy-alias="1" type="button">Copiar alias</button></div>' +
       (c.payHolder ? '<div class="pay-holder">Titular: '+esc(c.payHolder)+'</div>' : '') +
-      '<div class="pay-note">El local confirma tu pago al recibirlo. Si podés, mandá el comprobante por WhatsApp.</div></div>';
+      '<button class="link-btn plain" type="button" data-inform="'+kind+'|transfer|'+esc(t.id)+'">Ya transferí</button></div>';
   }
-  if(b.payMethod==="mp"){
-    return '<div class="pay-box"><div class="pay-box-title">Pagá '+money(b.price)+' online</div>' +
-      '<a class="btn btn-mp" href="'+esc(c.payMpLink)+'" target="_blank" rel="noopener">Pagar con Mercado Pago</a>' +
-      (b.debtCharged>0 ? '<div class="pay-note">El link cubre el corte ('+money(b.price)+'). Los '+money(b.debtCharged)+' de tu saldo anterior los abonás en el local.</div>' : '') +
-      '<div class="pay-note">Se abre Mercado Pago en otra pestaña. El local confirma tu pago cuando le llega.</div></div>';
-  }
-  return '<div class="pay-box"><div class="pay-box-title">Pagás '+total+' en el local</div>' +
-    '<div class="pay-note">Podés abonar en efectivo o como te quede cómodo al llegar.</div></div>';
+  if(!opts) opts = '<div class="pay-note">El local todavía no cargó un medio de pago online: pagás en efectivo en el local.</div>';
+  return '<div class="pay-box"><div class="pay-box-title">'+title+'</div>' + opts +
+    '<div class="pay-note">'+(deposit ? 'Si preferís, dejás la seña en efectivo en el local.' : 'Si pagás en efectivo en el local, el barbero lo registra y el turno queda completo.')+'</div></div>';
+}
+
+// pantalla de "turno reservado": cómo pagar la seña
+function payInstructions(b){
+  if(!(b.deposit > 0)) return '<div class="pay-box"><div class="pay-box-title">Pagás '+money(bookingTotal(b))+' al terminar</div>' +
+    '<div class="pay-note">Cuando termine el corte, entrás a la app y pagás desde acá, o en efectivo en el local.</div></div>';
+  return payBox(b, "deposit") +
+    '<div class="pay-note" style="text-align:center;">El saldo ('+money(bookingTotal(b) - b.deposit)+') lo pagás cuando termina el corte: te aparece acá en la app.</div>';
 }
 
 function stepExito(){
@@ -621,8 +669,26 @@ function bindClientEvents(){
       }
     });
   };
-  var cp = document.getElementById("btnCopyAlias");
-  if(cp) cp.onclick = function(){ copyText(state.config.payAlias); };
+  document.querySelectorAll("[data-copy-alias]").forEach(function(el){
+    el.onclick = function(){ copyText(state.config.payAlias); };
+  });
+  // "Ya pagué": avisa al local (pasa a "informado"); él lo confirma
+  document.querySelectorAll("[data-inform]").forEach(function(el){
+    el.onclick = function(){
+      var p = el.getAttribute("data-inform").split("|"), kind = p[0], method = p[1], id = p[2];
+      var t = (client.lastBooking && client.lastBooking.id === id) ? client.lastBooking : myTurnos(client).filter(function(x){ return x.id === id; })[0];
+      if(!t) return;
+      el.disabled = true;
+      informPayment(t, kind, method).then(function(){
+        if(kind === "deposit"){ t.depositState = "informed"; t.payMethod = method; } else { t.balanceState = "informed"; t.balanceMethod = method; }
+        renderClient();
+      }).catch(function(e){
+        console.error(e);
+        el.disabled = false;
+        showToast("No pudimos avisar al local. Revisá tu conexión e intentá de nuevo.");
+      });
+    };
+  });
   var nb = document.getElementById("btnNewBooking");
   if(nb) nb.onclick = function(){
     client.step=2; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null; client.payMethod="local"; client.calMonth=null;

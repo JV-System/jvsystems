@@ -733,7 +733,7 @@ input[readonly]{opacity:.7;}
   .pay-grid .stat-tile .num{font-size:30px;}
   .pay-charts{grid-template-columns:1.4fr 1fr 1fr; gap:0 16px;}
   .pay-charts .card:first-child{grid-column:auto;}
-  .plist-head,.prow,.plist-total{display:grid; grid-template-columns:minmax(0,2.2fr) 1fr 1fr 1fr 1fr minmax(0,1.9fr); gap:12px; align-items:center;}
+  .plist-head,.prow,.plist-total{display:grid; grid-template-columns:minmax(0,2.1fr) .9fr .9fr .9fr .9fr .9fr minmax(0,1.9fr); gap:12px; align-items:center;}
   .plist-head{padding:0 12px 8px; font-size:11px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
   .prow .crow-who{grid-column:auto;}
   .prow .pchips{grid-column:auto;}
@@ -779,3 +779,17 @@ input[readonly]{opacity:.7;}
   .pay-grid{grid-template-columns:repeat(auto-fit, minmax(205px, 1fr));}
   .stat-grid{grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));}
 }
+
+/* seña y saldo */
+.pay-split{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0 4px;}
+.pay-split-item{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:11px 12px; display:flex; flex-direction:column; gap:3px;}
+.pay-split-item span{font-size:11.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px;}
+.pay-split-item b{font-family:'Anton',sans-serif; font-weight:400; font-size:24px; background:var(--accent-grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.pay-split-item i{font-style:normal; font-size:11.5px; color:var(--text-muted); font-weight:600; line-height:1.3;}
+.pay-opt-block{margin:12px 0; padding-top:12px; border-top:1px solid var(--border-soft);}
+.pay-opt-block:first-of-type{border-top:none; padding-top:0;}
+.pay-opt-block .link-btn.plain{display:block; margin:10px auto 0;}
+.pay-box.ok{border-color:rgba(79,174,131,.4);}
+.pay-card.due{border-color:var(--accent-2); box-shadow:0 0 0 1px rgba(41,182,246,.25), var(--shadow-1);}
+.paystate.info{color:var(--accent-1);}
+@media (max-width:380px){ .pay-split{grid-template-columns:1fr;} }

@@ -30,7 +30,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","price","priceIsExample","slotMinutes","hours"];
+                     "payAlias","payHolder","payMpLink","price","depositPercent","priceIsExample","slotMinutes","hours"];
 
   function docKey(k){ return String(k).replace(/[^A-Za-z0-9:_-]/g, "_"); }
   function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", ""); }
@@ -67,8 +67,12 @@
   // reserva + marca de horario ocupado en un mismo lote; si alguien tomó el horario antes, Firestore lo rechaza
   // además se guarda una copia resumida bajo la ficha del cliente (clients/{id}/turnos) para su lista "Mis turnos"
   function turnoCopy(b){
-    return {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
-            paid: b.paid, status: b.status, createdAt: b.createdAt};
+    var t = {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
+             paid: b.paid, status: b.status, createdAt: b.createdAt};
+    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel"].forEach(function(k){
+      if(b[k] !== undefined && b[k] !== null) t[k] = b[k];
+    });
+    return t;
   }
   persistBooking = function(b){
     return Promise.resolve(b.cid).then(function(cid){
@@ -282,7 +286,7 @@
   cancelMyTurno = function(t, profile){
     var u = auth && auth.currentUser;
     if(!u) return Promise.reject(authErr("auth/user-not-found"));
-    var uid = u.uid, late = (t.date === hoyAR());
+    var uid = u.uid, late = (t.date === hoyAR()), kept = depositKept(t);
     return db.doc("debtFlags/" + uid).get().then(function(snap){
       var flag = snap.exists ? snap.data() : null, batch = db.batch(), now = Date.now();
       batch.update(db.doc("bookings/" + t.id), {status: "cancelled", lateCancel: late});
@@ -293,16 +297,30 @@
         batch.update(db.doc("debtFlags/" + uid), {chargedBy: null});
         next = Object.assign({}, flag, {chargedBy: null});
       }
-      if(late && !flag){
+      if(late && !kept && !flag){
         batch.set(db.doc("debts/" + uid), {name: profile.name, lastname: profile.lastname, phone: profile.phone, since: now, bid: t.id});
         batch.set(db.doc("debtFlags/" + uid), {since: now, bid: t.id});
         next = {since: now, bid: t.id};
       }
       return batch.commit().then(function(){
         state.debtFlags[docKey(uid)] = next;
-        showToast(late ? "Turno cancelado. Quedó una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+        showToast(late && kept ? "Turno cancelado. Como es el mismo día, la seña queda en el local."
+          : late ? "Turno cancelado. Quedó una seña pendiente (cancelación del mismo día)."
+          : kept ? "Turno cancelado. El local te devuelve la seña." : "Turno cancelado sin cargo.");
       });
     });
+  };
+
+  // el cliente avisa que pagó la seña o el saldo (kind: "deposit" | "balance"; method: "mp" | "transfer").
+  // Pasa a "informado"; el local lo confirma al ver el pago. Se actualiza la reserva y su copia en un lote.
+  informPayment = function(t, kind, method){
+    var u = auth && auth.currentUser;
+    if(!u) return Promise.reject(authErr("auth/user-not-found"));
+    var patch = kind === "deposit" ? {depositState: "informed", payMethod: method} : {balanceState: "informed", balanceMethod: method};
+    var batch = db.batch();
+    batch.update(db.doc("bookings/" + t.id), patch);
+    batch.update(db.doc("clients/" + u.uid + "/turnos/" + t.id), patch);
+    return batch.commit().then(function(){ showToast("Listo, avisamos al local. Va a confirmar tu pago."); });
   };
 
   // referencia a la copia "Mis turnos" de una reserva (las reservas viejas no traen cid: se calcula)
@@ -312,7 +330,9 @@
   // cambios que el cliente tiene que ver reflejados en su lista
   function turnoPatch(patch){
     var out = {}, any = false;
-    ["status", "paid"].forEach(function(k){ if(patch[k] !== undefined){ out[k] = patch[k]; any = true; } });
+    ["status", "paid", "depositState", "balanceState", "balanceMethod", "payMethod", "depositRefunded"].forEach(function(k){
+      if(patch[k] !== undefined){ out[k] = patch[k]; any = true; }
+    });
     return any ? out : null;
   }
 
@@ -343,18 +363,21 @@
   cancelBooking = function(id){
     var b = state.bookings.filter(function(x){ return x.id === id; })[0];
     if(!b) return;
-    var penalized = (b.date === toISO(new Date()) && b.status === "confirmed");
+    var late = (b.date === toISO(new Date()) && b.status === "confirmed"), kept = depositKept(b);
+    var penalized = late && !kept;
     if(b.isExample){                                   // turno de ejemplo: solo en memoria
-      b.status = "cancelled";
+      b.status = "cancelled"; b.lateCancel = late;
       if(penalized) state.debts[b.clientKey] = {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now(), isExample: true};
-      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
+        : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
+        : kept ? "Turno cancelado. Hay que devolver la seña." : "Turno cancelado sin cargo.");
       hooks.refresh();
       return;
     }
     turnoRefFor(b).then(function(ref){
       var batch = db.batch();
-      batch.update(db.doc("bookings/" + id), {status: "cancelled"});
-      if(ref) batch.set(ref, Object.assign(turnoCopy(b), {status: "cancelled"}), {merge: true});
+      batch.update(db.doc("bookings/" + id), {status: "cancelled", lateCancel: late});
+      if(ref) batch.set(ref, Object.assign(turnoCopy(b), {status: "cancelled", lateCancel: late}), {merge: true});
       batch.delete(db.doc("slots/" + slotDocId(b)));                    // el horario vuelve a quedar libre
       if(penalized){
         var k = docKey(b.clientKey);
@@ -363,7 +386,9 @@
       }
       return batch.commit();
     }).then(function(){
-      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
+        : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
+        : kept ? "Turno cancelado. Hay que devolver la seña." : "Turno cancelado sin cargo.");
     }).catch(function(e){ fail(e); });
   };
 

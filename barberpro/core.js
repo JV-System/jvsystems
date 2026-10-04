@@ -74,6 +74,7 @@ function baseState(){
       mapboxToken:"",
       mapCenter:null,
       price:8000,
+      depositPercent:50,        // seña que se paga al reservar (% del precio); 0 = sin seña
       priceIsExample:true,
       slotMinutes:30,
       ownerPin:"1234",
@@ -212,12 +213,19 @@ function seedClientStories(s){
     var iso = openDay(addDays(today, offset), offset < 0 ? -1 : 1);
     var time = pickTime(iso, pref);
     if(!time) return null;
+    // seña y saldo: o.dep / o.bal = "paid" | "informed" | "pending" (por defecto: pagados si o.paid, si no pendientes)
+    var dep = depositFor(price);
+    var depSt = dep > 0 ? (o.dep || (o.paid ? "paid" : "pending")) : "paid";
+    var balSt = o.bal || (o.paid ? "paid" : "pending");
     var b = {
       id: uid() + Math.random().toString(36).slice(2, 5), name: p.name, lastname: p.lastname, nickname: p.nickname, phone: p.phone, email: p.email,
       date: iso, time: time, price: price, debtCharged: o.debt || 0,
-      payMethod: o.pay || "local", paid: !!o.paid, status: o.status || "completed",
+      payMethod: o.pay || "local", deposit: dep, depositState: depSt, balanceState: balSt,
+      paid: depSt === "paid" && balSt === "paid", status: o.status || "completed",
       createdAt: fromISO(addDays(iso, -2)).getTime(), seenByOwner: true, clientKey: p.key, isExample: true
     };
+    if(balSt !== "pending") b.balanceMethod = o.pay === "mp" ? "mp" : o.pay === "transfer" ? "transfer" : "cash";
+    if(o.status === "cancelled" && o.late){ b.lateCancel = true; }
     s.bookings.push(b);
     return b;
   }
@@ -230,13 +238,13 @@ function seedClientStories(s){
     add(matias, off, "18:00", {pay: i % 4 === 3 ? "local" : "transfer", paid: true});
     off -= g;
   });
-  add(matias, 8, "18:00", {pay: "transfer", status: "confirmed"});
+  add(matias, 8, "18:00", {pay: "transfer", status: "confirmed", dep: "paid"});               // ya pagó la seña
 
   // 2) Nico: 7 cortes cada 3 semanas con Mercado Pago, una cancelación con aviso, turno mañana ya pagado
   var nico = person("Nicolás", "Benítez", "Nico", "3415550102");
   for(var k = 0; k < 7; k++) add(nico, -9 - 21 * k, "11:00", {pay: "mp", paid: true});
-  add(nico, -30, "11:00", {pay: "mp", status: "cancelled"});          // cancelada con tiempo, sin cargo
-  add(nico, 1, "10:30", {pay: "mp", paid: true, status: "confirmed"});
+  add(nico, -30, "11:00", {pay: "mp", status: "cancelled", dep: "paid"});   // canceló con tiempo: hay que devolverle la seña
+  add(nico, 1, "10:30", {pay: "mp", status: "confirmed", dep: "paid"});       // turno de mañana, seña paga
 
   // 3) Fede: cancela bastante. Una seña pendiente por cancelar el mismo día, otro turno que no se marcó ni se cobró
   var fede = person("Federico", "Acosta", "Fede", "3415550103");
@@ -246,14 +254,17 @@ function seedClientStories(s){
   add(fede, -40, "16:00", {status: "cancelled"});
   add(fede, -27, "16:00", {paid: true});
   add(fede, -12, "16:30", {status: "confirmed"});                      // vino (o no) y quedó sin completar ni cobrar
-  add(fede, -3, "16:00", {status: "cancelled"});                        // cancelada el mismo día: perdió la seña
+  add(fede, -3, "16:00", {status: "cancelled", late: true});             // cancelada el mismo día sin haber pagado seña: queda el cargo
   s.debts[fede.key] = {name: fede.name, lastname: fede.lastname, phone: fede.phone, since: fromISO(addDays(today, -3)).getTime(), isExample: true};
-  add(fede, 6, "16:00", {status: "confirmed"});
+  add(fede, 6, "16:00", {status: "confirmed", dep: "informed", pay: "transfer"});   // avisó que transfirió la seña (falta confirmarla)
 
   // 4) Tomi: nuevo. Su primer corte quedó sin pagar y hoy tiene otro turno
   var tomi = person("Tomás", "Giménez", "Tomi", "3415550104");
-  add(tomi, -3, "12:00", {pay: "transfer", status: "completed"});
-  add(tomi, 0, "15:00", {pay: "local", status: "confirmed"});
+  add(tomi, -3, "12:00", {pay: "transfer", status: "completed", dep: "paid", bal: "informed"});   // pagó la seña y avisó que transfirió el saldo
+  add(tomi, 0, "15:00", {pay: "mp", status: "confirmed", dep: "paid"});
+
+  // seña retenida: canceló el mismo día habiendo pagado la seña
+  add(matias, -60, "18:00", {pay: "transfer", status: "cancelled", dep: "paid", late: true});
 
   // 5) Joaquín: 5 cortes mensuales y dejó de venir hace más de 4 meses
   var joa = person("Joaquín", "Peralta", "", "3415550105");
@@ -331,6 +342,50 @@ function payMethods(){
   if(c.payMpLink) m.push({id:"mp", label:"Mercado Pago", hint:"Pagás online con un link"});
   return m;
 }
+// ---------- seña y saldo ----------
+// Un turno se paga en dos partes: la SEÑA al reservar y el SALDO al terminar el corte. Cada parte pasa por
+// "pendiente" -> "informado" (el cliente avisó que pagó) -> "pagado" (el local lo confirmó o lo cobró en efectivo).
+function depositFor(price){
+  var p = state.config.depositPercent;
+  if(p === undefined || p === null || p === "") p = 50;
+  p = Math.max(0, Math.min(100, Number(p) || 0));
+  return Math.round(price * p / 100);
+}
+function bookingTotal(b){ return b.price + (b.debtCharged || 0); }
+function depState(b){ return b.depositState || (b.paid ? "paid" : "pending"); }
+function balState(b){ return b.balanceState || (b.paid ? "paid" : "pending"); }
+// la seña se quedó en el local (pagada y con monto): si cancela el mismo día no se devuelve
+function depositKept(b){ return (b.deposit || 0) > 0 && depState(b) === "paid" && !b.depositRefunded; }
+// dinero ya cobrado de este turno
+function collectedOf(b){
+  var total = bookingTotal(b), dep = b.deposit || 0;
+  if(b.paid) return total;
+  var c = 0;
+  if(depState(b) === "paid") c += dep;
+  if(balState(b) === "paid") c += Math.max(0, total - dep);
+  return c;
+}
+function balanceDue(b){ return Math.max(0, bookingTotal(b) - collectedOf(b)); }
+// ya pasó la hora en que termina el turno
+function turnoEnded(b){
+  var now = new Date(), today = toISO(now);
+  if(b.date < today) return true;
+  if(b.date > today) return false;
+  return timeToMin(b.time) + state.config.slotMinutes <= now.getHours() * 60 + now.getMinutes();
+}
+// el cliente avisa que pagó (kind: "deposit" | "balance"; method: "mp" | "transfer"). Local: se anota en el navegador.
+// cloud.js lo reemplaza por la versión de Firestore.
+function informPayment(t, kind, method){
+  var b = state.bookings.filter(function(x){ return x.id === t.id; })[0];
+  if(!b) return Promise.resolve();
+  if(kind === "deposit"){ b.depositState = "informed"; b.payMethod = method; }
+  else { b.balanceState = "informed"; b.balanceMethod = method; }
+  saveState();
+  hooks.refresh();
+  showToast("Listo, avisamos al local. Va a confirmar tu pago.");
+  return Promise.resolve();
+}
+
 function payMethodLabel(id){
   return id==="transfer" ? "Transferencia" : id==="mp" ? "Mercado Pago" : "En el local";
 }
@@ -610,14 +665,19 @@ function cancelBooking(id){
   var b = state.bookings.filter(function(x){ return x.id===id; })[0];
   if(!b) return;
   var todayISO = toISO(new Date());
-  var penalized = (b.date===todayISO && b.status==="confirmed");
+  var late = (b.date===todayISO && b.status==="confirmed");
+  var kept = depositKept(b);
+  var penalized = late && !kept;                        // si ya pagó la seña, esa es la penalidad: no se le suma una deuda
   if(penalized){
     state.debts[b.clientKey] = {name:b.name, lastname:b.lastname, phone:b.phone, since:Date.now()};
   }
   b.status = "cancelled";
+  b.lateCancel = late;
   saveState();
   hooks.refresh();
-  showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+  showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
+    : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
+    : kept ? "Turno cancelado. Hay que devolver la seña." : "Turno cancelado sin cargo.");
 }
 
 function completeBooking(id){

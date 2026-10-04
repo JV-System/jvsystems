@@ -298,41 +298,97 @@
     return html;
   }
 
+  var METHOD_NAMES = {local: "efectivo", cash: "efectivo", transfer: "transferencia", mp: "Mercado Pago"};
+
   function bookingRow(b){
     var badgeClass = b.status;
     var badgeLabel = b.status==="confirmed"?"Confirmado":b.status==="cancelled"?"Cancelado":"Completado";
-    var total = b.price + (b.debtCharged||0);
+    var total = bookingTotal(b);
     var actions = "";
-    if(b.status==="confirmed"){
-      actions = '<div class="actions">' +
-        (b.paid ? '' : '<button class="btn btn-primary btn-sm" data-paid="'+b.id+'">Cobrado</button>') +
-        '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
-        '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>' +
+    if(b.status !== "cancelled"){
+      actions = '<div class="actions">' + payActions(b) +
+        (b.status==="confirmed" ? '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
+                                   '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>' : '') +
         (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
         (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
+    } else if(depositKept(b) && !b.lateCancel){
+      actions = '<div class="actions"><button class="btn btn-primary btn-sm" data-refund="'+b.id+'">Seña devuelta</button></div>';
     }
     return '<div class="booking-row">' +
       '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
       '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.nickname?' <span class="nick">“'+esc(b.nickname)+'”</span>':'')+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
       '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
-      (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de seña)</span>':'') +
+      (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de cargo anterior)</span>':'') +
       '</div>' + payLine(b) + actions +
       '</div>';
   }
 
-  function payLine(b){
-    if(b.status==="cancelled") return "";
-    return '<div class="payline"><span class="paychip">'+payMethodLabel(b.payMethod||"local")+'</span>' +
-      '<span class="paystate '+(b.paid?'ok':'pend')+'">'+(b.paid?'Pagado':'Pago pendiente')+'</span></div>';
+  function stChip(st){
+    return st === "paid" ? '<span class="paystate ok">pagada</span>' : st === "informed" ? '<span class="paystate info">avisó que pagó</span>' : '<span class="paystate pend">pendiente</span>';
   }
 
-  function markPaid(id){
-    var b = state.bookings.filter(function(x){ return x.id===id; })[0];
-    if(!b) return;
-    updateBooking(id, {paid: true});
-    if(b.debtCharged > 0) settleDebt(b.clientKey);       // el saldo anterior que traía este turno queda saldado
-    showToast("Cobro registrado.");
+  // estado de la seña y del saldo de un turno
+  function payLine(b){
+    if(b.status === "cancelled"){
+      if(!depositKept(b) && !(b.deposit > 0 && b.depositRefunded)) return "";
+      return '<div class="payline">' + (b.depositRefunded ? '<span class="paystate ok">Seña devuelta</span>'
+        : b.lateCancel ? '<span class="paystate pend">Seña retenida '+money(b.deposit)+' (canceló el mismo día)</span>'
+        : '<span class="paystate info">Devolver seña '+money(b.deposit)+'</span>') + '</div>';
+    }
+    if(!(b.deposit > 0)){      // turno sin seña (o anterior a la seña): un solo pago
+      return '<div class="payline"><span class="paychip">'+payMethodLabel(b.payMethod||"local")+'</span>' +
+        '<span class="paystate '+(b.paid?'ok':'pend')+'">'+(b.paid?'Pagado':'Pago pendiente')+'</span></div>';
+    }
+    var ds = depState(b), bs = balState(b);
+    return '<div class="payline">' +
+      '<span class="paychip">Seña '+money(b.deposit)+'</span>' + stChip(ds) + (ds !== "pending" && b.payMethod ? '<span class="paychip">'+METHOD_NAMES[b.payMethod]+'</span>' : '') +
+      '<span class="paychip">Saldo '+money(Math.max(0, bookingTotal(b) - b.deposit))+'</span>' + stChip(bs) + (bs !== "pending" && b.balanceMethod ? '<span class="paychip">'+METHOD_NAMES[b.balanceMethod]+'</span>' : '') +
+      '</div>';
+  }
+
+  // botones de cobro: confirmar la seña, confirmar el saldo que avisó el cliente o cobrarlo en efectivo
+  function payActions(b){
+    var out = "", ds = depState(b), bs = balState(b);
+    if(b.deposit > 0 && ds !== "paid"){
+      out += '<button class="btn '+(ds === "informed" ? 'btn-primary' : 'btn-ghost')+' btn-sm" data-dep="'+b.id+'">'+(ds === "informed" ? 'Confirmar seña' : 'Seña recibida')+'</button>';
+    }
+    if(bs !== "paid"){
+      if(bs === "informed") out += '<button class="btn btn-primary btn-sm" data-bal="'+b.id+'">Confirmar saldo</button>';
+      out += '<button class="btn '+(bs === "informed" ? 'btn-ghost' : 'btn-primary')+' btn-sm" data-cash="'+b.id+'">Cobrado en efectivo</button>';
+    }
+    return out;
+  }
+
+  function findBooking(id){ return state.bookings.filter(function(x){ return x.id===id; })[0]; }
+
+  // la seña llegó (por transferencia, Mercado Pago o en el local)
+  function ownerDepositPaid(id){
+    var b = findBooking(id); if(!b) return;
+    updateBooking(id, {depositState: "paid", paid: balState(b) === "paid"});
+    showToast("Seña confirmada.");
+  }
+  // el saldo se pagó: queda todo pagado y el turno se completa. method: "cash" | "mp" | "transfer"
+  function ownerBalancePaid(id, method){
+    var b = findBooking(id); if(!b) return;
+    var patch = {depositState: "paid", balanceState: "paid", balanceMethod: method, paid: true, status: "completed"};
+    updateBooking(id, patch);
+    if(b.debtCharged > 0) settleDebt(b.clientKey);       // el cargo anterior que traía este turno queda saldado
+    showToast(method === "cash" ? "Cobrado en efectivo. Turno completo." : "Pago confirmado. Turno completo.");
+  }
+
+  function bindPayActions(root){
+    root = root || document;
+    root.querySelectorAll("[data-dep]").forEach(function(el){ el.onclick = function(){ ownerDepositPaid(el.getAttribute("data-dep")); }; });
+    root.querySelectorAll("[data-bal]").forEach(function(el){
+      el.onclick = function(){ var id = el.getAttribute("data-bal"), b = findBooking(id); ownerBalancePaid(id, (b && b.balanceMethod) || "transfer"); };
+    });
+    root.querySelectorAll("[data-cash],[data-paid]").forEach(function(el){
+      el.onclick = function(){ ownerBalancePaid(el.getAttribute("data-cash") || el.getAttribute("data-paid"), "cash"); };
+    });
+    root.querySelectorAll("[data-refund]").forEach(function(el){
+      el.onclick = function(){ updateBooking(el.getAttribute("data-refund"), {depositRefunded: true}); showToast("Seña marcada como devuelta."); };
+    });
   }
 
   function agendaSemana(){
@@ -465,9 +521,7 @@
         if(b && !b.reminded) updateBooking(id, {reminded: true});
       });
     });
-    document.querySelectorAll("[data-paid]").forEach(function(el){
-      el.onclick = function(){ markPaid(el.getAttribute("data-paid")); };
-    });
+    bindPayActions();
     document.querySelectorAll("[data-complete]").forEach(function(el){
       el.onclick = function(){ completeBooking(el.getAttribute("data-complete")); };
     });
@@ -589,7 +643,7 @@
       '<div class="sub">Cómo pueden pagar tus clientes al reservar (el pago en el local siempre está)</div>' +
       '<label>Alias o CBU para transferencias <span class="opt">(opcional)</span></label><input type="text" id="inpPayAlias" value="'+esc(c.payAlias)+'" maxlength="40" placeholder="Ej: barberia.elcorte">' +
       '<label>Titular de la cuenta <span class="opt">(opcional)</span></label><input type="text" id="inpPayHolder" value="'+esc(c.payHolder)+'" maxlength="40" placeholder="Ej: Juan Pérez">' +
-      '<label>Link de pago de Mercado Pago <span class="opt">(opcional)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
+      '<label>Link de pago de Mercado Pago <span class="opt">(opcional · por el monto de la seña / saldo)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
       '<div class="field-hint">Creálo en la app de Mercado Pago: Cobrar → Link de pago, por el precio del corte.</div>' +
       '<div class="field-hint">Los pagos los confirmás vos a mano desde la agenda (botón "Cobrado").</div>' +
       '<button class="btn btn-primary" id="btnSaveCobros">Guardar cobros</button></div>' +
@@ -639,6 +693,8 @@
     return '<div class="card"><h2>Precio y duración</h2>' +
       (state.config.priceIsExample ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Este precio es un valor de ejemplo. Actualizalo con el precio real del corte.</div></div>' : '') +
       '<label>Precio del corte ($)</label><input type="number" id="inpPrice" value="'+state.config.price+'">' +
+      '<label>Seña al reservar (% del precio)</label><input type="number" id="inpDeposit" min="0" max="100" value="'+(state.config.depositPercent === undefined ? 50 : state.config.depositPercent)+'">' +
+      '<div class="field-hint">0 = sin seña. Con el precio actual, la seña es de '+money(depositFor(state.config.price))+' y el saldo de '+money(state.config.price - depositFor(state.config.price))+'. Si cancelan el mismo día, la seña queda en el local; si cancelan antes, se devuelve.</div>' +
       '<label>Duración del turno (minutos)</label>' +
       '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
       '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
@@ -653,6 +709,8 @@
     if(btn) btn.onclick = function(){
       var p = parseInt(document.getElementById("inpPrice").value,10);
       if(!isNaN(p) && p>0){ state.config.price = p; state.config.priceIsExample=false; }
+      var dp = parseInt(document.getElementById("inpDeposit").value, 10);
+      state.config.depositPercent = isNaN(dp) ? 50 : Math.max(0, Math.min(100, dp));
       state.config.slotMinutes = parseInt(document.getElementById("inpSlotMin").value,10);
       saveState();
       renderOwner();
@@ -734,11 +792,15 @@
     c.cancelled = c.bookings.length - valid.length;
     c.last = past.length ? past[past.length - 1] : null;
     c.next = upcoming.length ? upcoming[0] : null;
-    var paidList = valid.filter(function(b){ return b.paid; });
-    c.paidCount = paidList.length;
-    c.sealPaid = paidList.reduce(function(s, b){ return s + (b.debtCharged || 0); }, 0);
-    c.spent = paidList.reduce(function(s, b){ return s + amount(b); }, 0);
-    c.toCollect = past.filter(function(b){ return !b.paid; }).reduce(function(s, b){ return s + amount(b); }, 0);
+    // cobrado = seña y/o saldo ya confirmados; la seña de un turno cancelado el mismo día también es plata cobrada
+    var collectedList = valid.filter(function(b){ return collectedOf(b) > 0; });
+    var retained = c.bookings.filter(function(b){ return b.status === "cancelled" && b.lateCancel && depositKept(b); });
+    var sum = function(list, fn){ return list.reduce(function(s, b){ return s + fn(b); }, 0); };
+    c.paidCount = collectedList.length;
+    c.sealPaid = sum(valid, function(b){ return (b.deposit > 0 && depState(b) === "paid") ? b.deposit : 0; }) + sum(retained, function(b){ return b.deposit; });
+    c.spent = sum(collectedList, collectedOf) + sum(retained, function(b){ return b.deposit; });
+    c.depositDue = sum(valid, function(b){ return (b.deposit > 0 && depState(b) !== "paid") ? b.deposit : 0; });
+    c.toCollect = past.reduce(function(s, b){ return s + balanceDue(b); }, 0);
     c.debtKeys = debtKeys;
     c.debt = debtKeys.length * currentPenalty();
     c.gap = gap;
@@ -898,7 +960,7 @@
           '<div class="hist-pay">'+money(total)+' · '+payMethodLabel(b.payMethod || "local") +
             (b.status === "cancelled" ? '' : ' · <span class="paystate '+(b.paid ? 'ok' : 'pend')+'">'+(b.paid ? 'Pagado' : 'Pago pendiente')+'</span>') +
             (b.debtCharged ? ' · <span class="debt-tag">incluye '+money(b.debtCharged)+' de seña</span>' : '') + '</div>' +
-          (b.status !== "cancelled" && !b.paid ? '<button class="btn btn-primary btn-sm" data-paid="'+b.id+'">Cobrado</button>' : '') +
+          (b.status !== "cancelled" && !b.paid ? '<button class="btn btn-primary btn-sm" data-cash="'+b.id+'">Cobrado en efectivo</button>' : '') +
           '</div>';
       }).join("") + '</div>' : '<div class="empty-note">Sin turnos.</div>') +
       '</div>';
@@ -925,9 +987,7 @@
     document.querySelectorAll("[data-csort]").forEach(function(el){
       el.onclick = function(){ session.clientSort = el.getAttribute("data-csort"); renderOwner(); };
     });
-    document.querySelectorAll("[data-paid]").forEach(function(el){
-      el.onclick = function(){ markPaid(el.getAttribute("data-paid")); };
-    });
+    bindPayActions();
     document.querySelectorAll("[data-settle]").forEach(function(el){
       el.onclick = function(){ settleDebt(el.getAttribute("data-settle")); };
     });
@@ -971,17 +1031,27 @@
   function bTotal(b){ return b.price + (b.debtCharged || 0); }
 
   // totales de un conjunto de turnos
+  // cobrado = señas confirmadas + saldos confirmados (cortes = saldos, por compatibilidad con el nombre viejo)
   function paySummary(list, today){
-    var s = {paid: 0, cortes: 0, senas: 0, count: 0, toCollect: 0, toCollectCount: 0, byMethod: {local: 0, transfer: 0, mp: 0}, byDow: [0, 0, 0, 0, 0, 0, 0]};
+    var s = {paid: 0, cortes: 0, senas: 0, count: 0, toCollect: 0, toCollectCount: 0, depositDue: 0, byMethod: {local: 0, transfer: 0, mp: 0}, byDow: [0, 0, 0, 0, 0, 0, 0]};
     list.forEach(function(b){
-      if(b.status === "cancelled") return;
-      if(b.paid){
-        s.paid += bTotal(b); s.cortes += b.price; s.senas += (b.debtCharged || 0); s.count++;
-        s.byMethod[b.payMethod || "local"] = (s.byMethod[b.payMethod || "local"] || 0) + bTotal(b);
-        s.byDow[fromISO(b.date).getDay()] += bTotal(b);
-      } else if(b.date <= today){
-        s.toCollect += bTotal(b); s.toCollectCount++;
+      var dep = 0, bal = 0;
+      if(b.status === "cancelled"){
+        if(b.lateCancel && depositKept(b)) dep = b.deposit;              // canceló el mismo día: la seña queda en el local
+      } else {
+        dep = (b.deposit > 0 && depState(b) === "paid") ? b.deposit : 0;
+        bal = collectedOf(b) - dep;
+        if(b.deposit > 0 && depState(b) !== "paid") s.depositDue += b.deposit;
+        if(b.date <= today && balanceDue(b) > 0){ s.toCollect += balanceDue(b); s.toCollectCount++; }
       }
+      var tot = dep + bal;
+      if(!tot) return;
+      s.paid += tot; s.senas += dep; s.cortes += bal;
+      if(b.status !== "cancelled") s.count++;
+      var depM = b.payMethod || "local", balM = b.balanceMethod === "cash" ? "local" : (b.balanceMethod || b.payMethod || "local");
+      s.byMethod[depM] = (s.byMethod[depM] || 0) + dep;
+      s.byMethod[balM] = (s.byMethod[balM] || 0) + bal;
+      s.byDow[fromISO(b.date).getDay()] += tot;
     });
     return s;
   }
@@ -1022,10 +1092,11 @@
 
   function payChips(c){
     var chips = [];
-    if(c.paidCount && !c.toCollect) chips.push('<span class="pchip ok">Pagado</span>');
-    if(c.sealPaid) chips.push('<span class="pchip seal">Seña cobrada</span>');
-    if(c.debt) chips.push('<span class="pchip warn">Señado · pendiente</span>');
-    if(c.toCollect) chips.push('<span class="pchip due">Por cobrar</span>');
+    if(c.paidCount && !c.toCollect && !c.depositDue) chips.push('<span class="pchip ok">Pagado</span>');
+    if(c.sealPaid) chips.push('<span class="pchip seal">Señó</span>');
+    if(c.depositDue) chips.push('<span class="pchip warn">Seña pendiente</span>');
+    if(c.toCollect) chips.push('<span class="pchip due">Debe saldo</span>');
+    if(c.debt) chips.push('<span class="pchip warn">Cargo por cancelación</span>');
     return chips.length ? chips.join("") : '<span class="pchip none">Sin pagos</span>';
   }
 
@@ -1037,7 +1108,7 @@
     var delta = prev ? pctChange(cur.paid, prev.paid) : null;
 
     var pendingSeals = Object.keys(state.debts).length, pendingSealAmt = pendingSeals * currentPenalty();
-    var totalDue = cur.paid + cur.toCollect;
+    var totalDue = cur.paid + cur.toCollect + cur.depositDue;
     var collectRate = totalDue ? Math.round(cur.paid * 100 / totalDue) : 0;
     var avg = cur.count ? Math.round(cur.paid / cur.count) : 0;
 
@@ -1047,13 +1118,13 @@
 
     html += '<div class="stat-grid pay-grid">' +
       payTile(money(cur.paid), 'Cobrado', delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs '+(session.payRange === 'mes' || session.payRange === 'anio' ? 'mismo tramo anterior' : 'período anterior')+'</span>', 'pay-main') +
-      payTile(money(cur.cortes), 'Cortes cobrados', cur.count + ' turnos pagados') +
-      payTile(money(cur.senas), 'Señas cobradas', 'sumadas a turnos pagados') +
-      payTile(money(cur.toCollect), 'Por cobrar', cur.toCollectCount + ' turnos ya realizados sin pagar', cur.toCollect ? 'is-warn' : '') +
-      payTile(money(pendingSealAmt), 'Señas pendientes', pendingSeals + (pendingSeals === 1 ? ' cliente' : ' clientes') + ' por cancelar el mismo día', pendingSeals ? 'is-warn' : '') +
-      payTile(money(avg), 'Ticket promedio', 'por turno pagado') +
+      payTile(money(cur.senas), 'Señas cobradas', 'adelantos al reservar (incluye las que quedaron por cancelar el mismo día)') +
+      payTile(money(cur.cortes), 'Saldos cobrados', cur.count + ' turnos con pagos · al terminar el corte') +
+      payTile(money(cur.depositDue), 'Señas por cobrar', 'turnos reservados que todavía no pagaron la seña', cur.depositDue ? 'is-warn' : '') +
+      payTile(money(cur.toCollect), 'Saldos por cobrar', cur.toCollectCount + ' turnos ya realizados sin pagar', cur.toCollect ? 'is-warn' : '') +
+      payTile(money(pendingSealAmt), 'Cargos pendientes', pendingSeals + (pendingSeals === 1 ? ' cliente' : ' clientes') + ' por cancelar el mismo día sin seña', pendingSeals ? 'is-warn' : '') +
+      payTile(money(avg), 'Ticket promedio', 'por turno con pagos') +
       payTile(collectRate + '%', 'Tasa de cobro', 'cobrado sobre lo que ya correspondía') +
-      payTile(String(cur.count), 'Turnos cobrados', inCur.filter(function(x){ return x.status === "cancelled"; }).length + ' cancelados en el período') +
       '</div>';
 
     // evolución de los últimos 6 meses (no depende del período elegido)
@@ -1066,7 +1137,7 @@
     var dows = [1, 2, 3, 4, 5, 6, 0].map(function(d){ return {label: DOW_SHORT[d], a: cur.byDow[d], b: 0}; });
 
     html += '<div class="pay-charts">' +
-      '<div class="card"><h2>Cobrado por mes</h2><div class="sub">Últimos 6 meses · <i class="lg lg-main"></i>cortes <i class="lg lg-seal"></i>señas</div>' + barChart(months) + '</div>' +
+      '<div class="card"><h2>Cobrado por mes</h2><div class="sub">Últimos 6 meses · <i class="lg lg-main"></i>saldos <i class="lg lg-seal"></i>señas</div>' + barChart(months) + '</div>' +
       '<div class="card"><h2>Medios de pago</h2><div class="sub">Cómo pagan en el período elegido</div>' + methodBars(cur.byMethod, cur.paid) + '</div>' +
       '<div class="card"><h2>Por día de la semana</h2><div class="sub">Cuándo se cobra más</div>' + barChart(dows) + '</div>' +
       '</div>';
@@ -1079,7 +1150,7 @@
         var p = c.profile, hay = (p.name + " " + p.lastname + " " + (p.nickname || "") + " " + (p.email || "")).toLowerCase();
         return hay.indexOf(q) >= 0 || (digitsOnly(q).length >= 3 && digitsOnly(p.phone).indexOf(digitsOnly(q)) >= 0);
       }
-      return c.paidCount || c.toCollect || c.debt || c.sealPaid;
+      return c.paidCount || c.toCollect || c.debt || c.sealPaid || c.depositDue;
     });
     html += '<div class="card"><h2>Pagos por persona</h2><div class="sub">Qué pagó, qué señó y qué debe cada cliente en el período elegido (las señas pendientes son las de hoy)</div>' +
       '<input type="text" id="inpPaySearch" placeholder="Buscar por nombre, teléfono o mail" value="'+esc(session.payQuery)+'" autocomplete="off">' +
@@ -1094,12 +1165,12 @@
     var s = session.paySort;
     list = list.slice().sort(function(a, b){
       if(s === "nombre") return a.sortName < b.sortName ? -1 : 1;
-      if(s === "debe") return ((b.debt + b.toCollect) - (a.debt + a.toCollect)) || (b.spent - a.spent);
+      if(s === "debe") return ((b.debt + b.toCollect + b.depositDue) - (a.debt + a.toCollect + a.depositDue)) || (b.spent - a.spent);
       return (b.spent - a.spent) || (b.paidCount - a.paidCount);
     });
     if(!list.length) return '<div class="empty-note">No hay pagos para ese período o búsqueda.</div>';
-    var tot = list.reduce(function(t, c){ t.spent += c.spent; t.seal += c.sealPaid; t.debt += c.debt; t.due += c.toCollect; return t; }, {spent: 0, seal: 0, debt: 0, due: 0});
-    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Seña cobrada</span><span>Seña pendiente</span><span>Por cobrar</span><span>Estado</span></div>' +
+    var tot = list.reduce(function(t, c){ t.spent += c.spent; t.seal += c.sealPaid; t.sealDue += c.depositDue; t.debt += c.debt; t.due += c.toCollect; return t; }, {spent: 0, seal: 0, sealDue: 0, debt: 0, due: 0});
+    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Seña cobrada</span><span>Seña pendiente</span><span>Saldo por cobrar</span><span>Cargo cancel.</span><span>Estado</span></div>' +
       list.map(function(c){
         var p = c.profile;
         return '<button type="button" class="prow" data-pclient="'+esc(c.key)+'">' +
@@ -1107,11 +1178,12 @@
             (p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '') + '<i>'+c.paidCount+' '+(c.paidCount === 1 ? 'turno pagado' : 'turnos pagados')+'</i></span></span>' +
           '<span class="crow-c" data-l="Pagado">'+money(c.spent)+'</span>' +
           '<span class="crow-c" data-l="Seña cobrada">'+(c.sealPaid ? money(c.sealPaid) : '—')+'</span>' +
-          '<span class="crow-c" data-l="Seña pendiente">'+(c.debt ? '<span class="owe">'+money(c.debt)+'</span>' : '—')+'</span>' +
-          '<span class="crow-c" data-l="Por cobrar">'+(c.toCollect ? '<span class="owe">'+money(c.toCollect)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Seña pendiente">'+(c.depositDue ? '<span class="owe">'+money(c.depositDue)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Saldo por cobrar">'+(c.toCollect ? '<span class="owe">'+money(c.toCollect)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Cargo por cancelación">'+(c.debt ? '<span class="owe">'+money(c.debt)+'</span>' : '—')+'</span>' +
           '<span class="crow-c pchips" data-l="Estado">'+payChips(c)+'</span></button>';
       }).join("") +
-      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.seal)+'</span><span>'+money(tot.debt)+'</span><span>'+money(tot.due)+'</span><span></span></div>';
+      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.seal)+'</span><span>'+money(tot.sealDue)+'</span><span>'+money(tot.due)+'</span><span>'+money(tot.debt)+'</span><span></span></div>';
   }
 
   function bindPagosEvents(){
@@ -1143,7 +1215,7 @@
         var p = c.profile, hay = (p.name + " " + p.lastname + " " + (p.nickname || "") + " " + (p.email || "")).toLowerCase();
         return hay.indexOf(q) >= 0 || (digitsOnly(q).length >= 3 && digitsOnly(p.phone).indexOf(digitsOnly(q)) >= 0);
       }
-      return c.paidCount || c.toCollect || c.debt || c.sealPaid;
+      return c.paidCount || c.toCollect || c.debt || c.sealPaid || c.depositDue;
     });
     box.innerHTML = payListHtml(list);
     box.querySelectorAll("[data-pclient]").forEach(function(el){
