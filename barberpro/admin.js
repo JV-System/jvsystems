@@ -1068,7 +1068,7 @@
     {id: "todo",    label: "Todo"}
   ];
   var PAY_METHOD_NAMES = {local: "En el local", transfer: "Transferencia", mp: "Mercado Pago"};
-  var DOW_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  var PAY_DOW = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   function monthBounds(y, m){   // m = 0..11 (puede salirse de rango: se normaliza)
     var first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
@@ -1244,7 +1244,7 @@
       var sm = paySummary(state.bookings.filter(function(x){ return inRange(x, mb); }), today);
       months.push({label: MONTHS[md.getMonth()].slice(0, 3), a: sm.cortes, b: sm.senas});
     }
-    var dows = [1, 2, 3, 4, 5, 6, 0].map(function(d){ return {label: DOW_SHORT[d], a: cur.byDow[d], b: 0}; });
+    var dows = [1, 2, 3, 4, 5, 6, 0].map(function(d){ return {label: PAY_DOW[d], a: cur.byDow[d], b: 0}; });
 
     html += '<div class="pay-charts">' +
       '<div class="card"><h2>Cobrado por mes</h2><div class="sub">Últimos 6 meses · <i class="lg lg-main"></i>saldos <i class="lg lg-seal"></i>señas</div>' + barChart(months) + '</div>' +
