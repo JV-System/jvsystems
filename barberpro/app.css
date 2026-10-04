@@ -644,3 +644,37 @@ input[readonly]{opacity:.7;}
 .myt-side{display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:none;}
 .myt-cancel{background:none; border:1px solid rgba(239,74,91,.4); color:var(--danger); font-family:inherit; font-weight:700; font-size:11.5px; padding:4px 11px; border-radius:999px; cursor:pointer;}
 .myt-cancel:hover{background:var(--danger-bg);}
+
+/* ocupación por día en el calendario del mes: celular = solo barra; pantalla mediana = barra + %; monitor ancho = barra + % + cantidad */
+.month-cell{position:relative;}
+.occ{position:absolute; left:6px; right:6px; bottom:5px; display:flex; flex-direction:column; gap:2px; align-items:stretch;}
+.occ-txt,.occ-n{display:none; text-align:center; font-weight:800; font-variant-numeric:tabular-nums; line-height:1;}
+.occ-track{display:block; height:4px; background:var(--surface-3); border-radius:999px; overflow:hidden;}
+.occ-fill{display:block; height:100%; border-radius:999px; background:var(--success);}
+.occ-fill.mid{background:var(--warn);}
+.occ-fill.high{background:var(--danger);}
+.occ-legend{margin-top:12px; flex-wrap:wrap;}
+.occ-legend .occ-fill{width:14px; height:6px; display:inline-block;}
+.month-cell .dn{margin-bottom:8px;}
+@media (min-width:1000px){
+  .month-cell{aspect-ratio:1.1;}
+  .occ{left:8px; right:8px; bottom:7px; gap:3px;}
+  .occ-txt{display:block; font-size:11px; color:var(--text-muted);}
+  .occ-track{height:6px;}
+  .month-cell .dn{margin-bottom:18px;}
+}
+@media (min-width:1280px){
+  .month-cell{aspect-ratio:1.5;}
+  .occ{left:12px; right:12px; bottom:9px;}
+  .occ-txt{font-size:12.5px;}
+  .occ-n{display:block; font-size:11px; font-weight:700; color:var(--text-faint);}
+  .occ-track{height:7px;}
+  .month-cell .dn{margin-bottom:30px;}
+}
+/* pantalla mediana: el resumen va arriba y el calendario usa todo el ancho */
+@media (min-width:1000px) and (max-width:1279px){
+  .agenda-layout{display:block;}
+  .agenda-side{position:static; max-height:none; overflow:visible; padding-right:0;}
+  .agenda-side .stat-row{max-width:520px;}
+  .agenda-main{margin-top:6px;}
+}

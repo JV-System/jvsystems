@@ -400,6 +400,17 @@
       '</div>';
   }
 
+  // ocupación del día: turnos tomados sobre el total de horarios que abre el local ese día
+  function dayOccupancy(iso, count){
+    var slotMin = state.config.slotMinutes, total = 0;
+    getRangesForDate(iso).forEach(function(r){
+      for(var t = timeToMin(r.start); t + slotMin <= timeToMin(r.end); t += slotMin) total++;
+    });
+    if(!total) return null;
+    var pct = Math.min(100, Math.round(count * 100 / total));
+    return {total: total, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};
+  }
+
   function agendaMes(){
     var cursor = fromISO(session.monthCursor);
     var year = cursor.getFullYear(), month = cursor.getMonth();
@@ -416,9 +427,11 @@
       var other = d.getMonth()!==month;
       var count = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).length;
       var closed = isDayFullyClosed(iso);
-      cells += '<div class="month-cell'+(other?' other':'')+(closed&&!other?' closed':'')+(iso===todayISO?' today':'')+'" '+(other?'':'data-jump="'+iso+'"')+'>' +
+      var occ = (!other && !closed) ? dayOccupancy(iso, count) : null;
+      cells += '<div class="month-cell'+(other?' other':'')+(closed&&!other?' closed':'')+(iso===todayISO?' today':'')+'" '+(other?'':'data-jump="'+iso+'"')+
+        (occ ? ' title="'+count+' de '+occ.total+' horarios ocupados ('+occ.pct+'%)"' : '')+'>' +
         '<div class="dn">'+d.getDate()+'</div>' +
-        (count && !other ? '<div class="dot"></div>' : '') +
+        (occ ? '<div class="occ"><span class="occ-txt">'+occ.pct+'%</span><span class="occ-track"><i class="occ-fill '+occ.level+'" style="width:'+occ.pct+'%"></i></span><span class="occ-n">'+count+'/'+occ.total+'</span></div>' : '') +
         '</div>';
     }
     return '<div class="nav-arrows">' +
@@ -426,7 +439,8 @@
       '<div class="lbl">'+MONTHS[month]+' '+year+'</div>' +
       '<button data-mnav="1">›</button>' +
       '</div>' +
-      '<div class="month-grid">'+cells+'</div>';
+      '<div class="month-grid">'+cells+'</div>' +
+      '<div class="gantt-legend occ-legend"><span><i class="occ-fill low"></i>Hasta 49%</span><span><i class="occ-fill mid"></i>50 a 84%</span><span><i class="occ-fill high"></i>85% o más (casi lleno)</span></div>';
   }
 
   function bindAgendaEvents(){
