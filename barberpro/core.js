@@ -31,8 +31,16 @@ function cleanTeam(list){
     var id = String(m.id || m.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").slice(0, 24);
     if(!id || seen[id]) return null;
     seen[id] = 1;
-    return {id: id, name: String(m.name || id).slice(0, 40), role: m.role === "employee" ? "employee" : "owner",
-            whatsapp: String(m.whatsapp || "").replace(/[^\d]/g, ""), active: m.active !== false};
+    var out = {id: id, name: String(m.name || id).slice(0, 40), role: m.role === "employee" ? "employee" : "owner",
+               whatsapp: String(m.whatsapp || "").replace(/[^\d]/g, ""), active: m.active !== false};
+    // días que atiende (0 = domingo ... 6 = sábado); si atiende todos, no se guarda. maxPerDay: tope de turnos por día (0 = todos los horarios)
+    if(Array.isArray(m.days)){
+      var ds = m.days.map(Number).filter(function(n, i, a){ return n >= 0 && n <= 6 && a.indexOf(n) === i; }).sort();
+      if(ds.length && ds.length < 7) out.days = ds;
+    }
+    var mx = parseInt(m.maxPerDay, 10);
+    if(mx > 0) out.maxPerDay = Math.min(mx, 200);
+    return out;
   }).filter(Boolean);
 }
 function teamList(){
@@ -40,6 +48,8 @@ function teamList(){
   return Array.isArray(t) && t.length ? t : [{id: "dueno", name: "Dueño", role: "owner", whatsapp: "", active: true}];
 }
 function activeBarbers(){ return teamList().filter(function(m){ return m.active !== false; }); }
+// ¿ese barbero atiende ese día de la semana?
+function barberWorks(m, iso){ return !m || !Array.isArray(m.days) || m.days.indexOf(fromISO(iso).getDay()) >= 0; }
 function barberById(id){ return teamList().filter(function(m){ return m.id === id; })[0] || null; }
 function ownerBarber(){ return teamList().filter(function(m){ return m.role === "owner"; })[0] || teamList()[0]; }
 // a quién se le asigna una reserva: las anteriores al equipo (sin barbero) son del dueño
@@ -517,6 +527,8 @@ function generateSlots(iso, barber){
   return slots;
 }
 function getSlotStatuses(iso, barber){
+  var member = barber ? barberById(barber) : null;
+  if(member && !barberWorks(member, iso)) return [];                    // ese día no atiende
   var ranges = getRangesForDate(iso);
   var slotMin = state.config.slotMinutes;
   var slots = [];
@@ -530,7 +542,8 @@ function getSlotStatuses(iso, barber){
     slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
   }
   var takenSet = takenTimes(iso, barber);
-  return slots.map(function(s){ return {time:s, taken:!!takenSet[s]}; });
+  var full = !!(member && member.maxPerDay > 0 && Object.keys(takenSet).length >= member.maxPerDay);   // llegó al tope de turnos del día
+  return slots.map(function(s){ return {time:s, taken:!!takenSet[s] || full}; });
 }
 
 // ---------- operaciones de datos ----------
@@ -709,11 +722,13 @@ function activeDebtFor(key){ return state.debts[key] || null; }
 function currentPenalty(){ return Math.round(state.config.price/2); }
 
 
-function cancelBooking(id){
+// opts.noShow: el cliente no vino ni avisó -> queda como "suspendido" (la seña se queda; sin seña, queda el cargo)
+function cancelBooking(id, opts){
   var b = state.bookings.filter(function(x){ return x.id===id; })[0];
   if(!b) return;
   var todayISO = toISO(new Date());
-  var late = (b.date===todayISO && b.status==="confirmed");
+  var noShow = !!(opts && opts.noShow);
+  var late = noShow || (b.date===todayISO && b.status==="confirmed");
   var kept = depositKept(b);
   var penalized = late && !kept;                        // si ya pagó la seña, esa es la penalidad: no se le suma una deuda
   if(penalized){
@@ -721,8 +736,10 @@ function cancelBooking(id){
   }
   b.status = "cancelled";
   b.lateCancel = late;
+  if(noShow) b.noShow = true;
   saveState();
   hooks.refresh();
+  if(noShow){ showToast(kept ? "Turno suspendido (no vino). La seña queda en el local." : "Turno suspendido (no vino). Se registró un cargo pendiente."); return; }
   showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
     : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
     : kept ? "Turno cancelado. Hay que devolver la seña." : "Turno cancelado sin cargo.");

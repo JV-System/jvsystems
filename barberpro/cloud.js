@@ -400,13 +400,14 @@
     batch.commit().catch(function(e){ console.error(e); });
   };
 
-  cancelBooking = function(id){
+  cancelBooking = function(id, opts){
     var b = state.bookings.filter(function(x){ return x.id === id; })[0];
     if(!b) return;
-    var late = (b.date === toISO(new Date()) && b.status === "confirmed"), kept = depositKept(b);
+    var noShow = !!(opts && opts.noShow);
+    var late = noShow || (b.date === toISO(new Date()) && b.status === "confirmed"), kept = depositKept(b);
     var penalized = late && !kept;
     if(b.isExample){                                   // turno de ejemplo: solo en memoria
-      b.status = "cancelled"; b.lateCancel = late;
+      b.status = "cancelled"; b.lateCancel = late; if(noShow) b.noShow = true;
       if(penalized) state.debts[b.clientKey] = {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now(), isExample: true};
       showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
         : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
@@ -416,7 +417,7 @@
     }
     turnoRefFor(b).then(function(ref){
       var batch = db.batch();
-      batch.update(db.doc("bookings/" + id), {status: "cancelled", lateCancel: late});
+      batch.update(db.doc("bookings/" + id), noShow ? {status: "cancelled", lateCancel: late, noShow: true} : {status: "cancelled", lateCancel: late});
       if(ref) batch.set(ref, Object.assign(turnoCopy(b), {status: "cancelled", lateCancel: late}), {merge: true});
       batch.delete(db.doc("slots/" + slotDocId(b)));                    // el horario vuelve a quedar libre
       if(penalized){

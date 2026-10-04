@@ -227,7 +227,7 @@ function calendarHtml(){
     if(n < 1 || n > dim){ cells += '<span class="cal-day blank"></span>'; continue; }
     var iso = y + "-" + pad2(m + 1) + "-" + pad2(n);
     var inRange = iso >= today && iso <= last;
-    var open = inRange && !isDayFullyClosed(iso);
+    var open = inRange && !isDayFullyClosed(iso) && barberWorks(barberById(chosenBarber()), iso);
     var free = open ? getSlotStatuses(iso, chosenBarber()).filter(function(s){ return !s.taken; }).length : 0;
     var cls = "cal-day" + (iso === today ? " today" : "") + (client.selectedDate === iso ? " selected" : "");
     var dot = "";
@@ -255,7 +255,7 @@ var TURNO_STATE = {confirmed:"Confirmado", completed:"Realizado", cancelled:"Can
 
 function turnoRow(t){
   var past = t.date < toISO(new Date()) && t.status === "confirmed";
-  var label = past ? "Pasado" : (TURNO_STATE[t.status] || t.status);
+  var label = past ? "Pasado" : (t.status === "cancelled" && t.lateCancel ? "Suspendido" : (TURNO_STATE[t.status] || t.status));
   var total = t.price + (t.debtCharged || 0);
   var pay = "";
   if(t.status !== "cancelled"){

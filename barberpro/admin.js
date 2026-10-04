@@ -326,13 +326,14 @@
 
   function bookingRow(b){
     var badgeClass = b.status;
-    var badgeLabel = b.status==="confirmed"?"Confirmado":b.status==="cancelled"?"Cancelado":"Completado";
+    var badgeLabel = b.status==="confirmed"?"Confirmado":b.status==="cancelled"?(b.lateCancel?"Suspendido":"Cancelado con aviso"):"Completado";
     var total = bookingTotal(b);
     var actions = "";
     if(b.status !== "cancelled"){
       actions = '<div class="actions">' + payActions(b) +
         (b.status==="confirmed" ? '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
                                    (isEmployee() ? '' : '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>') : '') +
+        (b.status==="confirmed" && !isEmployee() && turnoEnded(b) ? '<button class="btn btn-danger btn-sm" data-noshow="'+b.id+'">No vino</button>' : '') +
         (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
         (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
@@ -404,6 +405,12 @@
 
   function bindPayActions(root){
     root = root || document;
+    root.querySelectorAll("[data-noshow]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-noshow"), b = findBooking(id);
+        askConfirm("Marcar como suspendido", "El cliente no vino ni avisó. " + (b && depositKept(b) ? "La seña ("+money(b.deposit)+") queda en el local." : "Como no pagó la seña, queda un cargo pendiente del 50% a su nombre.") + " ¿Lo marcamos?", function(){ cancelBooking(id, {noShow: true}); });
+      };
+    });
     root.querySelectorAll("[data-dep]").forEach(function(el){ el.onclick = function(){ ownerDepositPaid(el.getAttribute("data-dep")); }; });
     root.querySelectorAll("[data-bal]").forEach(function(el){
       el.onclick = function(){ var id = el.getAttribute("data-bal"), b = findBooking(id); ownerBalancePaid(id, (b && b.balanceMethod) || "transfer"); };
@@ -496,7 +503,17 @@
       for(var t = timeToMin(r.start); t + slotMin <= timeToMin(r.end); t += slotMin) total++;
     });
     if(!total) return null;
-    if(!isEmployee() && (!session.agendaBarber || session.agendaBarber === "all")) total *= Math.max(1, activeBarbers().length);
+    // capacidad = turnos permitidos ese día: por cada barbero que atiende, sus horarios (con su tope por día si lo tiene)
+    var who = isEmployee() ? [barberById(myBarber())]
+      : (session.agendaBarber && session.agendaBarber !== "all") ? [barberById(session.agendaBarber)] : activeBarbers();
+    var cap = 0;
+    who.forEach(function(m){
+      if(!m){ cap += total; return; }
+      if(!barberWorks(m, iso)) return;                      // ese día no atiende
+      cap += m.maxPerDay > 0 ? Math.min(total, m.maxPerDay) : total;
+    });
+    if(!cap) return null;
+    total = cap;
     var pct = Math.min(100, Math.round(count * 100 / total));
     return {total: total, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};   // alto = verde (agenda llena), bajo = rojo
   }
@@ -830,6 +847,13 @@
     c.sealPaid = sum(valid, function(b){ return (b.deposit > 0 && depState(b) === "paid") ? b.deposit : 0; }) + sum(retained, function(b){ return b.deposit; });
     c.spent = sum(collectedList, collectedOf) + sum(retained, function(b){ return b.deposit; });
     c.depositDue = sum(valid, function(b){ return (b.deposit > 0 && depState(b) !== "paid") ? b.deposit : 0; });
+    // señas según el estado del turno: por venir (señado), retenida (suspendido) y a devolver (canceló con aviso)
+    var noticeList = c.bookings.filter(function(b){ return b.status === "cancelled" && !b.lateCancel; });
+    c.depUpcoming = sum(valid, function(b){ return (b.deposit > 0 && depState(b) === "paid" && !turnoEnded(b)) ? b.deposit : 0; });
+    c.depKept = sum(retained, function(b){ return b.deposit; });
+    c.depRefund = sum(noticeList, function(b){ return (b.deposit > 0 && depState(b) === "paid" && !b.depositRefunded) ? b.deposit : 0; });
+    c.cancelNotice = noticeList.length;
+    c.suspended = c.bookings.filter(function(b){ return b.status === "cancelled" && b.lateCancel; }).length;
     c.toCollect = past.reduce(function(s, b){ return s + balanceDue(b); }, 0);
     c.debtKeys = debtKeys;
     c.debt = debtKeys.length * currentPenalty();
@@ -960,7 +984,7 @@
         '</div></div></div>';
 
     html += '<div class="stat-grid">' +
-      tile(c.turnos, 'Turnos') + tile(c.done, 'Realizados') + tile(c.cancelled, 'Cancelados') +
+      tile(c.turnos, 'Turnos') + tile(c.done, 'Realizados') + tile(c.cancelNotice, 'Cancelados con aviso') + tile(c.suspended, 'Suspendidos') +
       tile(money(c.spent), 'Cobrado') + tile(money(c.toCollect), 'Por cobrar') + tile(money(c.debt), 'Deuda por cancelación') +
       '</div>';
 
@@ -982,7 +1006,7 @@
 
     html += '<div class="card"><h2>Historial de turnos</h2><div class="sub">'+hist.length+' en total</div>' +
       (hist.length ? '<div class="hist">' + hist.map(function(b){
-        var label = b.status === "confirmed" ? "Confirmado" : b.status === "cancelled" ? "Cancelado" : "Completado";
+        var label = b.status === "confirmed" ? "Confirmado" : b.status === "cancelled" ? (b.lateCancel ? "Suspendido" : "Cancelado con aviso") : "Completado";
         var total = b.price + (b.debtCharged || 0);
         return '<div class="hist-row'+(b.status === "cancelled" ? ' off' : '')+'">' +
           '<div class="hist-when"><b>'+formatDateLong(b.date)+'</b> · '+b.time+' hs</div>' +
@@ -1063,13 +1087,20 @@
   // totales de un conjunto de turnos
   // cobrado = señas confirmadas + saldos confirmados (cortes = saldos, por compatibilidad con el nombre viejo)
   function paySummary(list, today){
-    var s = {paid: 0, cortes: 0, senas: 0, count: 0, toCollect: 0, toCollectCount: 0, depositDue: 0, byMethod: {local: 0, transfer: 0, mp: 0}, byDow: [0, 0, 0, 0, 0, 0, 0]};
+    var s = {paid: 0, cortes: 0, senas: 0, count: 0, toCollect: 0, toCollectCount: 0, depositDue: 0, upcomingDep: 0, kept: 0, refund: 0, noticeCount: 0, suspCount: 0, byMethod: {local: 0, transfer: 0, mp: 0}, byDow: [0, 0, 0, 0, 0, 0, 0]};
     list.forEach(function(b){
       var dep = 0, bal = 0;
       if(b.status === "cancelled"){
-        if(b.lateCancel && depositKept(b)) dep = b.deposit;              // canceló el mismo día: la seña queda en el local
+        if(b.lateCancel){                                                 // suspendido: la seña queda en el local
+          s.suspCount++;
+          if(depositKept(b)){ dep = b.deposit; s.kept += b.deposit; }
+        } else {                                                          // canceló con aviso: la seña se devuelve
+          s.noticeCount++;
+          if(b.deposit > 0 && depState(b) === "paid" && !b.depositRefunded) s.refund += b.deposit;
+        }
       } else {
         dep = (b.deposit > 0 && depState(b) === "paid") ? b.deposit : 0;
+        if(dep && !turnoEnded(b)) s.upcomingDep += dep;                   // señado: el turno todavía no se hizo
         bal = collectedOf(b) - dep;
         if(b.deposit > 0 && depState(b) !== "paid") s.depositDue += b.deposit;
         if(b.date <= today && balanceDue(b) > 0){ s.toCollect += balanceDue(b); s.toCollectCount++; }
@@ -1120,10 +1151,46 @@
     }).join("") + '</div>';
   }
 
+  // tres listas separadas: señado (turno por venir), cancelado con aviso y suspendido
+  function payStateLists(b){
+    var today = b.today, groups = {senado: [], aviso: [], susp: []};
+    allClients(function(x){ return inRange(x, b.cur); }).forEach(function(c){
+      c.bookings.forEach(function(bk){
+        var row = {c: c, b: bk};
+        if(bk.status === "cancelled"){ (bk.lateCancel ? groups.susp : groups.aviso).push(row); }
+        else if(bk.deposit > 0 && depState(bk) !== "pending" && !turnoEnded(bk)) groups.senado.push(row);
+      });
+    });
+    var sorter = function(x, y){ return (x.b.date + x.b.time) < (y.b.date + y.b.time) ? -1 : 1; };
+    var line = function(r, chip){
+      var p = r.c.profile, wh = !isEmployee() && activeBarbers().length > 1 && barberNameOf(r.b) ? ' · '+esc(barberNameOf(r.b)) : '';
+      return '<button type="button" class="slrow" data-pclient="'+esc(r.c.key)+'"><span class="sl-who"><b>'+esc(p.name)+' '+esc(p.lastname)+'</b>' +
+        '<i>'+formatDateLong(r.b.date)+' · '+r.b.time+' hs'+wh+'</i></span><span class="sl-chip">'+chip+'</span></button>';
+    };
+    var col = function(title, sub, rows, mk){
+      return '<div class="card sl-card"><h2>'+title+' <span class="count-pill">'+rows.length+'</span></h2><div class="sub">'+sub+'</div>' +
+        (rows.length ? rows.sort(sorter).map(mk).join("") : '<div class="empty-note">Ninguno en este período.</div>') + '</div>';
+    };
+    return '<div class="sl-grid">' +
+      col("Señados", "Pagaron la seña y su turno todavía no se hizo", groups.senado, function(r){
+        return line(r, '<span class="pchip seal">'+money(r.b.deposit)+(depState(r.b) === "informed" ? ' · avisó' : '')+'</span>');
+      }) +
+      col("Cancelados con aviso", "Avisaron con tiempo: la seña se devuelve", groups.aviso, function(r){
+        var d = r.b.deposit > 0 && depState(r.b) === "paid";
+        return line(r, d ? (r.b.depositRefunded ? '<span class="pchip ok">Seña devuelta</span>' : '<span class="pchip warn">Devolver '+money(r.b.deposit)+'</span>') : '<span class="pchip none">Sin seña</span>');
+      }) +
+      col("Suspendidos", "No vinieron o cancelaron el mismo día", groups.susp, function(r){
+        return line(r, depositKept(r.b) ? '<span class="pchip due">Seña retenida '+money(r.b.deposit)+'</span>' : '<span class="pchip due">Sin seña · cargo</span>');
+      }) +
+      '</div>';
+  }
+
   function payChips(c){
     var chips = [];
     if(c.paidCount && !c.toCollect && !c.depositDue) chips.push('<span class="pchip ok">Pagado</span>');
-    if(c.sealPaid) chips.push('<span class="pchip seal">Señó</span>');
+    if(c.depUpcoming) chips.push('<span class="pchip seal">Señado</span>');
+    if(c.cancelNotice) chips.push('<span class="pchip none">Cancelado con aviso</span>');
+    if(c.suspended) chips.push('<span class="pchip due">Suspendido</span>');
     if(c.depositDue) chips.push('<span class="pchip warn">Seña pendiente</span>');
     if(c.toCollect) chips.push('<span class="pchip due">Debe saldo</span>');
     if(c.debt) chips.push('<span class="pchip warn">Cargo por cancelación</span>');
@@ -1148,8 +1215,10 @@
 
     html += '<div class="stat-grid pay-grid">' +
       payTile(money(cur.paid), 'Cobrado', delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs '+(session.payRange === 'mes' || session.payRange === 'anio' ? 'mismo tramo anterior' : 'período anterior')+'</span>', 'pay-main') +
-      payTile(money(cur.senas), 'Señas cobradas', 'adelantos al reservar (incluye las que quedaron por cancelar el mismo día)') +
+      payTile(money(cur.upcomingDep), 'Señado · turnos por venir', 'señas pagadas de turnos que todavía faltan') +
       payTile(money(cur.cortes), 'Saldos cobrados', cur.count + ' turnos con pagos · al terminar el corte') +
+      payTile(money(cur.kept), 'Señas retenidas', cur.suspCount + (cur.suspCount === 1 ? ' turno suspendido' : ' turnos suspendidos') + ' (no vinieron o cancelaron el mismo día)') +
+      payTile(money(cur.refund), 'Señas a devolver', cur.noticeCount + (cur.noticeCount === 1 ? ' turno cancelado con aviso' : ' turnos cancelados con aviso'), cur.refund ? 'is-warn' : '') +
       payTile(money(cur.depositDue), 'Señas por cobrar', 'turnos reservados que todavía no pagaron la seña', cur.depositDue ? 'is-warn' : '') +
       payTile(money(cur.toCollect), 'Saldos por cobrar', cur.toCollectCount + ' turnos ya realizados sin pagar', cur.toCollect ? 'is-warn' : '') +
       payTile(money(pendingSealAmt), 'Cargos pendientes', pendingSeals + (pendingSeals === 1 ? ' cliente' : ' clientes') + ' por cancelar el mismo día sin seña', pendingSeals ? 'is-warn' : '') +
@@ -1171,6 +1240,8 @@
       '<div class="card"><h2>Medios de pago</h2><div class="sub">Cómo pagan en el período elegido</div>' + methodBars(cur.byMethod, cur.paid) + '</div>' +
       '<div class="card"><h2>Por día de la semana</h2><div class="sub">Cuándo se cobra más</div>' + barChart(dows) + '</div>' +
       '</div>';
+
+    html += payStateLists(b);
 
     // detalle por persona
     var all = allClients(function(x){ return inRange(x, b.cur); });
@@ -1199,21 +1270,21 @@
       return (b.spent - a.spent) || (b.paidCount - a.paidCount);
     });
     if(!list.length) return '<div class="empty-note">No hay pagos para ese período o búsqueda.</div>';
-    var tot = list.reduce(function(t, c){ t.spent += c.spent; t.seal += c.sealPaid; t.sealDue += c.depositDue; t.debt += c.debt; t.due += c.toCollect; return t; }, {spent: 0, seal: 0, sealDue: 0, debt: 0, due: 0});
-    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Seña cobrada</span><span>Seña pendiente</span><span>Saldo por cobrar</span><span>Cargo cancel.</span><span>Estado</span></div>' +
+    var tot = list.reduce(function(t, c){ t.spent += c.spent; t.up += c.depUpcoming; t.kept += c.depKept; t.refund += c.depRefund; t.due += c.toCollect; return t; }, {spent: 0, up: 0, kept: 0, refund: 0, due: 0});
+    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Señado (por venir)</span><span>Seña retenida</span><span>Seña a devolver</span><span>Saldo por cobrar</span><span>Estado</span></div>' +
       list.map(function(c){
         var p = c.profile;
         return '<button type="button" class="prow" data-pclient="'+esc(c.key)+'">' +
           '<span class="crow-who">'+clientAvatar(p, "sm")+'<span class="crow-txt"><b>'+esc(p.name)+' '+esc(p.lastname)+'</b>' +
             (p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '') + '<i>'+c.paidCount+' '+(c.paidCount === 1 ? 'turno pagado' : 'turnos pagados')+'</i></span></span>' +
           '<span class="crow-c" data-l="Pagado">'+money(c.spent)+'</span>' +
-          '<span class="crow-c" data-l="Seña cobrada">'+(c.sealPaid ? money(c.sealPaid) : '—')+'</span>' +
-          '<span class="crow-c" data-l="Seña pendiente">'+(c.depositDue ? '<span class="owe">'+money(c.depositDue)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Señado (por venir)">'+(c.depUpcoming ? money(c.depUpcoming) : '—')+'</span>' +
+          '<span class="crow-c" data-l="Seña retenida">'+(c.depKept ? '<span class="owe">'+money(c.depKept)+'</span>' : '—')+'</span>' +
+          '<span class="crow-c" data-l="Seña a devolver">'+(c.depRefund ? '<span class="owe">'+money(c.depRefund)+'</span>' : '—')+'</span>' +
           '<span class="crow-c" data-l="Saldo por cobrar">'+(c.toCollect ? '<span class="owe">'+money(c.toCollect)+'</span>' : '—')+'</span>' +
-          '<span class="crow-c" data-l="Cargo por cancelación">'+(c.debt ? '<span class="owe">'+money(c.debt)+'</span>' : '—')+'</span>' +
           '<span class="crow-c pchips" data-l="Estado">'+payChips(c)+'</span></button>';
       }).join("") +
-      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.seal)+'</span><span>'+money(tot.sealDue)+'</span><span>'+money(tot.due)+'</span><span>'+money(tot.debt)+'</span><span></span></div>';
+      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.up)+'</span><span>'+money(tot.kept)+'</span><span>'+money(tot.refund)+'</span><span>'+money(tot.due)+'</span><span></span></div>';
   }
 
   function bindPagosEvents(){
@@ -1334,6 +1405,12 @@
           '<label class="checkline tm-active"><input type="checkbox" data-tm-active="'+esc(m.id)+'" '+(m.active !== false ? 'checked' : '')+'><span>Atiende</span></label></div>' +
         '<div class="row2"><div><label>Nombre</label><input type="text" data-tm-name="'+esc(m.id)+'" value="'+esc(m.name)+'" maxlength="40"></div>' +
           '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" data-tm-wa="'+esc(m.id)+'" value="'+esc(m.whatsapp || "")+'" placeholder="5493415551234"></div></div>' +
+        '<label>Días que atiende</label><div class="day-toggles">' + [[1,"L"],[2,"M"],[3,"X"],[4,"J"],[5,"V"],[6,"S"],[0,"D"]].map(function(d){
+          var on = !Array.isArray(m.days) || m.days.indexOf(d[0]) >= 0;
+          return '<label class="day-chip"><input type="checkbox" data-tm-day="'+esc(m.id)+'|'+d[0]+'" '+(on ? 'checked' : '')+'><span>'+d[1]+'</span></label>';
+        }).join("") + '</div>' +
+        '<label>Máximo de turnos por día <span class="opt">(vacío = todos los horarios del local)</span></label>' +
+        '<input type="number" min="0" max="200" data-tm-max="'+esc(m.id)+'" value="'+(m.maxPerDay || "")+'" placeholder="Ej: 12" style="max-width:160px;">' +
         access +
         '<div class="actions"><button class="btn btn-primary btn-sm" type="button" data-tm-save="'+esc(m.id)+'">Guardar</button>' +
           (emp ? '<button class="btn btn-danger btn-sm" type="button" data-tm-del="'+esc(m.id)+'">Quitar del equipo</button>' : '') + '</div>' +
@@ -1367,7 +1444,11 @@
         var team = teamList().map(function(m){
           if(m.id !== id) return m;
           var act = document.querySelector('[data-tm-active="'+id+'"]');
-          return Object.assign({}, m, {name: val("data-tm-name", id) || m.name, whatsapp: val("data-tm-wa", id), active: act ? act.checked : true});
+          var days = [];
+          document.querySelectorAll('[data-tm-day^="'+id+'|"]').forEach(function(c){ if(c.checked) days.push(parseInt(c.getAttribute("data-tm-day").split("|")[1], 10)); });
+          if(!days.length){ showToast("Elegí al menos un día de atención."); days = [0, 1, 2, 3, 4, 5, 6]; }
+          return Object.assign({}, m, {name: val("data-tm-name", id) || m.name, whatsapp: val("data-tm-wa", id), active: act ? act.checked : true,
+                                       days: days, maxPerDay: parseInt(val("data-tm-max", id), 10) || 0});
         });
         if(!CLOUD){
           var pinEl = document.querySelector('[data-tm-pin="'+id+'"]');
