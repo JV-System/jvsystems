@@ -151,7 +151,7 @@
           var un = auth.onAuthStateChanged(function(u){
             un();
             if(!u) return resolve(null);
-            loadProfile(u).then(resolve).catch(function(){ resolve(null); });
+            loadProfile(u).then(function(p){ resolve(p || {incomplete: true, uid: u.uid, email: u.email}); }).catch(function(){ resolve(null); });
           });
         });
       },
@@ -168,12 +168,18 @@
         return persist(remember).then(function(){ return auth.signInWithEmailAndPassword(String(email).trim(), password); })
           .then(function(cred){
             return loadProfile(cred.user).then(function(p){
-              if(!p){ auth.signOut(); throw authErr("auth/user-not-found"); }
-              return p;
+              // la cuenta existe (ej. se creó desde la consola) pero todavía no tiene perfil de cliente: se completa al entrar
+              return p || {incomplete: true, uid: cred.user.uid, email: cred.user.email};
             });
           });
       },
       logout: function(){ return auth.signOut(); },
+      // completa el perfil de una cuenta que ya existía en Firebase pero no tenía datos de cliente
+      complete: function(p){
+        var u = auth.currentUser, prof = cleanProfile(Object.assign({}, p, {email: u ? u.email : p.email}));
+        if(!u) return Promise.reject(authErr("auth/user-not-found"));
+        return db.doc("clients/" + u.uid).set(prof).then(function(){ return Object.assign({uid: u.uid}, prof); });
+      },
       update: function(p){
         var u = auth.currentUser, prof = cleanProfile(p);
         if(!u) return Promise.reject(authErr("auth/user-not-found"));

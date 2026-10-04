@@ -726,6 +726,7 @@ var clientAuth = {
     m[email].profile = cleanProfile(p); saveLocalAccounts(m);
     return Promise.resolve(withUid(m[email].profile));
   },
+  complete: function(){ return Promise.reject(authErr("auth/user-not-found")); },
   resetPassword: function(){ return Promise.reject(authErr("local-mode")); }
 };
 

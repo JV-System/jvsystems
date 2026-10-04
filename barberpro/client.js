@@ -7,6 +7,7 @@ var client = {
   step:6,   // 6 cargando sesión, 0 inicio (iniciar sesión / crear cuenta), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
   name:"", lastname:"", nickname:"", phone:"", email:"", photo:"", uid:"", registered:false,
   selectedDate:null, selectedTime:null, calMonth:null, barber:"",
+  completing:false,   // la cuenta ya existía pero falta completar el perfil de cliente
   walkIn:false,       // turno por orden de llegada (de hoy, pago completo, sin seña)
   reschedule:null,    // turno que se está cambiando de día
   payMethod:"local",
@@ -184,10 +185,10 @@ function stepLogin(){
 }
 
 function stepDatos(){
-  var editing = client.registered;
+  var editing = client.registered || client.completing;
   return '<div class="card">' +
-    '<h2>'+(editing ? 'Tu perfil' : 'Creá tu cuenta')+'</h2>' +
-    '<div class="sub">'+(editing ? 'Podés corregirlo cuando quieras' : 'Una sola vez · después reservás con un toque')+'</div>' +
+    '<h2>'+(client.completing ? 'Completá tu perfil' : editing ? 'Tu perfil' : 'Creá tu cuenta')+'</h2>' +
+    '<div class="sub">'+(client.completing ? 'Tu cuenta ya existe: solo faltan tus datos para reservar' : editing ? 'Podés corregirlo cuando quieras' : 'Una sola vez · después reservás con un toque')+'</div>' +
     '<div class="avatar-edit"><div id="avatarPreview">'+avatarHtml("lg")+'</div>' +
       '<div class="avatar-btns"><button class="link-btn" id="btnPhoto" type="button">'+(client.photo ? 'Cambiar foto' : 'Agregar foto')+'</button>' +
       (client.photo ? '<button class="link-btn link-out" id="btnPhotoDel" type="button">Quitar</button>' : '') +
@@ -207,7 +208,7 @@ function stepDatos(){
       '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>') +
     '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local lo usa para confirmarte el turno y recordártelo.</div>' +
     '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Crear cuenta y continuar')+'</button>' +
-    (editing ? '<button class="btn btn-ghost" id="btnChangePass" type="button" style="margin-top:10px;">Cambiar contraseña</button>' +
+    (editing ? (client.completing ? '' : '<button class="btn btn-ghost" id="btnChangePass" type="button" style="margin-top:10px;">Cambiar contraseña</button>') +
                '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>'
              : '<button class="btn btn-ghost" id="btnRegBack" style="margin-top:10px;">Volver</button>') +
     '</div>';
@@ -567,7 +568,7 @@ function logoutClient(){
     clientAuth.logout().catch(function(e){ console.error(e); }).then(function(){
       stopWatchTurnos(); client.watching = null;
       client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = ""; client.photo = ""; client.uid = "";
-      client.registered = false; client.step = 0;
+      client.registered = false; client.completing = false; client.step = 0;
       client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local"; client.barber = "";
       renderClient();
       showToast("Saliste de la cuenta.");
@@ -575,10 +576,18 @@ function logoutClient(){
   });
 }
 
+// la cuenta existe pero no tiene perfil de cliente: se piden los datos que faltan
+function needProfile(p){
+  client.email = p.email || ""; client.uid = p.uid; client.registered = false; client.completing = true;
+  client.step = 1;
+  renderClient();
+  showToast("Falta completar tu perfil para poder reservar.");
+}
+
 function applyProfile(p){
   client.name = p.name; client.lastname = p.lastname; client.nickname = p.nickname || ""; client.phone = p.phone; client.email = p.email;
   client.photo = p.photo || ""; client.uid = p.uid || p.email;
-  client.registered = true;
+  client.registered = true; client.completing = false;
 }
 
 function bindClientEvents(){
@@ -606,6 +615,7 @@ function bindClientEvents(){
       if(!pass){ showToast("Ingresá tu contraseña."); return; }
       bl.disabled = true; bl.textContent = "Ingresando...";
       clientAuth.login(email, pass, document.getElementById("inpRemember").checked).then(function(p){
+        if(p.incomplete){ needProfile(p); return; }
         applyProfile(p); client.step = 2; renderClient();
       }).catch(function(e){
         console.error(e);
@@ -667,7 +677,10 @@ function bindClientEvents(){
     var label = b1.textContent;
     var done = function(p){ applyProfile(p); client.step = 2; renderClient(); };
     var fail = function(msg){ return function(e){ console.error(e); showToast(msg || authMessage(e)); b1.disabled = false; b1.textContent = label; }; };
-    if(client.registered){
+    if(client.completing){
+      b1.disabled = true; b1.textContent = "Guardando...";
+      clientAuth.complete(Object.assign({}, profile, {email: client.email})).then(done).catch(fail("No pudimos guardar tus datos. Intentá de nuevo."));
+    } else if(client.registered){
       b1.disabled = true; b1.textContent = "Guardando...";
       clientAuth.update(Object.assign({}, profile, {email: client.email})).then(done).catch(fail("No pudimos guardar los cambios. Intentá de nuevo."));
     } else {
@@ -799,6 +812,7 @@ function bindClientEvents(){
 // ¿ya hay una sesión abierta en este dispositivo? Entra directo a elegir fecha; si no, pantalla de inicio
 render();
 clientAuth.restore().then(function(p){
+  if(p && p.incomplete){ needProfile(p); return; }
   if(p){ applyProfile(p); client.step = 2; } else { client.step = 0; }
   renderClient();
 }).catch(function(e){ console.error(e); client.step = 0; renderClient(); });
