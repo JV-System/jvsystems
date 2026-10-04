@@ -6,7 +6,7 @@
 var client = {
   step:6,   // 6 cargando sesión, 0 inicio (iniciar sesión / crear cuenta), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
   name:"", lastname:"", nickname:"", phone:"", email:"", photo:"", uid:"", registered:false,
-  selectedDate:null, selectedTime:null, calMonth:null,
+  selectedDate:null, selectedTime:null, calMonth:null, barber:"",
   payMethod:"local",
   lastBooking:null
 };
@@ -44,14 +44,43 @@ function buildBooking(){
     id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
+    barberId:chosenBarber(), barberName:(barberById(chosenBarber()) || {}).name || "",
     payMethod:defaultPayMethod(), paid:false,
     deposit:dep, depositState:dep > 0 ? "pending" : "paid", balanceState:"pending",
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
 }
 
+// ---------- con quién se corta ----------
+// con un solo barbero se elige solo; con varios, el cliente elige antes de ver el calendario
+function chosenBarber(){
+  var a = activeBarbers();
+  if(a.length === 1) return a[0].id;
+  var m = client.barber && barberById(client.barber);
+  return m && m.active !== false ? m.id : "";
+}
+
+function barberPickerHtml(){
+  var a = activeBarbers();
+  if(a.length < 2) return "";
+  var cur = chosenBarber();
+  return '<div class="barber-pick"><div class="myt-title">¿Con quién te querés cortar?</div><div class="barber-opts">' + a.map(function(m){
+    var on = m.id === cur;
+    return '<button type="button" class="barber-opt'+(on ? ' on' : '')+'" data-barber="'+esc(m.id)+'" aria-pressed="'+on+'">' +
+      '<span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>' +
+      '<b>'+esc(m.name)+'</b><i>'+(m.role === "owner" ? 'Dueño' : 'Barbero')+'</i></button>';
+  }).join("") + '</div></div>';
+}
+
 // clave del saldo pendiente del cliente: en la nube es el id de su cuenta
 function myDebtKey(){ return CLOUD ? client.uid : clientKeyOf(client.name, client.lastname, client.phone); }
+
+// WhatsApp al que se avisa del turno: el del barbero elegido (si cargó el suyo) o el del local
+function waTargetFor(b){
+  var m = b.barberId && barberById(b.barberId);
+  if(m && m.whatsapp) return {num: waNumber(m.whatsapp), name: m.name};
+  return {num: state.config.whatsappLink, name: ""};
+}
 
 function buildWaLink(b){
   var msg = "Hola! Soy "+b.name+" "+b.lastname+(b.nickname?" ("+b.nickname+")":"")+". Reservé un turno en "+state.config.businessName+
@@ -59,7 +88,7 @@ function buildWaLink(b){
   if(b.debtCharged>0) msg += " Incluye "+money(b.debtCharged)+" de una cancelación anterior.";
   if(b.payMethod==="transfer") msg += " Te paso el comprobante de la transferencia.";
   msg += " ¡Gracias!";
-  return "https://wa.me/"+state.config.whatsappLink+"?text="+encodeURIComponent(msg);
+  return "https://wa.me/"+waTargetFor(b).num+"?text="+encodeURIComponent(msg);
 }
 
 // ================= VISTA =================
@@ -199,7 +228,7 @@ function calendarHtml(){
     var iso = y + "-" + pad2(m + 1) + "-" + pad2(n);
     var inRange = iso >= today && iso <= last;
     var open = inRange && !isDayFullyClosed(iso);
-    var free = open ? getSlotStatuses(iso).filter(function(s){ return !s.taken; }).length : 0;
+    var free = open ? getSlotStatuses(iso, chosenBarber()).filter(function(s){ return !s.taken; }).length : 0;
     var cls = "cal-day" + (iso === today ? " today" : "") + (client.selectedDate === iso ? " selected" : "");
     var dot = "";
     if(!inRange || !open) cls += " off";
@@ -237,7 +266,7 @@ function turnoRow(t){
     pay = t.lateCancel ? '<span class="paystate pend">Seña retenida</span>' : '<span class="paystate info">Seña a devolver</span>';
   }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
-    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' +
+    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+'</span>' : '') +
       '<span class="myt-sub">'+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
       (canCancelTurno(t) ? '<button type="button" class="myt-cancel" data-cancel-turno="'+t.id+'">Cancelar</button>' : '') + '</span></div>';
@@ -300,14 +329,15 @@ function misTurnosHtml(){
 }
 
 function stepFecha(){
-  var cal = calendarHtml();
+  var barber = chosenBarber();
+  var cal = barber ? calendarHtml() : '<div class="empty-note">Elegí con quién te querés cortar para ver los horarios.</div>';
 
   var debt = activeDebtFor(myDebtKey());
   var debtNotice = debt ? '<div class="notice warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div>Tenés un saldo pendiente de '+money(currentPenalty())+' por una cancelación anterior. Se va a sumar a este turno.</div></div>' : "";
 
   var slotsHtml = "";
-  if(client.selectedDate){
-    var statuses = getSlotStatuses(client.selectedDate);
+  if(client.selectedDate && barber){
+    var statuses = getSlotStatuses(client.selectedDate, barber);
     if(statuses.length===0){
       slotsHtml = '<div class="empty-note">No hay horarios disponibles ese día. Probá con otra fecha.</div>';
     }else{
@@ -327,10 +357,11 @@ function stepFecha(){
     '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mi perfil</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
     misTurnosHtml() +
+    barberPickerHtml() +
     cal +
     slotsHtml +
     '</div>' +
-    '<button class="btn btn-primary" id="btnStep2" '+(client.selectedDate&&client.selectedTime?'':'disabled')+'>Continuar</button>';
+    '<button class="btn btn-primary" id="btnStep2" '+(barber&&client.selectedDate&&client.selectedTime?'':'disabled')+'>Continuar</button>';
 }
 
 // ---------- seña y saldo ----------
@@ -354,6 +385,7 @@ function stepConfirmacion(){
     '<div class="sub">Revisá los datos antes de reservar</div>' +
     '<div class="summary-row"><span class="k">Fecha</span><span class="v">'+formatDateLong(client.selectedDate)+'</span></div>' +
     '<div class="summary-row"><span class="k">Horario</span><span class="v">'+client.selectedTime+' hs</span></div>' +
+    (activeBarbers().length > 1 ? '<div class="summary-row"><span class="k">Con</span><span class="v">'+esc((barberById(chosenBarber()) || {}).name || "")+'</span></div>' : '') +
     (state.config.address ? '<div class="summary-row"><span class="k">Lugar</span><span class="v place-v">'+esc(state.config.address)+'</span></div>' : '') +
     '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(price)+'</span></div>' +
     (debtAmount ? '<div class="summary-row"><span class="k">Saldo anterior</span><span class="v" style="color:var(--warn)">'+money(debtAmount)+'</span></div>' : "") +
@@ -418,7 +450,7 @@ function stepExito(){
   return '<div class="card" style="text-align:center;">' +
     '<div class="success-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4fae83" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>' +
     '<h2>¡Turno reservado!</h2>' +
-    '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs</div>' +
+    '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs'+(b.barberName && activeBarbers().length > 1 ? ' con '+esc(b.barberName) : '')+'</div>' +
     payInstructions(b) +
     '</div>' +
     placeCard() +
@@ -428,7 +460,7 @@ function stepExito(){
       '<a class="btn btn-primary" href="'+icsDataUri(b)+'" download="turno-'+b.date+'.ics">Guardar en mi calendario</a>' +
       '<a class="btn btn-ghost" href="'+googleCalendarLink(b)+'" target="_blank" rel="noopener">Agregar a Google Calendar</a>' +
     '</div></div>' +
-    (state.config.whatsappLink ? '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">Avisar por WhatsApp</a>' : '') +
+    (waTargetFor(b).num ? '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">'+(waTargetFor(b).name ? 'Avisarle a '+esc(waTargetFor(b).name)+' por WhatsApp' : 'Avisar por WhatsApp')+'</a>' : '') +
     '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>' +
     '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir</button>';
 }
@@ -486,7 +518,7 @@ function logoutClient(){
       stopWatchTurnos(); client.watching = null;
       client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = ""; client.photo = ""; client.uid = "";
       client.registered = false; client.step = 0;
-      client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";
+      client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local"; client.barber = "";
       renderClient();
       showToast("Saliste de la cuenta.");
     });
@@ -645,7 +677,7 @@ function bindClientEvents(){
   if(conf) conf.onclick = function(){
     // otra persona pudo haber tomado el horario mientras se decidía
     reloadState();
-    var free = getSlotStatuses(client.selectedDate).some(function(s){ return s.time===client.selectedTime && !s.taken; });
+    var free = getSlotStatuses(client.selectedDate, chosenBarber()).some(function(s){ return s.time===client.selectedTime && !s.taken; });
     if(!free){
       showToast("Ese horario se acaba de ocupar. Elegí otro.");
       client.selectedTime = null; client.step = 2; renderClient();
@@ -669,6 +701,13 @@ function bindClientEvents(){
       }
     });
   };
+  document.querySelectorAll("[data-barber]").forEach(function(el){
+    el.onclick = function(){
+      client.barber = el.getAttribute("data-barber");
+      client.selectedDate = null; client.selectedTime = null; client.calMonth = null;
+      renderClient();
+    };
+  });
   document.querySelectorAll("[data-copy-alias]").forEach(function(el){
     el.onclick = function(){ copyText(state.config.payAlias); };
   });

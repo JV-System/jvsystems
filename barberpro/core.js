@@ -23,6 +23,28 @@ function defaultHoursDay(morningActive, afternoonActive){
   };
 }
 
+// ---------- equipo ----------
+// El dueño (administrador) también es un barbero. Los empleados entran al panel con su usuario y ven solo sus turnos.
+function cleanTeam(list){
+  var seen = {};
+  return (list || []).map(function(m){
+    var id = String(m.id || m.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").slice(0, 24);
+    if(!id || seen[id]) return null;
+    seen[id] = 1;
+    return {id: id, name: String(m.name || id).slice(0, 40), role: m.role === "employee" ? "employee" : "owner",
+            whatsapp: String(m.whatsapp || "").replace(/[^\d]/g, ""), active: m.active !== false};
+  }).filter(Boolean);
+}
+function teamList(){
+  var t = state.config.team;
+  return Array.isArray(t) && t.length ? t : [{id: "dueno", name: "Dueño", role: "owner", whatsapp: "", active: true}];
+}
+function activeBarbers(){ return teamList().filter(function(m){ return m.active !== false; }); }
+function barberById(id){ return teamList().filter(function(m){ return m.id === id; })[0] || null; }
+function ownerBarber(){ return teamList().filter(function(m){ return m.role === "owner"; })[0] || teamList()[0]; }
+// a quién se le asigna una reserva: las anteriores al equipo (sin barbero) son del dueño
+function barberOfBooking(b){ return b.barberId || ownerBarber().id; }
+
 // Datos de esta barbería que vienen en config.js (viajan a todos los celulares).
 // Solo cuentan los textos que no estén vacíos; lo que se guarde desde el panel en un navegador los pisa.
 function fileDefaults(){
@@ -31,6 +53,7 @@ function fileDefaults(){
     if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
   });
   if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
+  if(Array.isArray(f.team) && f.team.length) out.team = cleanTeam(f.team);
   if(Array.isArray(f.mapCenter) && f.mapCenter.length === 2 && isFinite(f.mapCenter[0]) && isFinite(f.mapCenter[1])) out.mapCenter = [Number(f.mapCenter[0]), Number(f.mapCenter[1])];
   var h = fileHours(f.hours);
   if(h){ out.hours = h; out.hoursSig = JSON.stringify(f.hours); }
@@ -75,6 +98,7 @@ function baseState(){
       mapCenter:null,
       price:8000,
       depositPercent:50,        // seña que se paga al reservar (% del precio); 0 = sin seña
+      team:[],                  // equipo: [{id, name, role:"owner"|"employee", whatsapp, active}]; vacío = un solo barbero
       priceIsExample:true,
       slotMinutes:30,
       ownerPin:"1234",
@@ -106,9 +130,12 @@ function seedExampleData(s){
     });
     return slots;
   }
+  var crew = (Array.isArray(s.config.team) && s.config.team.length ? s.config.team : [{id:"dueno", name:"Dueño"}]), bi = 0;
   function mk(name,lastname,phone,date,time){
+    var who = crew[bi++ % crew.length];
     return {id:uid(), name:name, lastname:lastname, phone:phone||"", email:(name+lastname).toLowerCase().replace(/[^a-z]/g,"")+"@example.com", date:date, time:time,
       price:s.config.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
+      barberId:who.id, barberName:who.name,
       seenByOwner:true, clientKey:clientKeyOf(name,lastname,phone), isExample:true};
   }
 
@@ -201,9 +228,11 @@ function seedClientStories(s){
     return best;
   }
 
-  function person(name, lastname, nickname, phone){
+  var crewS = (Array.isArray(s.config.team) && s.config.team.length ? s.config.team : [{id:"dueno", name:"Dueño"}]);
+  function person(name, lastname, nickname, phone, crewIdx){
+    var who = crewS[(crewIdx || 0) % crewS.length];
     var mail = (name + lastname).toLowerCase().replace(/[^a-z]/g, "") + "@example.com";
-    var p = {name: name, lastname: lastname, nickname: nickname, phone: phone, email: mail};
+    var p = {name: name, lastname: lastname, nickname: nickname, phone: phone, email: mail, barberId: who.id, barberName: who.name};
     p.key = clientKeyOf(name, lastname, phone);
     return p;
   }
@@ -222,7 +251,8 @@ function seedClientStories(s){
       date: iso, time: time, price: price, debtCharged: o.debt || 0,
       payMethod: o.pay || "local", deposit: dep, depositState: depSt, balanceState: balSt,
       paid: depSt === "paid" && balSt === "paid", status: o.status || "completed",
-      createdAt: fromISO(addDays(iso, -2)).getTime(), seenByOwner: true, clientKey: p.key, isExample: true
+      createdAt: fromISO(addDays(iso, -2)).getTime(), seenByOwner: true, clientKey: p.key, isExample: true,
+      barberId: p.barberId, barberName: p.barberName
     };
     if(balSt !== "pending") b.balanceMethod = o.pay === "mp" ? "mp" : o.pay === "transfer" ? "transfer" : "cash";
     if(o.status === "cancelled" && o.late){ b.lateCancel = true; }
@@ -231,7 +261,7 @@ function seedClientStories(s){
   }
 
   // 1) Matías: 12 cortes, ~cada 14 días, todos pagados (casi siempre por transferencia) + próximo turno
-  var matias = person("Matías", "Romero", "El Gato", "3415550101");
+  var matias = person("Matías", "Romero", "El Gato", "3415550101", 0);
   var gaps = [9, 14, 15, 13, 14, 14, 16, 12, 14, 15, 14, 13];
   var off = -4;
   gaps.forEach(function(g, i){
@@ -241,13 +271,13 @@ function seedClientStories(s){
   add(matias, 8, "18:00", {pay: "transfer", status: "confirmed", dep: "paid"});               // ya pagó la seña
 
   // 2) Nico: 7 cortes cada 3 semanas con Mercado Pago, una cancelación con aviso, turno mañana ya pagado
-  var nico = person("Nicolás", "Benítez", "Nico", "3415550102");
+  var nico = person("Nicolás", "Benítez", "Nico", "3415550102", 2);
   for(var k = 0; k < 7; k++) add(nico, -9 - 21 * k, "11:00", {pay: "mp", paid: true});
   add(nico, -30, "11:00", {pay: "mp", status: "cancelled", dep: "paid"});   // canceló con tiempo: hay que devolverle la seña
   add(nico, 1, "10:30", {pay: "mp", status: "confirmed", dep: "paid"});       // turno de mañana, seña paga
 
   // 3) Fede: cancela bastante. Una seña pendiente por cancelar el mismo día, otro turno que no se marcó ni se cobró
-  var fede = person("Federico", "Acosta", "Fede", "3415550103");
+  var fede = person("Federico", "Acosta", "Fede", "3415550103", 1);
   add(fede, -96, "16:00", {paid: true});
   add(fede, -75, "16:00", {status: "cancelled"});
   add(fede, -52, "16:00", {paid: true});
@@ -259,7 +289,7 @@ function seedClientStories(s){
   add(fede, 6, "16:00", {status: "confirmed", dep: "informed", pay: "transfer"});   // avisó que transfirió la seña (falta confirmarla)
 
   // 4) Tomi: nuevo. Su primer corte quedó sin pagar y hoy tiene otro turno
-  var tomi = person("Tomás", "Giménez", "Tomi", "3415550104");
+  var tomi = person("Tomás", "Giménez", "Tomi", "3415550104", 1);
   add(tomi, -3, "12:00", {pay: "transfer", status: "completed", dep: "paid", bal: "informed"});   // pagó la seña y avisó que transfirió el saldo
   add(tomi, 0, "15:00", {pay: "mp", status: "confirmed", dep: "paid"});
 
@@ -267,7 +297,7 @@ function seedClientStories(s){
   add(matias, -60, "18:00", {pay: "transfer", status: "cancelled", dep: "paid", late: true});
 
   // 5) Joaquín: 5 cortes mensuales y dejó de venir hace más de 4 meses
-  var joa = person("Joaquín", "Peralta", "", "3415550105");
+  var joa = person("Joaquín", "Peralta", "", "3415550105", 0);
   for(var j = 0; j < 5; j++) add(joa, -128 - 31 * j, "10:00", {paid: true});
 }
 
@@ -292,6 +322,7 @@ function loadState(){
       if(k==="hours" || k==="hoursSig") return;
       if(!parsed.config[k] || parsed.config[k]===generic[k]) parsed.config[k] = fd[k];
     });
+    if(!Array.isArray(parsed.config.team) || !parsed.config.team.length) parsed.config.team = fd.team || [];
     parsed.config.hours = Object.assign({}, d.config.hours, (parsed.config||{}).hours||{});
     // si cambiaron los horarios en config.js, se adoptan una vez; los que edite el dueño después se respetan
     if(fd.hours && savedSig !== fd.hoursSig){ parsed.config.hours = fd.hours; parsed.config.hoursSig = fd.hoursSig; }
@@ -454,7 +485,7 @@ function getRangesForDate(iso){
   return ranges;
 }
 function isDayFullyClosed(iso){ return getRangesForDate(iso).length===0; }
-function generateSlots(iso){
+function generateSlots(iso, barber){
   var ranges = getRangesForDate(iso);
   var slotMin = state.config.slotMinutes;
   var slots = [];
@@ -467,11 +498,11 @@ function generateSlots(iso){
     var nowMin = new Date().getHours()*60+new Date().getMinutes();
     slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
   }
-  var taken = takenTimes(iso);
+  var taken = takenTimes(iso, barber);
   slots = slots.filter(function(s){ return !taken[s]; });
   return slots;
 }
-function getSlotStatuses(iso){
+function getSlotStatuses(iso, barber){
   var ranges = getRangesForDate(iso);
   var slotMin = state.config.slotMinutes;
   var slots = [];
@@ -484,7 +515,7 @@ function getSlotStatuses(iso){
     var nowMin = new Date().getHours()*60+new Date().getMinutes();
     slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
   }
-  var takenSet = takenTimes(iso);
+  var takenSet = takenTimes(iso, barber);
   return slots.map(function(s){ return {time:s, taken:!!takenSet[s]}; });
 }
 
@@ -493,9 +524,12 @@ function getSlotStatuses(iso){
 // así client.js y admin.js funcionan igual en los dos modos.
 
 // horarios ocupados de un día: { "10:00": true, ... }
-function takenTimes(iso){
+// barber (opcional): solo cuentan los turnos de ese barbero (las reservas sin barbero bloquean a todos)
+function takenTimes(iso, barber){
   var out = {};
-  state.bookings.forEach(function(b){ if(b.date===iso && b.status!=="cancelled") out[b.time] = true; });
+  state.bookings.forEach(function(b){
+    if(b.date===iso && b.status!=="cancelled" && (!barber || !b.barberId || b.barberId===barber)) out[b.time] = true;
+  });
   return out;
 }
 

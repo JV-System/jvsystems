@@ -26,6 +26,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // empleados: el dueño crea un documento staff/{uid} por cada uno (uid de su usuario) con el barbero al que corresponden
+    function isStaff() {
+      return signedIn() && exists(/databases/$(database)/documents/staff/$(request.auth.uid));
+    }
+
+    function staffBarber() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.barberId;
+    }
+
     function isStr(v, max) {
       return v is string && v.size() <= max;
     }
@@ -52,8 +61,23 @@ service cloud.firestore {
       return /databases/$(database)/documents/bookings/$(bid);
     }
 
+    // id del horario ocupado: fecha + hora (+ barbero si la reserva es con un barbero del equipo)
     function slotId(d) {
-      return d.date + '_' + d.time.replace(':', '');
+      return d.date + '_' + d.time.replace(':', '') + ('barber' in d ? '_' + d.barber : '');
+    }
+
+    function bookingSlotId(d) {
+      return d.date + '_' + d.time.replace(':', '') + ('barberId' in d ? '_' + d.barberId : '');
+    }
+
+    function validBarberId(v) {
+      return v is string && v.matches('^[a-z0-9]{1,24}$');
+    }
+
+    // ---------- empleados ----------
+    match /staff/{uid} {
+      allow read: if isOwner() || (signedIn() && request.auth.uid == uid);
+      allow write: if isOwner();
     }
 
     // ---------- datos del negocio ----------
@@ -66,8 +90,9 @@ service cloud.firestore {
     match /slots/{id} {
       allow read: if true;
       allow create: if signedIn()
-                    && request.resource.data.keys().hasOnly(['date', 'time', 'bid'])
+                    && request.resource.data.keys().hasOnly(['date', 'time', 'bid', 'barber'])
                     && request.resource.data.keys().hasAll(['date', 'time', 'bid'])
+                    && (!('barber' in request.resource.data) || validBarberId(request.resource.data.barber))
                     && validDate(request.resource.data.date)
                     && validTime(request.resource.data.time)
                     && isStr(request.resource.data.bid, 40)
@@ -75,6 +100,7 @@ service cloud.firestore {
       allow update: if false;
       // el dueño, o el cliente dueño de esa reserva en el mismo lote en que la cancela
       allow delete: if isOwner()
+                    || (isStaff() && resource.data.get('barber', '') == staffBarber())
                     || (signedIn()
                         && get(bookingPath(resource.data.bid)).data.cid == request.auth.uid
                         && getAfter(bookingPath(resource.data.bid)).data.status == 'cancelled');
@@ -82,7 +108,8 @@ service cloud.firestore {
 
     // ---------- reservas ----------
     match /bookings/{bid} {
-      allow read, delete: if isOwner();
+      allow read: if isOwner() || (isStaff() && resource.data.barberId == staffBarber());
+      allow delete: if isOwner();
       // el dueño cambia lo que quiera; el cliente solo puede CANCELAR su propia reserva confirmada (y no una ya pasada).
       // lateCancel lo fija la regla: es true solo si cancela el mismo día del turno (ahí se cobra el 50% de seña).
       allow update: if isOwner()
@@ -92,7 +119,7 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
                         && request.resource.data.status == 'cancelled'
                         && request.resource.data.lateCancel == (resource.data.date == hoyAR()))
-                    || informsDeposit() || informsBalance();
+                    || informsDeposit() || informsBalance() || staffEdits();
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -101,6 +128,15 @@ service cloud.firestore {
     function ownsBooking() {
       return signedIn() && resource.data.cid == request.auth.uid;
     }
+    // un empleado puede completar y cobrar los turnos de SU barbero (no cancelarlos ni tocar nada más)
+    function staffEdits() {
+      return isStaff() && resource.data.get('barberId', '') == staffBarber()
+          && resource.data.status in ['confirmed', 'completed']
+          && request.resource.data.status in ['confirmed', 'completed']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState',
+                                                                                  'balanceMethod', 'seenByOwner', 'reminded']);
+    }
+
     function informsDeposit() {
       return ownsBooking() && resource.data.status == 'confirmed'
           && resource.data.get('depositState', 'pending') == 'pending'
@@ -131,7 +167,7 @@ service cloud.firestore {
     function validBooking(bid, d) {
       return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
                                'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey', 'cid',
-                               'deposit', 'depositState', 'balanceState'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName'])
           && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey', 'cid'])
           && d.id == bid
@@ -153,8 +189,10 @@ service cloud.firestore {
           && isStr(d.clientKey, 80)
           && isStr(d.cid, 128)
           && validPayFields(d)
+          && (!('barberId' in d) || (validBarberId(d.barberId) && isStr(d.get('barberName', ''), 60)))
+          && (!('barberName' in d) || 'barberId' in d)
           // la reserva tiene que venir junto con la marca de horario ocupado (se escriben en un mismo lote)
-          && existsAfter(/databases/$(database)/documents/slots/$(slotId(d)));
+          && existsAfter(/databases/$(database)/documents/slots/$(bookingSlotId(d)));
     }
 
     // ---------- perfiles de clientes ----------
@@ -184,7 +222,7 @@ service cloud.firestore {
     // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). La lee ese cliente o el dueño.
     function validTurno(tid, d) {
       return d.keys().hasOnly(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt',
-                               'deposit', 'depositState', 'balanceState'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName'])
           && d.keys().hasAll(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
           && d.id == tid
           && validDate(d.date) && validTime(d.time)
@@ -217,7 +255,10 @@ service cloud.firestore {
                     || (signedIn() && request.auth.uid == id && resource.data.get('balanceState', 'pending') == 'pending'
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balanceState', 'balanceMethod'])
                         && request.resource.data.balanceState == 'informed' && request.resource.data.balanceMethod in ['transfer', 'mp']
-                        && getAfter(bookingPath(tid)).data.balanceState == 'informed');
+                        && getAfter(bookingPath(tid)).data.balanceState == 'informed')
+                    || (isStaff() && get(bookingPath(tid)).data.get('barberId', '') == staffBarber()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState', 'balanceMethod'])
+                        && request.resource.data.status in ['confirmed', 'completed'] && resource.data.status in ['confirmed', 'completed']);
       allow delete: if isOwner();
     }
 
@@ -233,7 +274,8 @@ service cloud.firestore {
 
     match /debtFlags/{key} {
       allow get: if isOwner() || (signedIn() && request.auth.uid == key);
-      allow list, delete: if isOwner();
+      allow list: if isOwner();
+      allow delete: if isOwner() || isStaff();
       allow create: if isOwner() || (request.resource.data.keys().hasOnly(['since', 'bid']) && validLateDebt(key, request.resource.data));
       allow update: if isOwner()
                     || (signedIn() && request.auth.uid == key
@@ -248,7 +290,8 @@ service cloud.firestore {
     }
 
     match /debts/{key} {
-      allow read, update, delete: if isOwner();
+      allow read, update: if isOwner();
+      allow delete: if isOwner() || isStaff();
       allow create: if isOwner()
                     || (request.resource.data.keys().hasOnly(['name', 'lastname', 'phone', 'since', 'bid'])
                         && isStr(request.resource.data.name, 60) && isStr(request.resource.data.lastname, 60)

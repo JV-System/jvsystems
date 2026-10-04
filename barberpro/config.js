@@ -24,6 +24,15 @@ window.BARBERPRO_CONFIG = {
   // del mail. Vacío = el panel pide el mail completo.
   ownerEmail:      "jv2066037@gmail.com",
 
+  // Equipo: el dueño (administrador) y los empleados. El cliente elige con quién cortarse al reservar. whatsapp = número con código de país
+  // (ej. "5493415551234"); si está, el aviso del turno le llega a ese barbero. Los empleados entran al panel con su propio usuario
+  // (se crean desde el panel del dueño, en Equipo) y ven solo sus turnos.
+  team: [
+    {id: "martin",  name: "Martín",  role: "owner"},
+    {id: "lucas",   name: "Lucas",   role: "employee"},
+    {id: "nicolas", name: "Nicolás", role: "employee"}
+  ],
+
   // Foto propia del local para el fondo del encabezado (ej. "hero.jpg", en esta misma carpeta). Si está, se usa en lugar del
   // mapa: no depende de ningún servicio externo, es gratis para siempre y no necesita token. Horizontal, ~1200 px de ancho, JPG.
   heroImage:       "",

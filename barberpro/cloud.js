@@ -30,10 +30,10 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","price","depositPercent","priceIsExample","slotMinutes","hours"];
+                     "payAlias","payHolder","payMpLink","price","depositPercent","priceIsExample","slotMinutes","hours","team"];
 
   function docKey(k){ return String(k).replace(/[^A-Za-z0-9:_-]/g, "_"); }
-  function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", ""); }
+  function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", "") + (b.barberId ? "_" + b.barberId : ""); }
   function fail(e, msg){
     console.error(e);
     showToast(msg || "No se pudo completar. Revisá tu conexión e intentá de nuevo.");
@@ -52,14 +52,18 @@
 
   db.collection("slots").where("date", ">=", toISO(new Date())).onSnapshot(function(snap){
     var m = {};
-    snap.forEach(function(doc){ var d = doc.data(); (m[d.date] = m[d.date] || {})[d.time] = true; });
+    // { fecha: { barbero: { hora: true } } }; los horarios viejos (sin barbero) quedan bajo "*" y bloquean a todos
+    snap.forEach(function(doc){ var d = doc.data(), day = (m[d.date] = m[d.date] || {}); (day[d.barber || "*"] = day[d.barber || "*"] || {})[d.time] = true; });
     state.slots = m;
     hooks.refresh();
   }, function(e){ console.error("slots", e); });
 
-  takenTimes = function(iso){
-    var out = {}, m = state.slots[iso];
-    if(m) Object.keys(m).forEach(function(t){ out[t] = true; });
+  takenTimes = function(iso, barber){
+    var out = {}, day = state.slots[iso];
+    if(day) Object.keys(day).forEach(function(who){
+      if(barber && who !== "*" && who !== barber) return;
+      Object.keys(day[who]).forEach(function(t){ out[t] = true; });
+    });
     return out;
   };
 
@@ -69,7 +73,7 @@
   function turnoCopy(b){
     var t = {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
              paid: b.paid, status: b.status, createdAt: b.createdAt};
-    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel"].forEach(function(k){
+    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName"].forEach(function(k){
       if(b[k] !== undefined && b[k] !== null) t[k] = b[k];
     });
     return t;
@@ -77,7 +81,9 @@
   persistBooking = function(b){
     return Promise.resolve(b.cid).then(function(cid){
       var batch = db.batch();
-      batch.set(db.doc("slots/" + slotDocId(b)), {date: b.date, time: b.time, bid: b.id});
+      var slot = {date: b.date, time: b.time, bid: b.id};
+      if(b.barberId) slot.barber = b.barberId;
+      batch.set(db.doc("slots/" + slotDocId(b)), slot);
       batch.set(db.doc("bookings/" + b.id), b);
       if(cid) batch.set(db.doc("clients/" + cid + "/turnos/" + b.id), turnoCopy(b));
       if(b.debtCharged > 0) batch.update(db.doc("debtFlags/" + docKey(b.clientKey)), {chargedBy: b.id});   // el saldo ya se sumó a este turno
@@ -211,17 +217,23 @@
   function adminError(e){
     console.error("panel", e);
     if(e && e.code === "permission-denied"){
-      showToast("Esta cuenta no es la del dueño de la barbería.");
+      showToast("Esta cuenta no tiene permisos en el panel de la barbería.");
       if(auth) auth.signOut();
     }
   }
+  // Roles: el dueño ve todo; un empleado (documento staff/{uid}) ve solo las reservas de su barbero.
+  var role = null, staffBarber = null;
+  state.staff = [];
   function startAdminListeners(){
     stopAdminListeners();
-    unsubAdmin.push(db.collection("bookings").onSnapshot(function(snap){
+    var bookingsRef = db.collection("bookings");
+    if(role === "employee") bookingsRef = bookingsRef.where("barberId", "==", staffBarber);
+    unsubAdmin.push(bookingsRef.onSnapshot(function(snap){
       var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
       realBookings = arr; applyReal();
       hooks.refresh();
     }, adminError));
+    if(role !== "owner") return;
     unsubAdmin.push(db.collection("clients").onSnapshot(function(snap){
       var arr = []; snap.forEach(function(d){ arr.push(Object.assign({uid: d.id}, d.data())); });
       state.clients = arr;
@@ -232,6 +244,11 @@
       realDebts = m; applyReal();
       hooks.refresh();
     }, adminError));
+    unsubAdmin.push(db.collection("staff").onSnapshot(function(snap){
+      var arr = []; snap.forEach(function(d){ arr.push(Object.assign({uid: d.id}, d.data())); });
+      state.staff = arr;
+      hooks.refresh();
+    }, adminError));
     // la primera vez que entra el dueño, se guarda la configuración inicial (config.js + valores de fábrica)
     db.doc("config/main").get().then(function(s){ if(!s.exists) saveState(); }).catch(function(e){ console.error(e); });
   }
@@ -239,11 +256,20 @@
   var authReady = false;
   if(auth && isAdminPage){
     auth.onAuthStateChanged(function(u){
-      authReady = true;
-      if(u){ startAdminListeners(); }
-      else { stopAdminListeners(); realBookings = []; realDebts = {}; applyReal(); }
-      hooks.authChanged();
-      hooks.refresh();
+      if(!u){
+        authReady = true; role = null; staffBarber = null;
+        stopAdminListeners(); realBookings = []; realDebts = {}; applyReal();
+        hooks.authChanged(); hooks.refresh();
+        return;
+      }
+      // ¿es empleado? (tiene un documento en staff); si no, se asume dueño y las reglas lo confirman al leer los datos
+      db.doc("staff/" + u.uid).get().then(function(snap){
+        if(snap.exists){ role = "employee"; staffBarber = snap.data().barberId; } else { role = "owner"; staffBarber = null; }
+      }).catch(function(){ role = "owner"; staffBarber = null; }).then(function(){
+        authReady = true;
+        startAdminListeners();
+        hooks.authChanged(); hooks.refresh();
+      });
     });
   }
   window.cloudAuth = {
@@ -258,6 +284,20 @@
       });
     },
     logout: function(){ return auth.signOut(); },
+    role: function(){ return role; },
+    barberId: function(){ return staffBarber; },
+    // el dueño crea el usuario de un empleado: se usa una segunda app de Firebase para no cerrar la sesión del dueño
+    createStaff: function(email, password, member){
+      var app2 = firebase.apps.filter(function(a){ return a.name === "staffcreate"; })[0] || firebase.initializeApp(cfg.firebase, "staffcreate");
+      var auth2 = app2.auth();
+      return auth2.createUserWithEmailAndPassword(email, password).then(function(cred){
+        var uid = cred.user.uid;
+        return auth2.signOut().then(function(){
+          return db.doc("staff/" + uid).set({barberId: member.id, name: member.name, email: String(email).trim().toLowerCase()});
+        }).then(function(){ return uid; });
+      });
+    },
+    removeStaff: function(uid){ return db.doc("staff/" + uid).delete(); },
     resetPassword: function(email){ return auth.sendPasswordResetEmail(email); },
     // cambiar la contraseña: se confirma primero la actual (Firebase lo exige para operaciones sensibles)
     changePassword: function(current, next){
@@ -291,7 +331,7 @@
       var flag = snap.exists ? snap.data() : null, batch = db.batch(), now = Date.now();
       batch.update(db.doc("bookings/" + t.id), {status: "cancelled", lateCancel: late});
       batch.update(db.doc("clients/" + uid + "/turnos/" + t.id), {status: "cancelled"});
-      batch.delete(db.doc("slots/" + t.date + "_" + String(t.time).replace(":", "")));        // el horario vuelve a quedar libre
+      batch.delete(db.doc("slots/" + t.date + "_" + String(t.time).replace(":", "") + (t.barberId ? "_" + t.barberId : "")));        // el horario vuelve a quedar libre
       var next = flag;
       if(flag && flag.chargedBy === t.id){                                                    // el saldo que traía este turno vuelve a estar pendiente
         batch.update(db.doc("debtFlags/" + uid), {chargedBy: null});

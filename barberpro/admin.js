@@ -2,8 +2,13 @@
    Depende de core.js (estado, utilidades, disponibilidad). */
 (function(){
 "use strict";
+  // local (versión de prueba): "1" = dueño, "emp:<id>" = empleado
+  var _lv = CLOUD ? null : sessionStorage.getItem(OWNER_KEY);
   var session = {
-    ownerAuthed: CLOUD ? false : (sessionStorage.getItem(OWNER_KEY)==="1"),
+    ownerAuthed: CLOUD ? false : !!_lv,
+    localRole: _lv && _lv.indexOf("emp:") === 0 ? "employee" : "owner",
+    localBarber: _lv && _lv.indexOf("emp:") === 0 ? _lv.slice(4) : null,
+    agendaBarber: "all",
     ownerTab: "agenda",
     agendaView: "dia",
     agendaDate: toISO(new Date()),
@@ -26,7 +31,8 @@
     applyBranding("Administración");
     if(!session.ownerAuthed) return;
     var t = session.ownerTab;
-    if(t==="agenda" || t==="saldos") renderOwner();
+    if(t==="agenda" || t==="saldos" || t==="cobros") renderOwner();
+    else if(t==="equipo"){ var ae = document.activeElement; if(!(ae && ae.closest && ae.closest(".owner-content"))) renderOwner(); }
     else if(t==="clientes" && document.activeElement !== document.getElementById("inpClientSearch")) renderOwner();
     else if(t==="pagos" && document.activeElement !== document.getElementById("inpPaySearch")) renderOwner();
   };
@@ -46,19 +52,26 @@
       return;
     }
 
-    var unseen = state.bookings.filter(function(b){ return !b.seenByOwner && b.status==="confirmed"; }).length;
-    var html = '<div class="owner-nav-row">' +
-      '<div class="owner-nav-scroll"><div class="owner-nav">' +
-        navBtn("agenda","Agenda", unseen) +
+    if(isEmployee() && EMP_TABS.indexOf(session.ownerTab) < 0) session.ownerTab = "agenda";
+    var unseen = bk().filter(function(b){ return !b.seenByOwner && b.status==="confirmed"; }).length;
+    var cobrosCount = isEmployee() ? bk().filter(function(b){
+      return b.status !== "cancelled" && ((b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed" || (turnoEnded(b) && balanceDue(b) > 0));
+    }).length : 0;
+    var navHtml = isEmployee()
+      ? navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("config","Mi cuenta")
+      : navBtn("agenda","Agenda", unseen) +
         navBtn("clientes","Clientes") +
         navBtn("pagos","Pagos") +
+        navBtn("equipo","Equipo") +
         navBtn("horarios","Horarios") +
         navBtn("cierres","Cierres") +
         navBtn("negocio","Negocio", needsSetup() ? "!" : 0) +
         navBtn("precios","Precios") +
         navBtn("saldos","Saldos", Object.keys(state.debts).length) +
-        navBtn("config","Configuración") +
-      '</div></div>' +
+        navBtn("config","Configuración");
+    var html = '<div class="owner-nav-row">' +
+      (isEmployee() ? '<div class="whoami"><span class="avatar">'+esc(((barberById(myBarber()) || {}).name || "?").charAt(0).toUpperCase())+'</span><div><b>'+esc((barberById(myBarber()) || {}).name || "Empleado")+'</b><i>Empleado</i></div></div>' : '') +
+      '<div class="owner-nav-scroll"><div class="owner-nav">' + navHtml + '</div></div>' +
       '<button class="btn-logout" id="btnLogout">Salir</button>' +
       '</div>';
 
@@ -70,6 +83,8 @@
     else if(session.ownerTab==="precios") html += ownerPrecios();
     else if(session.ownerTab==="clientes") html += ownerClientes();
     else if(session.ownerTab==="pagos") html += ownerPagos();
+    else if(session.ownerTab==="equipo") html += ownerEquipo();
+    else if(session.ownerTab==="cobros") html += ownerCobros();
     else if(session.ownerTab==="config") html += ownerConfig();
     else html += ownerSaldos();
     html += '</div>';
@@ -90,6 +105,8 @@
     else if(session.ownerTab==="precios") bindPreciosEvents();
     else if(session.ownerTab==="clientes") bindClientesEvents();
     else if(session.ownerTab==="pagos") bindPagosEvents();
+    else if(session.ownerTab==="equipo") bindEquipoEvents();
+    else if(session.ownerTab==="cobros") bindCobrosEvents();
     else if(session.ownerTab==="config") bindConfigEvents();
     else bindSaldosEvents();
   }
@@ -181,9 +198,15 @@
     }
     btn.onclick = function(){
       var pin = document.getElementById("inpPin").value;
+      var pins = state.config.staffPins || {};
+      var empId = Object.keys(pins).filter(function(id){ return pins[id] && pins[id] === pin && barberById(id) && barberById(id).role === "employee"; })[0];
       if(pin === state.config.ownerPin){
-        session.ownerAuthed = true;
+        session.ownerAuthed = true; session.localRole = "owner"; session.localBarber = null;
         sessionStorage.setItem(OWNER_KEY,"1");
+        renderOwner();
+      }else if(empId){
+        session.ownerAuthed = true; session.localRole = "employee"; session.localBarber = empId;
+        sessionStorage.setItem(OWNER_KEY,"emp:"+empId);
         renderOwner();
       }else{
         showToast("PIN incorrecto.");
@@ -204,7 +227,7 @@
 
   // cuando todavía no hay turnos: invita a cargar los datos de ejemplo para ver el panel con actividad
   function demoCta(){
-    if(state.bookings.length || hasExampleData()) return "";
+    if(isEmployee() || state.bookings.length || hasExampleData()) return "";
     return '<div class="card demo-cta"><h2>Todavía no hay turnos</h2>' +
       '<div class="sub">¿Querés ver cómo se ve el panel con actividad? Cargá clientes y turnos de ejemplo' + (CLOUD ? ' (solo en este navegador, no se guardan en tu base).' : '.') + '</div>' +
       '<button class="btn btn-primary" data-demo-on="1">Cargar datos de ejemplo</button></div>';
@@ -212,7 +235,7 @@
 
   function ownerAgenda(){
     var todayISO = toISO(new Date());
-    var todays = state.bookings.filter(function(b){ return b.date===todayISO && b.status!=="cancelled"; });
+    var todays = bk().filter(function(b){ return b.date===todayISO && b.status!=="cancelled"; });
     var toCollect = todays.filter(function(b){ return !b.paid; }).reduce(function(s,b){ return s + b.price + (b.debtCharged||0); }, 0);
 
     var html = '<div class="agenda-layout"><aside class="agenda-side">' + demoCta() + '<div class="stat-row">' +
@@ -228,6 +251,7 @@
     html += reminderCard();
     html += proximosCard();
     html += '</aside><section class="agenda-main">';
+    html += barberFilterHtml();
 
     html += '<div class="agenda-subnav">' +
       ['dia','semana','mes'].map(function(v){
@@ -245,14 +269,14 @@
   // los próximos turnos confirmados (hoy en adelante); un toque abre ese día
   function proximosCard(){
     var now = new Date(), today = toISO(now), nowMin = now.getHours()*60 + now.getMinutes();
-    var list = state.bookings.filter(function(b){
+    var list = bk().filter(function(b){
       return b.status==="confirmed" && (b.date > today || (b.date===today && timeToMin(b.time) >= nowMin - 30));
     }).sort(function(a,b){ return (a.date+a.time) < (b.date+b.time) ? -1 : 1; }).slice(0, 8);
     return '<div class="card next-card"><h2>Próximos turnos</h2>' +
       (list.length ? list.map(function(b){
         return '<button type="button" class="next-row" data-jump="'+b.date+'">' +
           '<span class="next-when"><b>'+b.time+'</b>'+(b.date===today ? 'Hoy' : formatDateLong(b.date))+'</span>' +
-          '<span class="next-who">'+esc(b.name)+' '+esc(b.lastname)+'</span>' +
+          '<span class="next-who">'+esc(b.name)+' '+esc(b.lastname)+(!isEmployee() && activeBarbers().length > 1 && barberNameOf(b) ? ' <small>· '+esc(barberNameOf(b))+'</small>' : '')+'</span>' +
           (b.paid ? '<span class="paystate ok">Pagado</span>' : '') + '</button>';
       }).join("") : '<div class="empty-note">No hay turnos próximos.</div>') +
       '</div>';
@@ -261,7 +285,7 @@
   // turnos de mañana: un toque por cliente abre WhatsApp o el mail con el recordatorio ya escrito
   function tomorrowBookings(){
     var t = addDays(toISO(new Date()), 1);
-    return state.bookings.filter(function(b){ return b.date===t && b.status==="confirmed"; })
+    return bk().filter(function(b){ return b.date===t && b.status==="confirmed"; })
       .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
   }
   function reminderCard(){
@@ -284,7 +308,7 @@
 
   function agendaDia(){
     var iso = session.agendaDate;
-    var list = state.bookings.filter(function(b){ return b.date===iso; }).sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+    var list = bk().filter(function(b){ return b.date===iso; }).sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
     var html = '<div class="nav-arrows">' +
       '<button data-dnav="-1">‹</button>' +
       '<div class="lbl">'+formatDateLong(iso)+'</div>' +
@@ -308,7 +332,7 @@
     if(b.status !== "cancelled"){
       actions = '<div class="actions">' + payActions(b) +
         (b.status==="confirmed" ? '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
-                                   '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>' : '') +
+                                   (isEmployee() ? '' : '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>') : '') +
         (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
         (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
@@ -319,6 +343,7 @@
       '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
       '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.nickname?' <span class="nick">“'+esc(b.nickname)+'”</span>':'')+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
       '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
+      (!isEmployee() && activeBarbers().length > 1 && barberNameOf(b) ? ' · <span class="with-barber">con '+esc(barberNameOf(b))+'</span>' : '') +
       (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de cargo anterior)</span>':'') +
       '</div>' + payLine(b) + actions +
       '</div>';
@@ -445,10 +470,11 @@
       var row = '<div class="gantt-row"><div class="gantt-time">'+timeLbl+'</div>';
       days.forEach(function(iso){
         var open = getRangesForDate(iso).some(function(r){ return t>=timeToMin(r.start) && t<timeToMin(r.end); });
-        var booking = state.bookings.filter(function(b){ return b.date===iso && b.time===timeLbl && b.status!=="cancelled"; })[0];
+        var here = bk().filter(function(b){ return b.date===iso && b.time===timeLbl && b.status!=="cancelled"; }), booking = here[0];
         var cls = "gantt-cell" + (open?"":" closed") + (booking?" booked":"") + (iso===todayISO?" today":"");
-        var content = booking ? '<span class="gantt-name">'+esc(booking.name)+' '+esc((booking.lastname||"").charAt(0))+'.</span>' : "";
-        row += '<div class="'+cls+'"'+(booking?' data-jump="'+iso+'" title="'+esc(booking.name)+' '+esc(booking.lastname)+' · '+timeLbl+'hs"':'')+'>'+content+'</div>';
+        var content = booking ? '<span class="gantt-name">'+esc(booking.name)+' '+esc((booking.lastname||"").charAt(0))+'.'+(here.length > 1 ? ' <b class="gantt-more">+'+(here.length-1)+'</b>' : '')+'</span>' : "";
+        var tip = here.map(function(b){ return esc(b.name)+' '+esc(b.lastname)+(activeBarbers().length > 1 && barberNameOf(b) ? ' ('+esc(barberNameOf(b))+')' : ''); }).join(' / ');
+        row += '<div class="'+cls+'"'+(booking?' data-jump="'+iso+'" title="'+tip+' · '+timeLbl+'hs"':'')+'>'+content+'</div>';
       });
       return row + '</div>';
     }).join('');
@@ -470,8 +496,9 @@
       for(var t = timeToMin(r.start); t + slotMin <= timeToMin(r.end); t += slotMin) total++;
     });
     if(!total) return null;
+    if(!isEmployee() && (!session.agendaBarber || session.agendaBarber === "all")) total *= Math.max(1, activeBarbers().length);
     var pct = Math.min(100, Math.round(count * 100 / total));
-    return {total: total, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};
+    return {total: total, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};   // alto = verde (agenda llena), bajo = rojo
   }
 
   function agendaMes(){
@@ -488,7 +515,7 @@
       var d = new Date(gridStart); d.setDate(gridStart.getDate()+i);
       var iso = toISO(d);
       var other = d.getMonth()!==month;
-      var count = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).length;
+      var count = bk().filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).length;
       var closed = isDayFullyClosed(iso);
       var occ = (!other && !closed) ? dayOccupancy(iso, count) : null;
       cells += '<div class="month-cell'+(other?' other':'')+(closed&&!other?' closed':'')+(iso===todayISO?' today':'')+'" '+(other?'':'data-jump="'+iso+'"')+
@@ -503,7 +530,7 @@
       '<button data-mnav="1">›</button>' +
       '</div>' +
       '<div class="month-grid">'+cells+'</div>' +
-      '<div class="gantt-legend occ-legend"><span><i class="occ-fill low"></i>Hasta 49%</span><span><i class="occ-fill mid"></i>50 a 84%</span><span><i class="occ-fill high"></i>85% o más (casi lleno)</span></div>';
+      '<div class="gantt-legend occ-legend"><span><i class="occ-fill low"></i>Hasta 49% (flojo)</span><span><i class="occ-fill mid"></i>50 a 84%</span><span><i class="occ-fill high"></i>85% o más (lleno)</span></div>';
   }
 
   function bindAgendaEvents(){
@@ -511,6 +538,9 @@
     if(ce) ce.onclick = function(){
       askConfirm("Borrar datos de ejemplo", "¿Borrar los turnos y saldos de ejemplo? Los turnos reales no se tocan.", clearExampleData);
     };
+    document.querySelectorAll("[data-abarber]").forEach(function(el){
+      el.onclick = function(){ session.agendaBarber = el.getAttribute("data-abarber"); renderOwner(); };
+    });
     document.querySelectorAll(".agendaViewBtn").forEach(function(el){
       el.onclick = function(){ session.agendaView = el.getAttribute("data-v"); renderOwner(); };
     });
@@ -1223,6 +1253,180 @@
     });
   }
 
+  // ================= EQUIPO Y ROLES =================
+  var EMP_TABS = ["agenda", "cobros", "config"];       // lo que ve un empleado: su agenda, sus cobros y su cuenta
+  function curRole(){ return CLOUD ? (cloudAuth.role() || "owner") : session.localRole; }
+  function myBarber(){ return CLOUD ? cloudAuth.barberId() : session.localBarber; }
+  function isEmployee(){ return curRole() === "employee"; }
+
+  // reservas que se ven: el empleado solo las de su barbero; el dueño todas o las del barbero elegido en el filtro
+  function bk(){
+    var list = state.bookings;
+    if(isEmployee()){ var me = myBarber(); return list.filter(function(b){ return barberOfBooking(b) === me; }); }
+    var f = session.agendaBarber;
+    if(!f || f === "all") return list;
+    return list.filter(function(b){ return barberOfBooking(b) === f; });
+  }
+
+  function barberNameOf(b){
+    var m = barberById(barberOfBooking(b));
+    return (m && m.name) || b.barberName || "";
+  }
+
+  // filtro por barbero (solo dueño y solo si hay más de uno)
+  function barberFilterHtml(){
+    if(isEmployee() || activeBarbers().length < 2) return "";
+    var opts = [{id: "all", name: "Todos"}].concat(activeBarbers());
+    return '<div class="chips barber-filter">' + opts.map(function(m){
+      return '<button type="button" class="chip'+(session.agendaBarber === m.id ? ' on' : '')+'" data-abarber="'+esc(m.id)+'">'+esc(m.name)+'</button>';
+    }).join("") + '</div>';
+  }
+
+  // ---------- cobros pendientes (empleado) ----------
+  function ownerCobros(){
+    var list = bk().filter(function(b){ return b.status !== "cancelled"; });
+    var sorter = function(a, b){ return (a.date + a.time) < (b.date + b.time) ? -1 : 1; };
+    var confirmar = list.filter(function(b){ return (b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed"; }).sort(sorter);
+    var saldos = list.filter(function(b){ return confirmar.indexOf(b) < 0 && turnoEnded(b) && balanceDue(b) > 0; }).sort(sorter);
+    var senas = list.filter(function(b){ return confirmar.indexOf(b) < 0 && !turnoEnded(b) && b.deposit > 0 && depState(b) === "pending"; }).sort(sorter);
+    var section = function(title, sub, items){
+      return '<div class="card"><h2>'+title+' <span class="count-pill">'+items.length+'</span></h2><div class="sub">'+sub+'</div>' +
+        (items.length ? items.map(function(b){ return '<div class="cobro-date">'+formatDateLong(b.date)+'</div>'+bookingRow(b); }).join("") : '<div class="empty-note">Nada por acá.</div>') + '</div>';
+    };
+    return section("Para confirmar", "El cliente avisó que pagó: confirmalo al ver el pago", confirmar) +
+      section("Saldos por cobrar", "Turnos que ya terminaron y tienen saldo pendiente", saldos) +
+      section("Señas pendientes", "Turnos reservados que todavía no pagaron la seña", senas);
+  }
+  function bindCobrosEvents(){
+    bindPayActions();
+    document.querySelectorAll("[data-complete]").forEach(function(el){
+      el.onclick = function(){ completeBooking(el.getAttribute("data-complete")); };
+    });
+  }
+
+  // ---------- Equipo (dueño) ----------
+  function staffRecordFor(id){ return (state.staff || []).filter(function(s){ return s.barberId === id; })[0]; }
+
+  function ownerEquipo(){
+    var team = teamList();
+    var html = '<div class="card"><h2>Equipo</h2>' +
+      '<div class="sub">Quiénes atienden. El cliente elige con quién cortarse al reservar y el aviso del turno le llega al WhatsApp de ese barbero. ' +
+      'Los empleados entran al panel con su usuario y ven solo su agenda, sus cobros pendientes y su cuenta (no ven el análisis de dinero ni nada del dueño).</div>';
+    html += team.map(function(m){
+      var emp = m.role === "employee", rec = emp && CLOUD ? staffRecordFor(m.id) : null;
+      var pin = !CLOUD && emp ? ((state.config.staffPins || {})[m.id] || "") : "";
+      var access = "";
+      if(emp){
+        if(CLOUD){
+          access = rec
+            ? '<div class="tm-access">Usuario: <b>'+esc(rec.email)+'</b> <button class="link-btn" type="button" data-tm-reset="'+esc(rec.email)+'">Mandarle mail para cambiar la contraseña</button></div>'
+            : '<div class="tm-access"><div class="field-hint" style="margin:0 0 6px;">Todavía no tiene usuario para entrar al panel.</div>' +
+              '<div class="row2"><div><label>Mail</label><input type="email" data-tm-email="'+esc(m.id)+'" placeholder="empleado@mail.com" autocapitalize="off"></div>' +
+              '<div><label>Contraseña</label><input type="text" data-tm-pass="'+esc(m.id)+'" placeholder="Mínimo 6 caracteres"></div></div>' +
+              '<button class="btn btn-ghost btn-sm" type="button" data-tm-create="'+esc(m.id)+'">Crear acceso</button></div>';
+        } else {
+          access = '<div class="tm-access"><label>PIN de acceso <span class="opt">(versión de prueba)</span></label><input type="text" data-tm-pin="'+esc(m.id)+'" value="'+esc(pin)+'" placeholder="Ej: 2222" style="max-width:160px;"></div>';
+        }
+      }
+      return '<div class="tm-row" data-tm="'+esc(m.id)+'">' +
+        '<div class="tm-head"><span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>' +
+          '<div><b>'+esc(m.name)+'</b><span class="tm-role">'+(emp ? 'Empleado' : 'Dueño · administrador')+'</span></div>' +
+          '<label class="checkline tm-active"><input type="checkbox" data-tm-active="'+esc(m.id)+'" '+(m.active !== false ? 'checked' : '')+'><span>Atiende</span></label></div>' +
+        '<div class="row2"><div><label>Nombre</label><input type="text" data-tm-name="'+esc(m.id)+'" value="'+esc(m.name)+'" maxlength="40"></div>' +
+          '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" data-tm-wa="'+esc(m.id)+'" value="'+esc(m.whatsapp || "")+'" placeholder="5493415551234"></div></div>' +
+        access +
+        '<div class="actions"><button class="btn btn-primary btn-sm" type="button" data-tm-save="'+esc(m.id)+'">Guardar</button>' +
+          (emp ? '<button class="btn btn-danger btn-sm" type="button" data-tm-del="'+esc(m.id)+'">Quitar del equipo</button>' : '') + '</div>' +
+        '</div>';
+    }).join("");
+    html += '</div>';
+
+    html += '<div class="card"><h2>Agregar empleado</h2><div class="sub">Se crea su usuario para que entre al panel y aparece como opción al reservar.</div>' +
+      '<div class="row2"><div><label>Nombre</label><input type="text" id="inpNewTmName" maxlength="40" placeholder="Ej: Julián"></div>' +
+      '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" id="inpNewTmWa" placeholder="5493415551234"></div></div>' +
+      (CLOUD
+        ? '<div class="row2"><div><label>Mail (su usuario)</label><input type="email" id="inpNewTmEmail" placeholder="empleado@mail.com" autocapitalize="off"></div>' +
+          '<div><label>Contraseña</label><input type="text" id="inpNewTmPass" placeholder="Mínimo 6 caracteres"></div></div>'
+        : '<label>PIN de acceso</label><input type="text" id="inpNewTmPin" placeholder="Ej: 2222" style="max-width:160px;">') +
+      '<button class="btn btn-primary" id="btnAddTm" type="button">Agregar al equipo</button></div>';
+    return html;
+  }
+
+  function saveTeam(list, msg){
+    state.config.team = cleanTeam(list);
+    saveState();
+    renderOwner();
+    showToast(msg || "Equipo guardado.");
+  }
+
+  function bindEquipoEvents(){
+    var val = function(attr, id){ var el = document.querySelector('['+attr+'="'+id+'"]'); return el ? el.value.trim() : ""; };
+    document.querySelectorAll("[data-tm-save]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-tm-save");
+        var team = teamList().map(function(m){
+          if(m.id !== id) return m;
+          var act = document.querySelector('[data-tm-active="'+id+'"]');
+          return Object.assign({}, m, {name: val("data-tm-name", id) || m.name, whatsapp: val("data-tm-wa", id), active: act ? act.checked : true});
+        });
+        if(!CLOUD){
+          var pinEl = document.querySelector('[data-tm-pin="'+id+'"]');
+          if(pinEl){ state.config.staffPins = Object.assign({}, state.config.staffPins || {}); state.config.staffPins[id] = pinEl.value.trim(); }
+        }
+        if(!team.filter(function(m){ return m.active !== false; }).length){ showToast("Tiene que haber al menos un barbero que atienda."); return; }
+        saveTeam(team);
+      };
+    });
+    document.querySelectorAll("[data-tm-del]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-tm-del"), m = barberById(id);
+        askConfirm("Quitar del equipo", "¿Quitar a " + (m ? m.name : "este empleado") + "? Deja de aparecer al reservar y pierde el acceso al panel. Sus turnos ya reservados no se borran.", function(){
+          var rec = CLOUD ? staffRecordFor(id) : null;
+          if(rec) cloudAuth.removeStaff(rec.uid).catch(function(e){ console.error(e); });
+          if(!CLOUD && state.config.staffPins) delete state.config.staffPins[id];
+          saveTeam(teamList().filter(function(x){ return x.id !== id; }), "Empleado quitado del equipo.");
+        });
+      };
+    });
+    document.querySelectorAll("[data-tm-reset]").forEach(function(el){
+      el.onclick = function(){
+        cloudAuth.resetPassword(el.getAttribute("data-tm-reset")).then(function(){ showToast("Le mandamos un mail para que cambie la contraseña."); })
+          .catch(function(){ showToast("No se pudo enviar el mail."); });
+      };
+    });
+    document.querySelectorAll("[data-tm-create]").forEach(function(el){
+      el.onclick = function(){
+        var id = el.getAttribute("data-tm-create"), m = barberById(id);
+        var email = val("data-tm-email", id), pass = val("data-tm-pass", id);
+        if(!isValidEmail(email)){ showToast("Escribí un mail válido."); return; }
+        if(pass.length < 6){ showToast("La contraseña tiene que tener al menos 6 caracteres."); return; }
+        el.disabled = true; el.textContent = "Creando...";
+        cloudAuth.createStaff(email, pass, m).then(function(){ showToast("Acceso creado. Pasale el mail y la contraseña a " + m.name + "."); })
+          .catch(function(e){ console.error(e); showToast(authMessage(e)); el.disabled = false; el.textContent = "Crear acceso"; });
+      };
+    });
+    var add = document.getElementById("btnAddTm");
+    if(add) add.onclick = function(){
+      var name = document.getElementById("inpNewTmName").value.trim(), wa = document.getElementById("inpNewTmWa").value.trim();
+      if(!name){ showToast("Escribí el nombre del empleado."); return; }
+      var team = teamList().slice(), id = cleanTeam([{name: name}])[0].id, n = 2, base = id;
+      while(team.some(function(m){ return m.id === id; })) id = base + (n++);
+      var member = {id: id, name: name, role: "employee", whatsapp: wa, active: true};
+      var done = function(){ team.push(member); saveTeam(team, name + " se sumó al equipo."); };
+      if(CLOUD){
+        var email = document.getElementById("inpNewTmEmail").value.trim(), pass = document.getElementById("inpNewTmPass").value;
+        if(!isValidEmail(email)){ showToast("Escribí un mail válido."); return; }
+        if(pass.length < 6){ showToast("La contraseña tiene que tener al menos 6 caracteres."); return; }
+        add.disabled = true; add.textContent = "Creando...";
+        cloudAuth.createStaff(email, pass, member).then(done).catch(function(e){ console.error(e); showToast(authMessage(e)); add.disabled = false; add.textContent = "Agregar al equipo"; });
+      } else {
+        var pin = document.getElementById("inpNewTmPin").value.trim();
+        if(pin){ state.config.staffPins = Object.assign({}, state.config.staffPins || {}); state.config.staffPins[id] = pin; }
+        done();
+      }
+    };
+  }
+
   // ================= CONFIGURACIÓN =================
   function ownerConfig(){
     var user = CLOUD && window.cloudAuth ? cloudAuth.user() : null;
@@ -1244,6 +1448,7 @@
       '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +
       '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
 
+    if(isEmployee()) return html;       // el empleado solo ve su cuenta y su sesión
     html += '<div class="card"><h2>Datos de ejemplo</h2>' +
       '<div class="sub">Cargá clientes, turnos y saldos inventados para ver cómo se ve el panel con actividad (clientes fieles, cancelaciones, deudas, recordatorios). ' +
       (CLOUD ? 'Solo se ven en este navegador: no se guardan en tu base ni los ven los clientes.' : 'Se guardan en este navegador.') + '</div>' +

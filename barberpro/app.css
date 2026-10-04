@@ -650,9 +650,9 @@ input[readonly]{opacity:.7;}
 .occ{position:absolute; left:6px; right:6px; bottom:5px; display:flex; flex-direction:column; gap:2px; align-items:stretch;}
 .occ-txt,.occ-n{display:none; text-align:center; font-weight:800; font-variant-numeric:tabular-nums; line-height:1;}
 .occ-track{display:block; height:4px; background:var(--surface-3); border-radius:999px; overflow:hidden;}
-.occ-fill{display:block; height:100%; border-radius:999px; background:var(--success);}
+.occ-fill{display:block; height:100%; border-radius:999px; background:var(--danger);}
 .occ-fill.mid{background:var(--warn);}
-.occ-fill.high{background:var(--danger);}
+.occ-fill.high{background:var(--success);}
 .occ-legend{margin-top:12px; flex-wrap:wrap;}
 .occ-legend .occ-fill{width:14px; height:6px; display:inline-block;}
 .month-cell .dn{margin-bottom:8px;}
@@ -793,3 +793,36 @@ input[readonly]{opacity:.7;}
 .pay-card.due{border-color:var(--accent-2); box-shadow:0 0 0 1px rgba(41,182,246,.25), var(--shadow-1);}
 .paystate.info{color:var(--accent-1);}
 @media (max-width:380px){ .pay-split{grid-template-columns:1fr;} }
+
+/* elegir barbero */
+.barber-pick{margin:4px 0 14px; padding-bottom:14px; border-bottom:1px solid var(--border-soft);}
+.barber-opts{display:grid; grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:8px;}
+.barber-opt{display:flex; flex-direction:column; align-items:center; gap:4px; background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:12px 8px; cursor:pointer; color:var(--text); font-family:inherit;}
+.barber-opt b{font-size:14px; font-weight:800;}
+.barber-opt i{font-style:normal; font-size:11px; color:var(--text-faint); font-weight:700;}
+.barber-opt.on{border-color:var(--accent-2); background:linear-gradient(180deg, rgba(41,182,246,.16), rgba(33,150,243,.06)); box-shadow:0 0 0 1px rgba(41,182,246,.3);}
+.myt-with{font-size:12px; color:var(--accent-1); font-weight:700;}
+
+/* ---------- equipo y roles ---------- */
+.barber-filter{margin:0 0 12px;}
+.with-barber{color:var(--accent-1); font-weight:700;}
+.next-who small{color:var(--text-faint); font-weight:700;}
+.gantt-more{font-weight:800; opacity:.9;}
+.count-pill{display:inline-block; min-width:24px; padding:1px 9px; margin-left:6px; border-radius:999px; background:var(--surface-3); color:var(--text-muted); font-size:12px; font-weight:800; text-align:center; vertical-align:2px;}
+.cobro-date{font-size:12px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.3px; margin:12px 0 6px;}
+.cobro-date:first-of-type{margin-top:4px;}
+.whoami{display:flex; align-items:center; gap:10px; padding:4px 2px 10px;}
+.whoami b{display:block; font-size:15px;}
+.whoami i{font-style:normal; font-size:11.5px; color:var(--text-faint); font-weight:700;}
+.tm-row{padding:14px 0; border-top:1px solid var(--border-soft);}
+.tm-row:first-of-type{border-top:none; padding-top:6px;}
+.tm-head{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+.tm-head > div{flex:1; min-width:0;}
+.tm-head b{font-size:16px; display:block;}
+.tm-role{font-size:12px; font-weight:700; color:var(--text-faint);}
+.tm-active{margin:0; flex:none !important;}
+.tm-access{margin:6px 0 12px; padding:12px; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; font-size:13px;}
+@media (min-width:1000px){
+  .owner-content.tab-equipo{max-width:1100px;}
+  .whoami{padding-bottom:6px;}
+}
