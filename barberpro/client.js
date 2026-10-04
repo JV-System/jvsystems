@@ -14,6 +14,9 @@ var client = {
   lastBooking:null
 };
 
+// quién actúa en el registro de movimientos
+actor = function(){ return {role: "client", name: (client.name + " " + client.lastname).trim()}; };
+
 // ---------- apertura ----------
 (function(){
   var overlay = document.getElementById("introOverlay");
@@ -273,7 +276,7 @@ function turnoRow(t){
     pay = t.lateCancel ? '<span class="paystate pend">Seña retenida</span>' : '<span class="paystate info">Seña a devolver</span>';
   }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
-    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') +
+    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') + (t.transferredFromName && t.transferredAt && t.status === "confirmed" && !turnoEnded(t) && Date.now() - t.transferredAt < 3 * 86400000 ? '<span class="myt-with notice">Tu turno pasó de '+esc(t.transferredFromName)+' a '+esc(t.barberName || "otro barbero")+'</span>' : '') +
       '<span class="myt-sub">'+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
       (canReschedule(t) ? '<button type="button" class="myt-cancel myt-change" data-reschedule="'+t.id+'">Cambiar día</button>' : '') +

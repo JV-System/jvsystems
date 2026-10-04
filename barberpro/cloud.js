@@ -26,6 +26,7 @@
   state = defaultState();
   state.slots = {};              // { "2026-10-13": { "10:00": true } }  horarios ocupados (público)
   state.debtFlags = {};          // saldos pendientes consultados (lado cliente)
+  state.movements = [];          // registro de movimientos (solo lo ven el dueño y los empleados)
   state.barberPhotos = {};       // fotos de perfil de los barberos (públicas)
   state.debtFlagsLoaded = {};
 
@@ -33,6 +34,10 @@
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
                      "payAlias","payHolder","payMpLink","payMpLinks","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
 
+  // agrega al lote un registro de movimiento (quién, cuándo y qué pasó con un turno)
+  function moveSet(batch, b, type, text, extra){
+    batch.set(db.collection("movements").doc(), moveEntry(b, type, text, extra));
+  }
   function docKey(k){ return String(k).replace(/[^A-Za-z0-9:_-]/g, "_"); }
   function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", "") + (b.barberId ? "_" + b.barberId : ""); }
   function fail(e, msg){
@@ -84,7 +89,7 @@
   function turnoCopy(b){
     var t = {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
              paid: b.paid, status: b.status, createdAt: b.createdAt};
-    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName", "walkIn", "rescheduled"].forEach(function(k){
+    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName", "walkIn", "rescheduled", "transferredFromName", "transferredAt"].forEach(function(k){
       if(b[k] !== undefined && b[k] !== null) t[k] = b[k];
     });
     return t;
@@ -96,6 +101,7 @@
       if(b.barberId) slot.barber = b.barberId;
       batch.set(db.doc("slots/" + slotDocId(b)), slot);
       batch.set(db.doc("bookings/" + b.id), b);
+      moveSet(batch, b, "reserva", b.walkIn ? "Tomó un turno por orden de llegada" : "Reservó el turno" + (b.deposit > 0 ? " (seña " + money(b.deposit) + ")" : ""));
       if(cid) batch.set(db.doc("clients/" + cid + "/turnos/" + b.id), turnoCopy(b));
       if(b.debtCharged > 0) batch.update(db.doc("debtFlags/" + docKey(b.clientKey)), {chargedBy: b.id});   // el saldo ya se sumó a este turno
       return batch.commit().then(function(){ return b; });
@@ -245,6 +251,13 @@
     stopAdminListeners();
     var bookingsRef = db.collection("bookings");
     if(role === "employee") bookingsRef = bookingsRef.where("barberId", "==", staffBarber);
+    // movimientos: el dueño ve los últimos 500; el empleado, los que involucran a su barbero
+    var movesRef = role === "employee" ? db.collection("movements").where("barbers", "array-contains", staffBarber) : db.collection("movements").orderBy("at", "desc").limit(500);
+    unsubAdmin.push(movesRef.onSnapshot(function(snap){
+      var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
+      state.movements = arr;
+      hooks.refresh();
+    }, function(e){ console.error("movements", e); }));
     unsubAdmin.push(bookingsRef.onSnapshot(function(snap){
       var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
       realBookings = arr; applyReal();
@@ -347,6 +360,7 @@
     return db.doc("debtFlags/" + uid).get().then(function(snap){
       var flag = snap.exists ? snap.data() : null, batch = db.batch(), now = Date.now();
       batch.update(db.doc("bookings/" + t.id), {status: "cancelled", lateCancel: late});
+      moveSet(batch, t, late ? "suspension" : "cancelacion", late ? "Canceló el mismo día: turno suspendido" : "Canceló el turno con aviso");
       batch.update(db.doc("clients/" + uid + "/turnos/" + t.id), {status: "cancelled"});
       batch.delete(db.doc("slots/" + t.date + "_" + String(t.time).replace(":", "") + (t.barberId ? "_" + t.barberId : "")));        // el horario vuelve a quedar libre
       var next = flag;
@@ -368,6 +382,28 @@
     });
   };
 
+  // pasarle el corte a un compañero: cambia el barbero del turno, libera el horario del que lo cedía y ocupa el del compañero (si ya
+  // tiene un turno a esa hora, falla). Todo en un lote, con su registro de movimiento.
+  transferBooking = function(id, toId){
+    var b = state.bookings.filter(function(x){ return x.id === id; })[0], to = barberById(toId);
+    if(!b || !to) return Promise.reject(authErr("no-booking"));
+    var from = barberById(barberOfBooking(b)) || {id: barberOfBooking(b), name: b.barberName || ""};
+    var nb = Object.assign({}, b, {barberId: toId, barberName: to.name});
+    var notify = shouldNotifyChange(b), now = Date.now();
+    var patch = {barberId: toId, barberName: to.name, transferredFrom: from.id, transferredFromName: from.name, transferredAt: now, transferCount: (b.transferCount || 0) + 1};
+    var slot = {date: b.date, time: b.time, bid: b.id, barber: toId};
+    return turnoRefFor(b).then(function(ref){
+      var batch = db.batch();
+      batch.update(db.doc("bookings/" + id), patch);
+      if(ref) batch.set(ref, {barberId: toId, barberName: to.name, transferredFromName: from.name, transferredAt: now}, {merge: true});
+      batch.delete(db.doc("slots/" + slotDocId(b)));
+      batch.set(db.doc("slots/" + slotDocId(nb)), slot);
+      moveSet(batch, nb, "transferencia", "Pasó el corte de " + from.name + " a " + to.name + (notify ? " (se avisa al cliente)" : " (en el momento: sin aviso al cliente)"),
+              {barbers: [from.id, toId], fromName: from.name, toName: to.name});
+      return batch.commit();
+    }).then(function(){ return {notify: notify, from: from.name, to: to.name}; });
+  };
+
   // el cliente cambia su turno de día (una sola vez, hasta 24 h antes): la seña pasa al horario nuevo.
   // En un lote: se actualiza la reserva y su copia, se libera el horario viejo y se ocupa el nuevo; si alguien lo tomó antes, falla.
   rescheduleMyTurno = function(t, newDate, newTime){
@@ -378,6 +414,7 @@
     var batch = db.batch(), slot = {date: newDate, time: newTime, bid: t.id};
     if(t.barberId) slot.barber = t.barberId;
     batch.update(db.doc("bookings/" + t.id), {date: newDate, time: newTime, rescheduled: 1, originalDate: t.date, originalTime: t.time});
+    moveSet(batch, t, "cambio_dia", "Cambió el turno del " + formatDateLong(t.date) + " " + t.time + " hs al " + formatDateLong(newDate) + " " + newTime + " hs");
     batch.update(db.doc("clients/" + u.uid + "/turnos/" + t.id), {date: newDate, time: newTime, rescheduled: 1});
     batch.delete(db.doc("slots/" + oldSlot));
     batch.set(db.doc("slots/" + newSlot), slot);
@@ -392,6 +429,7 @@
     var patch = kind === "deposit" ? {depositState: "informed", payMethod: method} : {balanceState: "informed", balanceMethod: method};
     var batch = db.batch();
     batch.update(db.doc("bookings/" + t.id), patch);
+    moveSet(batch, t, "pago", "Avisó que pagó " + (kind === "deposit" ? "la seña" : "el saldo") + " por " + (method === "mp" ? "Mercado Pago" : "transferencia"));
     batch.update(db.doc("clients/" + u.uid + "/turnos/" + t.id), patch);
     return batch.commit().then(function(){ showToast("Listo, avisamos al local. Va a confirmar tu pago."); });
   };
@@ -415,12 +453,13 @@
       hooks.refresh();
       return Promise.resolve();
     }
-    var b = state.bookings.filter(function(x){ return x.id === id; })[0], tp = turnoPatch(patch);
-    if(!b || !tp) return db.doc("bookings/" + id).update(patch).catch(function(e){ fail(e); });
-    return turnoRefFor(b).then(function(ref){
+    var b = state.bookings.filter(function(x){ return x.id === id; })[0], tp = turnoPatch(patch), moves = b ? moveFromPatch(b, patch) : [];
+    if(!b || (!tp && !moves.length)) return db.doc("bookings/" + id).update(patch).catch(function(e){ fail(e); });
+    return (tp ? turnoRefFor(b) : Promise.resolve(null)).then(function(ref){
       var batch = db.batch();
       batch.update(db.doc("bookings/" + id), patch);
-      if(ref) batch.set(ref, Object.assign(turnoCopy(b), tp), {merge: true});
+      if(ref && tp) batch.set(ref, Object.assign(turnoCopy(b), tp), {merge: true});
+      moves.forEach(function(m){ moveSet(batch, b, m[0], m[1]); });
       return batch.commit();
     }).catch(function(e){ fail(e); });
   };
@@ -451,6 +490,7 @@
     turnoRefFor(b).then(function(ref){
       var batch = db.batch();
       batch.update(db.doc("bookings/" + id), noShow ? {status: "cancelled", lateCancel: late, noShow: true} : {status: "cancelled", lateCancel: late});
+      moveSet(batch, b, late ? "suspension" : "cancelacion", noShow ? "No vino: turno suspendido" : late ? "Cancelado el mismo día: turno suspendido" : "Turno cancelado con aviso");
       if(ref) batch.set(ref, Object.assign(turnoCopy(b), {status: "cancelled", lateCancel: late}), {merge: true});
       batch.delete(db.doc("slots/" + slotDocId(b)));                    // el horario vuelve a quedar libre
       if(penalized){

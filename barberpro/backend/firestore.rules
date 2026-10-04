@@ -90,6 +90,43 @@ service cloud.firestore {
       allow write: if isOwner();
     }
 
+    // ---------- movimientos ----------
+    // registro de todo lo que pasa con un turno (reserva, pagos, cancelación, cambio de día, transferencia entre barberos...).
+    // Cada uno lo escribe en el mismo lote que la acción; no se edita. Lo lee el dueño (todo) y cada empleado (lo que involucra a su barbero).
+    function validMovement(d) {
+      return d.keys().hasOnly(['bid', 'barbers', 'clientName', 'date', 'time', 'type', 'text', 'at', 'byRole', 'byName', 'fromName', 'toName'])
+          && d.keys().hasAll(['bid', 'barbers', 'clientName', 'date', 'time', 'type', 'text', 'at', 'byRole', 'byName'])
+          && isStr(d.bid, 40) && d.barbers is list && d.barbers.size() >= 1 && d.barbers.size() <= 2
+          && isStr(d.clientName, 130) && validDate(d.date) && validTime(d.time)
+          && d.type in ['reserva', 'pago', 'completado', 'cancelacion', 'suspension', 'cambio_dia', 'transferencia']
+          && isStr(d.text, 220) && d.at is number && d.byRole in ['owner', 'staff', 'client'] && isStr(d.byName, 60)
+          && (!('fromName' in d) || isStr(d.fromName, 60)) && (!('toName' in d) || isStr(d.toName, 60));
+    }
+
+    // el movimiento de un cliente tiene que corresponder a un cambio REAL de su reserva en el mismo lote (no se puede escribir "porque sí")
+    function clientMoveMatches(d) {
+      return (d.type == 'reserva' && !exists(bookingPath(d.bid)) && existsAfter(bookingPath(d.bid)))
+          || (d.type == 'pago' && exists(bookingPath(d.bid))
+              && (get(bookingPath(d.bid)).data.get('depositState', '') != getAfter(bookingPath(d.bid)).data.get('depositState', '')
+                  || get(bookingPath(d.bid)).data.get('balanceState', '') != getAfter(bookingPath(d.bid)).data.get('balanceState', '')))
+          || ((d.type == 'cancelacion' || d.type == 'suspension') && exists(bookingPath(d.bid))
+              && get(bookingPath(d.bid)).data.status == 'confirmed' && getAfter(bookingPath(d.bid)).data.status == 'cancelled')
+          || (d.type == 'cambio_dia' && exists(bookingPath(d.bid))
+              && get(bookingPath(d.bid)).data.get('rescheduled', 0) == 0 && getAfter(bookingPath(d.bid)).data.get('rescheduled', 0) == 1);
+    }
+
+    match /movements/{mid} {
+      allow read: if isOwner() || (isStaff() && staffBarber() in resource.data.barbers);
+      allow create: if validMovement(request.resource.data)
+                    && ((isOwner() && request.resource.data.byRole == 'owner')
+                        || (isStaff() && request.resource.data.byRole == 'staff' && staffBarber() in request.resource.data.barbers)
+                        || (signedIn() && request.resource.data.byRole == 'client'
+                            && getAfter(bookingPath(request.resource.data.bid)).data.cid == request.auth.uid
+                            && clientMoveMatches(request.resource.data)));
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
     // ---------- foto de perfil de los barberos ----------
     // pública (la ve el cliente al elegir con quién cortarse); la cambia el dueño o el propio empleado en su barbero
     match /barbers/{id} {
@@ -145,7 +182,7 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
                         && request.resource.data.status == 'cancelled'
                         && request.resource.data.lateCancel == (resource.data.date == hoyAR()))
-                    || informsDeposit() || informsBalance() || staffEdits() || reschedules();
+                    || informsDeposit() || informsBalance() || staffEdits() || reschedules() || staffTransfers();
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -174,6 +211,15 @@ service cloud.firestore {
           && validDate(request.resource.data.date) && validTime(request.resource.data.time)
           && request.resource.data.date >= hoyAR()
           && resource.data.date + ' ' + resource.data.time >= dtAR(request.time + duration.value(24, 'h'))
+          && existsAfter(/databases/$(database)/documents/slots/$(bookingSlotId(request.resource.data)));
+    }
+
+    // un empleado le pasa un turno confirmado suyo a otro barbero (el horario del compañero tiene que estar libre: lo crea en el mismo lote)
+    function staffTransfers() {
+      return isStaff() && resource.data.get('barberId', '') == staffBarber() && resource.data.status == 'confirmed'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['barberId', 'barberName', 'transferredFrom', 'transferredFromName',
+                                                                                  'transferredAt', 'transferCount'])
+          && validBarberId(request.resource.data.barberId) && request.resource.data.barberId != resource.data.get('barberId', '')
           && existsAfter(/databases/$(database)/documents/slots/$(bookingSlotId(request.resource.data)));
     }
 
@@ -317,6 +363,9 @@ service cloud.firestore {
                         && getAfter(bookingPath(tid)).data.get('rescheduled', 0) == 1
                         && getAfter(bookingPath(tid)).data.date == request.resource.data.date
                         && getAfter(bookingPath(tid)).data.time == request.resource.data.time)
+                    || (isStaff() && get(bookingPath(tid)).data.get('barberId', '') == staffBarber()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['barberId', 'barberName', 'transferredFromName', 'transferredAt'])
+                        && getAfter(bookingPath(tid)).data.barberId == request.resource.data.barberId)
                     || (isStaff() && get(bookingPath(tid)).data.get('barberId', '') == staffBarber()
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState', 'balanceMethod'])
                         && request.resource.data.status in ['confirmed', 'completed'] && resource.data.status in ['confirmed', 'completed']);

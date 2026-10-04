@@ -67,6 +67,83 @@ function teamList(){
   return Array.isArray(t) && t.length ? t : [{id: "dueno", name: "Dueño", role: "owner", whatsapp: "", active: true}];
 }
 function activeBarbers(){ return teamList().filter(function(m){ return m.active !== false; }); }
+// ---------- movimientos ----------
+// Cada cosa que pasa con un turno deja un registro (quién, cuándo, qué). Las pantallas definen quién actúa con `actor`.
+var actor = function(){ return {role: "owner", name: ""}; };
+var MOVE_TYPES = {reserva: "Reserva", pago: "Pago", completado: "Completado", cancelacion: "Cancelación", suspension: "Suspendido", cambio_dia: "Cambio de día", transferencia: "Transferencia"};
+function moveEntry(b, type, text, extra){
+  var a = actor();
+  var who = b.name ? (String(b.name) + " " + String(b.lastname || "")).trim() : String(a.name || "");
+  var m = {bid: b.id, barbers: [barberOfBooking(b)], clientName: who.slice(0, 120), date: b.date, time: b.time,
+           type: type, text: String(text || "").slice(0, 200), at: Date.now(), byRole: a.role, byName: String(a.name || "").slice(0, 60)};
+  if(extra) Object.keys(extra).forEach(function(k){ m[k] = extra[k]; });
+  return m;
+}
+// versión local: se guarda en este navegador (cloud.js escribe el registro en Firestore, dentro del mismo lote que la acción)
+function logMove(b, type, text, extra){
+  state.movements = state.movements || [];
+  state.movements.push(moveEntry(b, type, text, extra));
+}
+// lo que dejan en el registro los cambios que hace el dueño o un empleado sobre un turno (según los campos que cambian)
+function moveFromPatch(b, patch){
+  var out = [], mName = {mp: "Mercado Pago", transfer: "transferencia", cash: "efectivo", local: "efectivo"};
+  if(patch.status === "completed") out.push(["completado", "Turno completado"]);
+  if(patch.depositState === "paid") out.push(["pago", "Seña confirmada" + ((b.deposit > 0) ? " ("+money(b.deposit)+")" : "") + (b.payMethod ? " · " + (mName[b.payMethod] || b.payMethod) : "")]);
+  if(patch.balanceState === "paid") out.push(["pago", (patch.balanceMethod === "cash" ? "Cobrado en efectivo" : "Pago confirmado") + (patch.balanceMethod && patch.balanceMethod !== "cash" ? " · " + (mName[patch.balanceMethod] || patch.balanceMethod) : "")]);
+  if(patch.depositRefunded) out.push(["pago", "Seña devuelta al cliente"]);
+  return out;
+}
+function minsUntil(b){ return hoursUntil(b) * 60; }
+// ¿hay que avisarle al cliente de un cambio? Con más de 30 minutos de anticipación sí; en el momento o media hora antes, no.
+function shouldNotifyChange(b){ return minsUntil(b) > 30; }
+
+// pasarle el corte a un compañero (local; cloud.js lo reemplaza). Devuelve {notify}.
+function transferBooking(id, toId){
+  var b = state.bookings.filter(function(x){ return x.id === id; })[0], to = barberById(toId);
+  if(!b || !to) return Promise.reject(authErr("no-booking"));
+  var from = barberById(barberOfBooking(b)) || {id: barberOfBooking(b), name: b.barberName || ""};
+  var busy = state.bookings.some(function(x){ return x.id !== b.id && x.date === b.date && x.time === b.time && x.status !== "cancelled" && barberOfBooking(x) === toId; });
+  if(busy) return Promise.reject(authErr("slot-taken"));
+  var notify = shouldNotifyChange(b);
+  b.transferredFrom = from.id; b.transferredFromName = from.name; b.transferredAt = Date.now(); b.transferCount = (b.transferCount || 0) + 1;
+  b.barberId = to.id; b.barberName = to.name;
+  logMove(b, "transferencia", "Pasó el corte de " + from.name + " a " + to.name + (notify ? " (se avisa al cliente)" : " (en el momento: sin aviso al cliente)"),
+          {barbers: [from.id, to.id], fromName: from.name, toName: to.name});
+  saveState();
+  hooks.refresh();
+  return Promise.resolve({notify: notify, from: from.name, to: to.name});
+}
+// aviso al cliente de que su turno pasó a otro barbero (mensaje ya escrito, lo manda quien lo pasó)
+function transferText(b, fromName){
+  return "Hola " + b.name + "! Te avisamos que tu turno del " + formatDateLong(b.date) + " a las " + b.time + " hs en " + state.config.businessName +
+    " pasó a ser con " + (b.barberName || "otro barbero") + (fromName ? " (antes era con " + fromName + ")" : "") + ". Te esperamos igual, ¡gracias!";
+}
+
+// elegir una opción (o leer un aviso con botones): options = [{id, label, sub, disabled, href}]; onPick(id) para las que no tienen href
+function askChoose(title, message, options, onPick){
+  var ov = document.getElementById("chooseOverlay");
+  if(!ov){
+    ov = document.createElement("div"); ov.id = "chooseOverlay"; ov.className = "modal-overlay";
+    ov.innerHTML = '<div class="modal-box"><h3 id="chTitle"></h3><p id="chMsg"></p><div id="chOpts" class="choose-opts"></div><button class="btn btn-ghost" id="chClose" style="margin-top:10px;">Cerrar</button></div>';
+    document.body.appendChild(ov);
+  }
+  document.getElementById("chTitle").textContent = title;
+  document.getElementById("chMsg").textContent = message;
+  var box = document.getElementById("chOpts"); box.innerHTML = "";
+  options.forEach(function(o){
+    var el = document.createElement(o.href ? "a" : "button");
+    el.className = "choose-opt" + (o.disabled ? " disabled" : "");
+    if(o.href){ el.href = o.href; el.target = "_blank"; el.rel = "noopener"; }
+    else { el.type = "button"; el.disabled = !!o.disabled; }
+    el.innerHTML = '<b></b><i></i>';
+    el.querySelector("b").textContent = o.label; el.querySelector("i").textContent = o.sub || "";
+    el.onclick = function(){ if(o.disabled) return; ov.classList.remove("show"); if(!o.href && onPick) onPick(o.id); };
+    box.appendChild(el);
+  });
+  document.getElementById("chClose").onclick = function(){ ov.classList.remove("show"); };
+  ov.classList.add("show");
+}
+
 // ---------- orden de llegada y cambio de día ----------
 // próximo horario libre de HOY con ese barbero que empieza en los próximos minutos que permita el local (null si no hay o está desactivado)
 function walkInSlot(barber){
@@ -91,6 +168,7 @@ function rescheduleMyTurno(t, newDate, newTime){
   if(!b) return Promise.reject(authErr("no-booking"));
   var free = getSlotStatuses(newDate, b.barberId).some(function(s){ return s.time === newTime && !s.taken; });
   if(!free) return Promise.reject(authErr("slot-taken"));
+  logMove(b, "cambio_dia", "Cambió el turno del " + formatDateLong(b.date) + " " + b.time + " hs al " + formatDateLong(newDate) + " " + newTime + " hs");
   b.originalDate = b.date; b.originalTime = b.time; b.date = newDate; b.time = newTime; b.rescheduled = 1;
   saveState();
   hooks.refresh();
@@ -227,6 +305,7 @@ function baseState(){
     closures:[],
     bookings:[],
     debts:{},
+    movements:[],           // registro de movimientos de los turnos (versión local)
     barberPhotos:{}         // { idBarbero: "data:image/jpeg;base64,..." } foto de perfil de cada barbero
   };
 }
@@ -447,6 +526,7 @@ function loadState(){
     parsed.bookings = parsed.bookings||[];
     parsed.debts = parsed.debts||{};
     parsed.barberPhotos = parsed.barberPhotos||{};
+    parsed.movements = parsed.movements||[];
     return parsed;
   }catch(e){ return defaultState(); }
 }
@@ -554,6 +634,7 @@ function informPayment(t, kind, method){
   if(!b) return Promise.resolve();
   if(kind === "deposit"){ b.depositState = "informed"; b.payMethod = method; }
   else { b.balanceState = "informed"; b.balanceMethod = method; }
+  logMove(b, "pago", "Avisó que pagó " + (kind === "deposit" ? "la seña" : "el saldo") + " por " + (method === "mp" ? "Mercado Pago" : "transferencia"));
   saveState();
   hooks.refresh();
   showToast("Listo, avisamos al local. Va a confirmar tu pago.");
@@ -682,6 +763,7 @@ function takenTimes(iso, barber){
 // guarda una reserva nueva (devuelve una promesa). Si traía un saldo anterior, queda cobrado en este turno.
 function persistBooking(b){
   state.bookings.push(b);
+  logMove(b, "reserva", b.walkIn ? "Tomó un turno por orden de llegada" : "Reservó el turno" + (b.deposit > 0 ? " (seña " + money(b.deposit) + ")" : ""));
   if(b.debtCharged > 0) delete state.debts[b.clientKey];
   saveState();
   return Promise.resolve(b);
@@ -691,6 +773,7 @@ function persistBooking(b){
 function updateBooking(id, patch){
   var b = state.bookings.filter(function(x){ return x.id===id; })[0];
   if(!b) return Promise.resolve();
+  moveFromPatch(b, patch).forEach(function(m){ logMove(b, m[0], m[1]); });      // antes de aplicar, para leer los datos previos
   Object.assign(b, patch);
   saveState();
   hooks.refresh();
@@ -857,6 +940,7 @@ function cancelBooking(id, opts){
   b.status = "cancelled";
   b.lateCancel = late;
   if(noShow) b.noShow = true;
+  logMove(b, late ? "suspension" : "cancelacion", noShow ? "No vino: turno suspendido" : late ? "Cancelado el mismo día: turno suspendido" : "Turno cancelado con aviso");
   saveState();
   hooks.refresh();
   if(noShow){ showToast(kept ? "Turno suspendido (no vino). La seña queda en el local." : "Turno suspendido (no vino). Se registró un cargo pendiente."); return; }
@@ -869,6 +953,7 @@ function completeBooking(id){
   var b = state.bookings.filter(function(x){ return x.id===id; })[0];
   if(!b) return;
   b.status = "completed";
+  logMove(b, "completado", "Turno completado");
   saveState();
   hooks.refresh();
 }

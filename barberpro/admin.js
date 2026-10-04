@@ -19,6 +19,8 @@
     clientSort: "turnos",
     payRange: "mes",
     teamRange: "mes",
+    moveFilter: "todos",
+    moveQuery: "",
     paySort: "pagado",
     payQuery: ""
   };
@@ -33,6 +35,7 @@
     if(!session.ownerAuthed) return;
     var t = session.ownerTab;
     if(t==="agenda" || t==="saldos" || t==="cobros" || t==="hoy") renderOwner();
+    else if(t==="movimientos" && document.activeElement !== document.getElementById("inpMoveSearch")) renderOwner();
     else if(t==="equipo"){ var ae = document.activeElement; if(!(ae && ae.closest && ae.closest(".owner-content"))) renderOwner(); }
     else if(t==="clientes" && document.activeElement !== document.getElementById("inpClientSearch")) renderOwner();
     else if(t==="pagos" && document.activeElement !== document.getElementById("inpPaySearch")) renderOwner();
@@ -60,10 +63,11 @@
     }).length : 0;
     var hoyBadge = hoyAttentionCount();
     var navHtml = isEmployee()
-      ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("config","Mi cuenta")
+      ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("movimientos","Movimientos") + navBtn("config","Mi cuenta")
       : navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Agenda", unseen) +
         navBtn("clientes","Clientes") +
         navBtn("pagos","Pagos") +
+        navBtn("movimientos","Movimientos") +
         navBtn("equipo","Equipo") +
         navBtn("horarios","Horarios") +
         navBtn("cierres","Cierres") +
@@ -86,6 +90,7 @@
     else if(session.ownerTab==="precios") html += ownerPrecios();
     else if(session.ownerTab==="clientes") html += ownerClientes();
     else if(session.ownerTab==="pagos") html += ownerPagos();
+    else if(session.ownerTab==="movimientos") html += ownerMovimientos();
     else if(session.ownerTab==="equipo") html += ownerEquipo();
     else if(session.ownerTab==="cobros") html += ownerCobros();
     else if(session.ownerTab==="config") html += ownerConfig();
@@ -109,6 +114,7 @@
     else if(session.ownerTab==="precios") bindPreciosEvents();
     else if(session.ownerTab==="clientes") bindClientesEvents();
     else if(session.ownerTab==="pagos") bindPagosEvents();
+    else if(session.ownerTab==="movimientos") bindMovimientosEvents();
     else if(session.ownerTab==="equipo") bindEquipoEvents();
     else if(session.ownerTab==="cobros") bindCobrosEvents();
     else if(session.ownerTab==="config") bindConfigEvents();
@@ -338,6 +344,7 @@
         (b.status==="confirmed" ? '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
                                    (isEmployee() ? '' : '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>') : '') +
         (b.status==="confirmed" && !isEmployee() && turnoEnded(b) ? '<button class="btn btn-danger btn-sm" data-noshow="'+b.id+'">No vino</button>' : '') +
+        (b.status==="confirmed" && !turnoEnded(b) && activeBarbers().length > 1 ? '<button class="btn btn-ghost btn-sm" data-transfer="'+b.id+'">Pasar a otro barbero</button>' : '') +
         (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
         (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
@@ -415,6 +422,7 @@
 
   function bindPayActions(root){
     root = root || document;
+    root.querySelectorAll("[data-transfer]").forEach(function(el){ el.onclick = function(){ transferFlow(el.getAttribute("data-transfer")); }; });
     root.querySelectorAll("[data-noshow]").forEach(function(el){
       el.onclick = function(){
         var id = el.getAttribute("data-noshow"), b = findBooking(id);
@@ -1372,7 +1380,7 @@
   }
 
   // ================= EQUIPO Y ROLES =================
-  var EMP_TABS = ["hoy", "agenda", "cobros", "config"];       // lo que ve un empleado: su agenda, sus cobros y su cuenta
+  var EMP_TABS = ["hoy", "agenda", "cobros", "movimientos", "config"];       // lo que ve un empleado: su agenda, sus cobros y su cuenta
   function curRole(){ return CLOUD ? (cloudAuth.role() || "owner") : session.localRole; }
   function myBarber(){ return CLOUD ? cloudAuth.barberId() : session.localBarber; }
   function isEmployee(){ return curRole() === "employee"; }
@@ -1917,6 +1925,107 @@
       });
     });
     document.querySelectorAll("[data-seen]").forEach(function(el){ el.onclick = function(){ markAllSeen(); renderOwner(); }; });
+  }
+
+  // ================= PASAR EL CORTE A UN COMPAÑERO + MOVIMIENTOS =================
+  // quién hace cada cosa en el registro de movimientos
+  actor = function(){
+    return isEmployee() ? {role: "staff", name: (barberById(myBarber()) || {}).name || "Empleado"} : {role: "owner", name: (ownerBarber() || {}).name || "Dueño"};
+  };
+
+  function barberBusyAt(m, b){
+    if(CLOUD) return !!takenTimes(b.date, m.id)[b.time];
+    return state.bookings.some(function(x){ return x.id !== b.id && x.date === b.date && x.time === b.time && x.status !== "cancelled" && barberOfBooking(x) === m.id; });
+  }
+
+  function transferFlow(id){
+    var b = findBooking(id);
+    if(!b) return;
+    var cur = barberOfBooking(b);
+    var opts = activeBarbers().filter(function(m){ return m.id !== cur; }).map(function(m){
+      var works = barberSlotTimes(b.date, m).indexOf(b.time) >= 0, busy = works && barberBusyAt(m, b);
+      return {id: m.id, label: m.name, sub: !works ? "Fuera de su horario a esa hora" : busy ? "Ya tiene un turno a esa hora" : "Libre a esa hora", disabled: !works || busy};
+    });
+    if(!opts.length){ showToast("No hay otro barbero para pasarle el corte."); return; }
+    var note = shouldNotifyChange(b)
+      ? "Faltan más de 30 minutos: al pasarlo te armo el mensaje para avisarle al cliente."
+      : "Falta menos de media hora: se pasa sin avisarle al cliente.";
+    askChoose("Pasar este corte a otro barbero", esc2(b.name + " " + b.lastname) + " · " + formatDateLong(b.date) + " · " + b.time + " hs. " + note, opts, function(toId){
+      transferBooking(id, toId).then(function(res){
+        if(!res.notify){
+          showToast("Listo: el corte pasó a " + res.to + ". Faltaba menos de media hora, así que no se le avisa al cliente.");
+          return;
+        }
+        var nb = Object.assign({}, b, {barberName: res.to}), txt = transferText(nb, res.from), links = [];
+        if(b.phone) links.push({label: "Avisar por WhatsApp", sub: "Se abre el mensaje ya escrito para " + b.name, href: "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(txt)});
+        if(b.email) links.push({label: "Avisar por mail", sub: b.email, href: "mailto:" + b.email + "?subject=" + encodeURIComponent("Tu turno en " + state.config.businessName) + "&body=" + encodeURIComponent(txt)});
+        if(!links.length){ showToast("Corte pasado a " + res.to + ". El cliente no tiene teléfono ni mail cargados para avisarle."); return; }
+        askChoose("Corte pasado a " + res.to, "El cliente ya lo ve en su app. Como faltaba más de media hora, avisale por acá:", links, null);
+      }).catch(function(e){
+        console.error(e);
+        var busy = e && (e.code === "slot-taken" || e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
+        showToast(busy ? "Ese compañero ya tiene un turno a esa hora (o no se puede pasar este turno)." : "No se pudo pasar el corte. Intentá de nuevo.");
+      });
+    });
+  }
+  function esc2(t){ return String(t); }      // el texto del aviso se muestra como texto plano
+
+  // ---------- pestaña Movimientos ----------
+  var MOVE_GROUPS = [
+    {id: "todos", label: "Todos", types: null},
+    {id: "transferencia", label: "Transferencias", types: ["transferencia"]},
+    {id: "pago", label: "Pagos", types: ["pago"]},
+    {id: "cancel", label: "Cancelaciones", types: ["cancelacion", "suspension"]},
+    {id: "cambio", label: "Cambios de día", types: ["cambio_dia"]},
+    {id: "reserva", label: "Reservas", types: ["reserva"]},
+    {id: "completado", label: "Completados", types: ["completado"]}
+  ];
+  var MOVE_ROLE = {owner: "Dueño", staff: "Empleado", client: "Cliente"};
+
+  function fmtStamp(ts){
+    var d = new Date(ts);
+    return d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3).toLowerCase() + " · " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+  }
+
+  function visibleMovements(){
+    var list = (state.movements || []).slice();
+    if(isEmployee()){ var me = myBarber(); list = list.filter(function(m){ return (m.barbers || []).indexOf(me) >= 0; }); }
+    return list.sort(function(a, b){ return b.at - a.at; });
+  }
+
+  function movesHtml(list){
+    var g = MOVE_GROUPS.filter(function(x){ return x.id === session.moveFilter; })[0] || MOVE_GROUPS[0];
+    var q = session.moveQuery.trim().toLowerCase();
+    var rows = list.filter(function(m){
+      if(g.types && g.types.indexOf(m.type) < 0) return false;
+      if(!q) return true;
+      return (m.clientName + " " + m.text + " " + m.byName).toLowerCase().indexOf(q) >= 0;
+    });
+    if(!rows.length) return '<div class="empty-note">No hay movimientos para este filtro.</div>';
+    return rows.slice(0, 300).map(function(m){
+      var who = esc(m.byName || "") + (m.byName ? ' · ' : '') + (MOVE_ROLE[m.byRole] || m.byRole);
+      return '<div class="mv-row"><span class="mv-when">'+fmtStamp(m.at)+'</span>' +
+        '<span class="mv-type t-'+esc(m.type)+'">'+(MOVE_TYPES[m.type] || esc(m.type))+'</span>' +
+        '<div class="mv-body"><b>'+esc(m.text)+'</b><i>'+esc(m.clientName || "")+' · turno del '+formatDateLong(m.date)+' '+esc(m.time)+' hs · '+who+'</i></div></div>';
+    }).join("") + (rows.length > 300 ? '<div class="field-hint">Se muestran los 300 más recientes.</div>' : '');
+  }
+
+  function ownerMovimientos(){
+    var list = visibleMovements();
+    var count = function(g){ return g.types ? list.filter(function(m){ return g.types.indexOf(m.type) >= 0; }).length : list.length; };
+    return '<div class="card"><h2>Movimientos</h2><div class="sub">Registro de todo lo que pasa con los turnos: reservas, pagos, cancelaciones, cambios de día y cortes pasados entre barberos' + (isEmployee() ? ' (los de tu agenda)' : '') + '</div>' +
+      '<input type="text" id="inpMoveSearch" placeholder="Buscar por cliente, barbero o detalle" value="'+esc(session.moveQuery)+'" autocomplete="off">' +
+      '<div class="chips">' + MOVE_GROUPS.map(function(g){
+        return '<button type="button" class="chip'+(session.moveFilter === g.id ? ' on' : '')+'" data-mfilter="'+g.id+'">'+g.label+' <small>'+count(g)+'</small></button>';
+      }).join("") + '</div><div id="moveList">'+movesHtml(list)+'</div></div>';
+  }
+
+  function bindMovimientosEvents(){
+    document.querySelectorAll("[data-mfilter]").forEach(function(el){
+      el.onclick = function(){ session.moveFilter = el.getAttribute("data-mfilter"); renderOwner(); };
+    });
+    var s = document.getElementById("inpMoveSearch");
+    if(s) s.oninput = function(){ session.moveQuery = s.value; document.getElementById("moveList").innerHTML = movesHtml(visibleMovements()); };
   }
 
   // ================= CONFIGURACIÓN =================
