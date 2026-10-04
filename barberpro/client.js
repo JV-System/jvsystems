@@ -7,6 +7,8 @@ var client = {
   step:6,   // 6 cargando sesión, 0 inicio (iniciar sesión / crear cuenta), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
   name:"", lastname:"", nickname:"", phone:"", email:"", photo:"", uid:"", registered:false,
   selectedDate:null, selectedTime:null, calMonth:null, barber:"",
+  walkIn:false,       // turno por orden de llegada (de hoy, pago completo, sin seña)
+  reschedule:null,    // turno que se está cambiando de día
   payMethod:"local",
   lastBooking:null
 };
@@ -36,11 +38,12 @@ var client = {
 // ---------- reserva ----------
 // arma la reserva (guardarla es persistBooking: en el navegador o en Firestore según el modo)
 function buildBooking(){
+  var b = null;
   var key = myDebtKey();
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
-  var dep = depositFor(state.config.price);
-  return {
+  var dep = client.walkIn ? 0 : depositFor(state.config.price);
+  b = {
     id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
@@ -49,6 +52,8 @@ function buildBooking(){
     deposit:dep, depositState:dep > 0 ? "pending" : "paid", balanceState:"pending",
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
+  if(client.walkIn) b.walkIn = true;
+  return b;
 }
 
 // ---------- con quién se corta ----------
@@ -94,7 +99,7 @@ function buildWaLink(b){
 // ================= VISTA =================
 function renderClient(){
   var main = document.getElementById("main");
-  var html = (client.step === 0 || client.step === 5 || client.step === 6) ? '' : '<div class="stepper">' +
+  var html = (client.step === 0 || client.step === 5 || client.step === 6 || client.step === 7) ? '' : '<div class="stepper">' +
     [1,2,3,4].map(function(n){ return '<div class="dot'+(client.step>=n?' done':'')+'"></div>'; }).join("") +
     '</div>';
 
@@ -104,6 +109,7 @@ function renderClient(){
   else if(client.step===1) html += stepDatos();
   else if(client.step===2) html += stepFecha();
   else if(client.step===3) html += stepConfirmacion();
+  else if(client.step===7) html += stepReprogramar();
   else html += stepExito();
 
   main.innerHTML = html;
@@ -266,9 +272,10 @@ function turnoRow(t){
     pay = t.lateCancel ? '<span class="paystate pend">Seña retenida</span>' : '<span class="paystate info">Seña a devolver</span>';
   }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
-    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+'</span>' : '') +
+    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') +
       '<span class="myt-sub">'+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
+      (canReschedule(t) ? '<button type="button" class="myt-cancel myt-change" data-reschedule="'+t.id+'">Cambiar día</button>' : '') +
       (canCancelTurno(t) ? '<button type="button" class="myt-cancel" data-cancel-turno="'+t.id+'">Cancelar</button>' : '') + '</span></div>';
 }
 
@@ -290,6 +297,8 @@ function cancelTurnoFlow(id){
       (kept ? "Como cancelás antes del día del turno, el local te devuelve la seña (" + money(t.deposit) + ")."
             : "No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.");
   if(t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
+  if(canReschedule(t)) msg += " Si solo necesitás otro día, podés cambiarlo sin costo (un cambio por turno).";
+  if(t.rescheduled) msg += " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo y pagar la seña de nuevo.";
   askConfirm(late ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
     cancelMyTurno(t, client).then(function(){ renderClient(); }).catch(function(e){
       console.error(e);
@@ -305,6 +314,9 @@ function pagosPendientesHtml(all){
     if(t.status === "cancelled") return;
     if(t.status === "confirmed" && t.deposit > 0 && depState(t) === "pending" && !turnoEnded(t)){
       cards.push('<div class="card pay-card"><h2>Seña de tu turno</h2><div class="sub">'+formatDateLong(t.date)+' · '+t.time+' hs</div>'+payBox(t, "deposit")+'</div>');
+    }
+    if(t.walkIn && t.status === "confirmed" && !turnoEnded(t) && balState(t) !== "paid" && balanceDue(t) > 0){
+      cards.push('<div class="card pay-card due"><h2>Orden de llegada</h2><div class="sub">'+formatDateLong(t.date)+' · '+t.time+' hs · pagá el total</div>'+payBox(t, "balance", "Pagá el total: {monto}")+'</div>');
     }
     if((t.status === "confirmed" || t.status === "completed") && turnoEnded(t) && balState(t) !== "paid" && balanceDue(t) > 0){
       cards.push('<div class="card pay-card due"><h2>¡Terminó tu turno!</h2><div class="sub">'+formatDateLong(t.date)+' · '+t.time+' hs · realizá el pago acá</div>'+payBox(t, "balance")+'</div>');
@@ -326,6 +338,39 @@ function misTurnosHtml(){
     (next.length ? next.map(turnoRow).join("") : '<div class="field-hint" style="margin:0 0 8px;">No tenés turnos próximos.</div>') +
     (hist.length ? '<details class="myt-hist"><summary>Historial ('+hist.length+')</summary>' + hist.slice(0, 10).map(turnoRow).join("") + '</details>' : '') +
     '</div>';
+}
+
+// orden de llegada: si justo hay un horario libre de hoy que empieza enseguida, se puede tomar y pagar el total ahora
+function walkInCardHtml(barber){
+  if(!barber) return "";
+  var time = walkInSlot(barber);
+  if(!time) return "";
+  var m = barberById(barber), price = state.config.price + (activeDebtFor(myDebtKey()) ? currentPenalty() : 0);
+  return '<div class="walkin-card"><div class="walkin-ico">⚡</div><div class="walkin-txt"><b>Orden de llegada</b>' +
+    '<span>Hay lugar hoy a las <strong>'+time+' hs</strong>'+(activeBarbers().length > 1 && m ? ' con '+esc(m.name) : '')+'. Pagás el total ('+money(price)+') ahora, sin seña.</span></div>' +
+    '<button type="button" class="btn btn-primary btn-sm" data-walkin="'+time+'">Tomar este turno</button></div>';
+}
+
+// cambiar de día: una sola vez por turno, hasta 24 horas antes
+function stepReprogramar(){
+  var t = client.reschedule;
+  if(!t) return "";
+  var barber = chosenBarber();
+  var slotsHtml = "";
+  if(client.selectedDate){
+    var statuses = getSlotStatuses(client.selectedDate, barber);
+    slotsHtml = statuses.length === 0 ? '<div class="empty-note">No hay horarios disponibles ese día. Probá con otra fecha.</div>'
+      : '<div class="slot-grid">' + statuses.map(function(st){
+          if(st.taken) return '<button class="slot-btn taken" disabled>'+st.time+'<span class="taken-lbl">Ocupado</span></button>';
+          return '<button class="slot-btn'+(client.selectedTime===st.time ? ' selected' : '')+'" data-time="'+st.time+'">'+st.time+'</button>';
+        }).join("") + '</div>';
+  }
+  return '<div class="card"><h2>Cambiá el día de tu turno</h2>' +
+    '<div class="sub">Ahora: '+formatDateLong(t.date)+' · '+t.time+' hs'+(t.barberName && activeBarbers().length > 1 ? ' con '+esc(t.barberName) : '')+'</div>' +
+    '<div class="notice info"><div>Es tu único cambio sin costo: la seña pasa al nuevo horario. Si después tenés que cancelar, se cancela y para volver tenés que reservar de nuevo y pagar la seña otra vez.</div></div>' +
+    calendarHtml() + slotsHtml + '</div>' +
+    '<div class="btn-row"><button class="btn btn-ghost" id="btnRsBack">Volver</button>' +
+    '<button class="btn btn-primary" id="btnRsConfirm" '+(client.selectedDate && client.selectedTime ? '' : 'disabled')+'>Confirmar cambio</button></div>';
 }
 
 function stepFecha(){
@@ -358,6 +403,7 @@ function stepFecha(){
     debtNotice +
     misTurnosHtml() +
     barberPickerHtml() +
+    walkInCardHtml(barber) +
     cal +
     slotsHtml +
     '</div>' +
@@ -379,7 +425,7 @@ function stepConfirmacion(){
   var debt = activeDebtFor(myDebtKey());
   var debtAmount = debt ? currentPenalty() : 0;
   var price = state.config.price, total = price + debtAmount;
-  var dep = depositFor(price);
+  var dep = client.walkIn ? 0 : depositFor(price);
   return '<div class="card">' +
     '<h2>Confirmá tu turno</h2>' +
     '<div class="sub">Revisá los datos antes de reservar</div>' +
@@ -395,9 +441,11 @@ function stepConfirmacion(){
           '<div class="pay-split-item"><span>1. Seña para reservar</span><b>'+money(dep)+'</b><i>Se paga ahora, después de confirmar</i></div>' +
           '<div class="pay-split-item"><span>2. Saldo al terminar</span><b>'+money(total - dep)+'</b><i>Lo pagás desde la app o en efectivo</i></div>' +
         '</div>'
-      : '<div class="notice info"><div>Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.</div></div>') +
+      : '<div class="notice info"><div>'+(client.walkIn
+          ? 'Orden de llegada: pagás el total ('+money(total)+') ahora, sin seña, desde la app o en efectivo en el local. Tenés que estar en los próximos minutos.'
+          : 'Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.')+'</div></div>') +
     '</div>' +
-    cancelPolicyNote(dep) +
+    (client.walkIn ? '' : cancelPolicyNote(dep)) +
     '<div class="btn-row">' +
       '<button class="btn btn-ghost" id="btnBack2">Atrás</button>' +
       '<button class="btn btn-primary" id="btnConfirm">Confirmar turno</button>' +
@@ -413,11 +461,11 @@ function cancelPolicyNote(dep){
 }
 
 // cuadro para pagar una parte (seña o saldo): link de Mercado Pago, alias para copiar (transferencia, MODO, billeteras) y avisar que pagó
-function payBox(t, kind){
+function payBox(t, kind, titleOverride){
   var c = state.config, deposit = kind === "deposit";
   var amount = deposit ? (t.deposit || 0) : balanceDue(t);
   var st = deposit ? depState(t) : balState(t);
-  var title = deposit ? 'Pagá la seña de '+money(amount) : 'Pagá el saldo de '+money(amount);
+  var title = titleOverride ? titleOverride.replace("{monto}", money(amount)) : deposit ? 'Pagá la seña de '+money(amount) : 'Pagá el saldo de '+money(amount);
   if(st === "paid") return '<div class="pay-box ok"><div class="pay-box-title">'+(deposit ? 'Seña' : 'Saldo')+' pagado ✓</div></div>';
   if(st === "informed") return '<div class="pay-box"><div class="pay-box-title">Avisaste que pagaste '+money(amount)+'</div><div class="pay-note">El local lo confirma apenas lo vea. No hace falta que hagas nada más.</div></div>';
   var opts = "";
@@ -438,6 +486,8 @@ function payBox(t, kind){
 
 // pantalla de "turno reservado": cómo pagar la seña
 function payInstructions(b){
+  if(b.walkIn) return payBox(b, "balance", "Pagá el total: {monto}") +
+    '<div class="pay-note" style="text-align:center;">Orden de llegada: tenés que estar en el local en los próximos minutos.</div>';
   if(!(b.deposit > 0)) return '<div class="pay-box"><div class="pay-box-title">Pagás '+money(bookingTotal(b))+' al terminar</div>' +
     '<div class="pay-note">Cuando termine el corte, entrás a la app y pagás desde acá, o en efectivo en el local.</div></div>';
   return payBox(b, "deposit") +
@@ -633,8 +683,40 @@ function bindClientEvents(){
   document.querySelectorAll("[data-calnav]").forEach(function(el){
     el.onclick = function(){ client.calMonth = addMonths(client.calMonth, parseInt(el.getAttribute("data-calnav"), 10)); renderClient(); };
   });
+  document.querySelectorAll("[data-walkin]").forEach(function(el){
+    el.onclick = function(){
+      client.selectedDate = toISO(new Date()); client.selectedTime = el.getAttribute("data-walkin"); client.walkIn = true; client.step = 3;
+      renderClient();
+    };
+  });
+  document.querySelectorAll("[data-reschedule]").forEach(function(el){
+    el.onclick = function(){
+      var t = myTurnos(client).filter(function(x){ return x.id === el.getAttribute("data-reschedule"); })[0];
+      if(!t || !canReschedule(t)){ showToast("Ya no se puede cambiar este turno."); return; }
+      client.reschedule = t; client.barber = t.barberId || ownerBarber().id;
+      client.selectedDate = null; client.selectedTime = null; client.calMonth = null; client.step = 7;
+      renderClient();
+    };
+  });
+  var rsBack = document.getElementById("btnRsBack");
+  if(rsBack) rsBack.onclick = function(){ client.reschedule = null; client.selectedDate = null; client.selectedTime = null; client.step = 2; renderClient(); };
+  var rsOk = document.getElementById("btnRsConfirm");
+  if(rsOk) rsOk.onclick = function(){
+    var t = client.reschedule;
+    if(!t || !client.selectedDate || !client.selectedTime) return;
+    rsOk.disabled = true; rsOk.textContent = "Cambiando...";
+    rescheduleMyTurno(t, client.selectedDate, client.selectedTime).then(function(){
+      client.reschedule = null; client.selectedDate = null; client.selectedTime = null; client.step = 2; renderClient();
+    }).catch(function(e){
+      console.error(e);
+      var taken = e && (e.code === "slot-taken" || e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
+      showToast(taken ? "Ese horario se acaba de ocupar o ya no se puede cambiar. Elegí otro." : "No pudimos cambiar el turno. Intentá de nuevo.");
+      if(taken){ client.selectedTime = null; renderClient(); } else { rsOk.disabled = false; rsOk.textContent = "Confirmar cambio"; }
+    });
+  };
   document.querySelectorAll(".cal-day[data-pick]").forEach(function(el){
     el.onclick = function(){
+      client.walkIn = false;
       client.selectedDate = el.getAttribute("data-date"); client.selectedTime = null;
       client.calMonth = client.selectedDate.slice(0, 8) + "01";
       renderClient();
@@ -651,7 +733,7 @@ function bindClientEvents(){
     el.onclick = function(){ client.payMethod = el.getAttribute("data-pay"); renderClient(); };
   });
   var back2 = document.getElementById("btnBack2");
-  if(back2) back2.onclick = function(){ client.step=2; renderClient(); };
+  if(back2) back2.onclick = function(){ client.walkIn = false; client.step=2; renderClient(); };
   var conf = document.getElementById("btnConfirm");
   if(conf) conf.onclick = function(){
     // otra persona pudo haber tomado el horario mientras se decidía
@@ -709,7 +791,7 @@ function bindClientEvents(){
   });
   var nb = document.getElementById("btnNewBooking");
   if(nb) nb.onclick = function(){
-    client.step=2; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null; client.payMethod="local"; client.calMonth=null;
+    client.step=2; client.selectedDate=null; client.selectedTime=null; client.lastBooking=null; client.payMethod="local"; client.calMonth=null; client.walkIn=false;
     renderClient();
   };
 }

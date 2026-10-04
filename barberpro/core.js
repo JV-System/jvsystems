@@ -48,6 +48,37 @@ function teamList(){
   return Array.isArray(t) && t.length ? t : [{id: "dueno", name: "Dueño", role: "owner", whatsapp: "", active: true}];
 }
 function activeBarbers(){ return teamList().filter(function(m){ return m.active !== false; }); }
+// ---------- orden de llegada y cambio de día ----------
+// próximo horario libre de HOY con ese barbero que empieza en los próximos minutos que permita el local (null si no hay o está desactivado)
+function walkInSlot(barber){
+  var win = state.config.walkInMinutes;
+  if(win === undefined || win === null || win === "") win = 90;
+  win = Number(win) || 0;
+  if(win <= 0) return null;
+  var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+  var free = getSlotStatuses(toISO(now), barber).filter(function(s){ return !s.taken && timeToMin(s.time) <= nowMin + win; });
+  return free.length ? free[0].time : null;
+}
+function hoursUntil(b){
+  var p = b.time.split(":"), d = fromISO(b.date);
+  d.setHours(Number(p[0]), Number(p[1]), 0, 0);
+  return (d.getTime() - Date.now()) / 3600000;
+}
+// un cambio de día por reserva, hasta 24 horas antes, y no para los de orden de llegada
+function canReschedule(b){ return b.status === "confirmed" && !b.rescheduled && !b.walkIn && hoursUntil(b) >= 24; }
+// el cliente cambia su turno a otro día/horario (mismo barbero). Local: en este navegador; cloud.js lo reemplaza por Firestore.
+function rescheduleMyTurno(t, newDate, newTime){
+  var b = state.bookings.filter(function(x){ return x.id === t.id; })[0];
+  if(!b) return Promise.reject(authErr("no-booking"));
+  var free = getSlotStatuses(newDate, b.barberId).some(function(s){ return s.time === newTime && !s.taken; });
+  if(!free) return Promise.reject(authErr("slot-taken"));
+  b.originalDate = b.date; b.originalTime = b.time; b.date = newDate; b.time = newTime; b.rescheduled = 1;
+  saveState();
+  hooks.refresh();
+  showToast("Listo, cambiamos tu turno. Es el único cambio sin costo.");
+  return Promise.resolve();
+}
+
 // foto de perfil de un barbero (o "" si no cargó)
 function barberPhoto(id){ return (state.barberPhotos || {})[id] || ""; }
 // guarda o quita la foto de un barbero (photo = "" la quita). Local: en este navegador; cloud.js lo reemplaza por Firestore.
@@ -138,6 +169,7 @@ function baseState(){
       mapCenter:null,
       price:8000,
       depositPercent:50,        // seña que se paga al reservar (% del precio); 0 = sin seña
+      walkInMinutes:90,         // orden de llegada: se ofrece el horario libre de hoy que empiece en los próximos N minutos (0 = no se ofrece)
       team:[],                  // equipo: [{id, name, role:"owner"|"employee", whatsapp, active}]; vacío = un solo barbero
       priceIsExample:true,
       slotMinutes:30,

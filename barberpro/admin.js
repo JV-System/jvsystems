@@ -346,6 +346,7 @@
       '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.nickname?' <span class="nick">“'+esc(b.nickname)+'”</span>':'')+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
       '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
       (!isEmployee() && activeBarbers().length > 1 && barberNameOf(b) ? ' · <span class="with-barber">con '+esc(barberNameOf(b))+'</span>' : '') +
+      (b.rescheduled ? ' · <span class="with-barber">cambió de día (antes: '+shortDate(b.originalDate)+' '+esc(b.originalTime||"")+')</span>' : '') +
       (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de cargo anterior)</span>':'') +
       '</div>' + payLine(b) + actions +
       '</div>';
@@ -362,6 +363,11 @@
       return '<div class="payline">' + (b.depositRefunded ? '<span class="paystate ok">Seña devuelta</span>'
         : b.lateCancel ? '<span class="paystate pend">Seña retenida '+money(b.deposit)+' (canceló el mismo día)</span>'
         : '<span class="paystate info">Devolver seña '+money(b.deposit)+'</span>') + '</div>';
+    }
+    if(b.walkIn){              // orden de llegada: un solo pago, el total
+      var bs0 = balState(b);
+      return '<div class="payline"><span class="paychip walkin-chip">⚡ Orden de llegada</span><span class="paychip">Total '+money(bookingTotal(b))+'</span>' + stChip(bs0) +
+        (bs0 !== "pending" && b.balanceMethod ? '<span class="paychip">'+METHOD_NAMES[b.balanceMethod]+'</span>' : '') + '</div>';
     }
     if(!(b.deposit > 0)){      // turno sin seña (o anterior a la seña): un solo pago
       return '<div class="payline"><span class="paychip">'+payMethodLabel(b.payMethod||"local")+'</span>' +
@@ -743,6 +749,8 @@
       '<label>Precio del corte ($)</label><input type="number" id="inpPrice" value="'+state.config.price+'">' +
       '<label>Seña al reservar (% del precio)</label><input type="number" id="inpDeposit" min="0" max="100" value="'+(state.config.depositPercent === undefined ? 50 : state.config.depositPercent)+'">' +
       '<div class="field-hint">0 = sin seña. Con el precio actual, la seña es de '+money(depositFor(state.config.price))+' y el saldo de '+money(state.config.price - depositFor(state.config.price))+'. Si cancelan el mismo día, la seña queda en el local; si cancelan antes, se devuelve.</div>' +
+      '<label>Orden de llegada (minutos)</label><input type="number" id="inpWalkIn" min="0" max="240" value="'+(state.config.walkInMinutes === undefined ? 90 : state.config.walkInMinutes)+'">' +
+      '<div class="field-hint">Si hay un horario libre de hoy que empieza dentro de este tiempo, el cliente lo puede tomar al instante pagando el total (sin seña). 0 = no ofrecer.</div>' +
       '<label>Duración del turno (minutos)</label>' +
       '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
       '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
@@ -759,6 +767,8 @@
       if(!isNaN(p) && p>0){ state.config.price = p; state.config.priceIsExample=false; }
       var dp = parseInt(document.getElementById("inpDeposit").value, 10);
       state.config.depositPercent = isNaN(dp) ? 50 : Math.max(0, Math.min(100, dp));
+      var wi = parseInt(document.getElementById("inpWalkIn").value, 10);
+      state.config.walkInMinutes = isNaN(wi) ? 90 : Math.max(0, Math.min(240, wi));
       state.config.slotMinutes = parseInt(document.getElementById("inpSlotMin").value,10);
       saveState();
       renderOwner();

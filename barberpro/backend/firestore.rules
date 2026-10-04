@@ -57,6 +57,16 @@ service cloud.firestore {
       return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day());
     }
 
+    // 'AAAA-MM-DD HH:MM' de un instante, en hora de Argentina
+    function dtAR(ts) {
+      let t = ts - duration.value(3, 'h');
+      return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day()) + ' ' + pad2(t.hours()) + ':' + pad2(t.minutes());
+    }
+
+    function minsOf(time) {
+      return int(time[0:2]) * 60 + int(time[3:5]);
+    }
+
     function bookingPath(bid) {
       return /databases/$(database)/documents/bookings/$(bid);
     }
@@ -107,14 +117,19 @@ service cloud.firestore {
                     && validDate(request.resource.data.date)
                     && validTime(request.resource.data.time)
                     && isStr(request.resource.data.bid, 40)
-                    && id == slotId(request.resource.data);
+                    && id == slotId(request.resource.data)
+                    && getAfter(bookingPath(request.resource.data.bid)).data.date == request.resource.data.date
+                    && getAfter(bookingPath(request.resource.data.bid)).data.time == request.resource.data.time;
       allow update: if false;
       // el dueño, o el cliente dueño de esa reserva en el mismo lote en que la cancela
       allow delete: if isOwner()
                     || (isStaff() && resource.data.get('barber', '') == staffBarber())
                     || (signedIn()
                         && get(bookingPath(resource.data.bid)).data.cid == request.auth.uid
-                        && getAfter(bookingPath(resource.data.bid)).data.status == 'cancelled');
+                        && (getAfter(bookingPath(resource.data.bid)).data.status == 'cancelled'
+                            // o la reserva se cambió de día y este horario ya no es el suyo
+                            || (getAfter(bookingPath(resource.data.bid)).data.get('rescheduled', 0) == 1
+                                && bookingSlotId(getAfter(bookingPath(resource.data.bid)).data) != id)));
     }
 
     // ---------- reservas ----------
@@ -130,7 +145,7 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
                         && request.resource.data.status == 'cancelled'
                         && request.resource.data.lateCancel == (resource.data.date == hoyAR()))
-                    || informsDeposit() || informsBalance() || staffEdits();
+                    || informsDeposit() || informsBalance() || staffEdits() || reschedules();
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -146,6 +161,20 @@ service cloud.firestore {
           && request.resource.data.status in ['confirmed', 'completed']
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState',
                                                                                   'balanceMethod', 'seenByOwner', 'reminded']);
+    }
+
+    // cambio de día: una sola vez por reserva y hasta 24 horas antes del turno; la seña pasa al nuevo horario (el cliente
+    // crea el horario nuevo y libera el viejo en el mismo lote)
+    function reschedules() {
+      return ownsBooking() && resource.data.status == 'confirmed'
+          && resource.data.get('rescheduled', 0) == 0 && resource.data.get('walkIn', false) == false
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'time', 'rescheduled', 'originalDate', 'originalTime'])
+          && request.resource.data.rescheduled == 1
+          && request.resource.data.originalDate == resource.data.date && request.resource.data.originalTime == resource.data.time
+          && validDate(request.resource.data.date) && validTime(request.resource.data.time)
+          && request.resource.data.date >= hoyAR()
+          && resource.data.date + ' ' + resource.data.time >= dtAR(request.time + duration.value(24, 'h'))
+          && existsAfter(/databases/$(database)/documents/slots/$(bookingSlotId(request.resource.data)));
     }
 
     function informsDeposit() {
@@ -164,7 +193,22 @@ service cloud.firestore {
     }
 
     // seña y saldo: opcionales al crear (reservas viejas), pero si vienen tienen que ser coherentes
+    // orden de llegada: turno de HOY, que empieza en los próximos minutos que permita el local, con el pago completo (sin seña)
+    function validWalkIn(d) {
+      return d.walkIn == true && d.get('deposit', -1) == 0 && d.get('depositState', 'x') == 'paid' && d.get('balanceState', 'x') == 'pending'
+          && d.date == hoyAR()
+          && (exists(/databases/$(database)/documents/config/main) ? get(/databases/$(database)/documents/config/main).data.get('walkInMinutes', 90) : 90) > 0
+          && minsOf(d.time) >= (request.time - duration.value(3, 'h')).hours() * 60 + (request.time - duration.value(3, 'h')).minutes() - 5
+          && minsOf(d.time) <= (request.time - duration.value(3, 'h')).hours() * 60 + (request.time - duration.value(3, 'h')).minutes()
+                               + (exists(/databases/$(database)/documents/config/main) ? get(/databases/$(database)/documents/config/main).data.get('walkInMinutes', 90) : 90) + 5
+          && !('balanceMethod' in d) && !('depositRefunded' in d);
+    }
+
     function validPayFields(d) {
+      return ('walkIn' in d) ? validWalkIn(d) : validPayFieldsNormal(d);
+    }
+
+    function validPayFieldsNormal(d) {
       return (!('deposit' in d) || (d.deposit is number && d.deposit >= 0 && d.deposit <= d.price
                                      && d.get('depositState', 'x') == (d.deposit > 0 ? 'pending' : 'paid')
                                      && d.get('balanceState', 'x') == 'pending'
@@ -178,7 +222,7 @@ service cloud.firestore {
     function validBooking(bid, d) {
       return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
                                'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey', 'cid',
-                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn'])
           && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey', 'cid'])
           && d.id == bid
@@ -233,7 +277,7 @@ service cloud.firestore {
     // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). La lee ese cliente o el dueño.
     function validTurno(tid, d) {
       return d.keys().hasOnly(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt',
-                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn'])
           && d.keys().hasAll(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
           && d.id == tid
           && validDate(d.date) && validTime(d.time)
@@ -267,6 +311,12 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balanceState', 'balanceMethod'])
                         && request.resource.data.balanceState == 'informed' && request.resource.data.balanceMethod in ['transfer', 'mp']
                         && getAfter(bookingPath(tid)).data.balanceState == 'informed')
+                    || (signedIn() && request.auth.uid == id && resource.data.status == 'confirmed' && resource.data.get('rescheduled', 0) == 0
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['date', 'time', 'rescheduled'])
+                        && request.resource.data.rescheduled == 1
+                        && getAfter(bookingPath(tid)).data.get('rescheduled', 0) == 1
+                        && getAfter(bookingPath(tid)).data.date == request.resource.data.date
+                        && getAfter(bookingPath(tid)).data.time == request.resource.data.time)
                     || (isStaff() && get(bookingPath(tid)).data.get('barberId', '') == staffBarber()
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState', 'balanceMethod'])
                         && request.resource.data.status in ['confirmed', 'completed'] && resource.data.status in ['confirmed', 'completed']);

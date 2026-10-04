@@ -31,7 +31,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","price","depositPercent","priceIsExample","slotMinutes","hours","team"];
+                     "payAlias","payHolder","payMpLink","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
 
   function docKey(k){ return String(k).replace(/[^A-Za-z0-9:_-]/g, "_"); }
   function slotDocId(b){ return b.date + "_" + String(b.time).replace(":", "") + (b.barberId ? "_" + b.barberId : ""); }
@@ -84,7 +84,7 @@
   function turnoCopy(b){
     var t = {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
              paid: b.paid, status: b.status, createdAt: b.createdAt};
-    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName"].forEach(function(k){
+    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName", "walkIn", "rescheduled"].forEach(function(k){
       if(b[k] !== undefined && b[k] !== null) t[k] = b[k];
     });
     return t;
@@ -360,6 +360,22 @@
           : kept ? "Turno cancelado. El local te devuelve la seña." : "Turno cancelado sin cargo.");
       });
     });
+  };
+
+  // el cliente cambia su turno de día (una sola vez, hasta 24 h antes): la seña pasa al horario nuevo.
+  // En un lote: se actualiza la reserva y su copia, se libera el horario viejo y se ocupa el nuevo; si alguien lo tomó antes, falla.
+  rescheduleMyTurno = function(t, newDate, newTime){
+    var u = auth && auth.currentUser;
+    if(!u) return Promise.reject(authErr("auth/user-not-found"));
+    var who = t.barberId ? "_" + t.barberId : "";
+    var oldSlot = t.date + "_" + String(t.time).replace(":", "") + who, newSlot = newDate + "_" + String(newTime).replace(":", "") + who;
+    var batch = db.batch(), slot = {date: newDate, time: newTime, bid: t.id};
+    if(t.barberId) slot.barber = t.barberId;
+    batch.update(db.doc("bookings/" + t.id), {date: newDate, time: newTime, rescheduled: 1, originalDate: t.date, originalTime: t.time});
+    batch.update(db.doc("clients/" + u.uid + "/turnos/" + t.id), {date: newDate, time: newTime, rescheduled: 1});
+    batch.delete(db.doc("slots/" + oldSlot));
+    batch.set(db.doc("slots/" + newSlot), slot);
+    return batch.commit().then(function(){ showToast("Listo, cambiamos tu turno. Es el único cambio sin costo."); });
   };
 
   // el cliente avisa que pagó la seña o el saldo (kind: "deposit" | "balance"; method: "mp" | "transfer").
