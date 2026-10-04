@@ -96,7 +96,7 @@
         '<div class="lockicon">🔒</div>' +
         '<h2>Acceso del dueño</h2>' +
         '<div class="sub">Ingresá con tu mail y contraseña</div>' +
-        '<input type="email" id="inpOwnerEmail" placeholder="tu@mail.com" autocomplete="username" autocapitalize="off" value="'+esc(rememberedOwnerEmail())+'" style="text-align:center;">' +
+        '<input type="text" id="inpOwnerEmail" inputmode="email" placeholder="'+(((window.BARBERPRO_CONFIG || {}).ownerEmail) ? 'usuario o mail' : 'tu@mail.com')+'" autocomplete="username" autocapitalize="off" value="'+esc(rememberedOwnerEmail())+'" style="text-align:center;">' +
         '<div class="pw-wrap"><input type="password" id="inpOwnerPass" placeholder="Contraseña" autocomplete="current-password" style="text-align:center;">' +
           '<button type="button" class="pw-eye" id="btnPwEye" aria-label="Mostrar contraseña" aria-pressed="false">' + EYE_SVG + '</button></div>' +
         '<label class="checkline" style="justify-content:center;"><input type="checkbox" id="inpOwnerRemember" checked><span>Recordar en este dispositivo</span></label>' +
@@ -121,10 +121,13 @@
       var emailEl = document.getElementById("inpOwnerEmail"), passEl = document.getElementById("inpOwnerPass");
       function go(){
         var email = emailEl.value.trim(), pass = passEl.value;
+        // atajo: si escribe un usuario sin @ (ej. "admin") se usa el mail del dueño cargado en config.js
+        var ownerMail = (window.BARBERPRO_CONFIG || {}).ownerEmail;
+        if(email && email.indexOf("@") < 0 && ownerMail) email = ownerMail;
         var remember = document.getElementById("inpOwnerRemember").checked;
         if(!email || !pass){ showToast("Escribí tu mail y tu contraseña."); return; }
         btn.disabled = true; btn.textContent = "Ingresando...";
-        try{ if(remember) localStorage.setItem(OWNER_EMAIL_KEY, email); else localStorage.removeItem(OWNER_EMAIL_KEY); }catch(e){}
+        try{ if(remember) localStorage.setItem(OWNER_EMAIL_KEY, emailEl.value.trim()); else localStorage.removeItem(OWNER_EMAIL_KEY); }catch(e){}
         cloudAuth.login(email, pass, remember).catch(function(e){
           btn.disabled = false; btn.textContent = "Ingresar";
           showToast(authErrorMsg(e));
@@ -141,7 +144,8 @@
       btn.onclick = go;
       passEl.onkeydown = function(e){ if(e.key === "Enter") go(); };
       document.getElementById("btnOwnerReset").onclick = function(){
-        var email = emailEl.value.trim();
+        var email = emailEl.value.trim(), ownerMail = (window.BARBERPRO_CONFIG || {}).ownerEmail;
+        if(email && email.indexOf("@") < 0 && ownerMail) email = ownerMail;
         if(!email){ showToast("Escribí tu mail arriba y volvé a tocar este botón."); return; }
         cloudAuth.resetPassword(email).then(function(){
           showToast("Si ese mail es el del dueño, te mandamos un correo para cambiar la contraseña.");

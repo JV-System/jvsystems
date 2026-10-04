@@ -20,6 +20,10 @@ window.BARBERPRO_CONFIG = {
       "appId": "1:585767235541:web:64763b1ab811a771fbd75c"
   },
 
+  // Mail del usuario dueño en Firebase (Authentication). Con esto, en el panel alcanza con escribir un usuario corto (ej. "admin") en lugar
+  // del mail. Vacío = el panel pide el mail completo.
+  ownerEmail:      "",
+
   // Foto propia del local para el fondo del encabezado (ej. "hero.jpg", en esta misma carpeta). Si está, se usa en lugar del
   // mapa: no depende de ningún servicio externo, es gratis para siempre y no necesita token. Horizontal, ~1200 px de ancho, JPG.
   heroImage:       "",
