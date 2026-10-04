@@ -331,45 +331,6 @@ function payInstructions(b){
     '<div class="pay-note">Podés abonar en efectivo o como te quede cómodo al llegar.</div></div>';
 }
 
-// ---------- comprobante del turno ----------
-function receiptCode(b){ return String(b.id).slice(-6).toUpperCase(); }
-
-function receiptText(b){
-  var c = state.config, total = bookingTotal(b);
-  var L = [
-    "COMPROBANTE DE TURNO - " + c.businessName,
-    "N° " + receiptCode(b),
-    "",
-    "Cliente: " + b.name + " " + b.lastname,
-    "Fecha: " + formatDateLong(b.date),
-    "Hora: " + b.time + " hs"
-  ];
-  if(c.address) L.push("Lugar: " + c.address);
-  L.push("Corte: " + money(b.price));
-  if(b.debtCharged > 0) L.push("Saldo anterior: " + money(b.debtCharged));
-  L.push("Total: " + money(total));
-  L.push("Pago: " + payMethodLabel(b.payMethod).toLowerCase() + (b.payMethod === "local" ? "" : " (el local confirma el pago al recibirlo)"));
-  L.push("");
-  L.push("Si cancelás el mismo día del turno se cobra el 50% de seña.");
-  return L.join("\n");
-}
-
-function receiptWaLink(b){ return "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(receiptText(b)); }
-function receiptMailLink(b){
-  return "mailto:" + b.email + "?subject=" + encodeURIComponent("Comprobante de tu turno - " + state.config.businessName) +
-    "&body=" + encodeURIComponent(receiptText(b));
-}
-
-function receiptCard(b){
-  return '<div class="card receipt-card"><h2>Tu comprobante</h2>' +
-    '<div class="sub">N° '+receiptCode(b)+' · '+formatDateLong(b.date)+' · '+b.time+' hs</div>' +
-    '<div class="cal-actions">' +
-      (b.phone ? '<a class="btn btn-wa" href="'+receiptWaLink(b)+'" target="_blank" rel="noopener">Recibirlo en mi WhatsApp</a>' : '') +
-      (b.email ? '<a class="btn btn-ghost" href="'+receiptMailLink(b)+'">Recibirlo en mi mail</a>' : '') +
-    '</div>' +
-    '<div class="field-hint" style="margin:10px 0 0;">Se abre con el mensaje ya escrito: solo tocás enviar.</div></div>';
-}
-
 function stepExito(){
   var b = client.lastBooking;
   if(!b) return '<div class="card">Algo salió mal.</div>';
@@ -379,7 +340,6 @@ function stepExito(){
     '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs</div>' +
     payInstructions(b) +
     '</div>' +
-    receiptCard(b) +
     placeCard() +
     '<div class="card"><h2>Que no se te pase</h2>' +
     '<div class="sub">Guardalo en tu calendario y te avisa un día antes y 2 horas antes.</div>' +
