@@ -4,7 +4,7 @@
 "use strict";
 
 var client = {
-  step:1,
+  step:0,   // 0 inicio (iniciar sesión / registrarse), 5 iniciar sesión, 1 datos, 2 fecha, 3 confirmar, 4 listo
   name:"", lastname:"", nickname:"", phone:"", email:"", registered:false,
   selectedDate:null, selectedTime:null, calMonth:null,
   payMethod:"local",
@@ -28,21 +28,18 @@ var client = {
 })();
 
 // ---------- reserva ----------
-function createBooking(){
+// arma la reserva (guardarla es persistBooking: en el navegador o en Firestore según el modo)
+function buildBooking(){
   var key = clientKeyOf(client.name, client.lastname, client.phone);
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
-  var booking = {
+  return {
     id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
     payMethod:client.payMethod, paid:false,
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key
   };
-  state.bookings.push(booking);
-  if(hasDebt) delete state.debts[key];
-  saveState();
-  return booking;
 }
 
 function bookingTotal(b){ return b.price + (b.debtCharged||0); }
@@ -59,11 +56,13 @@ function buildWaLink(b){
 // ================= VISTA =================
 function renderClient(){
   var main = document.getElementById("main");
-  var html = '<div class="stepper">' +
+  var html = (client.step === 0 || client.step === 5) ? '' : '<div class="stepper">' +
     [1,2,3,4].map(function(n){ return '<div class="dot'+(client.step>=n?' done':'')+'"></div>'; }).join("") +
     '</div>';
 
-  if(client.step===1) html += stepDatos();
+  if(client.step===0) html += stepInicio();
+  else if(client.step===5) html += stepLogin();
+  else if(client.step===1) html += stepDatos();
   else if(client.step===2) html += stepFecha();
   else if(client.step===3) html += stepConfirmacion();
   else html += stepExito();
@@ -71,6 +70,10 @@ function renderClient(){
   main.innerHTML = html;
   bindClientEvents();
   initPlaceMap();
+  if(CLOUD && client.registered){
+    var dkey = clientKeyOf(client.name, client.lastname, client.phone);
+    if(!state.debtFlagsLoaded[dkey]){ state.debtFlagsLoaded[dkey] = true; loadDebtFlag(dkey); }
+  }
 }
 
 // fondo satelital del encabezado (si no hay token/coordenadas o la imagen falla, queda el encabezado de siempre)
@@ -96,8 +99,32 @@ function render(){
 // si el dueño cambia algo en otra pestaña, se actualiza (sin pisar lo que se está escribiendo)
 hooks.refresh = function(){
   applyBranding("Turnos");
-  if(client.step !== 1) renderClient();
+  if(client.step !== 1 && client.step !== 5) renderClient();   // sin pisar lo que se está escribiendo
 };
+
+function stepInicio(){
+  return '<div class="card welcome">' +
+    '<h2>Reservá tu turno</h2>' +
+    '<div class="sub">Elegí fecha y horario en un minuto</div>' +
+    '<button class="btn btn-primary" id="btnGoLogin">Iniciar sesión</button>' +
+    '<button class="btn btn-ghost" id="btnGoRegister" style="margin-top:10px;">Registrarme</button>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Ya reservaste antes? Iniciá sesión con tu teléfono y tu mail.</div>' +
+    '</div>';
+}
+
+function stepLogin(){
+  return '<div class="card">' +
+    '<h2>Iniciar sesión</h2>' +
+    '<div class="sub">Con el teléfono y el mail con los que te registraste</div>' +
+    '<label>Teléfono</label>' +
+    '<input type="tel" id="inpLoginPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel">' +
+    '<label>Mail</label>' +
+    '<input type="email" id="inpLoginEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
+    '<button class="btn btn-primary" id="btnLogin">Entrar</button>' +
+    '<button class="btn btn-ghost" id="btnLoginBack" style="margin-top:10px;">Volver</button>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Todavía no tenés cuenta? <button class="link-btn" id="btnLoginToRegister" type="button">Registrate</button></div>' +
+    '</div>';
+}
 
 function stepDatos(){
   var editing = client.registered;
@@ -116,7 +143,8 @@ function stepDatos(){
     '<input type="email" id="inpEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="email" autocapitalize="off">' +
     '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local los usa para confirmarte el turno y recordártelo.</div>' +
     '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Registrarme y continuar')+'</button>' +
-    (editing ? '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>' : '') +
+    (editing ? '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>'
+             : '<button class="btn btn-ghost" id="btnRegBack" style="margin-top:10px;">Volver</button>') +
     '</div>';
 }
 
@@ -364,15 +392,56 @@ function logoutClient(){
   askConfirm("Salir", "Vas a tener que volver a registrarte para reservar. Los turnos que ya reservaste no se borran.", function(){
     try{ localStorage.removeItem(PROFILE_KEY); }catch(e){}
     client.name = ""; client.lastname = ""; client.nickname = ""; client.phone = ""; client.email = "";
-    client.registered = false; client.step = 1;
+    client.registered = false; client.step = 0;
     client.selectedDate = null; client.selectedTime = null; client.lastBooking = null; client.payMethod = "local";
     renderClient();
     showToast("Saliste de la cuenta.");
   });
 }
 
+function applyProfile(p){
+  client.name = p.name; client.lastname = p.lastname; client.nickname = p.nickname || ""; client.phone = p.phone; client.email = p.email;
+  client.registered = true;
+}
+
 function bindClientEvents(){
   document.querySelectorAll("[data-logout]").forEach(function(el){ el.onclick = logoutClient; });
+  var goL = document.getElementById("btnGoLogin");
+  if(goL) goL.onclick = function(){ client.step = 5; renderClient(); };
+  var goR = document.getElementById("btnGoRegister");
+  if(goR) goR.onclick = function(){ client.step = 1; renderClient(); };
+  var l2r = document.getElementById("btnLoginToRegister");
+  if(l2r) l2r.onclick = function(){ client.step = 1; renderClient(); };
+  var lb = document.getElementById("btnLoginBack");
+  if(lb) lb.onclick = function(){ client.step = 0; renderClient(); };
+  var rb = document.getElementById("btnRegBack");
+  if(rb) rb.onclick = function(){ client.step = 0; renderClient(); };
+  var bl = document.getElementById("btnLogin");
+  if(bl){
+    var doLogin = function(){
+      var phone = document.getElementById("inpLoginPhone").value.trim();
+      var email = document.getElementById("inpLoginEmail").value.trim();
+      if(digitsOnly(phone).length < 8){ showToast("Ingresá tu teléfono."); return; }
+      if(!isValidEmail(email)){ showToast("Ingresá el mail con el que te registraste."); return; }
+      bl.disabled = true; bl.textContent = "Buscando...";
+      findClient(phone, email).then(function(p){
+        if(!p){
+          showToast("No encontramos esa cuenta. Revisá el teléfono y el mail, o registrate.");
+          bl.disabled = false; bl.textContent = "Entrar";
+          return;
+        }
+        applyProfile(p);
+        try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(cleanProfile(p))); }catch(e){}
+        client.step = 2; renderClient();
+      }).catch(function(e){
+        console.error(e);
+        showToast("No pudimos iniciar sesión. Revisá tu conexión e intentá de nuevo.");
+        bl.disabled = false; bl.textContent = "Entrar";
+      });
+    };
+    bl.onclick = doLogin;
+    document.getElementById("inpLoginEmail").onkeydown = function(e){ if(e.key === "Enter") doLogin(); };
+  }
   var b1 = document.getElementById("btnStep1");
   if(b1) b1.onclick = function(){
     var name = document.getElementById("inpName").value.trim();
@@ -386,6 +455,8 @@ function bindClientEvents(){
     client.name = name; client.lastname = lastname; client.nickname = nickname; client.phone = phone; client.email = email;
     client.registered = true;
     try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({name:name,lastname:lastname,nickname:nickname,phone:phone,email:email})); }catch(e){}
+    // la ficha queda guardada para poder iniciar sesión desde otro celular; si falla, el registro sigue igual
+    saveClientProfile(cleanProfile(client)).catch(function(e){ console.error("ficha", e); });
     client.step = 2;
     renderClient();
   };
@@ -424,9 +495,23 @@ function bindClientEvents(){
       client.selectedTime = null; client.step = 2; renderClient();
       return;
     }
-    client.lastBooking = createBooking();
-    client.step = 4;
-    renderClient();
+    var b = buildBooking();
+    conf.disabled = true; conf.textContent = "Reservando...";
+    persistBooking(b).then(function(){
+      client.lastBooking = b;
+      client.step = 4;
+      renderClient();
+    }).catch(function(e){
+      console.error(e);
+      var taken = e && (e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
+      if(taken){
+        showToast("Ese horario se acaba de ocupar. Elegí otro.");
+        client.selectedTime = null; client.step = 2; renderClient();
+      } else {
+        showToast("No pudimos guardar tu turno. Revisá tu conexión e intentá de nuevo.");
+        conf.disabled = false; conf.textContent = "Confirmar turno";
+      }
+    });
   };
   var cp = document.getElementById("btnCopyAlias");
   if(cp) cp.onclick = function(){ copyText(state.config.payAlias); };

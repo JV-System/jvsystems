@@ -1,5 +1,8 @@
 /* BarberPro Turnos - núcleo compartido: datos, utilidades, disponibilidad y reservas.
    Lo usan la app del cliente (index.html) y el panel (admin.html). */
+// true cuando hay Firebase configurado y cargado (lo activa cloud.js); false = modo local de demo
+var CLOUD = false;
+
 var STORAGE_KEY = "barberpro_turnos_v2";
 var PROFILE_KEY = "barberpro_client_profile_v2";
 // versiones anteriores (datos de prueba): se borran del dispositivo la primera vez que se abre la app
@@ -200,7 +203,7 @@ function saveState(){
 var state = loadState();
 
 // cada página (cliente / admin) engancha acá lo que hay que redibujar cuando cambian los datos
-var hooks = { refresh: function(){} };
+var hooks = { refresh: function(){}, authChanged: function(){} };
 
 // releer los datos (por ejemplo cuando el otro tab de este navegador guardó algo)
 function reloadState(){ state = loadState(); }
@@ -314,8 +317,8 @@ function generateSlots(iso){
     var nowMin = new Date().getHours()*60+new Date().getMinutes();
     slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
   }
-  var taken = state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).map(function(b){ return b.time; });
-  slots = slots.filter(function(s){ return taken.indexOf(s)===-1; });
+  var taken = takenTimes(iso);
+  slots = slots.filter(function(s){ return !taken[s]; });
   return slots;
 }
 function getSlotStatuses(iso){
@@ -331,9 +334,85 @@ function getSlotStatuses(iso){
     var nowMin = new Date().getHours()*60+new Date().getMinutes();
     slots = slots.filter(function(s){ return timeToMin(s) > nowMin; });
   }
-  var takenSet = {};
-  state.bookings.filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).forEach(function(b){ takenSet[b.time]=true; });
+  var takenSet = takenTimes(iso);
   return slots.map(function(s){ return {time:s, taken:!!takenSet[s]}; });
+}
+
+// ---------- operaciones de datos ----------
+// Versión LOCAL (demo, guarda en este navegador). cloud.js las reemplaza por la versión de Firestore cuando hay Firebase configurado,
+// así client.js y admin.js funcionan igual en los dos modos.
+
+// horarios ocupados de un día: { "10:00": true, ... }
+function takenTimes(iso){
+  var out = {};
+  state.bookings.forEach(function(b){ if(b.date===iso && b.status!=="cancelled") out[b.time] = true; });
+  return out;
+}
+
+// guarda una reserva nueva (devuelve una promesa). Si traía un saldo anterior, queda cobrado en este turno.
+function persistBooking(b){
+  state.bookings.push(b);
+  if(b.debtCharged > 0) delete state.debts[b.clientKey];
+  saveState();
+  return Promise.resolve(b);
+}
+
+// cambia campos de una reserva existente (pagado, avisado, estado...)
+function updateBooking(id, patch){
+  var b = state.bookings.filter(function(x){ return x.id===id; })[0];
+  if(!b) return Promise.resolve();
+  Object.assign(b, patch);
+  saveState();
+  hooks.refresh();
+  return Promise.resolve();
+}
+
+// el dueño abrió la agenda: lo nuevo pasa a "visto"
+function markAllSeen(){
+  var changed = false;
+  state.bookings.forEach(function(b){ if(!b.seenByOwner){ b.seenByOwner = true; changed = true; } });
+  if(changed) saveState();
+}
+
+// borra todos los turnos, saldos y cierres
+function resetAllData(){
+  state.bookings = []; state.debts = {}; state.closures = [];
+  saveState();
+  hooks.refresh();
+  return Promise.resolve();
+}
+
+// ¿este cliente tiene un saldo pendiente? (en local ya está cargado en state.debts)
+function loadDebtFlag(key){ return Promise.resolve(); }
+
+// ---------- fichas de clientes (para "Iniciar sesión") ----------
+// La ficha se guarda con un id que es el hash (SHA-256) del teléfono + el mail: para abrirla hay que saber los dos datos.
+function sha256Hex(text){
+  if(window.crypto && crypto.subtle && window.TextEncoder){
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("0" + b.toString(16)).slice(-2); }).join("");
+    });
+  }
+  return Promise.reject(new Error("sin-crypto"));
+}
+function clientDocId(phone, email){
+  return sha256Hex(digitsOnly(phone) + "|" + String(email || "").trim().toLowerCase());
+}
+function cleanProfile(p){
+  return {name: p.name, lastname: p.lastname, nickname: p.nickname || "", phone: p.phone, email: p.email};
+}
+
+// Versión LOCAL (demo): las fichas quedan en este navegador. cloud.js las reemplaza por Firestore.
+var CLIENTS_KEY = "barberpro_clients_v2";
+function localClients(){ try{ return JSON.parse(localStorage.getItem(CLIENTS_KEY) || "{}"); }catch(e){ return {}; } }
+function findClient(phone, email){
+  return clientDocId(phone, email).then(function(id){ return localClients()[id] || null; });
+}
+function saveClientProfile(p){
+  return clientDocId(p.phone, p.email).then(function(id){
+    var m = localClients(); m[id] = cleanProfile(p);
+    try{ localStorage.setItem(CLIENTS_KEY, JSON.stringify(m)); }catch(e){}
+  });
 }
 
 // ---------- booking ops ----------

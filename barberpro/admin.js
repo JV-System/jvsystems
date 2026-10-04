@@ -3,7 +3,7 @@
 (function(){
 "use strict";
   var session = {
-    ownerAuthed: (sessionStorage.getItem(OWNER_KEY)==="1"),
+    ownerAuthed: CLOUD ? false : (sessionStorage.getItem(OWNER_KEY)==="1"),
     ownerTab: "agenda",
     agendaView: "dia",
     agendaDate: toISO(new Date()),
@@ -21,21 +21,17 @@
     if(session.ownerAuthed && (session.ownerTab==="agenda" || session.ownerTab==="saldos")) renderOwner();
   };
 
+  // inició o cerró sesión (Firebase Authentication)
+  hooks.authChanged = function(){
+    session.ownerAuthed = !!(window.cloudAuth && cloudAuth.user());
+    renderOwner();
+  };
+
   function renderOwner(){
     var main = document.getElementById("main");
     if(!session.ownerAuthed){
       main.innerHTML = ownerLogin();
-      var btn = document.getElementById("btnOwnerLogin");
-      btn.onclick = function(){
-        var pin = document.getElementById("inpPin").value;
-        if(pin === state.config.ownerPin){
-          session.ownerAuthed = true;
-          sessionStorage.setItem(OWNER_KEY,"1");
-          renderOwner();
-        }else{
-          showToast("PIN incorrecto.");
-        }
-      };
+      bindOwnerLogin();
       return;
     }
 
@@ -63,8 +59,7 @@
     bindOwnerNav();
 
     if(session.ownerTab==="agenda"){
-      state.bookings.forEach(function(b){ b.seenByOwner = true; });
-      saveState();
+      markAllSeen();
       bindAgendaEvents();
     } else if(session.ownerTab==="horarios") bindHorariosEvents();
     else if(session.ownerTab==="cierres") bindCierresEvents();
@@ -79,7 +74,29 @@
     return '<button class="ownerNavBtn'+active+'" data-tab="'+id+'">'+label+badge+'</button>';
   }
 
+  function authErrorMsg(e){
+    var code = e && e.code ? e.code : "";
+    if(code === "auth/too-many-requests") return "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
+    if(code === "auth/network-request-failed") return "Sin conexión. Revisá tu internet.";
+    if(code.indexOf("auth/") === 0) return "Mail o contraseña incorrectos.";
+    return "No se pudo iniciar sesión. Intentá de nuevo.";
+  }
+
   function ownerLogin(){
+    if(CLOUD){
+      if(!cloudAuth.isReady()){
+        return '<div class="card lockcard"><div class="lockicon">⏳</div><h2>Un momento...</h2><div class="sub">Verificando tu sesión</div></div>';
+      }
+      return '<div class="card lockcard">' +
+        '<div class="lockicon">🔒</div>' +
+        '<h2>Acceso del dueño</h2>' +
+        '<div class="sub">Ingresá con tu mail y contraseña</div>' +
+        '<input type="email" id="inpOwnerEmail" placeholder="tu@mail.com" autocomplete="username" autocapitalize="off" style="text-align:center;">' +
+        '<input type="password" id="inpOwnerPass" placeholder="Contraseña" autocomplete="current-password" style="text-align:center;">' +
+        '<button class="btn btn-primary" id="btnOwnerLogin" style="max-width:240px; margin:0 auto;">Ingresar</button>' +
+        '<button class="link-btn" id="btnOwnerReset" type="button" style="margin-top:14px;">Olvidé mi contraseña</button>' +
+        '</div>';
+    }
     return '<div class="card lockcard">' +
       '<div class="lockicon">🔒</div>' +
       '<h2>Acceso del dueño</h2>' +
@@ -90,12 +107,52 @@
       '</div>';
   }
 
+  function bindOwnerLogin(){
+    var btn = document.getElementById("btnOwnerLogin");
+    if(!btn) return;
+    if(CLOUD){
+      var emailEl = document.getElementById("inpOwnerEmail"), passEl = document.getElementById("inpOwnerPass");
+      function go(){
+        var email = emailEl.value.trim(), pass = passEl.value;
+        if(!email || !pass){ showToast("Escribí tu mail y tu contraseña."); return; }
+        btn.disabled = true; btn.textContent = "Ingresando...";
+        cloudAuth.login(email, pass).catch(function(e){
+          btn.disabled = false; btn.textContent = "Ingresar";
+          showToast(authErrorMsg(e));
+        });
+      }
+      btn.onclick = go;
+      passEl.onkeydown = function(e){ if(e.key === "Enter") go(); };
+      document.getElementById("btnOwnerReset").onclick = function(){
+        var email = emailEl.value.trim();
+        if(!email){ showToast("Escribí tu mail arriba y volvé a tocar este botón."); return; }
+        cloudAuth.resetPassword(email).then(function(){
+          showToast("Si ese mail es el del dueño, te mandamos un correo para cambiar la contraseña.");
+        }).catch(function(){ showToast("No se pudo enviar el correo. Revisá el mail e intentá de nuevo."); });
+      };
+      return;
+    }
+    btn.onclick = function(){
+      var pin = document.getElementById("inpPin").value;
+      if(pin === state.config.ownerPin){
+        session.ownerAuthed = true;
+        sessionStorage.setItem(OWNER_KEY,"1");
+        renderOwner();
+      }else{
+        showToast("PIN incorrecto.");
+      }
+    };
+  }
+
   function bindOwnerNav(){
     document.querySelectorAll(".ownerNavBtn").forEach(function(el){
       el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); renderOwner(); };
     });
     var lo = document.getElementById("btnLogout");
-    if(lo) lo.onclick = function(){ session.ownerAuthed=false; sessionStorage.removeItem(OWNER_KEY); renderOwner(); };
+    if(lo) lo.onclick = function(){
+      if(CLOUD){ cloudAuth.logout(); return; }          // authChanged vuelve a dibujar la pantalla de acceso
+      session.ownerAuthed=false; sessionStorage.removeItem(OWNER_KEY); renderOwner();
+    };
   }
 
   function ownerAgenda(){
@@ -200,9 +257,8 @@
   function markPaid(id){
     var b = state.bookings.filter(function(x){ return x.id===id; })[0];
     if(!b) return;
-    b.paid = true;
-    saveState();
-    renderOwner();
+    updateBooking(id, {paid: true});
+    if(b.debtCharged > 0) settleDebt(b.clientKey);       // el saldo anterior que traía este turno queda saldado
     showToast("Cobro registrado.");
   }
 
@@ -319,7 +375,7 @@
       el.addEventListener("click", function(){
         var id = el.getAttribute("data-remind");
         var b = state.bookings.filter(function(x){ return x.id===id; })[0];
-        if(b && !b.reminded){ b.reminded = true; saveState(); setTimeout(renderOwner, 300); }
+        if(b && !b.reminded) updateBooking(id, {reminded: true});
       });
     });
     document.querySelectorAll("[data-paid]").forEach(function(el){
@@ -458,10 +514,10 @@
     var br = document.getElementById("btnResetAll");
     if(br) br.onclick = function(){
       askConfirm("Empezar de cero", "Se borran todos los turnos, saldos y cierres. Esto no se puede deshacer. ¿Seguimos?", function(){
-        state.bookings = []; state.debts = {}; state.closures = [];
-        saveState();
-        renderOwner();
-        showToast("Listo: la agenda quedó vacía.");
+        resetAllData().then(function(){
+          renderOwner();
+          showToast("Listo: la agenda quedó vacía.");
+        });
       });
     };
     var bc = document.getElementById("btnSaveCobros");
@@ -500,9 +556,10 @@
       '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
       '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
       '</div>' +
-      '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel del dueño</div>' +
-      '<label>Nuevo PIN</label><input type="text" id="inpNewPin" value="'+state.config.ownerPin+'">' +
-      '<button class="btn btn-ghost" id="btnSavePin">Guardar PIN</button></div>';
+      (CLOUD ? '' :
+        '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel del dueño</div>' +
+        '<label>Nuevo PIN</label><input type="text" id="inpNewPin" value="'+state.config.ownerPin+'">' +
+        '<button class="btn btn-ghost" id="btnSavePin">Guardar PIN</button></div>');
   }
   function bindPreciosEvents(){
     var btn = document.getElementById("btnSavePrecios");

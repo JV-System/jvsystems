@@ -1,0 +1,127 @@
+rules_version = '2';
+
+// BarberPro Turnos - reglas de seguridad de Firestore.
+//
+//  - config/main      datos de la barbería (nombre, horarios, precio, cobros, cierres): los ve cualquiera, los edita solo el dueño.
+//  - slots/{fecha_hora}  marca de "horario ocupado": pública, trae solo fecha y hora (ningún dato de personas).
+//                        Cualquiera puede crearla UNA vez: si el documento ya existe no se puede pisar, así dos personas
+//                        no reservan el mismo horario. Solo el dueño la borra (al cancelar).
+//  - bookings/{id}    la reserva completa (nombre, teléfono, mail): el cliente solo puede CREARLA; leerla es del dueño.
+//  - clients/{hash}   ficha del cliente registrado (nombre, apodo, teléfono, mail). El id es un hash del teléfono + mail, así que solo
+//                     se puede abrir sabiendo los dos datos; no se puede listar. Sirve para "Iniciar sesión" desde otro celular.
+//  - debtFlags/{key}  aviso de "tiene un saldo pendiente": se consulta de a uno (get), no se puede listar.
+//  - debts/{key}      detalle de saldos pendientes: solo el dueño.
+//
+// El dueño es el usuario de Firebase Authentication cuyo uid figura en isOwner().
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid in ['RQIEHKxHKwPAZXguUzxO2vd6s8k1'];
+    }
+
+    function isStr(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    function validDate(v) {
+      return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function validTime(v) {
+      return v is string && v.matches('^[0-9]{2}:[0-9]{2}$');
+    }
+
+    function slotId(d) {
+      return d.date + '_' + d.time.replace(':', '');
+    }
+
+    // ---------- datos del negocio ----------
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // ---------- horarios ocupados ----------
+    match /slots/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['date', 'time', 'bid'])
+                    && request.resource.data.keys().hasAll(['date', 'time', 'bid'])
+                    && validDate(request.resource.data.date)
+                    && validTime(request.resource.data.time)
+                    && isStr(request.resource.data.bid, 40)
+                    && id == slotId(request.resource.data);
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    // ---------- reservas ----------
+    match /bookings/{bid} {
+      allow read, update, delete: if isOwner();
+      allow create: if validBooking(bid, request.resource.data);
+    }
+
+    function validBooking(bid, d) {
+      return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
+                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey'])
+          && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
+                              'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey'])
+          && d.id == bid
+          && isStr(d.name, 60) && d.name.size() > 0
+          && isStr(d.lastname, 60) && d.lastname.size() > 0
+          && (!('nickname' in d) || isStr(d.nickname, 30))
+          && isStr(d.phone, 40) && d.phone.size() >= 6
+          && isStr(d.email, 120) && d.email.matches('.+@.+[.].+')
+          && validDate(d.date) && validTime(d.time)
+          && d.price is number && d.price > 0 && d.price <= 10000000
+          && (!exists(/databases/$(database)/documents/config/main)
+              || get(/databases/$(database)/documents/config/main).data.price == d.price)
+          && d.debtCharged is number && d.debtCharged >= 0 && d.debtCharged <= d.price
+          && d.payMethod in ['local', 'transfer', 'mp']
+          && d.paid == false
+          && d.status == 'confirmed'
+          && d.createdAt is number
+          && (!('seenByOwner' in d) || d.seenByOwner == false)
+          && isStr(d.clientKey, 80)
+          // la reserva tiene que venir junto con la marca de horario ocupado (se escriben en un mismo lote)
+          && existsAfter(/databases/$(database)/documents/slots/$(slotId(d)));
+    }
+
+    // ---------- fichas de clientes ----------
+    function validClient(d) {
+      return d.keys().hasOnly(['name', 'lastname', 'nickname', 'phone', 'email'])
+          && d.keys().hasAll(['name', 'lastname', 'phone', 'email'])
+          && isStr(d.name, 60) && d.name.size() > 0
+          && isStr(d.lastname, 60) && d.lastname.size() > 0
+          && (!('nickname' in d) || isStr(d.nickname, 30))
+          && isStr(d.phone, 40) && d.phone.size() >= 6
+          && isStr(d.email, 120) && d.email.matches('.+@.+[.].+');
+    }
+
+    match /clients/{id} {
+      allow get: if true;
+      allow list, delete: if isOwner();
+      allow create: if id.matches('^[0-9a-f]{64}$') && validClient(request.resource.data);
+      // se puede corregir el nombre o el apodo; el teléfono y el mail (que forman el id) no cambian
+      allow update: if validClient(request.resource.data)
+                    && request.resource.data.phone == resource.data.phone
+                    && request.resource.data.email == resource.data.email;
+    }
+
+    // ---------- saldos pendientes ----------
+    match /debtFlags/{key} {
+      allow get: if true;
+      allow list, create, delete: if isOwner();
+      // el cliente solo puede marcar que ese saldo ya se sumó a su turno (una vez, sin tocar nada más)
+      allow update: if isOwner()
+                    || (resource.data.get('chargedBy', null) == null
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chargedBy'])
+                        && isStr(request.resource.data.chargedBy, 40));
+    }
+
+    match /debts/{key} {
+      allow read, write: if isOwner();
+    }
+  }
+}

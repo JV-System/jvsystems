@@ -8,6 +8,18 @@ window.BARBERPRO_CONFIG = {
   address:         "Mitre 576, S2000 Rosario, Santa Fe",
   mapsLink:        "",   // opcional: link exacto de Google Maps; si está vacío se arma con nombre + dirección
 
+  // Datos en la nube (Firebase de ESTA barbería). Con esto las reservas se guardan en Firestore y el panel del dueño entra con mail
+  // y contraseña. Si se borra este bloque, la app vuelve al modo local de demo (datos en el navegador, PIN).
+  // La apiKey de Firebase es pública por diseño; lo que protege los datos son las reglas de backend/firestore.rules.
+  firebase: {
+      "apiKey": "AIzaSyCVEKObhJYYCNv-fq7n3maWerNT1U7Gnt8",
+      "authDomain": "barberpro-a6405.firebaseapp.com",
+      "projectId": "barberpro-a6405",
+      "storageBucket": "barberpro-a6405.firebasestorage.app",
+      "messagingSenderId": "585767235541",
+      "appId": "1:585767235541:web:64763b1ab811a771fbd75c"
+  },
+
   // Foto propia del local para el fondo del encabezado (ej. "hero.jpg", en esta misma carpeta). Si está, se usa en lugar del
   // mapa: no depende de ningún servicio externo, es gratis para siempre y no necesita token. Horizontal, ~1200 px de ancho, JPG.
   heroImage:       "",

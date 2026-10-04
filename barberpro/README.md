@@ -1,9 +1,16 @@
 BarberPro Turnos — sistema de reservas para barberías (JV Systems). Genérico: cada barbería carga su nombre, dirección, WhatsApp y medios de cobro desde el panel de administración.
 
-- `index.html` — app del cliente: registrarse (nombre, apellido, apodo opcional, teléfono, mail), elegir fecha en un calendario mensual (días libres, completos y cerrados) y horario, y pagar (en el local / transferencia / Mercado Pago). Al reservar recibe un comprobante (botones para mandárselo a su WhatsApp y a su mail con el mensaje ya escrito) y puede guardar el turno en su calendario (aviso 1 día antes y 2 horas antes).
+- `index.html` — app del cliente: pantalla de inicio con **Iniciar sesión** (teléfono + mail) o **Registrarme** (nombre, apellido, apodo opcional, teléfono, mail), elegir fecha en un calendario mensual (días libres, completos y cerrados) y horario, y pagar (en el local / transferencia / Mercado Pago). Al reservar recibe un comprobante (botones para mandárselo a su WhatsApp y a su mail con el mensaje ya escrito) y puede guardar el turno en su calendario (aviso 1 día antes y 2 horas antes).
 - `admin.html` — panel del dueño (PIN inicial 1234): agenda día / Gantt semanal / mes, lista de recordatorios de mañana (un toque abre WhatsApp o mail con el mensaje listo), horarios, cierres, datos del negocio y cobros, precio y saldos por cancelación.
 - `config.js` — datos de ESTA barbería (nombre, dirección, horarios estándar, WhatsApp, alias, link de Mercado Pago). La dirección arma el mapa y el "Cómo llegar" que ve el cliente al reservar. `mapboxToken` + `mapCenter` ([longitud, latitud]) ponen de fondo del encabezado una vista satelital inclinada del local (Mapbox; las coordenadas se indican a mano porque Mapbox no ubica bien muchas calles argentinas). Se ven en todos los celulares. Cada cliente al que se le vende tiene su copia con su config.js.
 - `core.js`, `app.css` — lógica y estilos compartidos.
 - `vendor/leaflet/` — Leaflet 1.9.4 (BSD-2), librería de mapas guardada en el proyecto. La tarjeta "Dónde es" muestra un mapa propio con los mapas de OpenStreetMap y el pin del local (usa `mapCenter` de config.js); sin coordenadas cae al mapa incrustado de Google. Sin claves ni costo.
 
 Prototipo estático (localStorage), sin backend: las dos páginas comparten datos solo dentro del mismo navegador. Para que el cliente y el dueño estén en celulares distintos hace falta backend (fase 2).
+
+## Modo nube (Firebase)
+- `config.js` trae el bloque `firebase` del proyecto de la barbería. Con eso `cloud.js` guarda las reservas en **Firestore** (el cliente y el dueño se ven en tiempo real desde cualquier celular) y el panel entra con **mail y contraseña** (Firebase Authentication). Sin ese bloque, la app queda en modo local de demo.
+- `backend/` — reglas de seguridad de Firestore (`firestore.rules`) y su `firebase.json`. Se despliegan con: `firebase deploy --only firestore:rules --project <id> --account <cuenta>` (siempre con proyecto y cuenta explícitos, parado en esta carpeta).
+- El dueño es el usuario cuyo uid figura en `isOwner()` dentro de `firestore.rules`. Un horario ocupado es un documento en `slots/` que se puede crear una sola vez, así no hay doble reserva.
+- Fichas de clientes: al registrarse se guarda `clients/{hash(teléfono|mail)}`; "Iniciar sesión" busca ese documento (solo se abre sabiendo los dos datos, no se puede listar). En modo local las fichas quedan en el navegador.
+- Pendiente (fase 2b, requiere plan Blaze + Cloud Functions): envío automático del comprobante y recordatorios por mail y WhatsApp.
