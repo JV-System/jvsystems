@@ -499,6 +499,13 @@ function myTurnos(profile){
   return state.bookings.filter(function(b){ return digitsOnly(b.phone) === d && String(b.email || "").trim().toLowerCase() === m; });
 }
 
+// el cliente cancela su propio turno. Local: misma lógica que el dueño (si es del mismo día queda una seña pendiente).
+// cloud.js lo reemplaza por la versión de Firestore. Devuelve una promesa.
+function cancelMyTurno(t, profile){
+  cancelBooking(t.id);
+  return Promise.resolve();
+}
+
 // ---------- booking ops ----------
 function activeDebtFor(key){ return state.debts[key] || null; }
 function currentPenalty(){ return Math.round(state.config.price/2); }

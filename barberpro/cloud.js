@@ -242,6 +242,37 @@
     return db.doc("config/main").set(out).catch(function(e){ fail(e, "No se pudo guardar. ¿Iniciaste sesión como dueño?"); });
   };
 
+  // fecha de hoy en Argentina (las reglas de seguridad deciden con esta misma fecha si una cancelación es "del mismo día")
+  function hoyAR(){ return new Intl.DateTimeFormat("en-CA", {timeZone: "America/Argentina/Buenos_Aires"}).format(new Date()); }
+
+  // el cliente cancela su turno: se libera el horario y, si es del mismo día, queda una seña pendiente a su nombre.
+  // Todo en un lote; las reglas verifican que la reserva sea suya y que la cancelación tardía sea de verdad del mismo día.
+  cancelMyTurno = function(t, profile){
+    var u = auth && auth.currentUser;
+    if(!u) return Promise.reject(authErr("auth/user-not-found"));
+    var uid = u.uid, late = (t.date === hoyAR());
+    return db.doc("debtFlags/" + uid).get().then(function(snap){
+      var flag = snap.exists ? snap.data() : null, batch = db.batch(), now = Date.now();
+      batch.update(db.doc("bookings/" + t.id), {status: "cancelled", lateCancel: late});
+      batch.update(db.doc("clients/" + uid + "/turnos/" + t.id), {status: "cancelled"});
+      batch.delete(db.doc("slots/" + t.date + "_" + String(t.time).replace(":", "")));        // el horario vuelve a quedar libre
+      var next = flag;
+      if(flag && flag.chargedBy === t.id){                                                    // el saldo que traía este turno vuelve a estar pendiente
+        batch.update(db.doc("debtFlags/" + uid), {chargedBy: null});
+        next = Object.assign({}, flag, {chargedBy: null});
+      }
+      if(late && !flag){
+        batch.set(db.doc("debts/" + uid), {name: profile.name, lastname: profile.lastname, phone: profile.phone, since: now, bid: t.id});
+        batch.set(db.doc("debtFlags/" + uid), {since: now, bid: t.id});
+        next = {since: now, bid: t.id};
+      }
+      return batch.commit().then(function(){
+        state.debtFlags[docKey(uid)] = next;
+        showToast(late ? "Turno cancelado. Quedó una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+      });
+    });
+  };
+
   // referencia a la copia "Mis turnos" de una reserva (las reservas viejas no traen cid: se calcula)
   function turnoRefFor(b){
     return Promise.resolve(b.cid ? db.doc("clients/" + b.cid + "/turnos/" + b.id) : null);

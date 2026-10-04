@@ -20,17 +20,23 @@ var client = {
   if(seen){
     overlay.style.display = "none";
   } else {
-    setTimeout(function(){
+    // bienvenida con el nombre de la barbería; un toque la saltea
+    var nm = document.getElementById("introName"), tg = document.getElementById("introTag");
+    if(nm) nm.textContent = state.config.businessName || "";
+    if(tg) tg.textContent = state.config.tagline || "";
+    var closeIntro = function(){
       overlay.classList.add("hide");
       try{ sessionStorage.setItem(INTRO_KEY,"1"); }catch(e){}
-    }, 1200);
+    };
+    overlay.onclick = closeIntro;
+    setTimeout(closeIntro, 3200);
   }
 })();
 
 // ---------- reserva ----------
 // arma la reserva (guardarla es persistBooking: en el navegador o en Firestore según el modo)
 function buildBooking(){
-  var key = clientKeyOf(client.name, client.lastname, client.phone);
+  var key = myDebtKey();
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
   return {
@@ -41,6 +47,9 @@ function buildBooking(){
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
 }
+
+// clave del saldo pendiente del cliente: en la nube es el id de su cuenta
+function myDebtKey(){ return CLOUD ? client.uid : clientKeyOf(client.name, client.lastname, client.phone); }
 
 function bookingTotal(b){ return b.price + (b.debtCharged||0); }
 
@@ -74,7 +83,7 @@ function renderClient(){
   initPlaceMap();
   if(client.registered && client.watching !== client.uid){ client.watching = client.uid; watchMyTurnos(client); }
   if(CLOUD && client.registered){
-    var dkey = clientKeyOf(client.name, client.lastname, client.phone);
+    var dkey = myDebtKey();
     if(!state.debtFlagsLoaded[dkey]){ state.debtFlagsLoaded[dkey] = true; loadDebtFlag(dkey); }
   }
 }
@@ -223,7 +232,31 @@ function turnoRow(t){
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
     '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' +
       '<span class="myt-sub">'+money(total)+' · '+payMethodLabel(t.payMethod)+(pay ? ' · ' : '')+pay+'</span></div>' +
-    '<span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span></div>';
+    '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
+      (canCancelTurno(t) ? '<button type="button" class="myt-cancel" data-cancel-turno="'+t.id+'">Cancelar</button>' : '') + '</span></div>';
+}
+
+// se puede cancelar un turno confirmado que todavía no pasó
+function canCancelTurno(t){
+  if(t.status !== "confirmed") return false;
+  var now = new Date(), today = toISO(now);
+  return t.date > today || (t.date === today && timeToMin(t.time) > now.getHours() * 60 + now.getMinutes());
+}
+
+function cancelTurnoFlow(id){
+  var t = myTurnos(client).filter(function(x){ return x.id === id; })[0];
+  if(!t || !canCancelTurno(t)) return;
+  var late = (t.date === toISO(new Date()));
+  var msg = late
+    ? "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña del 50% (" + money(currentPenalty()) + "): queda a tu nombre y se suma a tu próximo turno."
+    : "Vas a cancelar el turno del " + formatDateLong(t.date) + " a las " + t.time + " hs. No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.";
+  if(t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
+  askConfirm(late ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
+    cancelMyTurno(t, client).then(function(){ renderClient(); }).catch(function(e){
+      console.error(e);
+      showToast("No pudimos cancelar el turno. Revisá tu conexión e intentá de nuevo.");
+    });
+  });
 }
 
 function misTurnosHtml(){
@@ -244,7 +277,7 @@ function misTurnosHtml(){
 function stepFecha(){
   var cal = calendarHtml();
 
-  var debt = activeDebtFor(clientKeyOf(client.name, client.lastname, client.phone));
+  var debt = activeDebtFor(myDebtKey());
   var debtNotice = debt ? '<div class="notice warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div>Tenés un saldo pendiente de '+money(currentPenalty())+' por una cancelación anterior. Se va a sumar a este turno.</div></div>' : "";
 
   var slotsHtml = "";
@@ -287,7 +320,7 @@ function payOptions(){
 }
 
 function stepConfirmacion(){
-  var debt = activeDebtFor(clientKeyOf(client.name, client.lastname, client.phone));
+  var debt = activeDebtFor(myDebtKey());
   var debtAmount = debt ? currentPenalty() : 0;
   var total = state.config.price + debtAmount;
   return '<div class="card">' +
@@ -441,6 +474,9 @@ function readPhoto(file){
 
 function bindClientEvents(){
   document.querySelectorAll("[data-logout]").forEach(function(el){ el.onclick = logoutClient; });
+  document.querySelectorAll("[data-cancel-turno]").forEach(function(el){
+    el.onclick = function(){ cancelTurnoFlow(el.getAttribute("data-cancel-turno")); };
+  });
   var goL = document.getElementById("btnGoLogin");
   if(goL) goL.onclick = function(){ client.step = 5; renderClient(); };
   var goR = document.getElementById("btnGoRegister");

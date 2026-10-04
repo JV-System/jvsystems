@@ -38,6 +38,20 @@ service cloud.firestore {
       return v is string && v.matches('^[0-9]{2}:[0-9]{2}$');
     }
 
+    function pad2(n) {
+      return n < 10 ? '0' + string(n) : string(n);
+    }
+
+    // fecha de hoy en Argentina (UTC-3) como 'AAAA-MM-DD'
+    function hoyAR() {
+      let t = request.time - duration.value(3, 'h');
+      return string(t.year()) + '-' + pad2(t.month()) + '-' + pad2(t.day());
+    }
+
+    function bookingPath(bid) {
+      return /databases/$(database)/documents/bookings/$(bid);
+    }
+
     function slotId(d) {
       return d.date + '_' + d.time.replace(':', '');
     }
@@ -59,12 +73,25 @@ service cloud.firestore {
                     && isStr(request.resource.data.bid, 40)
                     && id == slotId(request.resource.data);
       allow update: if false;
-      allow delete: if isOwner();
+      // el dueño, o el cliente dueño de esa reserva en el mismo lote en que la cancela
+      allow delete: if isOwner()
+                    || (signedIn()
+                        && get(bookingPath(resource.data.bid)).data.cid == request.auth.uid
+                        && getAfter(bookingPath(resource.data.bid)).data.status == 'cancelled');
     }
 
     // ---------- reservas ----------
     match /bookings/{bid} {
-      allow read, update, delete: if isOwner();
+      allow read, delete: if isOwner();
+      // el dueño cambia lo que quiera; el cliente solo puede CANCELAR su propia reserva confirmada (y no una ya pasada).
+      // lateCancel lo fija la regla: es true solo si cancela el mismo día del turno (ahí se cobra el 50% de seña).
+      allow update: if isOwner()
+                    || (signedIn() && resource.data.cid == request.auth.uid
+                        && resource.data.status == 'confirmed'
+                        && resource.data.date >= hoyAR()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
+                        && request.resource.data.status == 'cancelled'
+                        && request.resource.data.lateCancel == (resource.data.date == hoyAR()));
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -138,22 +165,47 @@ service cloud.firestore {
       allow create: if isOwner()
                     || (signedIn() && request.auth.uid == id && validTurno(tid, request.resource.data)
                         && existsAfter(/databases/$(database)/documents/bookings/$(tid)));
-      allow update, delete: if isOwner();
+      allow update: if isOwner()
+                    || (signedIn() && request.auth.uid == id && resource.data.status == 'confirmed'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                        && request.resource.data.status == 'cancelled'
+                        && getAfter(bookingPath(tid)).data.status == 'cancelled');
+      allow delete: if isOwner();
     }
 
     // ---------- saldos pendientes ----------
+    // La clave de un saldo es el id de la cuenta del cliente. Lo crea el dueño al cancelar un turno del mismo día o el propio
+    // cliente cuando cancela el mismo día (la regla verifica en la reserva que de verdad fue una cancelación tardía).
+    function validLateDebt(key, d) {
+      return signedIn() && request.auth.uid == key && isStr(d.bid, 40)
+          && getAfter(bookingPath(d.bid)).data.cid == key
+          && getAfter(bookingPath(d.bid)).data.status == 'cancelled'
+          && getAfter(bookingPath(d.bid)).data.lateCancel == true;
+    }
+
     match /debtFlags/{key} {
-      allow get: if true;
-      allow list, create, delete: if isOwner();
-      // el cliente solo puede marcar que ese saldo ya se sumó a su turno (una vez, sin tocar nada más)
+      allow get: if isOwner() || (signedIn() && request.auth.uid == key);
+      allow list, delete: if isOwner();
+      allow create: if isOwner() || (request.resource.data.keys().hasOnly(['since', 'bid']) && validLateDebt(key, request.resource.data));
       allow update: if isOwner()
-                    || (signedIn() && resource.data.get('chargedBy', null) == null
+                    || (signedIn() && request.auth.uid == key
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chargedBy'])
-                        && isStr(request.resource.data.chargedBy, 40));
+                        && (
+                          // el saldo se suma a un turno nuevo (una sola vez)
+                          (resource.data.get('chargedBy', null) == null && isStr(request.resource.data.chargedBy, 40))
+                          // o ese turno se cancela y el saldo vuelve a quedar pendiente
+                          || (resource.data.get('chargedBy', null) != null && request.resource.data.chargedBy == null
+                              && getAfter(bookingPath(resource.data.chargedBy)).data.cid == key
+                              && getAfter(bookingPath(resource.data.chargedBy)).data.status == 'cancelled')));
     }
 
     match /debts/{key} {
-      allow read, write: if isOwner();
+      allow read, update, delete: if isOwner();
+      allow create: if isOwner()
+                    || (request.resource.data.keys().hasOnly(['name', 'lastname', 'phone', 'since', 'bid'])
+                        && isStr(request.resource.data.name, 60) && isStr(request.resource.data.lastname, 60)
+                        && isStr(request.resource.data.phone, 40) && request.resource.data.since is number
+                        && validLateDebt(key, request.resource.data));
     }
   }
 }
