@@ -572,3 +572,27 @@ input[readonly]{opacity:.7;}
   .owner-content.tab-clientes{max-width:none;}
   .owner-content.tab-clientes > .card{padding:22px 24px;}
 }
+
+/* panel del dueño: aprovechar toda la pantalla y lista de próximos turnos */
+.next-card{margin-top:16px;}
+.next-row{display:flex; align-items:center; gap:10px; width:100%; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:10px; padding:9px 12px; margin-bottom:8px; cursor:pointer; color:var(--text); font-family:inherit; text-align:left;}
+.next-row:hover{border-color:var(--accent-2);}
+.next-when{display:flex; flex-direction:column; font-size:11.5px; color:var(--text-faint); font-weight:700; min-width:64px;}
+.next-when b{font-size:15px; color:var(--text); font-variant-numeric:tabular-nums;}
+.next-who{flex:1; min-width:0; font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+@media (min-width:1000px){
+  .app-admin{max-width:none;}
+  .app-admin .adminbar{padding:14px 40px;}
+  .app-admin #main{padding:0 40px;}
+  #main.is-owner{grid-template-columns:220px minmax(0,1fr); gap:36px;}
+  .owner-content:not(.tab-agenda):not(.tab-clientes){max-width:1100px;}
+  .gantt-wrap{max-height:calc(100vh - 230px);}
+}
+@media (min-width:1400px){
+  #main.is-owner{grid-template-columns:240px minmax(0,1fr);}
+  .agenda-layout{grid-template-columns:minmax(0,1fr) 400px;}
+}
+@media (min-width:1000px){
+  .agenda-side{max-height:calc(100vh - 108px); overflow-y:auto; padding-right:4px; scrollbar-width:thin;}
+}

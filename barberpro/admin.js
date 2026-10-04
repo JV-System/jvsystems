@@ -208,6 +208,7 @@
     }
 
     html += reminderCard();
+    html += proximosCard();
     html += '</aside><section class="agenda-main">';
 
     html += '<div class="agenda-subnav">' +
@@ -221,6 +222,22 @@
     else html += agendaMes();
 
     return html + '</section></div>';
+  }
+
+  // los próximos turnos confirmados (hoy en adelante); un toque abre ese día
+  function proximosCard(){
+    var now = new Date(), today = toISO(now), nowMin = now.getHours()*60 + now.getMinutes();
+    var list = state.bookings.filter(function(b){
+      return b.status==="confirmed" && (b.date > today || (b.date===today && timeToMin(b.time) >= nowMin - 30));
+    }).sort(function(a,b){ return (a.date+a.time) < (b.date+b.time) ? -1 : 1; }).slice(0, 8);
+    return '<div class="card next-card"><h2>Próximos turnos</h2>' +
+      (list.length ? list.map(function(b){
+        return '<button type="button" class="next-row" data-jump="'+b.date+'">' +
+          '<span class="next-when"><b>'+b.time+'</b>'+(b.date===today ? 'Hoy' : formatDateLong(b.date))+'</span>' +
+          '<span class="next-who">'+esc(b.name)+' '+esc(b.lastname)+'</span>' +
+          (b.paid ? '<span class="paystate ok">Pagado</span>' : '') + '</button>';
+      }).join("") : '<div class="empty-note">No hay turnos próximos.</div>') +
+      '</div>';
   }
 
   // turnos de mañana: un toque por cliente abre WhatsApp o el mail con el recordatorio ya escrito
