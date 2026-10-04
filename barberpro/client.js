@@ -118,7 +118,7 @@ hooks.refresh = function(){
 function avatarHtml(size){
   var cls = "avatar" + (size ? " " + size : "");
   if(client.photo) return '<img class="'+cls+'" src="'+esc(client.photo)+'" alt="Tu foto de perfil">';
-  var ini = (client.nickname || client.name || "?").trim().charAt(0).toUpperCase();
+  var ini = (client.name || client.nickname || "?").trim().charAt(0).toUpperCase();
   return '<span class="'+cls+'">'+esc(ini)+'</span>';
 }
 

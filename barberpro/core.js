@@ -164,7 +164,102 @@ function seedExampleData(s){
   s.debts[f1] = {name:"Facundo", lastname:"Silva", phone:"1155550444", since:Date.now(), isExample:true};
   var f2 = clientKeyOf("Rocío","Navarro","");
   s.debts[f2] = {name:"Rocío", lastname:"Navarro", phone:"", since:Date.now(), isExample:true};
+
+  seedClientStories(s);
 }
+
+// Cinco clientes inventados con historias distintas (para ver el panel con actividad real):
+//  1) Matías "El Gato": cliente fiel, se corta cada ~2 semanas hace casi 6 meses, paga por transferencia
+//  2) Nico: cada 3 semanas, paga con Mercado Pago, canceló una vez con aviso y tiene turno mañana (aparece en recordatorios)
+//  3) Fede: cancelador, una cancelación del mismo día (seña pendiente) y un turno pasado sin cobrar
+//  4) Tomi: cliente nuevo, vino hace unos días y quedó sin pagar; tiene turno hoy
+//  5) Joaquín: dejó de venir hace más de 4 meses
+function seedClientStories(s){
+  var today = toISO(new Date());
+  var price = s.config.price;
+
+  function slotsOf(iso){
+    var day = (s.config.hours || {})[DOW_KEYS[fromISO(iso).getDay()]];
+    var out = [];
+    if(!day) return out;
+    [day.morning, day.afternoon].forEach(function(r){
+      if(r && r.active){
+        for(var t = timeToMin(r.start); t + s.config.slotMinutes <= timeToMin(r.end); t += s.config.slotMinutes) out.push(minToTime(t));
+      }
+    });
+    return out;
+  }
+  // el día abierto más cercano (hacia atrás o hacia adelante) y, dentro de ese día, el horario más parecido al preferido
+  function openDay(iso, dir){
+    for(var i = 0; i < 8 && !slotsOf(iso).length; i++) iso = addDays(iso, dir);
+    return iso;
+  }
+  function pickTime(iso, pref){
+    var sl = slotsOf(iso), want = timeToMin(pref), best = sl[0];
+    sl.forEach(function(t){ if(Math.abs(timeToMin(t) - want) < Math.abs(timeToMin(best) - want)) best = t; });
+    return best;
+  }
+
+  function person(name, lastname, nickname, phone){
+    var mail = (name + lastname).toLowerCase().replace(/[^a-z]/g, "") + "@example.com";
+    var p = {name: name, lastname: lastname, nickname: nickname, phone: phone, email: mail};
+    p.key = clientKeyOf(name, lastname, phone);
+    return p;
+  }
+  // offset: días respecto de hoy (negativo = pasado)
+  function add(p, offset, pref, o){
+    o = o || {};
+    var iso = openDay(addDays(today, offset), offset < 0 ? -1 : 1);
+    var time = pickTime(iso, pref);
+    if(!time) return null;
+    var b = {
+      id: uid() + Math.random().toString(36).slice(2, 5), name: p.name, lastname: p.lastname, nickname: p.nickname, phone: p.phone, email: p.email,
+      date: iso, time: time, price: price, debtCharged: o.debt || 0,
+      payMethod: o.pay || "local", paid: !!o.paid, status: o.status || "completed",
+      createdAt: fromISO(addDays(iso, -2)).getTime(), seenByOwner: true, clientKey: p.key, isExample: true
+    };
+    s.bookings.push(b);
+    return b;
+  }
+
+  // 1) Matías: 12 cortes, ~cada 14 días, todos pagados (casi siempre por transferencia) + próximo turno
+  var matias = person("Matías", "Romero", "El Gato", "3415550101");
+  var gaps = [9, 14, 15, 13, 14, 14, 16, 12, 14, 15, 14, 13];
+  var off = -4;
+  gaps.forEach(function(g, i){
+    add(matias, off, "18:00", {pay: i % 4 === 3 ? "local" : "transfer", paid: true});
+    off -= g;
+  });
+  add(matias, 8, "18:00", {pay: "transfer", status: "confirmed"});
+
+  // 2) Nico: 7 cortes cada 3 semanas con Mercado Pago, una cancelación con aviso, turno mañana ya pagado
+  var nico = person("Nicolás", "Benítez", "Nico", "3415550102");
+  for(var k = 0; k < 7; k++) add(nico, -9 - 21 * k, "11:00", {pay: "mp", paid: true});
+  add(nico, -30, "11:00", {pay: "mp", status: "cancelled"});          // cancelada con tiempo, sin cargo
+  add(nico, 1, "10:30", {pay: "mp", paid: true, status: "confirmed"});
+
+  // 3) Fede: cancela bastante. Una seña pendiente por cancelar el mismo día, otro turno que no se marcó ni se cobró
+  var fede = person("Federico", "Acosta", "Fede", "3415550103");
+  add(fede, -96, "16:00", {paid: true});
+  add(fede, -75, "16:00", {status: "cancelled"});
+  add(fede, -52, "16:00", {paid: true});
+  add(fede, -40, "16:00", {status: "cancelled"});
+  add(fede, -27, "16:00", {paid: true});
+  add(fede, -12, "16:30", {status: "confirmed"});                      // vino (o no) y quedó sin completar ni cobrar
+  add(fede, -3, "16:00", {status: "cancelled"});                        // cancelada el mismo día: perdió la seña
+  s.debts[fede.key] = {name: fede.name, lastname: fede.lastname, phone: fede.phone, since: fromISO(addDays(today, -3)).getTime(), isExample: true};
+  add(fede, 6, "16:00", {status: "confirmed"});
+
+  // 4) Tomi: nuevo. Su primer corte quedó sin pagar y hoy tiene otro turno
+  var tomi = person("Tomás", "Giménez", "Tomi", "3415550104");
+  add(tomi, -3, "12:00", {pay: "transfer", status: "completed"});
+  add(tomi, 0, "15:00", {pay: "local", status: "confirmed"});
+
+  // 5) Joaquín: 5 cortes mensuales y dejó de venir hace más de 4 meses
+  var joa = person("Joaquín", "Peralta", "", "3415550105");
+  for(var j = 0; j < 5; j++) add(joa, -128 - 31 * j, "10:00", {paid: true});
+}
+
 
 function loadState(){
   try{
@@ -536,6 +631,14 @@ function completeBooking(id){
 function hasExampleData(){
   return state.bookings.some(function(b){ return b.isExample; }) ||
     Object.keys(state.debts).some(function(k){ return state.debts[k].isExample; });
+}
+// carga los datos de ejemplo (clientes, turnos y saldos inventados) para ver el panel con actividad. cloud.js lo reemplaza.
+function loadExampleData(){
+  if(hasExampleData()) return;
+  seedExampleData(state);
+  saveState();
+  hooks.refresh();
+  showToast("Datos de ejemplo cargados.");
 }
 function clearExampleData(){
   state.bookings = state.bookings.filter(function(b){ return !b.isExample; });

@@ -163,8 +163,40 @@
   }
 
   reloadState = function(){};            // los datos ya llegan en vivo
-  hasExampleData = function(){ return false; };
-  clearExampleData = function(){};
+  // Datos de ejemplo del panel: se arman en el navegador del dueño y NO se guardan en Firestore (ni los ven los clientes).
+  var DEMO_KEY = "barberpro_demo_on";
+  var realBookings = [], realDebts = {}, demo = null;
+  function demoOn(){ try{ return localStorage.getItem(DEMO_KEY) === "1"; }catch(e){ return false; } }
+  function setDemo(on){ try{ localStorage.setItem(DEMO_KEY, on ? "1" : "0"); }catch(e){} }
+  function ensureDemo(){
+    if(demo) return demo;
+    var tmp = {config: state.config, bookings: [], debts: {}};
+    seedExampleData(tmp);
+    demo = {bookings: tmp.bookings, debts: tmp.debts};
+    return demo;
+  }
+  // junta lo real con los datos de ejemplo (si están activados) y los deja en state
+  function applyReal(){
+    if(isAdminPage && demoOn()){
+      var d = ensureDemo();
+      state.bookings = realBookings.concat(d.bookings);
+      state.debts = Object.assign({}, realDebts, d.debts);
+    } else {
+      state.bookings = realBookings;
+      state.debts = realDebts;
+    }
+  }
+  hasExampleData = function(){ return isAdminPage && demoOn(); };
+  loadExampleData = function(){
+    if(demoOn()) return;
+    setDemo(true); demo = null; applyReal(); hooks.refresh();
+    showToast("Datos de ejemplo cargados (solo en este navegador).");
+  };
+  clearExampleData = function(){
+    setDemo(false); demo = null; applyReal(); hooks.refresh();
+    showToast("Datos de ejemplo borrados.");
+  };
+  function isDemoBooking(id){ var b = state.bookings.filter(function(x){ return x.id === id; })[0]; return !!(b && b.isExample); }
 
   // ---------- el dueño ----------
   var unsubAdmin = [];
@@ -183,7 +215,7 @@
     stopAdminListeners();
     unsubAdmin.push(db.collection("bookings").onSnapshot(function(snap){
       var arr = []; snap.forEach(function(d){ arr.push(d.data()); });
-      state.bookings = arr;
+      realBookings = arr; applyReal();
       hooks.refresh();
     }, adminError));
     unsubAdmin.push(db.collection("clients").onSnapshot(function(snap){
@@ -193,7 +225,7 @@
     }, adminError));
     unsubAdmin.push(db.collection("debts").onSnapshot(function(snap){
       var m = {}; snap.forEach(function(d){ m[d.id] = d.data(); });
-      state.debts = m;
+      realDebts = m; applyReal();
       hooks.refresh();
     }, adminError));
     // la primera vez que entra el dueño, se guarda la configuración inicial (config.js + valores de fábrica)
@@ -205,7 +237,7 @@
     auth.onAuthStateChanged(function(u){
       authReady = true;
       if(u){ startAdminListeners(); }
-      else { stopAdminListeners(); state.bookings = []; state.debts = {}; }
+      else { stopAdminListeners(); realBookings = []; realDebts = {}; applyReal(); }
       hooks.authChanged();
       hooks.refresh();
     });
@@ -285,6 +317,11 @@
   }
 
   updateBooking = function(id, patch){
+    if(isDemoBooking(id)){
+      Object.assign(state.bookings.filter(function(x){ return x.id === id; })[0], patch);
+      hooks.refresh();
+      return Promise.resolve();
+    }
     var b = state.bookings.filter(function(x){ return x.id === id; })[0], tp = turnoPatch(patch);
     if(!b || !tp) return db.doc("bookings/" + id).update(patch).catch(function(e){ fail(e); });
     return turnoRefFor(b).then(function(ref){
@@ -307,6 +344,13 @@
     var b = state.bookings.filter(function(x){ return x.id === id; })[0];
     if(!b) return;
     var penalized = (b.date === toISO(new Date()) && b.status === "confirmed");
+    if(b.isExample){                                   // turno de ejemplo: solo en memoria
+      b.status = "cancelled";
+      if(penalized) state.debts[b.clientKey] = {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now(), isExample: true};
+      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)." : "Turno cancelado sin cargo.");
+      hooks.refresh();
+      return;
+    }
     turnoRefFor(b).then(function(ref){
       var batch = db.batch();
       batch.update(db.doc("bookings/" + id), {status: "cancelled"});
@@ -326,6 +370,13 @@
   completeBooking = function(id){ updateBooking(id, {status: "completed"}); };
 
   settleDebt = function(key){
+    if(state.debts[key] && state.debts[key].isExample){          // saldo de ejemplo: solo en memoria
+      delete state.debts[key];
+      if(demo) delete demo.debts[key];
+      showToast("Saldo marcado como pagado.");
+      hooks.refresh();
+      return Promise.resolve();
+    }
     var k = docKey(key), batch = db.batch();
     batch.delete(db.doc("debts/" + k));
     batch.delete(db.doc("debtFlags/" + k));

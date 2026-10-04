@@ -716,7 +716,7 @@
   function clientAvatar(p, size){
     var cls = "avatar" + (size ? " " + size : "");
     if(p.photo) return '<img class="'+cls+'" src="'+esc(p.photo)+'" alt="">';
-    return '<span class="'+cls+'">'+esc(((p.nickname || p.name || "?") + "").trim().charAt(0).toUpperCase())+'</span>';
+    return '<span class="'+cls+'">'+esc(((p.name || p.nickname || "?") + "").trim().charAt(0).toUpperCase())+'</span>';
   }
 
   function shortDate(iso){
@@ -918,6 +918,14 @@
       '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +
       '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
 
+    html += '<div class="card"><h2>Datos de ejemplo</h2>' +
+      '<div class="sub">Cargá clientes, turnos y saldos inventados para ver cómo se ve el panel con actividad (clientes fieles, cancelaciones, deudas, recordatorios). ' +
+      (CLOUD ? 'Solo se ven en este navegador: no se guardan en tu base ni los ven los clientes.' : 'Se guardan en este navegador.') + '</div>' +
+      (hasExampleData()
+        ? '<button class="btn btn-danger" id="btnDemoOff">Borrar datos de ejemplo</button>'
+        : '<button class="btn btn-ghost" id="btnDemoOn">Cargar datos de ejemplo</button>') +
+      '</div>';
+
     html += '<div class="card"><h2>Más ajustes</h2>' +
       '<div class="sub">Datos del local, horarios, precio y cierres se cambian desde sus secciones del menú.</div>' +
       '<div class="cal-actions" style="justify-content:flex-start;">' +
@@ -930,6 +938,10 @@
   }
 
   function bindConfigEvents(){
+    var dOn = document.getElementById("btnDemoOn");
+    if(dOn) dOn.onclick = function(){ loadExampleData(); renderOwner(); };
+    var dOff = document.getElementById("btnDemoOff");
+    if(dOff) dOff.onclick = function(){ askConfirm("Borrar datos de ejemplo", "¿Borrar los turnos y saldos de ejemplo? Los datos reales no se tocan.", function(){ clearExampleData(); renderOwner(); }); };
     var lo = document.getElementById("btnConfigLogout");
     if(lo) lo.onclick = function(){ var b = document.getElementById("btnLogout"); if(b) b.click(); };
     document.querySelectorAll("[data-tab-go]").forEach(function(el){
