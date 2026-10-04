@@ -24,6 +24,22 @@ function defaultHoursDay(morningActive, afternoonActive){
 }
 
 // ---------- equipo ----------
+// horario de trabajo de un barbero: acepta el formato completo {mon:{morning:{active,start,end},afternoon:{...}}, ...} o el compacto de config.js
+function cleanHours(h){
+  if(!h || typeof h !== "object") return null;
+  var full = DOW_KEYS.every(function(k){ return h[k] && !Array.isArray(h[k]) && typeof h[k] === "object" && h[k].morning; });
+  if(!full) return fileHours(h);
+  var ok = /^\d{2}:\d{2}$/, out = {};
+  DOW_KEYS.forEach(function(k){
+    out[k] = {};
+    ["morning", "afternoon"].forEach(function(sh){
+      var s = h[k][sh] || {};
+      out[k][sh] = {active: !!s.active && ok.test(s.start) && ok.test(s.end), start: ok.test(s.start) ? s.start : "09:00", end: ok.test(s.end) ? s.end : "13:00"};
+    });
+  });
+  return out;
+}
+
 // El dueño (administrador) también es un barbero. Los empleados entran al panel con su usuario y ven solo sus turnos.
 function cleanTeam(list){
   var seen = {};
@@ -33,8 +49,11 @@ function cleanTeam(list){
     seen[id] = 1;
     var out = {id: id, name: String(m.name || id).slice(0, 40), role: m.role === "employee" ? "employee" : "owner",
                whatsapp: String(m.whatsapp || "").replace(/[^\d]/g, ""), active: m.active !== false};
-    // días que atiende (0 = domingo ... 6 = sábado); si atiende todos, no se guarda. maxPerDay: tope de turnos por día (0 = todos los horarios)
-    if(Array.isArray(m.days)){
+    // horario propio (mismo formato que el del local, o el compacto de config.js: {mon:[["09:30","17:00"]], ...}); sin horario propio usa el del local
+    var hh = cleanHours(m.hours);
+    if(hh) out.hours = hh;
+    // (anterior) días que atiende: 0 = domingo ... 6 = sábado. maxPerDay: tope de turnos por día (0 = todos los horarios)
+    if(!hh && Array.isArray(m.days)){
       var ds = m.days.map(Number).filter(function(n, i, a){ return n >= 0 && n <= 6 && a.indexOf(n) === i; }).sort();
       if(ds.length && ds.length < 7) out.days = ds;
     }
@@ -109,8 +128,32 @@ function readPhoto(file){
     fr.readAsDataURL(file);
   });
 }
-// ¿ese barbero atiende ese día de la semana?
-function barberWorks(m, iso){ return !m || !Array.isArray(m.days) || m.days.indexOf(fromISO(iso).getDay()) >= 0; }
+// horarios de un barbero ese día: los suyos si tiene un horario propio, si no los del local (en los dos casos respetando los cierres)
+function barberRanges(iso, m){
+  if(getClosure(iso)) return [];
+  if(m && m.hours){
+    var day = m.hours[weekdayKey(iso)], out = [];
+    if(day){ if(day.morning && day.morning.active) out.push(day.morning); if(day.afternoon && day.afternoon.active) out.push(day.afternoon); }
+    return out;
+  }
+  if(m && Array.isArray(m.days) && m.days.indexOf(fromISO(iso).getDay()) < 0) return [];
+  return getRangesForDate(iso);
+}
+// ¿ese barbero atiende ese día?
+function barberWorks(m, iso){ return barberRanges(iso, m).length > 0; }
+// horarios (turnos posibles) de un barbero ese día
+function barberSlotTimes(iso, m){
+  var out = [], slotMin = state.config.slotMinutes;
+  barberRanges(iso, m).forEach(function(r){
+    for(var t = timeToMin(r.start); t + slotMin <= timeToMin(r.end); t += slotMin) out.push(minToTime(t));
+  });
+  return out;
+}
+// cuántos turnos puede dar ese barbero ese día (sus horarios, con su tope por día si lo tiene)
+function barberDayCapacity(m, iso){
+  var n = barberSlotTimes(iso, m).length;
+  return m && m.maxPerDay > 0 ? Math.min(n, m.maxPerDay) : n;
+}
 function barberById(id){ return teamList().filter(function(m){ return m.id === id; })[0] || null; }
 function ownerBarber(){ return teamList().filter(function(m){ return m.role === "owner"; })[0] || teamList()[0]; }
 // a quién se le asigna una reserva: las anteriores al equipo (sin barbero) son del dueño
@@ -572,7 +615,8 @@ function getRangesForDate(iso){
   if(day.afternoon.active) ranges.push(day.afternoon);
   return ranges;
 }
-function isDayFullyClosed(iso){ return getRangesForDate(iso).length===0; }
+// el local no atiende ese día: ningún barbero trabaja (o hay un cierre)
+function isDayFullyClosed(iso){ return !activeBarbers().some(function(m){ return barberWorks(m, iso); }); }
 function generateSlots(iso, barber){
   var ranges = getRangesForDate(iso);
   var slotMin = state.config.slotMinutes;
@@ -592,8 +636,7 @@ function generateSlots(iso, barber){
 }
 function getSlotStatuses(iso, barber){
   var member = barber ? barberById(barber) : null;
-  if(member && !barberWorks(member, iso)) return [];                    // ese día no atiende
-  var ranges = getRangesForDate(iso);
+  var ranges = member ? barberRanges(iso, member) : getRangesForDate(iso);      // cada barbero con su propio horario
   var slotMin = state.config.slotMinutes;
   var slots = [];
   ranges.forEach(function(r){

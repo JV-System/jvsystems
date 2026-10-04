@@ -943,3 +943,7 @@ input[readonly]{opacity:.7;}
   .owner-content.tab-hoy{max-width:none;}
 }
 @media (min-width:1400px){ .hoy-layout{grid-template-columns:minmax(0,1fr) 380px;} }
+
+/* horario de cada barbero */
+.tm-hours{margin:4px 0 14px; background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:10px 12px;}
+.tm-hours summary{cursor:pointer; font-size:13px; font-weight:700; color:var(--accent-1); padding:2px 0 8px;}

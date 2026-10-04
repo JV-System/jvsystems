@@ -234,7 +234,7 @@ function calendarHtml(){
     if(n < 1 || n > dim){ cells += '<span class="cal-day blank"></span>'; continue; }
     var iso = y + "-" + pad2(m + 1) + "-" + pad2(n);
     var inRange = iso >= today && iso <= last;
-    var open = inRange && !isDayFullyClosed(iso) && barberWorks(barberById(chosenBarber()), iso);
+    var open = inRange && barberWorks(barberById(chosenBarber()), iso);
     var free = open ? getSlotStatuses(iso, chosenBarber()).filter(function(s){ return !s.taken; }).length : 0;
     var cls = "cal-day" + (iso === today ? " today" : "") + (client.selectedDate === iso ? " selected" : "");
     var dot = "";

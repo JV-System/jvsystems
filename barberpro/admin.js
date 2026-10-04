@@ -452,10 +452,12 @@
     // rango horario global: min inicio / max fin entre los turnos activos de la semana (o de la config si esa semana está toda cerrada)
     var minStart=null, maxEnd=null;
     days.forEach(function(iso){
-      getRangesForDate(iso).forEach(function(r){
-        var s=timeToMin(r.start), e=timeToMin(r.end);
-        if(minStart===null||s<minStart) minStart=s;
-        if(maxEnd===null||e>maxEnd) maxEnd=e;
+      viewBarbers().forEach(function(m){
+        barberRanges(iso, m).forEach(function(r){
+          var s=timeToMin(r.start), e=timeToMin(r.end);
+          if(minStart===null||s<minStart) minStart=s;
+          if(maxEnd===null||e>maxEnd) maxEnd=e;
+        });
       });
     });
     if(minStart===null){
@@ -486,7 +488,7 @@
       var timeLbl = minToTime(t);
       var row = '<div class="gantt-row"><div class="gantt-time">'+timeLbl+'</div>';
       days.forEach(function(iso){
-        var open = getRangesForDate(iso).some(function(r){ return t>=timeToMin(r.start) && t<timeToMin(r.end); });
+        var open = viewBarbers().some(function(m){ return barberRanges(iso, m).some(function(r){ return t>=timeToMin(r.start) && t<timeToMin(r.end); }); });
         var here = bk().filter(function(b){ return b.date===iso && b.time===timeLbl && b.status!=="cancelled"; }), booking = here[0];
         var cls = "gantt-cell" + (open?"":" closed") + (booking?" booked":"") + (iso===todayISO?" today":"");
         var content = booking ? '<span class="gantt-name">'+esc(booking.name)+' '+esc((booking.lastname||"").charAt(0))+'.'+(here.length > 1 ? ' <b class="gantt-more">+'+(here.length-1)+'</b>' : '')+'</span>' : "";
@@ -508,24 +510,12 @@
 
   // ocupación del día: turnos tomados sobre el total de horarios que abre el local ese día
   function dayOccupancy(iso, count){
-    var slotMin = state.config.slotMinutes, total = 0;
-    getRangesForDate(iso).forEach(function(r){
-      for(var t = timeToMin(r.start); t + slotMin <= timeToMin(r.end); t += slotMin) total++;
-    });
-    if(!total) return null;
-    // capacidad = turnos permitidos ese día: por cada barbero que atiende, sus horarios (con su tope por día si lo tiene)
-    var who = isEmployee() ? [barberById(myBarber())]
-      : (session.agendaBarber && session.agendaBarber !== "all") ? [barberById(session.agendaBarber)] : activeBarbers();
+    // capacidad = turnos que se pueden dar ese día: la suma de lo que atiende cada barbero según SU horario (y su tope por día)
     var cap = 0;
-    who.forEach(function(m){
-      if(!m){ cap += total; return; }
-      if(!barberWorks(m, iso)) return;                      // ese día no atiende
-      cap += m.maxPerDay > 0 ? Math.min(total, m.maxPerDay) : total;
-    });
+    viewBarbers().forEach(function(m){ cap += barberDayCapacity(m, iso); });
     if(!cap) return null;
-    total = cap;
-    var pct = Math.min(100, Math.round(count * 100 / total));
-    return {total: total, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};   // alto = verde (agenda llena), bajo = rojo
+    var pct = Math.min(100, Math.round(count * 100 / cap));
+    return {total: cap, count: count, pct: pct, level: pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"};   // alto = verde (agenda llena), bajo = rojo
   }
 
   function agendaMes(){
@@ -543,7 +533,7 @@
       var iso = toISO(d);
       var other = d.getMonth()!==month;
       var count = bk().filter(function(b){ return b.date===iso && b.status!=="cancelled"; }).length;
-      var closed = isDayFullyClosed(iso);
+      var closed = !viewBarbers().some(function(m){ return barberWorks(m, iso); });
       var occ = (!other && !closed) ? dayOccupancy(iso, count) : null;
       cells += '<div class="month-cell'+(other?' other':'')+(closed&&!other?' closed':'')+(iso===todayISO?' today':'')+'" '+(other?'':'data-jump="'+iso+'"')+
         (occ ? ' title="'+count+' de '+occ.total+' horarios ocupados ('+occ.pct+'%)"' : '')+'>' +
@@ -1353,6 +1343,14 @@
     return list.filter(function(b){ return barberOfBooking(b) === f; });
   }
 
+  // barberos que cuentan en la vista actual: el empleado, solo él; el dueño, todos o el del filtro
+  function viewBarbers(){
+    if(isEmployee()){ var me = barberById(myBarber()); return me ? [me] : activeBarbers(); }
+    var f = session.agendaBarber;
+    if(f && f !== "all"){ var m = barberById(f); if(m) return [m]; }
+    return activeBarbers();
+  }
+
   function barberNameOf(b){
     var m = barberById(barberOfBooking(b));
     return (m && m.name) || b.barberName || "";
@@ -1478,6 +1476,27 @@
   // ---------- Equipo (dueño) ----------
   function staffRecordFor(id){ return (state.staff || []).filter(function(s){ return s.barberId === id; })[0]; }
 
+  // horario de trabajo de un barbero: igual al del local o uno propio (por día, hasta 2 tramos)
+  function tmShift(id, dayKey, shiftKey, label, shift, off){
+    var key = id + "|" + dayKey + "|" + shiftKey, dis = off || !shift.active;
+    return '<div class="hours-shift'+(shift.active ? '' : ' disabled')+'"><span class="shiftname">'+label+'</span>' +
+      '<input type="checkbox" data-tmh-a="'+esc(key)+'" '+(shift.active ? 'checked' : '')+(off ? ' disabled' : '')+'>' +
+      '<input type="time" data-tmh-s="'+esc(key)+'" value="'+shift.start+'"'+(dis ? ' disabled' : '')+'>' +
+      '<input type="time" data-tmh-e="'+esc(key)+'" value="'+shift.end+'"'+(dis ? ' disabled' : '')+'></div>';
+  }
+  function memberHoursHtml(m){
+    var custom = !!m.hours, base = m.hours || state.config.hours;
+    var rows = DOW_KEYS.filter(function(k){ return k !== "sun"; }).concat(["sun"]).map(function(k){
+      var day = base[k] || state.config.hours[k];
+      return '<div class="hours-day"><div class="dlabel">'+DOW_LABEL[k]+'</div>' +
+        tmShift(m.id, k, "morning", "Horario", day.morning, !custom) + tmShift(m.id, k, "afternoon", "Horario 2", day.afternoon, !custom) + '</div>';
+    }).join("");
+    return '<label>Horario de trabajo</label>' +
+      '<label class="checkline"><input type="checkbox" data-tm-same="'+esc(m.id)+'" '+(custom ? '' : 'checked')+'><span>Igual al horario del local</span></label>' +
+      '<details class="tm-hours" '+(custom ? 'open' : '')+'><summary>Ver o cambiar el horario de '+esc(m.name)+'</summary>'+rows+
+      '<div class="field-hint">Cada barbero puede tener su propio horario. Dos barberos pueden tener turnos a la misma hora: cada uno atiende a un cliente distinto.</div></details>';
+  }
+
   function ownerEquipo(){
     var team = teamList();
     var html = teamStatsHtml() + '<div class="card"><h2>Equipo</h2>' +
@@ -1506,11 +1525,8 @@
         '<div class="row2"><div><label>Nombre</label><input type="text" data-tm-name="'+esc(m.id)+'" value="'+esc(m.name)+'" maxlength="40"></div>' +
           '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" data-tm-wa="'+esc(m.id)+'" value="'+esc(m.whatsapp || "")+'" placeholder="5493415551234"></div></div>' +
         '<label>Foto de perfil</label>' + photoEditHtml(m.id) +
-        '<label>Días que atiende</label><div class="day-toggles">' + [[1,"L"],[2,"M"],[3,"X"],[4,"J"],[5,"V"],[6,"S"],[0,"D"]].map(function(d){
-          var on = !Array.isArray(m.days) || m.days.indexOf(d[0]) >= 0;
-          return '<label class="day-chip"><input type="checkbox" data-tm-day="'+esc(m.id)+'|'+d[0]+'" '+(on ? 'checked' : '')+'><span>'+d[1]+'</span></label>';
-        }).join("") + '</div>' +
-        '<label>Máximo de turnos por día <span class="opt">(vacío = todos los horarios del local)</span></label>' +
+        memberHoursHtml(m) +
+        '<label>Máximo de turnos por día <span class="opt">(vacío = todos los horarios de su jornada)</span></label>' +
         '<input type="number" min="0" max="200" data-tm-max="'+esc(m.id)+'" value="'+(m.maxPerDay || "")+'" placeholder="Ej: 12" style="max-width:160px;">' +
         access +
         '<div class="actions"><button class="btn btn-primary btn-sm" type="button" data-tm-save="'+esc(m.id)+'">Guardar</button>' +
@@ -1543,22 +1559,56 @@
       el.onclick = function(){ session.teamRange = el.getAttribute("data-trange"); renderOwner(); };
     });
     var val = function(attr, id){ var el = document.querySelector('['+attr+'="'+id+'"]'); return el ? el.value.trim() : ""; };
+    // "igual al local": bloquea o habilita las horas del barbero; cada tramo se activa o apaga con su tilde
+    document.querySelectorAll("[data-tm-same]").forEach(function(el){
+      el.onchange = function(){
+        var id = el.getAttribute("data-tm-same");
+        document.querySelectorAll('[data-tmh-a^="'+id+'|"]').forEach(function(a){
+          a.disabled = el.checked;
+          var key = a.getAttribute("data-tmh-a");
+          [document.querySelector('[data-tmh-s="'+key+'"]'), document.querySelector('[data-tmh-e="'+key+'"]')].forEach(function(t){ t.disabled = el.checked || !a.checked; });
+        });
+        var det = el.closest(".tm-row").querySelector(".tm-hours"); if(det && !el.checked) det.open = true;
+      };
+    });
+    document.querySelectorAll("[data-tmh-a]").forEach(function(a){
+      a.onchange = function(){
+        var key = a.getAttribute("data-tmh-a");
+        [document.querySelector('[data-tmh-s="'+key+'"]'), document.querySelector('[data-tmh-e="'+key+'"]')].forEach(function(t){ t.disabled = !a.checked; });
+        a.closest(".hours-shift").classList.toggle("disabled", !a.checked);
+      };
+    });
     document.querySelectorAll("[data-tm-save]").forEach(function(el){
       el.onclick = function(){
-        var id = el.getAttribute("data-tm-save");
+        var id = el.getAttribute("data-tm-save"), bad = "";
         var team = teamList().map(function(m){
           if(m.id !== id) return m;
           var act = document.querySelector('[data-tm-active="'+id+'"]');
-          var days = [];
-          document.querySelectorAll('[data-tm-day^="'+id+'|"]').forEach(function(c){ if(c.checked) days.push(parseInt(c.getAttribute("data-tm-day").split("|")[1], 10)); });
-          if(!days.length){ showToast("Elegí al menos un día de atención."); days = [0, 1, 2, 3, 4, 5, 6]; }
-          return Object.assign({}, m, {name: val("data-tm-name", id) || m.name, whatsapp: val("data-tm-wa", id), active: act ? act.checked : true,
-                                       days: days, maxPerDay: parseInt(val("data-tm-max", id), 10) || 0});
+          var same = document.querySelector('[data-tm-same="'+id+'"]'), hours = null;
+          if(same && !same.checked){
+            hours = {};
+            DOW_KEYS.forEach(function(k){
+              hours[k] = {};
+              ["morning", "afternoon"].forEach(function(sh){
+                var key = id + "|" + k + "|" + sh;
+                var a = document.querySelector('[data-tmh-a="'+key+'"]'), st = document.querySelector('[data-tmh-s="'+key+'"]'), en = document.querySelector('[data-tmh-e="'+key+'"]');
+                var on = !!(a && a.checked);
+                if(on && st.value >= en.value){ bad = DOW_LABEL[k] + ": la hora de salida tiene que ser después de la de entrada."; }
+                hours[k][sh] = {active: on, start: (st && st.value) || "09:00", end: (en && en.value) || "13:00"};
+              });
+            });
+          }
+          var upd = Object.assign({}, m, {name: val("data-tm-name", id) || m.name, whatsapp: val("data-tm-wa", id), active: act ? act.checked : true,
+                                          maxPerDay: parseInt(val("data-tm-max", id), 10) || 0});
+          delete upd.days;
+          if(hours) upd.hours = hours; else delete upd.hours;
+          return upd;
         });
         if(!CLOUD){
           var pinEl = document.querySelector('[data-tm-pin="'+id+'"]');
           if(pinEl){ state.config.staffPins = Object.assign({}, state.config.staffPins || {}); state.config.staffPins[id] = pinEl.value.trim(); }
         }
+        if(bad){ showToast(bad); return; }
         if(!team.filter(function(m){ return m.active !== false; }).length){ showToast("Tiene que haber al menos un barbero que atienda."); return; }
         saveTeam(team);
       };
@@ -1675,8 +1725,9 @@
 
   function ownerHoy(){
     var d = hoyData(), today = d.today, owner = !isEmployee();
-    var open = getRangesForDate(today), crew = activeBarbers().filter(function(m){ return barberWorks(m, today); });
-    var off = activeBarbers().filter(function(m){ return !barberWorks(m, today); });
+    var team = isEmployee() ? viewBarbers() : activeBarbers();
+    var crew = team.filter(function(m){ return barberWorks(m, today); }), off = team.filter(function(m){ return !barberWorks(m, today); });
+    var hoursOf = function(m){ return barberRanges(today, m).map(function(r){ return r.start+' a '+r.end; }).join(' y '); };
 
     // ----- columna lateral: resumen, estado del local y avisos -----
     var toCollectToday = d.hoy.reduce(function(s, b){ return s + balanceDue(b); }, 0);
@@ -1688,10 +1739,9 @@
       (owner ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
       '</div>';
     var local = '<div class="card news-card"><h2>El local hoy</h2>' +
-      (open.length ? '<div class="summary-row"><span class="k">Horario</span><span class="v">'+open.map(function(r){ return r.start+' a '+r.end; }).join(' y ')+'</span></div>'
+      (crew.length ? crew.map(function(m){ return '<div class="summary-row"><span class="k">'+(team.length > 1 ? esc(m.name) : 'Horario')+'</span><span class="v">'+hoursOf(m)+'</span></div>'; }).join("")
                    : '<div class="notice warn"><div>El local está cerrado hoy.</div></div>') +
-      (activeBarbers().length > 1 && open.length ? '<div class="summary-row"><span class="k">Atienden</span><span class="v">'+(crew.length ? crew.map(function(m){ return esc(m.name); }).join(", ") : 'nadie')+'</span></div>' +
-        (off.length ? '<div class="summary-row"><span class="k">No atienden hoy</span><span class="v">'+off.map(function(m){ return esc(m.name); }).join(", ")+'</span></div>' : '') : '') +
+      (team.length > 1 && crew.length && off.length ? '<div class="summary-row"><span class="k">No atienden hoy</span><span class="v">'+off.map(function(m){ return esc(m.name); }).join(", ")+'</span></div>' : '') +
       '</div>';
     var avisos = [];
     if(owner){
