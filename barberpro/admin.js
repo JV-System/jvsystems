@@ -1971,7 +1971,7 @@
     {id: "completado", label: "Completados", types: ["completado"]},
     {id: "recordatorio", label: "Recordatorios", types: ["recordatorio"]}
   ];
-  var MOVE_ROLE = {owner: "Dueño", staff: "Empleado", client: "Cliente"};
+  var MOVE_ROLE = {owner: "Dueño", staff: "Empleado", client: "Cliente", system: "Automático"};
 
   function fmtStamp(ts){
     var d = new Date(ts);
@@ -2131,6 +2131,11 @@
       '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
 
     if(isEmployee()) return html;       // el empleado solo ve su cuenta y su sesión
+    if(CLOUD){
+      html += '<div class="card"><h2>Recordatorios automáticos</h2>' +
+        '<div class="sub">Todos los días a las 10:00 se manda solo un mail de recordatorio a los clientes que tienen turno mañana. Los que ya avisaste a mano desde el botón se saltean, y cada envío queda en Movimientos.</div>' +
+        '<label class="checkline"><input type="checkbox" id="chkAutoRem" '+(state.config.autoReminders === false ? '' : 'checked')+'><span>Enviar recordatorios automáticos por mail</span></label></div>';
+    }
     html += '<div class="card"><h2>Datos de ejemplo</h2>' +
       '<div class="sub">Cargá clientes, turnos y saldos inventados para ver cómo se ve el panel con actividad (clientes fieles, cancelaciones, deudas, recordatorios). ' +
       (CLOUD ? 'Solo se ven en este navegador: no se guardan en tu base ni los ven los clientes.' : 'Se guardan en este navegador.') + '</div>' +
@@ -2152,6 +2157,12 @@
 
   function bindConfigEvents(){
     bindPhotoControls();
+    var ar = document.getElementById("chkAutoRem");
+    if(ar) ar.onchange = function(){
+      state.config.autoReminders = ar.checked;
+      saveState();
+      showToast(ar.checked ? "Recordatorios automáticos encendidos." : "Recordatorios automáticos apagados.");
+    };
     var dOn = document.getElementById("btnDemoOn");
     if(dOn) dOn.onclick = function(){ loadExampleData(); renderOwner(); };
     var dOff = document.getElementById("btnDemoOff");

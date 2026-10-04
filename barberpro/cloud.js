@@ -32,7 +32,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","payMpLinks","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
+                     "payAlias","payHolder","payMpLink","payMpLinks","autoReminders","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
 
   // movimiento suelto (ej. "recordatorio enviado"); los turnos de ejemplo no se registran en la base
   logMovement = function(b, type, text){

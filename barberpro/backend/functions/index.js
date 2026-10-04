@@ -1,19 +1,18 @@
 /**
- * Mails automáticos de BarberPro.
+ * Recordatorios automáticos de BarberPro por mail.
  *
- * Estas funciones viven en el proyecto Firebase de Harmonia (plan Blaze) pero los datos están en OTRO proyecto,
- * "barberpro-a6405" (Firestore). Para leerlos y escribirlos, la cuenta de servicio de las funciones de Harmonia
- * tiene el rol "Cloud Datastore User" en barberpro-a6405 (se da una sola vez desde la consola de IAM).
+ * Estas funciones viven en el proyecto Firebase de Harmonia (plan Blaze, codebase "barberpro", no tocan las de Harmonia) pero los datos están en
+ * OTRO proyecto, "barberpro-a6405" (Firestore). Para leerlos y escribirlos, la cuenta de servicio de las funciones de Harmonia tiene el rol
+ * "Cloud Datastore User" en barberpro-a6405 (se da una sola vez desde la consola de IAM).
  *
- * - enviarComprobante:   el cliente llama a esto justo después de reservar, con el id de su reserva. La función lee la
- *                        reserva, arma el comprobante con la ubicación y se lo manda al mail que figura EN la reserva
- *                        (nunca a un mail que llegue en el pedido). Una sola vez por reserva.
- * - enviarRecordatorios: todos los días a las 10:00 (hora de Argentina) manda un recordatorio a quienes tienen turno mañana.
+ * - enviarRecordatorios: todos los días a las 10:00 (hora de Argentina) manda un mail de recordatorio a quienes tienen turno confirmado
+ *   mañana. Saltea a los que ya fueron avisados (a mano desde el panel o por este mismo proceso) y a los que no tienen mail. Cada envío
+ *   queda marcado en la reserva (reminded) y anotado en el registro de movimientos. El dueño lo enciende o apaga desde el panel
+ *   (config/main.autoReminders; si no está, se considera encendido).
  *
- * El mail sale por SMTP (Gmail con contraseña de aplicación por ahora). Se configura con el parámetro SMTP_USER y el
- * secreto SMTP_PASS; para cambiar de proveedor solo hay que tocar crearTransporte().
+ * El mail sale por SMTP (Gmail con contraseña de aplicación). Se configura con el parámetro SMTP_USER y el secreto SMTP_PASS; para cambiar de
+ * proveedor solo hay que tocar crearTransporte().
  */
-const { onRequest } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { defineSecret, defineString } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
@@ -26,11 +25,10 @@ const SMTP_PASS = defineSecret("SMTP_PASS");
 initializeApp({ projectId: "barberpro-a6405" });
 const db = getFirestore();
 
-const ORIGENES = ["https://jvsystems.com.ar", "https://www.jvsystems.com.ar", "http://localhost:8744"];
+const SITIO = "https://jvsystems.com.ar/barberpro/";
 const TZ = "America/Argentina/Buenos_Aires";
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-const PAGO = { local: "en el local", transfer: "transferencia", mp: "Mercado Pago" };
 
 function crearTransporte() {
   return nodemailer.createTransport({
@@ -44,12 +42,11 @@ function fechaLarga(iso) {
   const dia = DIAS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
   return `${dia} ${d} de ${MESES[m - 1]}`;
 }
-function plata(n) { return "$" + Math.round(n).toLocaleString("es-AR"); }
 function esc(s) {
   const mapa = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   return String(s || "").replace(/[&<>"']/g, c => mapa[c]);
 }
-function hoyAR(offsetDias = 0) {
+function fechaAR(offsetDias = 0) {
   const t = new Date(Date.now() + offsetDias * 86400000);
   return new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(t);   // YYYY-MM-DD
 }
@@ -64,105 +61,83 @@ function linkMapa(cfg) {
   return q ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q) : "";
 }
 
-function armarMail(b, cfg, tipo) {
+function armarMail(b, cfg) {
   const negocio = cfg.businessName || "Tu barbería";
-  const total = b.price + (b.debtCharged || 0);
   const mapa = linkMapa(cfg);
-  const codigo = String(b.id).slice(-6).toUpperCase();
-  const recordatorio = tipo === "recordatorio";
-  const titulo = recordatorio ? "Recordatorio: mañana tenés turno" : "Tu turno está reservado";
+  const equipo = Array.isArray(cfg.team) && cfg.team.filter(m => m.active !== false).length > 1;
+  const nombre = b.nickname || b.name;
   const filas = [
-    ["Cliente", `${b.name} ${b.lastname}`],
     ["Fecha", fechaLarga(b.date)],
     ["Hora", `${b.time} hs`],
-    cfg.address ? ["Lugar", cfg.address] : null,
-    ["Corte", plata(b.price)],
-    b.debtCharged > 0 ? ["Saldo anterior", plata(b.debtCharged)] : null,
-    ["Total", plata(total)],
-    ["Pago", PAGO[b.payMethod] || b.payMethod]
+    equipo && b.barberName ? ["Con", b.barberName] : null,
+    cfg.address ? ["Lugar", cfg.address] : null
   ].filter(Boolean);
+  const conSena = Number(cfg.depositPercent === undefined ? 50 : cfg.depositPercent) > 0;
+  const politica = conSena
+    ? "Si necesitás cambiar el día, podés hacerlo desde la app hasta 24 horas antes (un cambio por turno). Si cancelás el mismo día del turno, la seña queda en el local."
+    : "Si no podés venir, avisanos con tiempo: cancelar el mismo día del turno tiene un cargo del 50%.";
 
-  const lineas = [`${titulo} - ${negocio}`];
-  if (!recordatorio) lineas.push(`N° ${codigo}`);
-  lineas.push("");
+  const lineas = [`Hola ${nombre}! Te recordamos que mañana tenés turno en ${negocio}.`, ""];
   filas.forEach(([k, v]) => lineas.push(`${k}: ${v}`));
   lineas.push("");
   if (mapa) lineas.push(`Cómo llegar: ${mapa}`);
-  lineas.push("Si cancelás el mismo día del turno se cobra el 50% de seña.");
+  lineas.push(`Ver o cambiar tu turno: ${SITIO}`, "", politica, "¡Te esperamos!");
 
   const celdas = filas.map(([k, v]) =>
-    `<tr><td style="padding:7px 0;color:#5c6b7a;border-bottom:1px solid #e6ebf0">${esc(k)}</td>` +
-    `<td style="padding:7px 0;text-align:right;font-weight:600;border-bottom:1px solid #e6ebf0">${esc(v)}</td></tr>`).join("");
-  const boton = mapa
-    ? `<p style="margin:20px 0"><a href="${esc(mapa)}" style="background:#29b6f6;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;display:inline-block">Cómo llegar</a></p>`
-    : "";
+    `<tr><td style="padding:8px 0;color:#5c6b7a;border-bottom:1px solid #e6ebf0">${esc(k)}</td>` +
+    `<td style="padding:8px 0;text-align:right;font-weight:600;border-bottom:1px solid #e6ebf0">${esc(v)}</td></tr>`).join("");
+  const botones = (mapa ? `<a href="${esc(mapa)}" style="background:#29b6f6;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;display:inline-block;margin:0 8px 8px 0">Cómo llegar</a>` : "") +
+    `<a href="${esc(SITIO)}" style="background:#eef2f6;color:#16202b;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;display:inline-block;margin:0 0 8px 0">Ver mi turno</a>`;
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;color:#16202b">` +
-    `<h2 style="margin:0 0 4px">${esc(titulo)}</h2>` +
-    `<div style="color:#5c6b7a;margin-bottom:16px">${esc(negocio)}${recordatorio ? "" : " · N° " + codigo}</div>` +
-    `<table style="width:100%;border-collapse:collapse">${celdas}</table>${boton}` +
-    `<p style="color:#5c6b7a;font-size:13px">Si cancelás el mismo día del turno se cobra el 50% de seña.</p></div>`;
+    `<h2 style="margin:0 0 4px">Mañana tenés turno</h2>` +
+    `<div style="color:#5c6b7a;margin-bottom:16px">Hola ${esc(nombre)}, te lo recordamos desde ${esc(negocio)}.</div>` +
+    `<table style="width:100%;border-collapse:collapse">${celdas}</table><p style="margin:20px 0 6px">${botones}</p>` +
+    `<p style="color:#5c6b7a;font-size:13px">${esc(politica)}</p></div>`;
 
-  return { subject: `${titulo} - ${negocio}`, text: lineas.join("\n"), html };
+  return { subject: `Recordatorio: mañana tenés turno en ${negocio}`, text: lineas.join("\n"), html };
 }
 
-async function mandar(transporte, b, cfg, tipo) {
-  const m = armarMail(b, cfg, tipo);
-  await transporte.sendMail({
-    from: `"${(cfg.businessName || "BarberPro").replace(/"/g, "")}" <${SMTP_USER.value()}>`,
-    to: b.email, subject: m.subject, text: m.text, html: m.html
-  });
-}
-
-// marca la reserva (con transacción) para que el mismo aviso no salga dos veces; devuelve la reserva o null si ya salió
-async function reservar(ref, campo) {
+// marca la reserva (con transacción) para que el mismo aviso no salga dos veces; devuelve la reserva o null si ya estaba avisada
+async function reservar(ref) {
   return db.runTransaction(async tx => {
     const s = await tx.get(ref);
     if (!s.exists) return null;
     const b = s.data();
-    if (b[campo]) return null;
-    tx.update(ref, { [campo]: Date.now() });
+    if (b.reminded || b.reminderSentAt || b.status !== "confirmed") return null;
+    tx.update(ref, { reminderSentAt: Date.now() });
     return b;
   });
 }
 
-exports.enviarComprobante = onRequest({ secrets: [SMTP_PASS], cors: ORIGENES, region: "us-central1", maxInstances: 5 }, async (req, res) => {
-  if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
-  const id = String((req.body && req.body.id) || "");
-  if (!/^[A-Za-z0-9_-]{4,40}$/.test(id)) return res.status(400).json({ error: "Reserva inválida" });
-
-  const ref = db.doc("bookings/" + id);
-  try {
-    const previa = await ref.get();
-    // solo reservas recién hechas y confirmadas: así esto no sirve para mandar mails a cualquiera después
-    if (!previa.exists || previa.data().status !== "confirmed" || Date.now() - previa.data().createdAt > 15 * 60 * 1000) {
-      return res.status(404).json({ error: "No encontramos esa reserva" });
-    }
-    const b = await reservar(ref, "receiptSentAt");
-    if (!b) return res.json({ ok: true, yaEnviado: true });
-    try {
-      await mandar(crearTransporte(), b, await leerConfig(), "comprobante");
-    } catch (e) {
-      await ref.update({ receiptSentAt: null });          // que se pueda reintentar
-      throw e;
-    }
-    res.json({ ok: true });
-  } catch (e) {
-    console.error("enviarComprobante", e);
-    res.status(500).json({ error: "No se pudo enviar el mail" });
-  }
-});
-
 exports.enviarRecordatorios = onSchedule({ schedule: "0 10 * * *", timeZone: TZ, secrets: [SMTP_PASS], region: "us-central1" }, async () => {
-  const manana = hoyAR(1);
+  const cfg = await leerConfig();
+  if (cfg.autoReminders === false) { console.log("Recordatorios automáticos apagados desde el panel."); return; }
+  const manana = fechaAR(1);
   const snap = await db.collection("bookings").where("date", "==", manana).where("status", "==", "confirmed").get();
   if (snap.empty) return;
-  const cfg = await leerConfig(), transporte = crearTransporte();
+  const transporte = crearTransporte();
+  const duenio = (Array.isArray(cfg.team) ? cfg.team.find(m => m.role === "owner") : null) || { id: "dueno" };
+  let enviados = 0;
   for (const doc of snap.docs) {
+    const previa = doc.data();
+    if (!previa.email || previa.reminded || previa.reminderSentAt) continue;
     try {
-      const b = await reservar(doc.ref, "reminderSentAt");
+      const b = await reservar(doc.ref);
       if (!b) continue;
-      try { await mandar(transporte, b, cfg, "recordatorio"); }
-      catch (e) { await doc.ref.update({ reminderSentAt: null }); throw e; }
+      try {
+        const m = armarMail(b, cfg);
+        await transporte.sendMail({
+          from: `"${(cfg.businessName || "BarberPro").replace(/"/g, "")}" <${SMTP_USER.value()}>`,
+          to: b.email, subject: m.subject, text: m.text, html: m.html
+        });
+      } catch (e) { await doc.ref.update({ reminderSentAt: null }); throw e; }     // que se pueda reintentar
+      await doc.ref.update({ reminded: true });
+      await db.collection("movements").add({
+        bid: b.id, barbers: [b.barberId || duenio.id], clientName: `${b.name} ${b.lastname}`.trim().slice(0, 120), date: b.date, time: b.time,
+        type: "recordatorio", text: "Recordatorio enviado por mail (automático)", at: Date.now(), byRole: "system", byName: "Automático"
+      });
+      enviados++;
     } catch (e) { console.error("recordatorio", doc.id, e); }
   }
+  console.log(`Recordatorios enviados para ${manana}: ${enviados}`);
 });

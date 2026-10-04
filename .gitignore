@@ -7,3 +7,6 @@ branca/index_dev.html
 
 # dependencias de las funciones
 node_modules/
+
+# variables de las funciones (cuenta de mail que envía)
+barberpro/backend/functions/.env*
