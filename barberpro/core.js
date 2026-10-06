@@ -445,7 +445,7 @@ function seedClientStories(s){
     var time = pickTime(iso, pref);
     if(!time) return null;
     // seña y saldo: o.dep / o.bal = "paid" | "informed" | "pending" (por defecto: pagados si o.paid, si no pendientes)
-    var dep = depositFor(price);
+    var dep = depositFor(price, s.config);
     var depSt = dep > 0 ? (o.dep || (o.paid ? "paid" : "pending")) : "paid";
     var balSt = o.bal || (o.paid ? "paid" : "pending");
     var b = {
@@ -605,8 +605,8 @@ function hasMpLinks(){ return !!(state.config.payMpLink || (Array.isArray(state.
 // ---------- seña y saldo ----------
 // Un turno se paga en dos partes: la SEÑA al reservar y el SALDO al terminar el corte. Cada parte pasa por
 // "pendiente" -> "informado" (el cliente avisó que pagó) -> "pagado" (el local lo confirmó o lo cobró en efectivo).
-function depositFor(price){
-  var p = state.config.depositPercent;
+function depositFor(price, cfg){
+  var p = (cfg || state.config).depositPercent;
   if(p === undefined || p === null || p === "") p = 50;
   p = Math.max(0, Math.min(100, Number(p) || 0));
   return Math.round(price * p / 100);

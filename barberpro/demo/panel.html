@@ -1,0 +1,46 @@
+<!doctype html>
+<title>Administración</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#05080d">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../barberpro-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../app.css">
+<link rel="stylesheet" href="demo.css">
+
+<div class="backdrop backdrop-admin"></div>
+<div class="app app-admin">
+  <div class="adminbar">
+    <img class="adminlogo" src="../barberpro-logo.png" alt="BarberPro">
+    <div class="adminbar-txt">
+      <div class="adminbar-biz" id="wordmarkText">Tu Barbería</div>
+      <div class="adminbar-sub">Administración</div>
+    </div>
+    <a class="link-btn" href="app.html" target="_blank" rel="noopener">App del cliente</a>
+  </div>
+
+  <main id="main"></main>
+
+  <div class="footer-note"><span id="footerText"></span> · BarberPro by JV Systems</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMsg"></p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="modalNo">Volver</button>
+      <button class="btn btn-danger" id="modalYes" style="background:var(--accent-grad); color:#ffffff;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>window.BARBERPRO_PAGE = "admin";</script>
+<script src="config.js"></script>
+<script src="demo.js"></script>
+<script src="../core.js"></script>
+<script src="../cloud.js"></script>
+<script src="../admin.js"></script>
