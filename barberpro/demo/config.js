@@ -17,7 +17,7 @@ window.BARBERPRO_CONFIG = {
   whatsappDisplay: "",
   payAlias:        "barberia.demo",
   payHolder:       "Barbería Demo",
-  payMpLink:       "https://www.mercadopago.com.ar/",   // en la demo es solo un ejemplo: en la real va el link de cobro de cada barbería (mpago.la/...)
+  payMpLink:       "https://mpago.la/25U3fxd",   // link de cobro de ejemplo: en la versión real va el de cada barbería
   demoData:        true,
   hours: {
     mon: [["09:30", "19:30"]],
