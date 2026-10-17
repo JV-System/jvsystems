@@ -35,6 +35,10 @@ window.BARBERPRO_CONFIG = {
 
   // Foto propia del local para el fondo del encabezado (ej. "hero.jpg", en esta misma carpeta). Si está, se usa en lugar del
   // mapa: no depende de ningún servicio externo, es gratis para siempre y no necesita token. Horizontal, ~1200 px de ancho, JPG.
+  // Logo del local: poné el archivo en esta carpeta (ej. "parisi-logo.png", fondo transparente, cuadrado o apaisado) y escribí su nombre acá.
+  // Aparece arriba de todo, en la bienvenida y en el panel. Mientras el archivo no esté, se ve el nombre del local en texto.
+  logo:            "parisi-logo.png",
+
   heroImage:       "",
 
   // Fondo satelital del encabezado (Mapbox), se usa solo si heroImage está vacío. El token es PÚBLICO (empieza con pk.) y está pensado para ir en la página;
@@ -48,6 +52,11 @@ window.BARBERPRO_CONFIG = {
   payAlias:        "",   // Alias o CBU para transferencias (sirve el alias de Mercado Pago)
   payHolder:        "",  // Titular de la cuenta
   payMpLink:       "",   // Link de pago de Mercado Pago (https://mpago.la/...) por el precio del corte
+
+  // Avisos en el celular del equipo (ver backend/functions): clave pública de Web Push y dirección de la función que los manda.
+  // Se completan al desplegar las funciones; vacío = la app funciona igual pero sin notificaciones.
+  pushPublicKey:   "BAJbyFqw0Hzsf8cPwK_-N7jDCDcwXl5LT_OqLuTP76ldeKhkSbYCK339CD7GFrihrLcyUHHBU-W0QmsTTAezSHk",
+  pushEndpoint:    "",
 
   demoData: false,       // true = la primera vez carga turnos y saldos de ejemplo (para hacer demos). false = arranca vacío.
 

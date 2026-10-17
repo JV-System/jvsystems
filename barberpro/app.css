@@ -1152,3 +1152,44 @@ body.in-flow .bm-sub,body.in-flow .tagline{display:none;}
   .stat-tile{padding:12px 14px;}
   .hello-btns .link-btn{min-height:36px; padding:6px 12px; font-size:13px;}
 }
+
+/* ---- portada sin foto: franja de barbero + logo o nombre del local ---- */
+.hero:not(.has-map){display:none;}
+.hero.has-map + .top-stripe{display:none;}
+.top-stripe{height:5px; background:repeating-linear-gradient(-45deg, var(--accent-2) 0 9px, #dbe5ef 9px 18px); opacity:.8;}
+.brandline{margin-top:0; padding-top:22px; text-align:center;}
+.hero.has-map ~ .brandline{margin-top:-30px; padding-top:0;}
+.brand-logo{display:block; margin:0 auto 10px; max-width:min(70vw, 280px); max-height:110px; object-fit:contain;}
+.brand-logo[hidden]{display:none;}
+body.has-logo .brandline .wordmark{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}   /* el logo ya trae el nombre: queda solo para lectores de pantalla */
+.intro-photo[hidden]{display:none;}
+.intro-photo{object-fit:contain;}
+body.in-flow .top-stripe{display:none;}
+body.in-flow .brand-logo{display:none;}
+body.in-flow.has-logo .brandline .wordmark{position:static; width:auto; height:auto; overflow:visible; clip:auto;}
+.adminlogo[hidden]{display:none;}
+.backdrop-admin::after{display:none;}
+
+/* ---- app instalada en el celular: respeta el notch y la barra inferior del iPhone ---- */
+.adminbar{padding-top:calc(12px + env(safe-area-inset-top));}
+.app{padding-bottom:calc(32px + env(safe-area-inset-bottom));}
+body.in-flow .brandline{padding-top:calc(16px + env(safe-area-inset-top));}
+
+/* ---- tarjeta "App en tu celular" y links para clientes ---- */
+.status-ok{color:var(--success);}
+.pwa-steps{margin:0 0 10px; padding-left:20px; font-size:15px; line-height:1.55; color:var(--text-muted);}
+.pwa-steps li{margin-bottom:6px;}
+.pwa-steps b{color:var(--text);}
+.share-row{display:flex; flex-direction:column; gap:8px; padding:12px 0; border-top:1px solid var(--border-soft);}
+.share-row:first-of-type{border-top:0; padding-top:0;}
+.share-txt{display:flex; flex-direction:column; min-width:0;}
+.share-txt b{font-size:15px;}
+.share-txt span{font-size:12.5px; color:var(--text-faint); word-break:break-all;}
+.share-btns{display:flex; gap:8px;}
+.share-btns .btn{flex:1;}
+.pwa-nudge{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--accent-2); border-radius:12px; padding:10px 12px; margin-bottom:12px;}
+.pwa-nudge > div{flex:1; min-width:0; display:flex; flex-direction:column;}
+.pwa-nudge b{font-size:15px;}
+.pwa-nudge span{font-size:13px; color:var(--text-muted);}
+.pwa-nudge .btn{width:auto; flex:none;}
+.pwa-nudge .link-btn{flex:none; padding:6px 8px; min-height:32px;}

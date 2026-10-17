@@ -11,13 +11,15 @@ window.BARBERPRO_CONFIG = {
     {id: "lucas", name: "Lucas", role: "employee"},
     {id: "nico",  name: "Nico",  role: "employee"}
   ],
-  heroImage:       "../portada.jpg",
+  logo:            "",
+  heroImage:       "",
   mapboxToken:     "",
   mapCenter:       [-60.6393, -32.9468],
   whatsappDisplay: "",
   payAlias:        "barberia.demo",
   payHolder:       "Barbería Demo",
   payMpLink:       "https://mpago.la/25U3fxd",   // link de cobro de ejemplo: en la versión real va el de cada barbería
+  clientPage:      "app.html",     // la app del cliente de la demo (el link para clientes apunta acá)
   demoData:        true,
   hours: {
     mon: [["09:30", "19:30"]],

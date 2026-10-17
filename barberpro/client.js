@@ -13,6 +13,8 @@ var client = {
   payMethod:"local",
   lastBooking:null
 };
+// link directo de un barbero (el que se comparte por WhatsApp): ?b=lucas deja a ese barbero ya elegido
+try{ var qb = new URLSearchParams(location.search).get("b"); if(qb) client.barber = String(qb).toLowerCase(); }catch(e){}
 
 // quién actúa en el registro de movimientos
 actor = function(){ return {role: "client", name: (client.name + " " + client.lastname).trim()}; };
@@ -320,7 +322,7 @@ function cancelTurnoFlow(id){
   if(canReschedule(t)) msg += " Si solo necesitás otro día, podés cambiarlo sin costo (un cambio por turno).";
   if(t.rescheduled) msg += " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo y pagar la seña de nuevo.";
   askConfirm(late ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
-    cancelMyTurno(t, client).then(function(){ renderClient(); }).catch(function(e){
+    cancelMyTurno(t, client).then(function(){ notifyStaff(t.id, "cancelacion"); renderClient(); }).catch(function(e){
       console.error(e);
       showToast("No pudimos cancelar el turno. Revisá tu conexión e intentá de nuevo.");
     });
@@ -761,6 +763,7 @@ function bindClientEvents(){
     if(!t || !client.selectedDate || !client.selectedTime) return;
     rsOk.disabled = true; rsOk.textContent = "Cambiando...";
     rescheduleMyTurno(t, client.selectedDate, client.selectedTime).then(function(){
+      notifyStaff(t.id, "cambio_dia");
       client.reschedule = null; client.selectedDate = null; client.selectedTime = null; client.step = 2; renderClient();
     }).catch(function(e){
       console.error(e);
@@ -802,6 +805,7 @@ function bindClientEvents(){
     var b = buildBooking();
     conf.disabled = true; conf.textContent = "Reservando...";
     persistBooking(b).then(function(){
+      notifyStaff(b.id, "reserva");
       client.lastBooking = b;
       client.step = 4;
       renderClient();

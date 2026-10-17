@@ -247,7 +247,7 @@ function barberOfBooking(b){ return b.barberId || ownerBarber().id; }
 // Solo cuentan los textos que no estén vacíos; lo que se guarde desde el panel en un navegador los pisa.
 function fileDefaults(){
   var f = window.BARBERPRO_CONFIG || {}, out = {};
-  ["businessName","tagline","address","mapsLink","heroImage","mapboxToken","whatsappDisplay","whatsappLink","payAlias","payHolder","payMpLink"].forEach(function(k){
+  ["businessName","tagline","address","mapsLink","logo","heroImage","mapboxToken","whatsappDisplay","whatsappLink","payAlias","payHolder","payMpLink"].forEach(function(k){
     if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
   });
   if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
@@ -293,6 +293,7 @@ function baseState(){
       payMpLinks:[],            // links de Mercado Pago por monto: [{amount, url}] (la app usa el que coincide con lo que hay que cobrar)
       mapsLink:"",
       heroImage:"",
+      logo:"",                  // logo del local (archivo en esta carpeta, ej. "logo.png"); si no hay, se muestra el nombre en texto
       mapboxToken:"",
       mapCenter:null,
       price:8000,
@@ -565,6 +566,29 @@ function brandMarkup(name){
   return '<span class="bm-top">' + top + '</span>' + (rest ? '<span class="bm-sub"><i></i><span>' + esc(rest) + '</span><i></i></span>' : '');
 }
 
+// avisa al servidor que hay una reserva nueva / cancelada / cambiada para que mande la notificación al celular del barbero y del dueño.
+// No bloquea nada: si el servidor de avisos no está configurado o no responde, la reserva queda igual guardada.
+function notifyStaff(id, kind){
+  var url = (window.BARBERPRO_CONFIG || {}).pushEndpoint;
+  if(!CLOUD || !url) return;
+  try{
+    fetch(url, {method: "POST", headers: {"Content-Type": "text/plain;charset=UTF-8"}, body: JSON.stringify({id: id, kind: kind}), keepalive: true}).catch(function(){});
+  }catch(e){}
+}
+
+// logo del local: aparece en la portada, la bienvenida y el panel; si el archivo falta o no hay logo, se ve el nombre en texto
+function applyLogo(){
+  var logo = state.config.logo;
+  document.querySelectorAll("[data-brand-logo]").forEach(function(img){
+    if(!logo){ img.hidden = true; return; }
+    if(img.getAttribute("data-src") === logo) return;
+    img.setAttribute("data-src", logo);
+    img.onload = function(){ img.hidden = false; document.body.classList.add("has-logo"); };
+    img.onerror = function(){ img.hidden = true; };
+    img.src = logo;
+  });
+}
+
 function applyBranding(titleSuffix){
   var c = state.config;
   function $(id){ return document.getElementById(id); }
@@ -580,6 +604,7 @@ function applyBranding(titleSuffix){
     else wm.textContent = c.businessName;
   }
   if($("taglineText")){ $("taglineText").textContent = c.tagline; $("taglineText").hidden = !c.tagline; }
+  applyLogo();
   if($("footerText")) $("footerText").textContent = c.businessName + " · " + titleSuffix;
   document.title = c.businessName + " · " + titleSuffix;
 }

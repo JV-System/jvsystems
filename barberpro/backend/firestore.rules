@@ -127,6 +127,27 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
+    // ---------- avisos en el celular ----------
+    // Suscripción Web Push de cada celular del equipo (dueño o empleado). Solo la lee el servidor (con credenciales de administrador, que
+    // no pasan por estas reglas): nadie puede ver los dispositivos de otros. Cada usuario guarda y borra los suyos.
+    function validPushSub(d) {
+      return d.keys().hasOnly(['endpoint', 'p256dh', 'auth', 'uid', 'role', 'barberId', 'ua', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['endpoint', 'p256dh', 'auth', 'uid', 'role', 'barberId', 'createdAt', 'updatedAt'])
+          && isStr(d.endpoint, 700) && d.endpoint.matches('^https://.+')
+          && isStr(d.p256dh, 200) && isStr(d.auth, 100)
+          && d.uid == request.auth.uid
+          && ((d.role == 'owner' && isOwner() && d.barberId == '')
+              || (d.role == 'staff' && isStaff() && d.barberId == staffBarber()))
+          && (!('ua' in d) || isStr(d.ua, 200))
+          && d.createdAt is number && d.updatedAt is number;
+    }
+
+    match /pushSubs/{id} {
+      allow read: if false;
+      allow create, update: if signedIn() && validPushSub(request.resource.data);
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // ---------- foto de perfil de los barberos ----------
     // pública (la ve el cliente al elegir con quién cortarse); la cambia el dueño o el propio empleado en su barbero
     match /barbers/{id} {

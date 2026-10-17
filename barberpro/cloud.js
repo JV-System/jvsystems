@@ -342,6 +342,23 @@
       });
     },
     removeStaff: function(uid){ return db.doc("staff/" + uid).delete(); },
+    // ---- avisos en el celular (Web Push): la suscripción de este dispositivo se guarda para que el servidor sepa a quién avisar ----
+    pushSave: function(sub){
+      var u = auth && auth.currentUser;
+      if(!u) return Promise.reject(authErr("auth/user-not-found"));
+      var j = sub.toJSON(), keys = j.keys || {};
+      return sha256Hex(j.endpoint).then(function(h){
+        var now = Date.now();
+        return db.doc("pushSubs/" + h.slice(0, 40)).set({
+          endpoint: j.endpoint, p256dh: keys.p256dh || "", auth: keys.auth || "", uid: u.uid,
+          role: role === "employee" ? "staff" : "owner", barberId: role === "employee" ? (staffBarber || "") : "",
+          ua: String(navigator.userAgent || "").slice(0, 200), createdAt: now, updatedAt: now
+        });
+      });
+    },
+    pushRemove: function(sub){
+      return sha256Hex(sub.endpoint).then(function(h){ return db.doc("pushSubs/" + h.slice(0, 40)).delete(); });
+    },
     resetPassword: function(email){ return auth.sendPasswordResetEmail(email); },
     // cambiar la contraseña: se confirma primero la actual (Firebase lo exige para operaciones sensibles)
     changePassword: function(current, next){

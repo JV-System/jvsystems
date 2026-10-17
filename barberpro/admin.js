@@ -98,6 +98,7 @@
     html += '</div>';
 
     main.innerHTML = html;
+    if(CLOUD && window.PWA && !session.pwaSynced){ session.pwaSynced = true; PWA.resync(); }     // deja guardado este celular para los avisos
     bindOwnerNav();
     bindPwEyes();
     document.querySelectorAll("[data-demo-on]").forEach(function(el){
@@ -1890,7 +1891,7 @@
     if(!teamView) left = turnosHoyCard + left;
     right += side;
 
-    return '<div class="hoy-banner"><div><h2>Novedades de hoy</h2><div class="sub">'+formatDateLong(today)+(isEmployee() ? ' · tus turnos' : '')+'</div></div>' +
+    return '<div id="pwaNudge"></div>' + '<div class="hoy-banner"><div><h2>Novedades de hoy</h2><div class="sub">'+formatDateLong(today)+(isEmployee() ? ' · tus turnos' : '')+'</div></div>' +
       '<button class="btn btn-ghost btn-sm" data-goto="agenda" type="button">Ir a la agenda</button></div>' +
       closedNote +
       '<div class="hoy-top">' + tiles + '</div>' +
@@ -1898,7 +1899,23 @@
       '<div class="hoy-cols"><section class="hoy-col">'+left+'</section><section class="hoy-col">'+right+'</section></div>';
   }
 
+  // aviso arriba de Hoy para quien todavía no instaló la app ni activó los avisos (se puede descartar en este celular)
+  function fillPwaNudge(){
+    var box = document.getElementById("pwaNudge");
+    if(!box || !CLOUD || !window.PWA) return;
+    try{ if(localStorage.getItem("barberpro_pwa_nudge_off") === "1") return; }catch(e){}
+    PWA.status().then(function(st){
+      var b = document.getElementById("pwaNudge");
+      if(!b || (st !== "off" && st !== "ios-install")) return;
+      b.innerHTML = '<div class="pwa-nudge"><div><b>Recibí los turnos en tu celular</b><span>'+(st === "ios-install" ? 'Instalá la app en tu iPhone y activá los avisos.' : 'Activá los avisos de turnos nuevos.')+'</span></div>' +
+        '<button class="btn btn-primary btn-sm" type="button" id="btnNudgeGo">Ver cómo</button><button class="link-btn plain" type="button" id="btnNudgeOff" aria-label="Ocultar">✕</button></div>';
+      document.getElementById("btnNudgeGo").onclick = function(){ session.ownerTab = "config"; renderOwner(); };
+      document.getElementById("btnNudgeOff").onclick = function(){ try{ localStorage.setItem("barberpro_pwa_nudge_off", "1"); }catch(e){} b.innerHTML = ""; };
+    });
+  }
+
   function bindHoyEvents(){
+    fillPwaNudge();
     bindPayActions();
     document.querySelectorAll("[data-goto]").forEach(function(el){
       el.onclick = function(){ session.ownerTab = el.getAttribute("data-goto"); session.clientDetail = null; renderOwner(); window.scrollTo(0, 0); };
@@ -2107,10 +2124,100 @@
     document.getElementById("rmStop").onclick = closeRemind;
   }
 
+  // ================= APP EN EL CELULAR: instalar, avisos y link para clientes =================
+  // dirección de la app de los clientes (la carpeta, sin index.html); con ?b=id abre con ese barbero ya elegido
+  function clientBase(){ return new URL("./" + ((window.BARBERPRO_CONFIG || {}).clientPage || ""), location.href).href; }
+  function clientLink(barberId){ return clientBase() + (barberId ? "?b=" + encodeURIComponent(barberId) : ""); }
+
+  function shareLinksHtml(){
+    var rows = [], biz = state.config.businessName || "la barbería";
+    if(isEmployee()){
+      var me = barberById(myBarber());
+      rows.push({label: "Tu link" + (me ? " (" + me.name + ")" : ""), url: clientLink(myBarber())});
+    } else {
+      rows.push({label: "Link general", url: clientLink("")});
+      if(activeBarbers().length > 1) activeBarbers().forEach(function(m){ rows.push({label: "Link de " + m.name, url: clientLink(m.id)}); });
+    }
+    return '<div class="card"><h2>Link para tus clientes</h2>' +
+      '<div class="sub">Mandalo por WhatsApp. El cliente lo abre, crea su usuario y pide el turno'+(isEmployee() ? ' ya con vos elegido' : '')+'.</div>' +
+      rows.map(function(r, i){
+        var text = "Reservá tu turno en " + biz + ": " + r.url;
+        return '<div class="share-row"><div class="share-txt"><b>'+esc(r.label)+'</b><span>'+esc(r.url)+'</span></div>' +
+          '<div class="share-btns"><button class="btn btn-ghost btn-sm" type="button" data-copy-link="'+esc(r.url)+'">Copiar</button>' +
+          '<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(text)+'">WhatsApp</a></div></div>';
+      }).join("") + '</div>';
+  }
+
+  function pwaCardShell(){
+    if(!CLOUD || !window.PWA) return "";
+    return '<div class="card" id="pwaCard"><h2>App en tu celular</h2><div class="sub">Cargando...</div></div>';
+  }
+
+  // arma el contenido de la tarjeta según el estado del celular (instalada, avisos activados, etc.)
+  function fillPwaCard(){
+    var card = document.getElementById("pwaCard");
+    if(!card || !window.PWA) return;
+    PWA.status().then(function(st){
+      var c = document.getElementById("pwaCard");
+      if(!c) return;
+      var h = '<h2>App en tu celular</h2>';
+      var installed = PWA.isStandalone();
+      if(st === "nokey"){
+        h += '<div class="sub">Los avisos de turnos nuevos se activan en cuanto se termine de configurar el servidor. Mientras tanto la app funciona igual.</div>';
+      } else if(st === "ios-install"){
+        h += '<div class="sub">Para tener la app en tu iPhone y recibir avisos:</div>' +
+          '<ol class="pwa-steps"><li>Abrí esta página en <b>Safari</b>.</li><li>Tocá el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</li>' +
+          '<li>Elegí <b>Agregar a inicio</b> y confirmá.</li><li>Abrí la app desde el ícono nuevo, entrá con tu usuario y volvé acá para <b>activar los avisos</b>.</li></ol>' +
+          '<div class="field-hint">Necesita iOS 16.4 o más reciente.</div>';
+      } else if(st === "unsupported"){
+        h += '<div class="sub">Este navegador no permite avisos. Probá con Chrome (Android) o Safari (iPhone) y agregá la app a la pantalla de inicio.</div>';
+      } else if(st === "denied"){
+        h += '<div class="sub">Los avisos están bloqueados para esta app. Activalos desde los ajustes del celular (Notificaciones) y volvé a abrir la app.</div>';
+      } else if(st === "on"){
+        h += '<div class="sub status-ok">Los avisos están <b>activados</b> en este celular: te llega una notificación por cada turno nuevo, cancelado o cambiado'+(isEmployee() ? ' de tu agenda' : '')+'.</div>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="btnPwaTest" type="button">Probar aviso</button><button class="btn btn-ghost" id="btnPwaOff" type="button">Desactivar</button></div>';
+      } else if(st === "off"){
+        h += '<div class="sub">Activá los avisos para enterarte al instante de cada turno'+(isEmployee() ? ' que te reservan' : ' nuevo')+', aunque la app esté cerrada.</div>' +
+          '<button class="btn btn-primary" id="btnPwaOn" type="button">Activar avisos</button>';
+      }
+      if(!installed && st !== "ios-install" && st !== "local"){
+        h += PWA.canInstall()
+          ? '<button class="btn btn-ghost" id="btnPwaInstall" type="button" style="margin-top:10px;">Instalar la app en este celular</button>'
+          : '<div class="field-hint" style="margin-top:10px;">Para instalarla: en Chrome tocá el menú (⋮) y elegí <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>.</div>';
+      }
+      c.innerHTML = h;
+      var on = document.getElementById("btnPwaOn"), off = document.getElementById("btnPwaOff"), tst = document.getElementById("btnPwaTest"), ins = document.getElementById("btnPwaInstall");
+      if(on) on.onclick = function(){
+        on.disabled = true; on.textContent = "Activando...";
+        PWA.enable().then(function(){ showToast("Avisos activados."); }).catch(function(e){
+          showToast(e && e.code === "denied" ? "No diste permiso para las notificaciones." : "No se pudieron activar los avisos. Probá de nuevo.");
+          if(!(e && e.code === "denied")) console.error(e);
+        }).then(fillPwaCard);
+      };
+      if(off) off.onclick = function(){ PWA.disable().then(function(){ showToast("Avisos desactivados."); }).then(fillPwaCard); };
+      if(tst) tst.onclick = function(){ PWA.test().catch(function(){ showToast("No se pudo mostrar el aviso."); }); };
+      if(ins) ins.onclick = function(){ PWA.install().then(fillPwaCard); };
+    });
+  }
+
+  function copyLinkText(text){
+    var fallback = function(){
+      var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); }catch(e){} document.body.removeChild(ta);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(fallback); else fallback();
+  }
+
+  function bindShareLinks(){
+    document.querySelectorAll("[data-copy-link]").forEach(function(el){
+      el.onclick = function(){ copyLinkText(el.getAttribute("data-copy-link")); showToast("Link copiado."); };
+    });
+  }
+
   // ================= CONFIGURACIÓN =================
   function ownerConfig(){
     var user = CLOUD && window.cloudAuth ? cloudAuth.user() : null;
-    var html = '<div class="card"><h2>Tu cuenta</h2>';
+    var html = pwaCardShell() + shareLinksHtml() + '<div class="card"><h2>Tu cuenta</h2>';
     if(CLOUD){
       html += '<div class="summary-row"><span class="k">Usuario</span><span class="v">'+esc(user ? user.email : "")+'</span></div>' +
         '<div class="sub" style="margin-top:14px;">Cambiar contraseña</div>' +
@@ -2157,6 +2264,8 @@
 
   function bindConfigEvents(){
     bindPhotoControls();
+    bindShareLinks();
+    fillPwaCard();
     var ar = document.getElementById("chkAutoRem");
     if(ar) ar.onchange = function(){
       state.config.autoReminders = ar.checked;

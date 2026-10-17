@@ -3,7 +3,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#05080d">
-<link rel="icon" href="../barberpro-logo.png">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Exo+2:ital,wght@1,800;1,900&family=Manrope:wght@300;400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="../vendor/leaflet/leaflet.css">
@@ -13,8 +14,7 @@
 <div class="backdrop"></div>
 <div class="intro-overlay" id="introOverlay">
   <div class="intro-stage">
-    <div class="intro-glow"></div>
-    <img class="intro-photo" src="../barberpro-logo.png" alt="BarberPro">
+    <img class="intro-photo" data-brand-logo hidden alt="">
     <div class="intro-welcome">Bienvenido</div>
     <h1 class="intro-name" id="introName"></h1>
     <div class="intro-line"></div>
@@ -24,11 +24,11 @@
 <div class="app">
   <div class="hero" id="heroSection">
     <div class="hero-map" id="heroMap" hidden><img alt=""><span class="map-attrib">© Mapbox © OpenStreetMap © Maxar</span></div>
-    <img class="hero-photo" src="../portada.jpg" alt="Portada">
-    <div class="hero-top-fade"></div>
     <div class="hero-scrim"></div>
   </div>
+  <div class="top-stripe"></div>
   <div class="brandline">
+    <img class="brand-logo" data-brand-logo hidden alt="">
     <h1 class="wordmark" id="wordmarkText">Tu Barbería</h1>
     <div class="tagline" id="taglineText">Reservá tu turno online</div>
   </div>
