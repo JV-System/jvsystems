@@ -30,7 +30,7 @@ window.BARBERPRO_CONFIG = {
   team: [
     {id: "martin",  name: "Martín",  role: "owner"},
     {id: "lucas",   name: "Lucas",   role: "employee"},
-    {id: "nicolas", name: "Nicolás", role: "employee"}
+    {id: "gabi",    name: "Gabi",    role: "employee"}
   ],
 
   // Foto propia del local para el fondo del encabezado (ej. "hero.jpg", en esta misma carpeta). Si está, se usa en lugar del
