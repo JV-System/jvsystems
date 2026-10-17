@@ -46,3 +46,12 @@ En `demo/` hay una versión de prueba lista para compartir: `jvsystems.com.ar/ba
 - `demo.js` / `demo.css`: renuevan los datos de ejemplo cada día, dan PIN a los empleados (dueño 1234, Lucas 1111, Nico 2222) y muestran la barra inferior con "Ver panel/app" y "Reiniciar".
 
 Cualquier mejora que se haga a la app aparece sola en la demo.
+
+## Usuario sin mail y diseño sobrio para celular
+
+- **Crear cuenta sin mail:** el cliente elige un *usuario* (3 a 20 letras, números, punto o guion), su *nombre*, un *apodo* opcional y una *contraseña*; el teléfono es opcional. Por dentro el usuario se guarda como un mail inventado (`usuario@usuario.barberpro.app`) porque Firebase Authentication lo pide: ese mail no existe, no se muestra ni se usa para escribirle a nadie (las reservas guardan el mail vacío). Las cuentas viejas con mail real siguen entrando: en "Usuario" se puede escribir el mail completo.
+- **Contraseña olvidada:** sin mail no hay recuperación. Se avisa al crear la cuenta y la salida es crear otro usuario. El cliente puede cambiarla desde Mi perfil (pide la actual). Las cuentas con mail real conservan el correo de recuperación.
+- **Reglas** (`backend/firestore.rules`): apellido, teléfono y mail de la reserva pueden estar vacíos; el perfil del cliente sigue pidiendo el mail (el inventado cumple).
+- **Panel:** en Clientes se ve "Usuario: xxx" para estas cuentas y no aparece el botón de Mail; si no hay teléfono ni mail, en Recordatorios figura "sin contacto" (el cliente igual ve su turno en la app).
+- **Diseño:** al final de `app.css` está el "tema sobrio": colores lisos (sin degradés, brillos ni vidrio), letra de 16 px, campos y botones de 50 px o más, nombre del local en texto simple, bienvenida corta y estática, y dentro de la reserva el encabezado se achica para que los campos y el calendario queden arriba. Para volver al estilo anterior alcanza con borrar ese bloque.
+

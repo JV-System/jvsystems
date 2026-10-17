@@ -1009,7 +1009,7 @@
         return '<button type="button" class="crow" data-client="'+esc(c.key)+'">' +
           '<span class="crow-who">'+clientAvatar(p, "sm")+'<span class="crow-txt"><b>'+esc(p.name)+' '+esc(p.lastname)+'</b>' +
             (p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '') +
-            '<i>'+esc(p.phone || p.email || "")+'</i></span></span>' +
+            '<i>'+esc(p.phone || (isUserEmail(p.email) ? "@" + userOf(p.email) : p.email) || "")+'</i></span></span>' +
           '<span class="crow-c" data-l="Turnos">'+c.turnos+(c.cancelled ? ' <small>('+c.cancelled+' canc.)</small>' : '')+'</span>' +
           '<span class="crow-c" data-l="Última visita">'+(c.last ? shortDate(c.last.date) : (c.next ? 'Próximo '+shortDate(c.next.date) : '—'))+'</span>' +
           '<span class="crow-c" data-l="Cobrado">'+money(c.spent)+'</span>' +
@@ -1027,10 +1027,10 @@
     var html = '<button class="link-btn" id="btnClientBack" type="button" style="margin-bottom:14px;">‹ Volver a clientes</button>' +
       '<div class="card cdetail-head">' + clientAvatar(p, "lg") +
         '<div class="cdetail-who"><h2>'+esc(p.name)+' '+esc(p.lastname)+(p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '')+'</h2>' +
-        '<div class="sub">'+(p.phone ? esc(p.phone)+' · ' : '')+esc(p.email || "")+'</div>' +
+        '<div class="sub">'+(p.phone ? esc(p.phone)+' · ' : '')+(isUserEmail(p.email) ? 'Usuario: <b>'+esc(userOf(p.email))+'</b>' : esc(p.email || ""))+'</div>' +
         '<div class="cal-actions" style="justify-content:flex-start;">' +
           (p.phone ? '<a class="btn btn-wa btn-sm" href="https://wa.me/'+waNumber(p.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : '') +
-          (p.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(p.email)+'">Mail</a>' : '') +
+          (realEmail(p.email) ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(p.email)+'">Mail</a>' : '') +
         '</div></div></div>';
 
     html += '<div class="stat-grid">' +

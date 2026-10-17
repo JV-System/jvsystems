@@ -273,10 +273,10 @@ service cloud.firestore {
                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey', 'cid'])
           && d.id == bid
           && isStr(d.name, 60) && d.name.size() > 0
-          && isStr(d.lastname, 60) && d.lastname.size() > 0
+          && isStr(d.lastname, 60)
           && (!('nickname' in d) || isStr(d.nickname, 30))
-          && isStr(d.phone, 40) && d.phone.size() >= 6
-          && isStr(d.email, 120) && d.email.matches('.+@.+[.].+')
+          && isStr(d.phone, 40) && (d.phone.size() == 0 || d.phone.size() >= 6)
+          && isStr(d.email, 120) && (d.email.size() == 0 || d.email.matches('.+@.+[.].+'))
           && validDate(d.date) && validTime(d.time)
           && d.price is number && d.price > 0 && d.price <= 10000000
           && (!exists(/databases/$(database)/documents/config/main)
@@ -302,9 +302,9 @@ service cloud.firestore {
       return d.keys().hasOnly(['name', 'lastname', 'nickname', 'phone', 'email', 'photo'])
           && d.keys().hasAll(['name', 'lastname', 'phone', 'email'])
           && isStr(d.name, 60) && d.name.size() > 0
-          && isStr(d.lastname, 60) && d.lastname.size() > 0
+          && isStr(d.lastname, 60)
           && (!('nickname' in d) || isStr(d.nickname, 30))
-          && isStr(d.phone, 40) && d.phone.size() >= 6
+          && isStr(d.phone, 40) && (d.phone.size() == 0 || d.phone.size() >= 6)
           && isStr(d.email, 120) && d.email.matches('.+@.+[.].+')
           && (!('photo' in d) || (isStr(d.photo, 60000) && d.photo.matches('^data:image/jpeg;base64,.*')));
     }

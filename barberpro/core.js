@@ -815,8 +815,18 @@ function sha256Hex(text){
   }
   return Promise.reject(new Error("sin-crypto"));
 }
+// Usuario sin mail: el cliente elige un nombre de usuario y por dentro se guarda como un mail inventado (usuario@usuario.barberpro.app),
+// que es lo que pide el servicio de cuentas. Ese mail no existe: nunca se muestra ni se usa para escribirle a nadie.
+var USER_DOMAIN = "usuario.barberpro.app";
+function normUser(u){ return String(u || "").trim().toLowerCase().replace(/^@/, ""); }
+function validUser(u){ return /^[a-z0-9._-]{3,20}$/.test(u); }
+function loginId(input){ var s = normUser(input); return s.indexOf("@") >= 0 ? s : s + "@" + USER_DOMAIN; }
+function isUserEmail(e){ return String(e || "").toLowerCase().slice(-(USER_DOMAIN.length + 1)) === "@" + USER_DOMAIN; }
+function userOf(e){ return isUserEmail(e) ? String(e).split("@")[0] : String(e || ""); }
+function realEmail(e){ return isUserEmail(e) ? "" : String(e || ""); }
+
 function cleanProfile(p){
-  var out = {name: p.name, lastname: p.lastname, nickname: p.nickname || "", phone: p.phone, email: String(p.email || "").trim().toLowerCase()};
+  var out = {name: p.name, lastname: p.lastname || "", nickname: p.nickname || "", phone: p.phone || "", email: String(p.email || "").trim().toLowerCase()};
   if(p.photo) out.photo = p.photo;
   return out;
 }
@@ -871,17 +881,25 @@ var clientAuth = {
     return Promise.resolve(withUid(m[email].profile));
   },
   complete: function(){ return Promise.reject(authErr("auth/user-not-found")); },
+  changePassword: function(email, oldPass, newPass){
+    var m = localAccounts(), acc = m[String(email).toLowerCase()];
+    if(String(newPass).length < 6) return Promise.reject(authErr("auth/weak-password"));
+    return Promise.all([sha256Hex(oldPass), sha256Hex(newPass)]).then(function(h){
+      if(!acc || acc.hash !== h[0]) throw authErr("auth/invalid-credential");
+      acc.hash = h[1]; saveLocalAccounts(m);
+    });
+  },
   resetPassword: function(){ return Promise.reject(authErr("local-mode")); }
 };
 
 function authMessage(e){
   var code = e && e.code ? e.code : "";
-  if(code === "auth/email-already-in-use") return "Ya hay una cuenta con ese mail. Iniciá sesión.";
+  if(code === "auth/email-already-in-use") return "Ese usuario ya existe. Elegí otro o iniciá sesión.";
   if(code === "auth/weak-password") return "La contraseña tiene que tener al menos 6 caracteres.";
-  if(code === "auth/invalid-email") return "Ese mail no es válido.";
+  if(code === "auth/invalid-email") return "El usuario solo puede tener letras, números, punto, guion y guion bajo (de 3 a 20).";
   if(code === "auth/too-many-requests") return "Demasiados intentos. Esperá unos minutos y probá de nuevo.";
   if(code === "auth/network-request-failed") return "Sin conexión. Revisá tu internet.";
-  if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") return "Mail o contraseña incorrectos.";
+  if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found") return "Usuario o contraseña incorrectos.";
   if(code === "local-mode") return "En la versión de prueba no se puede recuperar la contraseña.";
   return "No se pudo completar. Intentá de nuevo.";
 }
@@ -916,7 +934,9 @@ function watchMyTurnos(profile){}
 function stopWatchTurnos(){}
 function myTurnos(profile){
   var d = digitsOnly(profile.phone), m = String(profile.email || "").trim().toLowerCase();
-  return state.bookings.filter(function(b){ return digitsOnly(b.phone) === d && String(b.email || "").trim().toLowerCase() === m; });
+  return state.bookings.filter(function(b){
+    return (b.cid && b.cid === profile.uid) || (digitsOnly(b.phone) === d && String(b.email || "").trim().toLowerCase() === m);
+  });
 }
 
 // el cliente cancela su propio turno. Local: misma lógica que el dueño (si es del mismo día queda una seña pendiente).

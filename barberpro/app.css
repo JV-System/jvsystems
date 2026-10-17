@@ -1021,3 +1021,134 @@ input[readonly]{opacity:.7;}
 .rm-step{font-size:11.5px; font-weight:800; color:var(--text-faint); text-transform:uppercase; letter-spacing:.4px;}
 .rm-preview{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:12px; padding:11px 13px; font-size:13px; color:var(--text-muted); line-height:1.45; margin:0 0 14px; max-height:140px; overflow:auto;}
 .mv-type.t-recordatorio{background:rgba(232,178,61,.16); color:var(--warn);}
+
+
+/* =====================================================================================================================
+   Tema sobrio (va al final para pisar lo anterior): colores lisos, sin brillos ni degradés, letra grande y botones altos,
+   pensado para usarse rápido con una mano en el celular. Mismos colores de siempre (azul sobre fondo oscuro).
+   ===================================================================================================================== */
+:root{
+  --bg:#0b1118;
+  --bg-image:none;
+  --surface:#131c27;
+  --surface-2:#1a2431;
+  --surface-3:#243142;
+  --border:#2c3a4b;
+  --border-soft:#223040;
+  --text:#f1f5f9;
+  --text-muted:#b3c0cd;
+  --text-faint:#8393a3;
+  --accent-1:#4aa8ec;
+  --accent-2:#1e88e5;
+  --accent-3:#1565c0;
+  --accent-grad:#1e88e5;
+  --radius-lg:14px;
+  --radius-md:12px;
+  --radius-sm:10px;
+  --shadow-1:none;
+}
+body{font-size:16px; line-height:1.4;}
+main{padding:14px 16px 20px;}
+
+/* tarjetas y textos */
+.card{border-radius:var(--radius-lg); box-shadow:none; padding:18px 16px;}
+.card h2{font-size:19px; font-weight:800; margin-bottom:4px;}
+.card .sub{font-size:14px; color:var(--text-muted); font-weight:500; margin-bottom:14px;}
+label{font-size:13.5px; font-weight:700; color:var(--text-muted); text-transform:none; letter-spacing:0; margin-bottom:6px;}
+.field-hint{font-size:13px; font-weight:500; margin-top:-4px; margin-bottom:12px; color:var(--text-faint);}
+.notice-soft{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:13.5px; font-weight:600; color:var(--text-muted); margin:2px 0 14px;}
+
+/* campos: altos y de 16px (así el celular no hace zoom al tocarlos) */
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=date],input[type=password],select{
+  font-size:16px; font-weight:500; min-height:50px; padding:12px 14px; border-radius:10px; margin-bottom:12px;
+}
+input[readonly]{opacity:.75;}
+input:focus,select:focus{outline:2px solid var(--accent-1); outline-offset:0; border-color:var(--accent-1);}
+.checkline span{font-size:15px;}
+
+/* botones: lisos, esquinas apenas redondeadas, fáciles de tocar */
+.btn{border-radius:12px; font-size:16px; font-weight:700; letter-spacing:0; min-height:52px; padding:12px 20px;}
+.btn-primary{background:var(--accent-2); color:#fff; box-shadow:none;}
+.btn-primary:active{background:var(--accent-3);}
+.btn-primary:disabled{opacity:.45;}
+.btn-ghost{background:transparent; border:1.5px solid var(--border); color:var(--text);}
+.btn-sm{min-height:42px; padding:9px 16px; font-size:14px; border-radius:10px;}
+.link-btn{border-radius:10px; font-size:14px; padding:9px 14px; min-height:40px; color:var(--accent-1); font-weight:700;}
+.link-btn.plain{border:none; text-decoration:underline; font-weight:600;}
+
+/* portada y nombre del local: texto liso, sin brillo ni movimiento */
+.hero-scrim{background:linear-gradient(180deg, rgba(11,17,24,0) 55%, var(--bg) 100%);}
+.hero-top-fade{display:none;}
+.brandline{margin-top:-30px;}
+.bm-top{font-family:'Manrope',system-ui,sans-serif; font-style:normal; font-weight:800; letter-spacing:-.5px; font-size:clamp(30px, 9.5vw, 44px); line-height:1.1; padding-right:0;}
+.bm-first,.bm-second{background:none !important; filter:none !important; animation:none !important; -webkit-background-clip:initial; background-clip:initial; padding-right:.18em;}
+.bm-first{color:var(--text);}
+.bm-second{color:var(--accent-1);}
+.bm-sub{margin-top:6px; justify-content:center;}
+.bm-sub i{display:none;}
+.bm-sub span{font-size:14px; font-weight:600; letter-spacing:.2px; padding-left:0; text-transform:none; color:var(--text-muted); text-shadow:none; white-space:normal;}
+.tagline{font-size:14px; font-weight:600; letter-spacing:0; text-transform:none; text-shadow:none; opacity:1; color:var(--text-muted);}
+.meta-chip{border-radius:10px; font-size:14px; font-weight:600; padding:9px 13px;}
+.stepper .dot{height:4px;}
+
+/* bienvenida: logo y nombre, sin resplandor ni vaivén */
+.intro-glow{display:none;}
+.intro-photo{filter:none; animation:introFade .5s ease forwards; width:min(44vw, 170px); height:min(44vw, 170px);}
+.intro-welcome{font-size:14px; letter-spacing:2px; padding-left:0; text-shadow:none; animation:introFade .5s ease .15s forwards; color:var(--text-muted);}
+.intro-name{transform:none; animation:introFade .5s ease .3s forwards;}
+.intro-line{display:none;}
+.intro-tag{font-size:14px; letter-spacing:0; text-transform:none; animation:introFade .5s ease .45s forwards;}
+.lockicon{display:none;}
+
+/* panel del dueño: sin relieve, sin vidrio, sin brillos */
+.backdrop-admin::before{display:none;}
+.backdrop-admin::after{opacity:.04; filter:none; -webkit-mask-image:none; mask-image:none;}
+.app-admin .card,.app-admin .stat-tile{background:var(--surface); -webkit-backdrop-filter:none; backdrop-filter:none; box-shadow:none;}
+.app-admin .owner-nav button,.app-admin .btn-logout{background:var(--surface); box-shadow:none;}
+.app-admin .owner-nav button.active{background:var(--accent-2); color:#fff; box-shadow:none;}
+.adminbar{background:var(--bg); -webkit-backdrop-filter:none; backdrop-filter:none;}
+
+/* ---- cliente: pantalla compacta dentro de la reserva ---- */
+body.in-flow .hero{display:none;}
+body.in-flow .meta-row{display:none;}
+body.in-flow .brandline{margin-top:0; padding-top:16px; text-align:left;}
+body.in-flow .bm-top{font-size:24px;}
+body.in-flow .bm-sub,body.in-flow .tagline{display:none;}
+
+/* ---- detalles del cliente ---- */
+.hello{flex-wrap:wrap; align-items:center;}
+.hello-btns{margin-left:auto;}
+.avatar{background:var(--accent-2);}
+.myt-title{font-size:14px; font-weight:800; letter-spacing:0; text-transform:none; color:var(--text);}
+.myt-row{border:1px solid var(--border-soft); background:var(--surface-2); padding:12px 13px;}
+.myt-main{font-size:15px;}
+.myt-sub{font-size:13px;}
+.myt-cancel{font-size:13px; padding:8px 12px; border-radius:10px;}
+.barber-opt{border-radius:12px; padding:12px 6px;}
+.barber-opt b{font-size:15px;}
+.barber-opt i{font-size:12px;}
+.barber-opt.on{background:var(--surface-3); border-color:var(--accent-1); box-shadow:inset 0 0 0 1px var(--accent-1);}
+.cal-title{font-size:16px;}
+.cal-nav{width:42px; height:42px; border-radius:10px;}
+.cal-dow{font-size:11px;}
+.cal-day{height:46px; font-size:16px; border-radius:10px;}
+.cal-legend{font-size:12.5px; font-weight:600;}
+.slot-grid{gap:10px;}
+.slot-btn{min-height:50px; font-size:16px; border-radius:10px;}
+.slot-btn.selected,.cal-day.selected{background:var(--accent-2);}
+.slot-btn .taken-lbl{font-size:10px;}
+.pay-box,.pay-alias{border-radius:12px;}
+
+/* ---- panel: números y tarjetas simples, y dos columnas de datos en el celular ---- */
+.stat-tile .num,.tcard-num .num,.pay-split-item b{font-family:'Manrope',system-ui,sans-serif; font-weight:800; background:none; -webkit-background-clip:initial; background-clip:initial; color:var(--accent-1);}
+.stat-tile .num{font-size:26px;}
+.stat-tile .lbl{font-size:12.5px; text-transform:none; letter-spacing:0; font-weight:600; color:var(--text-muted);}
+.stat-tile.is-warn .num{color:var(--warn);}
+.booking-row .time,.rank-pos,.rank-n,.remind-who b{font-family:'Manrope',system-ui,sans-serif; font-weight:800;}
+.adminbar-biz{font-family:'Manrope',system-ui,sans-serif; font-weight:800; font-size:18px; letter-spacing:0;}
+.hoy-banner{background:var(--surface); border:1px solid var(--border-soft);}
+@media (max-width:640px){
+  .hoy-top .stat-row{grid-template-columns:1fr 1fr; gap:10px;}
+  .stat-tile{padding:12px 14px;}
+  .hello-btns .link-btn{min-height:36px; padding:6px 12px; font-size:13px;}
+}

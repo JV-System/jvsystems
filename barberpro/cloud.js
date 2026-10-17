@@ -197,6 +197,14 @@
         if(!u) return Promise.reject(authErr("auth/user-not-found"));
         return db.doc("clients/" + u.uid).set(prof).then(function(){ return Object.assign({uid: u.uid}, prof); });
       },
+      // cambiar la contraseña desde la app: se pide la actual (vuelve a validar la sesión) y la nueva
+      changePassword: function(email, oldPass, newPass){
+        var u = auth.currentUser;
+        if(!u) return Promise.reject(authErr("auth/user-not-found"));
+        if(String(newPass).length < 6) return Promise.reject(authErr("auth/weak-password"));
+        var cred = firebase.auth.EmailAuthProvider.credential(u.email, oldPass);
+        return u.reauthenticateWithCredential(cred).then(function(){ return u.updatePassword(newPass); });
+      },
       resetPassword: function(email){ return auth.sendPasswordResetEmail(String(email).trim()); }
     };
   }

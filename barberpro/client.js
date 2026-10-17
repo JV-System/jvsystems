@@ -35,7 +35,7 @@ actor = function(){ return {role: "client", name: (client.name + " " + client.la
       try{ sessionStorage.setItem(INTRO_KEY,"1"); }catch(e){}
     };
     overlay.onclick = closeIntro;
-    setTimeout(closeIntro, 3200);
+    setTimeout(closeIntro, 1800);
   }
 })();
 
@@ -48,7 +48,7 @@ function buildBooking(){
   var debtAmount = hasDebt ? currentPenalty() : 0;
   var dep = client.walkIn ? 0 : depositFor(state.config.price);
   b = {
-    id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:client.email,
+    id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:realEmail(client.email),
     date:client.selectedDate, time:client.selectedTime,
     price:state.config.price, debtCharged:debtAmount,
     barberId:chosenBarber(), barberName:(barberById(chosenBarber()) || {}).name || "",
@@ -117,6 +117,8 @@ function renderClient(){
   else html += stepExito();
 
   main.innerHTML = html;
+  // dentro de la reserva el encabezado se achica: lo importante (campos, calendario, horarios) queda arriba en la pantalla
+  document.body.classList.toggle("in-flow", client.step !== 0 && client.step !== 6);
   bindClientEvents();
   bindPwEyes();
   initPlaceMap();
@@ -164,57 +166,71 @@ function avatarHtml(size){
 function stepInicio(){
   return '<div class="card welcome">' +
     '<h2>Reservá tu turno</h2>' +
-    '<div class="sub">Elegí fecha y horario en un minuto</div>' +
-    '<button class="btn btn-primary" id="btnGoLogin">Iniciar sesión</button>' +
-    '<button class="btn btn-ghost" id="btnGoRegister" style="margin-top:10px;">Crear cuenta</button>' +
-    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">Tu usuario es tu mail. Con tu cuenta ves tus turnos y reservás con un toque.</div>' +
+    '<div class="sub">Elegí día y hora en un minuto</div>' +
+    '<button class="btn btn-primary" id="btnGoRegister">Crear mi usuario</button>' +
+    '<button class="btn btn-ghost" id="btnGoLogin" style="margin-top:10px;">Ya tengo usuario</button>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">Sin mail: solo un usuario, tu nombre y una contraseña.</div>' +
     '</div>';
 }
 
 function stepLogin(){
   return '<div class="card">' +
-    '<h2>Iniciar sesión</h2>' +
-    '<div class="sub">Con tu mail y tu contraseña</div>' +
-    '<label>Mail</label>' +
-    '<input type="email" id="inpLoginEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="username" autocapitalize="off">' +
+    '<h2>Entrar</h2>' +
+    '<div class="sub">Con tu usuario y tu contraseña</div>' +
+    '<label>Usuario</label>' +
+    '<input type="text" id="inpLoginEmail" value="'+esc(isUserEmail(client.email) ? userOf(client.email) : client.email)+'" placeholder="tu usuario" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">' +
     '<label>Contraseña</label>' +
     pwField("inpLoginPass", "Tu contraseña", "current-password") +
-    '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>' +
     '<button class="btn btn-primary" id="btnLogin">Entrar</button>' +
     '<button class="link-btn plain" id="btnForgot" type="button" style="display:block; margin:12px auto 0;">Olvidé mi contraseña</button>' +
     '<button class="btn btn-ghost" id="btnLoginBack" style="margin-top:10px;">Volver</button>' +
-    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Todavía no tenés cuenta? <button class="link-btn" id="btnLoginToRegister" type="button">Crear cuenta</button></div>' +
+    '<div class="field-hint" style="margin:14px 0 0; text-align:center;">¿Primera vez? <button class="link-btn" id="btnLoginToRegister" type="button">Crear mi usuario</button></div>' +
     '</div>';
 }
 
 function stepDatos(){
   var editing = client.registered || client.completing;
-  return '<div class="card">' +
-    '<h2>'+(client.completing ? 'Completá tu perfil' : editing ? 'Tu perfil' : 'Creá tu cuenta')+'</h2>' +
-    '<div class="sub">'+(client.completing ? 'Tu cuenta ya existe: solo faltan tus datos para reservar' : editing ? 'Podés corregirlo cuando quieras' : 'Una sola vez · después reservás con un toque')+'</div>' +
-    '<div class="avatar-edit"><div id="avatarPreview">'+avatarHtml("lg")+'</div>' +
+  var legacy = editing && client.email && !isUserEmail(client.email);        // cuenta vieja que entra con mail
+  var title = client.completing ? 'Completá tu perfil' : editing ? 'Tu perfil' : 'Creá tu usuario';
+  var sub = client.completing ? 'Tu cuenta ya existe: solo faltan tus datos para reservar' : editing ? 'Podés corregirlo cuando quieras' : 'Cuatro datos y ya podés reservar';
+  var h = '<div class="card"><h2>'+title+'</h2><div class="sub">'+sub+'</div>';
+  if(editing){
+    h += '<div class="avatar-edit"><div id="avatarPreview">'+avatarHtml("lg")+'</div>' +
       '<div class="avatar-btns"><button class="link-btn" id="btnPhoto" type="button">'+(client.photo ? 'Cambiar foto' : 'Agregar foto')+'</button>' +
       (client.photo ? '<button class="link-btn link-out" id="btnPhotoDel" type="button">Quitar</button>' : '') +
-      '<input type="file" id="inpPhoto" accept="image/*" hidden></div></div>' +
-    '<div class="row2">' +
+      '<input type="file" id="inpPhoto" accept="image/*" hidden></div></div>';
+    h += '<label>'+(legacy ? 'Mail (es tu usuario)' : 'Usuario')+'</label>' +
+      '<input type="text" id="inpUserShow" value="'+esc(legacy ? client.email : userOf(client.email))+'" readonly autocomplete="username">';
+  } else {
+    h += '<label>Usuario</label>' +
+      '<input type="text" id="inpUser" placeholder="ej: juan.perez" maxlength="20" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+      '<div class="field-hint">Con este usuario entrás siempre. Letras, números, punto o guion.</div>';
+  }
+  h += '<div class="row2">' +
       '<div><label>Nombre</label><input type="text" id="inpName" value="'+esc(client.name)+'" placeholder="Juan" autocomplete="given-name"></div>' +
-      '<div><label>Apellido</label><input type="text" id="inpLastname" value="'+esc(client.lastname)+'" placeholder="Pérez" autocomplete="family-name"></div>' +
-    '</div>' +
-    '<div class="row2">' +
       '<div><label>Apodo <span class="opt">(opcional)</span></label><input type="text" id="inpNickname" value="'+esc(client.nickname)+'" placeholder="Cómo te dicen" maxlength="20"></div>' +
-      '<div><label>Teléfono</label><input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel"></div>' +
-    '</div>' +
-    '<label>Mail <span class="opt">(es tu usuario)</span></label>' +
-    '<input type="email" id="inpEmail" value="'+esc(client.email)+'" placeholder="tunombre@gmail.com" autocomplete="username" autocapitalize="off"'+(editing ? ' readonly' : '')+'>' +
-    (editing ? '' :
-      '<label>Contraseña</label>' + pwField("inpPass", "Mínimo 6 caracteres", "new-password") +
-      '<label class="checkline"><input type="checkbox" id="inpRemember" checked><span>Recordar en este dispositivo</span></label>') +
-    '<div class="field-hint">Teléfono con código de área, sin 0 ni 15. El local lo usa para confirmarte el turno y recordártelo.</div>' +
-    '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Crear cuenta y continuar')+'</button>' +
-    (editing ? (client.completing ? '' : '<button class="btn btn-ghost" id="btnChangePass" type="button" style="margin-top:10px;">Cambiar contraseña</button>') +
-               '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>'
-             : '<button class="btn btn-ghost" id="btnRegBack" style="margin-top:10px;">Volver</button>') +
     '</div>';
+  if(editing && client.lastname) h += '<label>Apellido</label><input type="text" id="inpLastname" value="'+esc(client.lastname)+'" autocomplete="family-name">';
+  if(!editing) h += '<label>Contraseña</label>' + pwField("inpPass", "Mínimo 6 caracteres", "new-password");
+  h += '<label>Teléfono <span class="opt">(opcional)</span></label>' +
+    '<input type="tel" id="inpPhone" value="'+esc(client.phone)+'" placeholder="11 2345 6789" autocomplete="tel">' +
+    '<div class="field-hint">Si lo dejás, el local puede avisarte de tu turno por WhatsApp.</div>';
+  if(!editing) h += '<div class="notice-soft">Anotá tu contraseña: como no hay mail, no se puede recuperar.</div>';
+  h += '<button class="btn btn-primary" id="btnStep1">'+(editing ? 'Guardar y continuar' : 'Crear usuario y reservar')+'</button>';
+  if(editing){
+    if(!client.completing){
+      h += '<button class="btn btn-ghost" id="btnChangePass" type="button" style="margin-top:10px;">Cambiar contraseña</button>';
+      if(!legacy){
+        h += '<div id="pwBox" hidden style="margin-top:12px;"><label>Contraseña actual</label>' + pwField("inpOldPass", "Tu contraseña de ahora", "current-password") +
+          '<label>Contraseña nueva</label>' + pwField("inpNewPass", "Mínimo 6 caracteres", "new-password") +
+          '<button class="btn btn-primary" id="btnPwSave" type="button">Guardar contraseña</button></div>';
+      }
+    }
+    h += '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir de esta cuenta</button>';
+  } else {
+    h += '<button class="btn btn-ghost" id="btnRegBack" style="margin-top:10px;">Volver</button>';
+  }
+  return h + '</div>';
 }
 
 // ---------- calendario mensual ----------
@@ -614,11 +630,12 @@ function bindClientEvents(){
   if(bl){
     var passEl = document.getElementById("inpLoginPass"), mailEl = document.getElementById("inpLoginEmail");
     var doLogin = function(){
-      var email = mailEl.value.trim(), pass = passEl.value;
-      if(!isValidEmail(email)){ showToast("Ingresá tu mail."); return; }
+      var id = normUser(mailEl.value), pass = passEl.value;
+      if(!id){ showToast("Ingresá tu usuario."); return; }
+      if(id.indexOf("@") >= 0 ? !isValidEmail(id) : !validUser(id)){ showToast("Revisá tu usuario: letras, números, punto o guion."); return; }
       if(!pass){ showToast("Ingresá tu contraseña."); return; }
       bl.disabled = true; bl.textContent = "Ingresando...";
-      clientAuth.login(email, pass, document.getElementById("inpRemember").checked).then(function(p){
+      clientAuth.login(loginId(id), pass, true).then(function(p){
         if(p.incomplete){ needProfile(p); return; }
         applyProfile(p); client.step = 2; renderClient();
       }).catch(function(e){
@@ -632,17 +649,33 @@ function bindClientEvents(){
   }
   var forgot = document.getElementById("btnForgot");
   if(forgot) forgot.onclick = function(){
-    var email = document.getElementById("inpLoginEmail").value.trim();
-    if(!isValidEmail(email)){ showToast("Escribí tu mail arriba y volvé a tocar este botón."); return; }
+    var email = normUser(document.getElementById("inpLoginEmail").value);
+    // los usuarios sin mail no tienen cómo recuperarla; las cuentas viejas con mail sí
+    if(email.indexOf("@") < 0){ showToast("Sin mail no se puede recuperar. Creá un usuario nuevo o pedile ayuda al local."); return; }
+    if(!isValidEmail(email)){ showToast("Revisá el mail que escribiste."); return; }
     clientAuth.resetPassword(email).then(function(){
       showToast("Si ese mail tiene cuenta, te mandamos un correo para cambiar la contraseña.");
     }).catch(function(e){ showToast(e && e.code === "local-mode" ? authMessage(e) : "No se pudo enviar el correo. Revisá el mail e intentá de nuevo."); });
   };
   var chp = document.getElementById("btnChangePass");
   if(chp) chp.onclick = function(){
-    clientAuth.resetPassword(client.email).then(function(){
+    var box = document.getElementById("pwBox");
+    if(box){ box.hidden = !box.hidden; if(!box.hidden) document.getElementById("inpOldPass").focus(); return; }
+    clientAuth.resetPassword(client.email).then(function(){       // cuenta vieja con mail
       showToast("Te mandamos un correo a " + client.email + " para cambiar la contraseña.");
     }).catch(function(e){ showToast(authMessage(e)); });
+  };
+  var pwSave = document.getElementById("btnPwSave");
+  if(pwSave) pwSave.onclick = function(){
+    var oldP = document.getElementById("inpOldPass").value, newP = document.getElementById("inpNewPass").value;
+    if(!oldP){ showToast("Escribí tu contraseña actual."); return; }
+    if(newP.length < 6){ showToast("La contraseña nueva tiene que tener al menos 6 caracteres."); return; }
+    pwSave.disabled = true; pwSave.textContent = "Guardando...";
+    clientAuth.changePassword(client.email, oldP, newP).then(function(){
+      document.getElementById("pwBox").hidden = true;
+      document.getElementById("inpOldPass").value = ""; document.getElementById("inpNewPass").value = "";
+      showToast("Contraseña cambiada.");
+    }).catch(function(e){ showToast(authMessage(e)); }).then(function(){ pwSave.disabled = false; pwSave.textContent = "Guardar contraseña"; });
   };
 
   // foto de perfil (se ve al instante; se guarda con el botón de abajo)
@@ -670,13 +703,18 @@ function bindClientEvents(){
   var b1 = document.getElementById("btnStep1");
   if(b1) b1.onclick = function(){
     var name = document.getElementById("inpName").value.trim();
-    var lastname = document.getElementById("inpLastname").value.trim();
+    var lastEl = document.getElementById("inpLastname");
+    var lastname = lastEl ? lastEl.value.trim() : (client.lastname || "");
     var nickname = document.getElementById("inpNickname").value.trim();
     var phone = document.getElementById("inpPhone").value.trim();
-    var email = document.getElementById("inpEmail").value.trim();
-    if(!name || !lastname){ showToast("Completá nombre y apellido."); return; }
-    if(digitsOnly(phone).length < 8){ showToast("Ingresá un teléfono válido (mínimo 8 dígitos)."); return; }
-    if(!isValidEmail(email)){ showToast("Ingresá un mail válido, por ejemplo tunombre@gmail.com."); return; }
+    var email = client.email;
+    if(!(client.registered || client.completing)){
+      var user = normUser(document.getElementById("inpUser").value);
+      if(!validUser(user)){ showToast("El usuario tiene de 3 a 20 letras, números, punto o guion."); return; }
+      email = loginId(user);
+    }
+    if(!name){ showToast("Escribí tu nombre."); return; }
+    if(phone && digitsOnly(phone).length < 8){ showToast("Revisá el teléfono (mínimo 8 dígitos) o dejalo vacío."); return; }
     var profile = {name:name, lastname:lastname, nickname:nickname, phone:phone, email:email, photo:client.photo};
     var label = b1.textContent;
     var done = function(p){ applyProfile(p); client.step = 2; renderClient(); };
@@ -691,7 +729,7 @@ function bindClientEvents(){
       var pass = document.getElementById("inpPass").value;
       if(pass.length < 6){ showToast("La contraseña tiene que tener al menos 6 caracteres."); return; }
       b1.disabled = true; b1.textContent = "Creando cuenta...";
-      clientAuth.register(profile, pass, document.getElementById("inpRemember").checked).then(done).catch(fail());
+      clientAuth.register(profile, pass, true).then(done).catch(fail());
     }
   };
   var editP = document.getElementById("btnEditProfile");
