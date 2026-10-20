@@ -2380,6 +2380,27 @@
 </div>
 
 <script>
+// Si el celular se queda sin lugar en el almacenamiento del navegador (Safari/iPhone
+// da ~5 MB por sitio y los datos ya los pasan por las firmas), setItem tira
+// QuotaExceededError y cortaba a la mitad cualquier botón o la carga inicial
+// (no llegaba a guardar la lista de usuarios -> "contraseña incorrecta").
+// Ahora ese error puntual se ignora y la app sigue con los datos en memoria,
+// que igual se sincronizan con Firebase. Cualquier otro error se propaga igual.
+(function() {
+  var _setOriginal = Storage.prototype.setItem;
+  Storage.prototype.setItem = function(k, v) {
+    try {
+      return _setOriginal.call(this, k, v);
+    } catch (e) {
+      if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+        window._storageLleno = true;
+        return;
+      }
+      throw e;
+    }
+  };
+})();
+
 // ==================== FIREBASE CONFIG ====================
 const FIREBASE_URL = 'https://branca-ingenieria-default-rtdb.firebaseio.com';
 
@@ -2711,7 +2732,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 50;
+const APP_BUILD = 51;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
