@@ -2732,7 +2732,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 51;
+const APP_BUILD = 52;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -5230,6 +5230,16 @@ function guardarFirmaClientePendiente() {
 function renderTabComprobante() {
   const o = ordenActual;
   const visitas = (o.visitas || []).filter(v => v.fecha || v.tiempo || v.causa);
+  // Horas a facturar que ve el cliente (ya con el personal extra sumado, sin explicarlo).
+  // Total solo si hay más de una visita o si difiere de la fila única; si Ornela editó las horas, manda ese valor.
+  const totalHsCliente = (() => {
+    const suma = visitas.reduce((s, v) => s + horasVisita(v).total, 0);
+    const hm = o.facturacion && o.facturacion.horasManual;
+    const total = (hm !== null && hm !== undefined && hm !== '' && !isNaN(parseFloat(hm))) ? parseFloat(hm) : suma;
+    if (!(total > 0)) return null;
+    if (visitas.length > 1) return total;
+    return Math.abs(total - suma) > 0.001 ? total : null;
+  })();
   const reps = (o.repuestos || []).filter(r => r.desc);
   const condBadges = (o.condicion || []).map(c =>
     `<span class="badge ${c==='Garantía'?'badge-teal':c==='Cortesía'?'badge-amber':'badge-teal'}">${c}</span>`
@@ -5367,7 +5377,7 @@ function renderTabComprobante() {
             <div class="comp-section-title">Visitas en planta</div>
             <table class="comp-visits-table">
               <thead><tr><th style="width:25%;">Fecha</th><th style="width:20%;">Tiempo</th><th>Descripción</th></tr></thead>
-              <tbody>${visitas.map(v=>`<tr><td>${esc(v.fecha)||'—'}</td><td>${esc(v.tiempo)||'—'}</td><td>${esc(v.causa)||'—'}</td></tr>`).join('')}</tbody>
+              <tbody>${visitas.map(v=>{ const hv = horasVisita(v).total; return `<tr><td>${esc(v.fecha)||'—'}</td><td>${hv > 0 ? fmtHs(hv) : (esc(v.tiempo)||'—')}</td><td>${esc(v.causa)||'—'}</td></tr>`; }).join('')}${totalHsCliente !== null ? `<tr><td style="font-weight:700;">Total</td><td style="font-weight:700;">${fmtHs(totalHsCliente)}</td><td></td></tr>` : ''}</tbody>
             </table>
           </div>` : ''}
 
