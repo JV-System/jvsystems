@@ -2732,7 +2732,7 @@ function _syncPush() {
 // la version mas nueva o le quedo algo viejo cacheado. Subir APP_BUILD en
 // cada deploy real (no hace falta en los reverts de diagnostico temporal).
 const APP_VERSION = 'v1.0';
-const APP_BUILD = 53;
+const APP_BUILD = 54;
 (function() {
   var vt = document.getElementById('app-version-tag');
   if (vt) vt.textContent = APP_VERSION + ' · build ' + APP_BUILD;
@@ -8408,7 +8408,8 @@ function avisoHorasComprobante() {
   return '<div id="aviso-horas-comp" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;line-height:1.5;color:#1e3a8a;">'
     + '<div style="font-weight:700;margin-bottom:4px;">🆕 Novedad en el comprobante</div>'
     + 'Ahora el comprobante muestra las <b>horas a facturar</b>. Si en una visita fueron 2 o más personas, el tiempo ya incluye el personal extra (ej: 2 hs con 2 personas = 3 hs) y abajo aparece el <b>Total</b>. '
-    + 'Lo que cargaste en la pestaña Tiempos no cambia.'
+    + 'Lo que cargaste en la pestaña Tiempos no cambia.<br>'
+    + '<b>Importante:</b> el tiempo de cada visita escribilo como un solo total, sin el signo +. Ej: <b>9hs</b> (no 3hs+6hs) o <b>3h 30min</b>. Si no, el sistema no lo suma bien.'
     + '<div style="margin-top:8px;"><button type="button" onclick="cerrarAvisoHorasComp()" style="background:#1d4ed8;color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Entendido</button></div>'
     + '</div>';
 }
