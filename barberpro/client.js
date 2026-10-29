@@ -37,7 +37,7 @@ actor = function(){ return {role: "client", name: (client.name + " " + client.la
       try{ sessionStorage.setItem(INTRO_KEY,"1"); }catch(e){}
     };
     overlay.onclick = closeIntro;
-    setTimeout(closeIntro, 1800);
+    setTimeout(closeIntro, 3900);
   }
 })();
 
