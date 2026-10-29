@@ -928,9 +928,14 @@ function bindClientEvents(){
 
 // ¿ya hay una sesión abierta en este dispositivo? Entra directo a elegir fecha; si no, pantalla de inicio
 render();
+// Si la revisión de la sesión tarda demasiado (mala señal, navegador que bloquea el almacenamiento, etc.), no se deja al cliente mirando "Un momento...":
+// a los 4 segundos aparece la pantalla de inicio. Si la sesión llega después y todavía está en esa pantalla, se entra igual.
+var restoreTimer = setTimeout(function(){ if(client.step === 6){ client.step = 0; renderClient(); } }, 4000);
 clientAuth.restore().then(function(p){
+  clearTimeout(restoreTimer);
+  if(client.step !== 6 && client.step !== 0) return;          // ya está escribiendo otra cosa: no lo movemos
   if(p && p.incomplete){ needProfile(p); return; }
   if(p){ applyProfile(p); client.step = 2; } else { client.step = 0; }
   renderClient();
-}).catch(function(e){ console.error(e); client.step = 0; renderClient(); });
+}).catch(function(e){ clearTimeout(restoreTimer); console.error(e); if(client.step === 6){ client.step = 0; renderClient(); } });
 })();
