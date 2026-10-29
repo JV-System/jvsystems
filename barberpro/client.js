@@ -530,6 +530,57 @@ function waNotifyHtml(){
   return '<label class="checkline wa-check"><input type="checkbox" id="chkWaNotify"'+(client.waNotify === false ? '' : ' checked')+'><span>Avisarle'+(t.name ? ' a '+esc(t.name) : ' al local')+' por WhatsApp al confirmar</span></label>';
 }
 
+// ---------- gracias + "tené en cuenta" (aparece al confirmar el turno, con la misma onda que la bienvenida) ----------
+function thanksNotes(b){
+  var n = [];
+  if(b.walkIn){
+    n.push("Orden de llegada: tenés que estar en el local en los próximos minutos.");
+    n.push("Pagás el total ("+money(bookingTotal(b))+") desde la app o en efectivo en el local.");
+    return n;
+  }
+  n.push("Llegá unos 5 minutos antes de tu horario.");
+  if(b.deposit > 0) n.push("Pagá la seña de <b>"+money(b.deposit)+"</b> para asegurar tu horario: en la próxima pantalla te mostramos cómo.");
+  else n.push("Pagás <b>"+money(bookingTotal(b))+"</b> al terminar el corte, desde la app o en efectivo.");
+  n.push("Podés cambiar el día <b>una vez</b>, hasta 24 horas antes, desde “Tus turnos”.");
+  n.push(b.deposit > 0
+    ? "Si cancelás antes del día del turno te devolvemos la seña; si cancelás el mismo día, queda en el local."
+    : "Si cancelás el mismo día del turno, se cobra el 50%.");
+  return n;
+}
+
+function showThanks(b){
+  var old = document.getElementById("thanksOverlay");
+  if(old) old.remove();
+  var who = esc(client.nickname || client.name || "");
+  var con = b.barberName && activeBarbers().length > 1 ? ' · con '+esc(b.barberName) : '';
+  var ov = document.createElement("div");
+  ov.id = "thanksOverlay"; ov.className = "thanks-overlay";
+  ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Turno reservado");
+  ov.innerHTML =
+    '<div class="intro-band top"></div><div class="intro-band bottom"></div>' +
+    '<i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i><i class="spark s5"></i>' +
+    '<div class="tk-stage">' +
+      '<div class="intro-glow"></div>' +
+      '<div class="tk-check"><i></i><svg viewBox="0 0 52 52" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 27l8 8 16-17"/></svg></div>' +
+      '<h2 class="tk-title"><span class="tk-shine">¡Gracias'+(who ? ', '+who : '')+'!</span></h2>' +
+      '<div class="tk-sub">Tu turno quedó reservado</div>' +
+      '<div class="tk-when">'+esc(formatDateLong(b.date))+' · '+esc(b.time)+' hs'+con+'</div>' +
+      '<div class="tk-card"><div class="tk-card-title">Tené en cuenta</div><ul>' +
+        thanksNotes(b).map(function(t, i){ return '<li style="animation-delay:'+(1.5 + i * 0.22).toFixed(2)+'s">'+t+'</li>'; }).join("") +
+      '</ul></div>' +
+      '<button type="button" class="btn btn-primary tk-btn" id="btnThanksOk">Entendido, ver mi turno</button>' +
+    '</div>';
+  document.body.appendChild(ov);
+  document.body.classList.add("no-scroll");
+  var close = function(){
+    ov.classList.add("hide");
+    document.body.classList.remove("no-scroll");
+    setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 700);
+    window.scrollTo(0, 0);
+  };
+  document.getElementById("btnThanksOk").onclick = close;
+}
+
 function stepExito(){
   var b = client.lastBooking;
   if(!b) return '<div class="card">Algo salió mal.</div>';
@@ -827,6 +878,7 @@ function bindClientEvents(){
       client.lastBooking = b;
       client.step = 4;
       renderClient();
+      showThanks(b);
     }).catch(function(e){
       console.error(e);
       if(waWin){ try{ waWin.close(); }catch(err){} }
