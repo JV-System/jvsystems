@@ -465,6 +465,20 @@
     return batch.commit().then(function(){ showToast("Listo, avisamos al local. Va a confirmar tu pago."); });
   };
 
+  // comprobantes de pago: la imagen va a la colección receipts y la reserva queda marcada, todo en un mismo lote
+  saveReceipt = function(t, kind, dataUrl){
+    var u = auth && auth.currentUser;
+    if(!u) return Promise.reject(authErr("auth/user-not-found"));
+    var batch = db.batch(), patch = {};
+    patch[receiptFlag(kind)] = true;
+    batch.set(db.doc("receipts/" + t.id + "_" + kind), {bid: t.id, kind: kind, cid: u.uid, image: dataUrl, createdAt: Date.now()});
+    batch.update(db.doc("bookings/" + t.id), patch);
+    return batch.commit();
+  };
+  loadReceipt = function(bid, kind){
+    return db.doc("receipts/" + bid + "_" + kind).get().then(function(s){ return s.exists ? s.data().image : null; }).catch(function(e){ console.error("comprobante", e); return null; });
+  };
+
   // referencia a la copia "Mis turnos" de una reserva (las reservas viejas no traen cid: se calcula)
   function turnoRefFor(b){
     return Promise.resolve(b.cid ? db.doc("clients/" + b.cid + "/turnos/" + b.id) : null);

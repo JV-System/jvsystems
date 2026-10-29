@@ -127,6 +127,28 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
+    // ---------- comprobantes de pago ----------
+    // Captura o foto de la transferencia (JPEG chico guardado como texto, igual que la foto de perfil). La crea el cliente dueño de la reserva,
+    // junto con la marca en la reserva; la ven el dueño, el barbero de ese turno y el propio cliente. Solo el dueño puede borrarla.
+    function validReceipt(id, d) {
+      return d.keys().hasOnly(['bid', 'kind', 'cid', 'image', 'createdAt'])
+          && d.keys().hasAll(['bid', 'kind', 'cid', 'image', 'createdAt'])
+          && isStr(d.bid, 40) && d.kind in ['deposit', 'balance'] && id == d.bid + '_' + d.kind
+          && d.cid == request.auth.uid
+          && isStr(d.image, 250000) && d.image.matches('^data:image/jpeg;base64,.*')
+          && d.createdAt is number
+          && get(bookingPath(d.bid)).data.cid == request.auth.uid
+          && get(bookingPath(d.bid)).data.status in ['confirmed', 'completed'];
+    }
+
+    match /receipts/{id} {
+      allow read: if isOwner()
+                  || (signedIn() && resource.data.cid == request.auth.uid)
+                  || (isStaff() && get(bookingPath(resource.data.bid)).data.get('barberId', '') == staffBarber());
+      allow create, update: if signedIn() && validReceipt(id, request.resource.data);
+      allow delete: if isOwner();
+    }
+
     // ---------- avisos en el celular ----------
     // Suscripción Web Push de cada celular del equipo (dueño o empleado). Solo la lee el servidor (con credenciales de administrador, que
     // no pasan por estas reglas): nadie puede ver los dispositivos de otros. Cada usuario guarda y borra los suyos.
@@ -203,7 +225,7 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
                         && request.resource.data.status == 'cancelled'
                         && request.resource.data.lateCancel == (resource.data.date == hoyAR()))
-                    || informsDeposit() || informsBalance() || staffEdits() || reschedules() || staffTransfers();
+                    || informsDeposit() || informsBalance() || attachesReceipt() || staffEdits() || reschedules() || staffTransfers();
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -242,6 +264,18 @@ service cloud.firestore {
                                                                                   'transferredAt', 'transferCount'])
           && validBarberId(request.resource.data.barberId) && request.resource.data.barberId != resource.data.get('barberId', '')
           && existsAfter(/databases/$(database)/documents/slots/$(bookingSlotId(request.resource.data)));
+    }
+
+    // el cliente adjunta el comprobante de su seña o de su saldo: marca la reserva y guarda la imagen en el mismo lote
+    function attachesReceipt() {
+      return ownsBooking() && resource.data.status in ['confirmed', 'completed']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['receiptDeposit', 'receiptBalance'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['receiptDeposit'])
+              || (request.resource.data.receiptDeposit == true
+                  && existsAfter(/databases/$(database)/documents/receipts/$(resource.data.id + '_deposit'))))
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['receiptBalance'])
+              || (request.resource.data.receiptBalance == true
+                  && existsAfter(/databases/$(database)/documents/receipts/$(resource.data.id + '_balance'))));
     }
 
     function informsDeposit() {

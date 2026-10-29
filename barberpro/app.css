@@ -1337,3 +1337,16 @@ body.no-scroll{overflow:hidden;}
   .thanks-overlay .intro-glow{opacity:.7; transform:translate(-50%,-50%);}
   .thanks-overlay .spark,.tk-check i{display:none;}
 }
+
+/* ---- comprobantes de pago ---- */
+.rc-box{margin-top:12px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:12px 14px;}
+.rc-box.ok{border-color:rgba(79,174,131,.5);}
+.rc-title{font-size:15px; font-weight:800; color:var(--text);}
+.rc-box.ok .rc-title{color:var(--success);}
+.rc-note{font-size:13.5px; color:var(--text-muted); margin:3px 0 10px; line-height:1.4;}
+.rc-btns{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.rc-btns .btn{width:auto; flex:1 1 auto;}
+.rc-chip{cursor:pointer; text-decoration:underline; color:var(--accent-1); background:var(--surface-2);}
+.receipt-box{max-width:520px; width:calc(100vw - 32px);}
+.rc-img{max-height:70vh; overflow:auto; border-radius:10px; background:#fff; margin:0 0 12px; text-align:center;}
+.rc-img img{max-width:100%; height:auto; display:block; margin:0 auto;}

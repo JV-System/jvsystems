@@ -487,6 +487,81 @@ function cancelPolicyNote(dep){
     '<div>'+txt+'</div></div>';
 }
 
+// ---------- comprobante de pago del cliente ----------
+// Después de avisar que pagó ("Ya transferí" / "Ya pagué con Mercado Pago") el cliente puede adjuntar la captura o foto del comprobante:
+// queda guardada en su turno y el local la ve antes de confirmar el pago. Además la puede compartir por WhatsApp (en el celular se adjunta
+// sola; una página web no puede mandar el WhatsApp por su cuenta).
+client.receipts = {};          // "idTurno_kind" -> true (hay comprobante) / false (no hay); undefined = todavía no se consultó
+client.receiptFile = null;     // último archivo elegido (para compartirlo por WhatsApp)
+
+function receiptState(t, kind){
+  var key = t.id + "_" + kind;
+  if(hasReceipt(t, kind)) return true;
+  if(client.receipts[key] !== undefined) return client.receipts[key];
+  if(!CLOUD){ client.receipts[key] = !!(state.receipts || {})[key]; return client.receipts[key]; }
+  client.receipts[key] = null;                       // consultando
+  loadReceipt(t.id, kind).then(function(img){ client.receipts[key] = !!img; if(client.step === 2 || client.step === 4) renderClient(); });
+  return null;
+}
+
+function payWaLink(t, kind){
+  var tgt = waTargetFor(t), amount = kind === "deposit" ? (t.deposit || 0) : balanceDue(t);
+  var msg = "Hola" + (tgt.name ? " " + tgt.name : "") + "! Ya " + (t.payMethod === "mp" && kind === "deposit" ? "pagué" : "transferí") + " " + (kind === "deposit" ? "la seña" : "el saldo") +
+    " de " + money(amount) + " de mi turno del " + formatDateLong(t.date) + " a las " + t.time + " hs. Te paso el comprobante. ¡Gracias!";
+  return "https://wa.me/" + tgt.num + "?text=" + encodeURIComponent(msg);
+}
+
+function receiptBlock(t, kind){
+  var st = receiptState(t, kind), id = esc(t.id) + "|" + kind, tgt = waTargetFor(t);
+  if(st === null) return '<div class="pay-note">Revisando comprobante...</div>';
+  var wa = tgt.num ? '<button class="btn btn-wa btn-sm" type="button" data-receipt-wa="'+id+'">'+(client.receiptFile ? 'Enviarle el comprobante a '+esc(tgt.name || 'el local')+' por WhatsApp' : 'Avisarle a '+esc(tgt.name || 'el local')+' por WhatsApp')+'</button>' : '';
+  if(st) return '<div class="rc-box ok"><div class="rc-title">✓ Comprobante guardado</div>' +
+    '<div class="rc-note">Quedó registrado en tu turno y el local lo puede ver.</div>' +
+    '<div class="rc-btns"><button class="link-btn" type="button" data-receipt-pick="'+id+'">Reemplazar</button>' + wa + '</div></div>';
+  return '<div class="rc-box"><div class="rc-title">Adjuntá el comprobante</div>' +
+    '<div class="rc-note">Sacale una captura o foto a la transferencia. Queda guardado en tu turno y el local lo ve.</div>' +
+    '<div class="rc-btns"><button class="btn btn-primary btn-sm" type="button" data-receipt-pick="'+id+'">Adjuntar comprobante</button>' + wa + '</div></div>';
+}
+
+function pickReceipt(idKind){
+  var parts = idKind.split("|"), t = myTurnos(client).filter(function(x){ return x.id === parts[0]; })[0] || (client.lastBooking && client.lastBooking.id === parts[0] ? client.lastBooking : null);
+  if(!t) return;
+  var inp = document.getElementById("inpReceipt");
+  if(!inp){
+    inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.id = "inpReceipt"; inp.hidden = true;
+    document.body.appendChild(inp);
+  }
+  inp.value = "";
+  inp.onchange = function(){
+    var f = inp.files && inp.files[0];
+    if(!f) return;
+    if(f.type && f.type.indexOf("image/") !== 0){ showToast("Elegí una foto o captura (JPG o PNG)."); return; }
+    showToast("Guardando comprobante...");
+    readReceipt(f).then(function(dataUrl){ return saveReceipt(t, parts[1], dataUrl); }).then(function(){
+      client.receipts[t.id + "_" + parts[1]] = true; client.receiptFile = f;
+      showToast("Comprobante guardado.");
+      renderClient();
+    }).catch(function(e){
+      console.error(e);
+      showToast(e && e.message === "grande" ? "La imagen es muy pesada. Probá con una captura de pantalla." : "No pudimos guardar el comprobante. Probá de nuevo.");
+    });
+  };
+  inp.click();
+}
+
+function shareReceipt(idKind){
+  var parts = idKind.split("|"), t = myTurnos(client).filter(function(x){ return x.id === parts[0]; })[0] || client.lastBooking;
+  if(!t) return;
+  var link = payWaLink(t, parts[1]), f = client.receiptFile;
+  try{
+    if(f && navigator.canShare && navigator.canShare({files: [f]})){
+      navigator.share({files: [f], text: decodeURIComponent(link.split("text=")[1] || "")}).catch(function(){});   // se elige WhatsApp y el chat del barbero
+      return;
+    }
+  }catch(e){}
+  window.open(link, "_blank");
+}
+
 // cuadro para pagar una parte (seña o saldo): link de Mercado Pago, alias para copiar (transferencia, MODO, billeteras) y avisar que pagó
 function payBox(t, kind, titleOverride){
   var c = state.config, deposit = kind === "deposit";
@@ -494,7 +569,7 @@ function payBox(t, kind, titleOverride){
   var st = deposit ? depState(t) : balState(t);
   var title = titleOverride ? titleOverride.replace("{monto}", money(amount)) : deposit ? 'Pagá la seña de '+money(amount) : 'Pagá el saldo de '+money(amount);
   if(st === "paid") return '<div class="pay-box ok"><div class="pay-box-title">'+(deposit ? 'Seña' : 'Saldo')+' pagado ✓</div></div>';
-  if(st === "informed") return '<div class="pay-box"><div class="pay-box-title">Avisaste que pagaste '+money(amount)+'</div><div class="pay-note">El local lo confirma apenas lo vea. No hace falta que hagas nada más.</div></div>';
+  if(st === "informed") return '<div class="pay-box"><div class="pay-box-title">Avisaste que pagaste '+money(amount)+'</div><div class="pay-note">El local lo confirma apenas lo vea.</div>' + receiptBlock(t, kind) + '</div>';
   var opts = "";
   var mpUrl = mpLinkFor(amount);
   if(mpUrl){
@@ -899,6 +974,8 @@ function bindClientEvents(){
       renderClient();
     };
   });
+  document.querySelectorAll("[data-receipt-pick]").forEach(function(el){ el.onclick = function(){ pickReceipt(el.getAttribute("data-receipt-pick")); }; });
+  document.querySelectorAll("[data-receipt-wa]").forEach(function(el){ el.onclick = function(){ shareReceipt(el.getAttribute("data-receipt-wa")); }; });
   document.querySelectorAll("[data-copy-alias]").forEach(function(el){
     el.onclick = function(){ copyText(state.config.payAlias); };
   });

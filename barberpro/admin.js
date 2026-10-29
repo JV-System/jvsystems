@@ -369,7 +369,39 @@
   }
 
   // estado de la seña y del saldo de un turno
+  // comprobantes de pago que adjuntó el cliente
+  function receiptChips(b){
+    var h = "";
+    if(hasReceipt(b, "deposit")) h += '<button type="button" class="paychip rc-chip" data-receipt-view="'+b.id+'|deposit">Ver comprobante de la seña</button>';
+    if(hasReceipt(b, "balance")) h += '<button type="button" class="paychip rc-chip" data-receipt-view="'+b.id+'|balance">Ver comprobante'+(b.walkIn || !(b.deposit > 0) ? '' : ' del saldo')+'</button>';
+    return h;
+  }
+  function showReceipt(idKind){
+    var p = idKind.split("|"), b = findBooking(p[0]);
+    showToast("Abriendo comprobante...");
+    loadReceipt(p[0], p[1]).then(function(img){
+      if(!img){ showToast("No se encontró el comprobante."); return; }
+      var ov = document.getElementById("receiptOverlay");
+      if(!ov){
+        ov = document.createElement("div"); ov.id = "receiptOverlay"; ov.className = "modal-overlay";
+        ov.innerHTML = '<div class="modal-box receipt-box"><h3 id="receiptTitle"></h3><div class="rc-img"><img id="receiptImg" alt="Comprobante de pago"></div>' +
+          '<div class="btn-row"><button class="btn btn-ghost" id="receiptClose" type="button">Cerrar</button></div></div>';
+        document.body.appendChild(ov);
+        ov.onclick = function(e){ if(e.target === ov || e.target.id === "receiptClose") ov.classList.remove("show"); };
+      }
+      document.getElementById("receiptTitle").textContent = "Comprobante" + (b ? " · " + (b.name + " " + (b.lastname || "")).trim() : "") + " · " + (p[1] === "deposit" ? "seña" : "saldo");
+      document.getElementById("receiptImg").src = img;
+      ov.classList.add("show");
+    });
+  }
+
   function payLine(b){
+    var base = payLineBase(b), chips = receiptChips(b);
+    if(!chips) return base;
+    if(!base) return '<div class="payline">' + chips + '</div>';
+    return base.replace(/<\/div>$/, chips + '</div>');
+  }
+  function payLineBase(b){
     if(b.status === "cancelled"){
       if(!depositKept(b) && !(b.deposit > 0 && b.depositRefunded)) return "";
       return '<div class="payline">' + (b.depositRefunded ? '<span class="paystate ok">Seña devuelta</span>'
@@ -431,6 +463,7 @@
         askConfirm("Marcar como suspendido", "El cliente no vino ni avisó. " + (b && depositKept(b) ? "La seña ("+money(b.deposit)+") queda en el local." : "Como no pagó la seña, queda un cargo pendiente del 50% a su nombre.") + " ¿Lo marcamos?", function(){ cancelBooking(id, {noShow: true}); });
       };
     });
+    root.querySelectorAll("[data-receipt-view]").forEach(function(el){ el.onclick = function(){ showReceipt(el.getAttribute("data-receipt-view")); }; });
     root.querySelectorAll("[data-dep]").forEach(function(el){ el.onclick = function(){ ownerDepositPaid(el.getAttribute("data-dep")); }; });
     root.querySelectorAll("[data-bal]").forEach(function(el){
       el.onclick = function(){ var id = el.getAttribute("data-bal"), b = findBooking(id); ownerBalancePaid(id, (b && b.balanceMethod) || "transfer"); };
@@ -1064,7 +1097,7 @@
           '<span class="badge '+b.status+'">'+label+'</span>' +
           '<div class="hist-pay">'+money(total)+' · '+payMethodLabel(b.payMethod || "local") +
             (b.status === "cancelled" ? '' : ' · <span class="paystate '+(b.paid ? 'ok' : 'pend')+'">'+(b.paid ? 'Pagado' : 'Pago pendiente')+'</span>') +
-            (b.debtCharged ? ' · <span class="debt-tag">incluye '+money(b.debtCharged)+' de seña</span>' : '') + '</div>' +
+            (b.debtCharged ? ' · <span class="debt-tag">incluye '+money(b.debtCharged)+' de seña</span>' : '') + receiptChips(b) + '</div>' +
           (b.status !== "cancelled" && !b.paid ? '<button class="btn btn-primary btn-sm" data-cash="'+b.id+'">Cobrado en efectivo</button>' : '') +
           '</div>';
       }).join("") + '</div>' : '<div class="empty-note">Sin turnos.</div>') +

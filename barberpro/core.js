@@ -672,6 +672,51 @@ function informPayment(t, kind, method){
   return Promise.resolve();
 }
 
+// ---------- comprobantes de pago ----------
+// El cliente adjunta una captura o foto de la transferencia: se achica (JPEG de hasta ~1100 px), se guarda en su turno y la ve el local.
+// Versión local: queda en el navegador. cloud.js reemplaza saveReceipt y loadReceipt por Firestore (colección receipts).
+function readReceipt(file){
+  return new Promise(function(resolve, reject){
+    var fr = new FileReader();
+    fr.onerror = function(){ reject(new Error("lectura")); };
+    fr.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error("imagen")); };
+      img.onload = function(){
+        var max = 1100, quality = 0.74, out = "";
+        for(var i = 0; i < 6; i++){
+          var k = Math.min(1, max / Math.max(img.width, img.height));
+          var cv = document.createElement("canvas");
+          cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k));
+          var ctx = cv.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+          ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          out = cv.toDataURL("image/jpeg", quality);
+          if(out.length <= 240000) return resolve(out);
+          max = Math.round(max * 0.8); quality = Math.max(0.5, quality - 0.06);
+        }
+        reject(new Error("grande"));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+function receiptFlag(kind){ return kind === "deposit" ? "receiptDeposit" : "receiptBalance"; }
+function hasReceipt(b, kind){ return !!(b && b[receiptFlag(kind)]); }
+function saveReceipt(t, kind, dataUrl){
+  var b = state.bookings.filter(function(x){ return x.id === t.id; })[0];
+  if(!b) return Promise.reject(new Error("sin reserva"));
+  state.receipts = state.receipts || {};
+  state.receipts[t.id + "_" + kind] = dataUrl;
+  b[receiptFlag(kind)] = true;
+  saveState();
+  hooks.refresh();
+  return Promise.resolve();
+}
+function loadReceipt(bid, kind){
+  return Promise.resolve((state.receipts || {})[bid + "_" + kind] || null);
+}
+
 function payMethodLabel(id){
   return id==="transfer" ? "Transferencia" : id==="mp" ? "Mercado Pago" : "En el local";
 }

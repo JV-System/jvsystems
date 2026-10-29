@@ -29,7 +29,7 @@ window.BARBERPRO_CONFIG = {
   // (se crean desde el panel del dueño, en Equipo) y ven solo sus turnos.
   team: [
     {id: "martin",  name: "Martín",  role: "owner"},
-    {id: "lucas",   name: "Lucas",   role: "employee"},
+    {id: "lucas",   name: "Lucas",   role: "employee", whatsapp: "5493434728484"},
     {id: "gabi",    name: "Gabi",    role: "employee"}
   ],
 
