@@ -105,9 +105,6 @@ def cartel_oscuro():
     d = ImageDraw.Draw(page)
     cx = W // 2
 
-    # marco fino
-    d.rounded_rectangle([60, 60, W - 60, H - 60], radius=40, outline=(44, 62, 84), width=5)
-
     # nombre del local
     tracked(d, cx, 170, NAME.upper(), font("impact", 250), WHITE, track=22)
     # ciudad entre dos líneas
@@ -127,7 +124,7 @@ def cartel_oscuro():
     d.text((x0 + wa, 640), b, font=f_t, fill=BLUE)
 
     # QR en tarjeta blanca con sombra y esquinas azules
-    qr_size, pad = 1320, 70
+    qr_size, pad = 1340, 70
     card = qr_size + pad * 2
     cx0, cy0 = (W - card) // 2, 1090
     shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -136,16 +133,6 @@ def cartel_oscuro():
     d = ImageDraw.Draw(page)
     d.rounded_rectangle([cx0, cy0, cx0 + card, cy0 + card], radius=70, fill=WHITE)
     page.paste(solo.resize((qr_size, qr_size), Image.NEAREST), (cx0 + pad, cy0 + pad))
-    o, ln, wd = 60, 190, 16
-    for (px, py, sx, sy) in ((cx0 - o, cy0 - o, 1, 1), (cx0 + card + o, cy0 - o, -1, 1), (cx0 - o, cy0 + card + o, 1, -1), (cx0 + card + o, cy0 + card + o, -1, -1)):
-        d.line([(px, py), (px + sx * ln, py)], fill=BLUE, width=wd)
-        d.line([(px, py), (px, py + sy * ln)], fill=BLUE, width=wd)
-
-    # postes de barbero a los costados
-    pole = with_caps(barber_pole(120, card - 330))
-    for px in (cx0 // 2, W - cx0 // 2):
-        page.alpha_composite(pole, (px - pole.size[0] // 2, cy0 + (card - pole.size[1]) // 2))
-    d = ImageDraw.Draw(page)
 
     # instrucciones
     y = cy0 + card + 130
@@ -168,8 +155,8 @@ def cartel_oscuro():
     f_u = font("bold", 84)
     txt = URL.replace("https://", "").rstrip("/")
     uw = d.textlength(txt, font=f_u)
-    d.rounded_rectangle([cx - uw / 2 - 90, H - 330, cx + uw / 2 + 90, H - 190], radius=70, outline=BLUE, width=7)
-    d.text((cx - uw / 2, H - 305), txt, font=f_u, fill=WHITE)
+    d.rounded_rectangle([cx - uw / 2 - 90, H - 300, cx + uw / 2 + 90, H - 160], radius=70, outline=BLUE, width=7)
+    d.text((cx - uw / 2, H - 275), txt, font=f_u, fill=WHITE)
     return page.convert("RGB")
 
 
