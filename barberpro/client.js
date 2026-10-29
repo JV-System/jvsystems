@@ -94,12 +94,16 @@ function waTargetFor(b){
 }
 
 function buildWaLink(b){
-  var msg = "Hola! Soy "+b.name+" "+b.lastname+(b.nickname?" ("+b.nickname+")":"")+". Reservé un turno en "+state.config.businessName+
-    " para el "+formatDateLong(b.date)+" a las "+b.time+"hs. Total: "+money(bookingTotal(b))+" ("+payMethodLabel(b.payMethod).toLowerCase()+").";
+  var who = (b.name+" "+(b.lastname || "")).trim()+(b.nickname?" ("+b.nickname+")":"");
+  var tgt = waTargetFor(b);
+  var msg = "Hola"+(tgt.name ? " "+tgt.name : "")+"! Soy "+who+". Reservé un turno"+(tgt.name ? " con vos" : "")+" en "+state.config.businessName+
+    " para el "+formatDateLong(b.date)+" a las "+b.time+" hs.";
+  if(b.walkIn) msg += " (Orden de llegada)";
+  msg += " Total: "+money(bookingTotal(b))+(b.deposit > 0 ? " (seña de "+money(b.deposit)+" por "+payMethodLabel(b.payMethod).toLowerCase()+")" : "")+".";
   if(b.debtCharged>0) msg += " Incluye "+money(b.debtCharged)+" de una cancelación anterior.";
   if(b.payMethod==="transfer") msg += " Te paso el comprobante de la transferencia.";
   msg += " ¡Gracias!";
-  return "https://wa.me/"+waTargetFor(b).num+"?text="+encodeURIComponent(msg);
+  return "https://wa.me/"+tgt.num+"?text="+encodeURIComponent(msg);
 }
 
 // ================= VISTA =================
@@ -468,6 +472,7 @@ function stepConfirmacion(){
           : 'Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.')+'</div></div>') +
     '</div>' +
     (client.walkIn ? '' : cancelPolicyNote(dep)) +
+    waNotifyHtml() +
     '<div class="btn-row">' +
       '<button class="btn btn-ghost" id="btnBack2">Atrás</button>' +
       '<button class="btn btn-primary" id="btnConfirm">Confirmar turno</button>' +
@@ -517,6 +522,14 @@ function payInstructions(b){
     '<div class="pay-note" style="text-align:center;">El saldo ('+money(bookingTotal(b) - b.deposit)+') lo pagás cuando termina el corte: te aparece acá en la app.</div>';
 }
 
+// "avisarle al barbero por WhatsApp": al confirmar se abre WhatsApp con el mensaje ya escrito y el cliente solo toca Enviar
+// (una página web no puede mandar un WhatsApp por sí sola; eso solo lo hace la API paga de Meta)
+function waNotifyHtml(){
+  var t = waTargetFor({barberId: chosenBarber()});
+  if(!t.num) return '';
+  return '<label class="checkline wa-check"><input type="checkbox" id="chkWaNotify"'+(client.waNotify === false ? '' : ' checked')+'><span>Avisarle'+(t.name ? ' a '+esc(t.name) : ' al local')+' por WhatsApp al confirmar</span></label>';
+}
+
 function stepExito(){
   var b = client.lastBooking;
   if(!b) return '<div class="card">Algo salió mal.</div>';
@@ -526,6 +539,7 @@ function stepExito(){
     '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs'+(b.barberName && activeBarbers().length > 1 ? ' con '+esc(b.barberName) : '')+'</div>' +
     payInstructions(b) +
     '</div>' +
+    (waTargetFor(b).num ? '<a class="btn btn-wa wa-main" href="'+buildWaLink(b)+'" target="_blank" rel="noopener">'+(waTargetFor(b).name ? 'Avisarle a '+esc(waTargetFor(b).name)+' por WhatsApp' : 'Avisar al local por WhatsApp')+'</a>' : '') +
     placeCard() +
     '<div class="card"><h2>Que no se te pase</h2>' +
     '<div class="sub">Guardalo en tu calendario y te avisa un día antes y 2 horas antes.</div>' +
@@ -533,7 +547,6 @@ function stepExito(){
       '<a class="btn btn-primary" href="'+icsDataUri(b)+'" download="turno-'+b.date+'.ics">Guardar en mi calendario</a>' +
       '<a class="btn btn-ghost" href="'+googleCalendarLink(b)+'" target="_blank" rel="noopener">Agregar a Google Calendar</a>' +
     '</div></div>' +
-    (waTargetFor(b).num ? '<a class="btn btn-wa" href="'+buildWaLink(b)+'" target="_blank" rel="noopener" style="margin-bottom:10px;">'+(waTargetFor(b).name ? 'Avisarle a '+esc(waTargetFor(b).name)+' por WhatsApp' : 'Avisar por WhatsApp')+'</a>' : '') +
     '<button class="btn btn-ghost" id="btnNewBooking">Reservar otro turno</button>' +
     '<button class="btn btn-ghost" data-logout="1" style="margin-top:10px;">Salir</button>';
 }
@@ -804,13 +817,19 @@ function bindClientEvents(){
     }
     var b = buildBooking();
     conf.disabled = true; conf.textContent = "Reservando...";
+    var waChk = document.getElementById("chkWaNotify");
+    client.waNotify = waChk ? waChk.checked : false;
+    var waWin = null;
+    if(client.waNotify && waTargetFor(b).num){ try{ waWin = window.open("about:blank", "_blank"); }catch(e){ waWin = null; } }
     persistBooking(b).then(function(){
       notifyStaff(b.id, "reserva");
+      if(waWin){ try{ waWin.location.href = buildWaLink(b); }catch(e){} }
       client.lastBooking = b;
       client.step = 4;
       renderClient();
     }).catch(function(e){
       console.error(e);
+      if(waWin){ try{ waWin.close(); }catch(err){} }
       var taken = e && (e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
       if(taken){
         showToast("Ese horario se acaba de ocupar. Elegí otro.");
