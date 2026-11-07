@@ -309,12 +309,19 @@ service cloud.firestore {
       return ('walkIn' in d) ? validWalkIn(d) : validPayFieldsNormal(d);
     }
 
+    // ¿La app cobra la seña? Va a la par de `cobrarEnApp` en config.js: con `false` (solo reservas, el cobro se hace en el local) se aceptan
+    // reservas sin seña; con `true` la seña tiene que ser, como mínimo, el porcentaje configurado. Se cambia en las dos a la vez.
+    function seniaObligatoria() {
+      return false;
+    }
+
     function validPayFieldsNormal(d) {
       return (!('deposit' in d) || (d.deposit is number && d.deposit >= 0 && d.deposit <= d.price
                                      && d.get('depositState', 'x') == (d.deposit > 0 ? 'pending' : 'paid')
                                      && d.get('balanceState', 'x') == 'pending'
-                                     && d.deposit * 100 + 100 >= d.price * (exists(/databases/$(database)/documents/config/main)
-                                          ? get(/databases/$(database)/documents/config/main).data.get('depositPercent', 50) : 50)))
+                                     && (!seniaObligatoria() && d.deposit == 0
+                                         || d.deposit * 100 + 100 >= d.price * (exists(/databases/$(database)/documents/config/main)
+                                          ? get(/databases/$(database)/documents/config/main).data.get('depositPercent', 50) : 50))))
           && (!('depositState' in d) || 'deposit' in d)
           && (!('balanceState' in d) || 'deposit' in d)
           && !('balanceMethod' in d) && !('depositRefunded' in d);

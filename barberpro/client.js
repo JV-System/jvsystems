@@ -990,14 +990,17 @@ function bindClientEvents(){
     }).catch(function(e){
       console.error(e);
       if(waWin){ try{ waWin.close(); }catch(err){} }
-      var taken = e && (e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
-      if(taken){
-        showToast("Ese horario se acaba de ocupar. Elegí otro.");
-        client.selectedTime = null; client.step = 2; renderClient();
-      } else {
-        showToast("No pudimos guardar tu turno. Revisá tu conexión e intentá de nuevo.");
-        conf.disabled = false; conf.textContent = "Confirmar turno";
-      }
+      var maybeTaken = e && (e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
+      // un "permiso denegado" puede ser un horario ocupado o un problema de la base: se comprueba antes de decir que se ocupó
+      (maybeTaken ? checkSlotTaken(b) : Promise.resolve(false)).then(function(taken){
+        if(taken){
+          showToast("Ese horario se acaba de ocupar. Elegí otro.");
+          client.selectedTime = null; client.step = 2; renderClient();
+        } else {
+          showToast(maybeTaken ? "No pudimos guardar tu turno (la base lo rechazó). Avisale al local y probá de nuevo en unos minutos." : "No pudimos guardar tu turno. Revisá tu conexión e intentá de nuevo.");
+          conf.disabled = false; conf.textContent = "Confirmar turno";
+        }
+      });
     });
   };
   document.querySelectorAll("[data-barber]").forEach(function(el){

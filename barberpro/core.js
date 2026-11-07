@@ -677,6 +677,9 @@ function informPayment(t, kind, method){
   return Promise.resolve();
 }
 
+// ¿ese horario ya está ocupado? (se usa para no confundir un error de la base con "se acaba de ocupar"). cloud.js lo consulta en Firestore.
+function checkSlotTaken(b){ return Promise.resolve(true); }
+
 // ---------- comprobantes de pago ----------
 // El cliente adjunta una captura o foto de la transferencia: se achica (JPEG de hasta ~1100 px), se guarda en su turno y la ve el local.
 // Versión local: queda en el navegador. cloud.js reemplaza saveReceipt y loadReceipt por Firestore (colección receipts).

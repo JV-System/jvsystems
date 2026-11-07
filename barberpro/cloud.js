@@ -466,6 +466,10 @@
     return batch.commit().then(function(){ showToast("Listo, avisamos al local. Va a confirmar tu pago."); });
   };
 
+  checkSlotTaken = function(b){
+    return db.doc("slots/" + slotDocId(b)).get().then(function(s){ return s.exists; }).catch(function(){ return true; });
+  };
+
   // comprobantes de pago: la imagen va a la colección receipts y la reserva queda marcada, todo en un mismo lote
   saveReceipt = function(t, kind, dataUrl){
     var u = auth && auth.currentUser;
