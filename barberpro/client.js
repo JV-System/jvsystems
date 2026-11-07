@@ -521,6 +521,16 @@ function payWaLink(t, kind){
   return "https://wa.me/" + tgt.num + "?text=" + encodeURIComponent(msg);
 }
 
+// mensaje al barbero cuando el cliente avisa que pagó: la reserva completa y el pago
+function buildPaidWaLink(t, kind){
+  var tgt = waTargetFor(t), amount = kind === "deposit" ? (t.deposit || 0) : balanceDue(t);
+  var who = ((client.name || "") + " " + (client.lastname || "")).trim() + (client.nickname ? " (" + client.nickname + ")" : "");
+  var msg = "Hola" + (tgt.name ? " " + tgt.name : "") + "! Soy " + who + ". Reservé un turno" + (tgt.name ? " con vos" : "") + " en " + state.config.businessName +
+    " para el " + formatDateLong(t.date) + " a las " + t.time + " hs. Ya pagué " + (kind === "deposit" ? "la seña" : "el saldo") + " de " + money(amount) +
+    (state.config.payAlias ? " (alias " + state.config.payAlias + ")" : "") + ". Te paso el comprobante. ¡Gracias!";
+  return "https://wa.me/" + tgt.num + "?text=" + encodeURIComponent(msg);
+}
+
 function receiptBlock(t, kind){
   var st = receiptState(t, kind), id = esc(t.id) + "|" + kind, tgt = waTargetFor(t);
   if(st === null) return '<div class="pay-note">Revisando comprobante...</div>';
@@ -528,8 +538,8 @@ function receiptBlock(t, kind){
   if(st) return '<div class="rc-box ok"><div class="rc-title">✓ Comprobante guardado</div>' +
     '<div class="rc-note">Quedó registrado en tu turno y el local lo puede ver.</div>' +
     '<div class="rc-btns"><button class="link-btn" type="button" data-receipt-pick="'+id+'">Reemplazar</button>' + wa + '</div></div>';
-  return '<div class="rc-box"><div class="rc-title">Adjuntá el comprobante</div>' +
-    '<div class="rc-note">Sacale una captura o foto a la transferencia. Queda guardado en tu turno y el local lo ve.</div>' +
+  return '<div class="rc-box"><div class="rc-title">Comprobante <span class="opt">(opcional)</span></div>' +
+    '<div class="rc-note">Si querés, adjuntá la captura del pago: queda guardada en tu turno y el local la ve.</div>' +
     '<div class="rc-btns"><button class="btn btn-primary btn-sm" type="button" data-receipt-pick="'+id+'">Adjuntar comprobante</button>' + wa + '</div></div>';
 }
 
@@ -587,10 +597,15 @@ function payBox(t, kind, titleOverride){
       '<button class="link-btn plain" type="button" data-inform="'+kind+'|mp|'+esc(t.id)+'">Ya pagué con Mercado Pago</button></div>';
   }
   if(c.payAlias){
-    opts += '<div class="pay-opt-block"><div class="pay-note" style="margin:0 0 6px;">O transferí '+money(amount)+' (también sirve MODO o tu billetera):</div>' +
+    var wa = waTargetFor(t);
+    opts += '<div class="pay-opt-block pay-steps2">' +
+      '<div class="pay-step"><b>1</b><span>Pagá <b>'+money(amount)+'</b> con Mercado Pago (o desde tu banco o billetera) al alias:</span></div>' +
       '<div class="pay-alias"><span>'+esc(c.payAlias)+'</span><button class="link-btn" data-copy-alias="1" type="button">Copiar alias</button></div>' +
       (c.payHolder ? '<div class="pay-holder">Titular: '+esc(c.payHolder)+'</div>' : '') +
-      '<button class="link-btn plain" type="button" data-inform="'+kind+'|transfer|'+esc(t.id)+'">Ya transferí</button></div>';
+      '<a class="btn btn-mp" href="https://www.mercadopago.com.ar/" target="_blank" rel="noopener" data-mp-open="1">Copiar alias y abrir Mercado Pago</a>' +
+      '<div class="pay-step"><b>2</b><span>Cuando termines de pagar, volvé y tocá:</span></div>' +
+      '<button class="btn btn-primary" type="button" data-inform="'+kind+'|transfer|'+esc(t.id)+'">Ya pagué</button>' +
+      (wa.num ? '<div class="pay-note" style="margin-top:6px;">Se abre WhatsApp con tu reserva para avisarle a '+esc(wa.name || 'el local')+'.</div>' : '') + '</div>';
   }
   if(!opts) opts = '<div class="pay-note">El local todavía no cargó un medio de pago online: pagás en efectivo en el local.</div>';
   return '<div class="pay-box"><div class="pay-box-title">'+title+'</div>' + opts +
@@ -611,6 +626,7 @@ function payInstructions(b){
 // "avisarle al barbero por WhatsApp": al confirmar se abre WhatsApp con el mensaje ya escrito y el cliente solo toca Enviar
 // (una página web no puede mandar un WhatsApp por sí sola; eso solo lo hace la API paga de Meta)
 function waNotifyHtml(){
+  if(cobraEnApp()) return '';          // cuando se cobra en la app, el WhatsApp se abre después de tocar "Ya pagué"
   var t = waTargetFor({barberId: chosenBarber()});
   if(!t.num) return '';
   return '<label class="checkline wa-check"><input type="checkbox" id="chkWaNotify"'+(client.waNotify === false ? '' : ' checked')+'><span>Avisarle'+(t.name ? ' a '+esc(t.name) : ' al local')+' por WhatsApp al confirmar</span></label>';
@@ -631,7 +647,7 @@ function thanksNotes(b){
     return n;
   }
   n.push("Llegá unos 5 minutos antes de tu horario.");
-  if(b.deposit > 0) n.push("Pagá la seña de <b>"+money(b.deposit)+"</b> para asegurar tu horario: en la próxima pantalla te mostramos cómo.");
+  if(b.deposit > 0) n.push("Pagá la seña de <b>"+money(b.deposit)+"</b> con Mercado Pago para asegurar tu horario. Cuando pagues, volvé y tocá <b>“Ya pagué”</b>: se abre WhatsApp para avisar.");
   else n.push("Pagás <b>"+money(bookingTotal(b))+"</b> al terminar el corte, desde la app o en efectivo.");
   n.push("Podés cambiar el día <b>una vez</b>, hasta 24 horas antes, desde “Tus turnos”.");
   n.push(b.deposit > 0
@@ -660,7 +676,7 @@ function showThanks(b){
       '<div class="tk-card"><div class="tk-card-title">Tené en cuenta</div><ul>' +
         thanksNotes(b).map(function(t, i){ return '<li style="animation-delay:'+(1.5 + i * 0.22).toFixed(2)+'s">'+t+'</li>'; }).join("") +
       '</ul></div>' +
-      '<button type="button" class="btn btn-primary tk-btn" id="btnThanksOk">Entendido, ver mi turno</button>' +
+      '<button type="button" class="btn btn-primary tk-btn" id="btnThanksOk">'+(b.deposit > 0 ? 'Entendido, ir a pagar la seña' : 'Entendido, ver mi turno')+'</button>' +
     '</div>';
   document.body.appendChild(ov);
   document.body.classList.add("no-scroll");
@@ -682,7 +698,7 @@ function stepExito(){
     '<div class="sub">Te esperamos el '+formatDateLong(b.date)+' a las '+b.time+' hs'+(b.barberName && activeBarbers().length > 1 ? ' con '+esc(b.barberName) : '')+'</div>' +
     payInstructions(b) +
     '</div>' +
-    (waTargetFor(b).num ? '<a class="btn btn-wa wa-main" href="'+buildWaLink(b)+'" target="_blank" rel="noopener">'+(waTargetFor(b).name ? 'Avisarle a '+esc(waTargetFor(b).name)+' por WhatsApp' : 'Avisar al local por WhatsApp')+'</a>' : '') +
+    (waTargetFor(b).num && (!cobraEnApp() || (b.walkIn ? balState(b) !== "pending" : (!(b.deposit > 0) || depState(b) !== "pending"))) ? '<a class="btn btn-wa wa-main" href="'+(cobraEnApp() ? buildPaidWaLink(b, b.walkIn ? "balance" : "deposit") : buildWaLink(b))+'" target="_blank" rel="noopener">'+(waTargetFor(b).name ? 'Avisarle a '+esc(waTargetFor(b).name)+' por WhatsApp' : 'Avisar al local por WhatsApp')+'</a>' : '') +
     placeCard() +
     '<div class="card"><h2>Que no se te pase</h2>' +
     '<div class="sub">Guardalo en tu calendario y te avisa un día antes y 2 horas antes.</div>' +
@@ -996,18 +1012,26 @@ function bindClientEvents(){
   document.querySelectorAll("[data-copy-alias]").forEach(function(el){
     el.onclick = function(){ copyText(state.config.payAlias); };
   });
+  document.querySelectorAll("[data-mp-open]").forEach(function(el){
+    el.addEventListener("click", function(){ copyText(state.config.payAlias); });     // el alias queda copiado para pegarlo en Mercado Pago
+  });
   // "Ya pagué": avisa al local (pasa a "informado"); él lo confirma
   document.querySelectorAll("[data-inform]").forEach(function(el){
     el.onclick = function(){
       var p = el.getAttribute("data-inform").split("|"), kind = p[0], method = p[1], id = p[2];
       var t = (client.lastBooking && client.lastBooking.id === id) ? client.lastBooking : myTurnos(client).filter(function(x){ return x.id === id; })[0];
       if(!t) return;
+      // el WhatsApp se abre dentro del toque (si no, el navegador lo bloquea) y se completa cuando el aviso al local quedó guardado
+      var waWin = null;
+      if(cobraEnApp() && waTargetFor(t).num){ try{ waWin = window.open("about:blank", "_blank"); }catch(err){ waWin = null; } }
       el.disabled = true;
       informPayment(t, kind, method).then(function(){
         if(kind === "deposit"){ t.depositState = "informed"; t.payMethod = method; } else { t.balanceState = "informed"; t.balanceMethod = method; }
+        if(waWin){ try{ waWin.location.href = buildPaidWaLink(t, kind); }catch(err){} }
         renderClient();
       }).catch(function(e){
         console.error(e);
+        if(waWin){ try{ waWin.close(); }catch(err){} }
         el.disabled = false;
         showToast("No pudimos avisar al local. Revisá tu conexión e intentá de nuevo.");
       });

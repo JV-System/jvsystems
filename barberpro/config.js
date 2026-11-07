@@ -58,9 +58,9 @@ window.BARBERPRO_CONFIG = {
   pushPublicKey:   "BAJbyFqw0Hzsf8cPwK_-N7jDCDcwXl5LT_OqLuTP76ldeKhkSbYCK339CD7GFrihrLcyUHHBU-W0QmsTTAezSHk",
   pushEndpoint:    "",
 
-  // false = la app es SOLO de reservas: no se pide seña ni se muestran pagos, saldos ni comprobantes (el cobro se hace en el local).
-  // Para activar los cobros en la app (seña, Mercado Pago, comprobantes) cambiá esto a true.
-  cobrarEnApp: false,
+  // true = la app cobra la seña (alias de Mercado Pago, aviso por WhatsApp y comprobante opcional). false = solo reservas: no se pide seña ni se
+  // muestran pagos, saldos ni comprobantes (el cobro se hace en el local).
+  cobrarEnApp: false,       // pasar a true cuando esté cargado el alias real de Parisi (Negocio > datos de cobro) y los WhatsApp del equipo
 
   demoData: false,       // true = la primera vez carga turnos y saldos de ejemplo (para hacer demos). false = arranca vacío.
 

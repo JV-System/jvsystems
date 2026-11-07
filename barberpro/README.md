@@ -72,3 +72,7 @@ Cualquier mejora que se haga a la app aparece sola en la demo.
 
 `cobrarEnApp: false` en `config.js` (es el valor de Parisi por ahora) deja la app solo para reservas: no se pide seña, no aparecen pagos, saldos, Mercado Pago ni comprobantes para el cliente, y en el panel se ocultan las pestañas Pagos y Saldos (y Cobros del empleado), las fichas de cobro de las reservas y los "a cobrar". Las cancelaciones del mismo día no generan saldo pendiente y la orden de llegada queda apagada (se paga en el momento). Para activar los cobros en la app (seña, Mercado Pago, comprobantes) alcanza con poner `cobrarEnApp: true`. Todo el código de cobros sigue ahí, listo para usar.
 
+### Flujo de pago con alias de Mercado Pago (cobrarEnApp: true)
+
+Al confirmar el turno aparece "Gracias" con lo que hay que tener en cuenta y después el cuadro de pago de la seña en dos pasos: 1) pagar con Mercado Pago (o banco / billetera) al **alias** del local (botón "Copiar alias y abrir Mercado Pago"); 2) volver y tocar **"Ya pagué"**. Ese toque avisa al local (el pago queda "informado" hasta que el dueño lo confirma en el panel) y abre WhatsApp con la reserva y el pago ya escritos, dirigido al barbero (o al WhatsApp del local si el barbero no cargó el suyo). Después, si quiere, el cliente adjunta el comprobante. Necesita el alias real en Negocio y el WhatsApp de cada barbero (Equipo o `team` en `config.js`). Mientras `cobrarEnApp` esté en `false` la app es solo de reservas.
+
