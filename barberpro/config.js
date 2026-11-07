@@ -29,7 +29,7 @@ window.BARBERPRO_CONFIG = {
   // (se crean desde el panel del dueño, en Equipo) y ven solo sus turnos.
   team: [
     {id: "martin",  name: "Martín",  role: "owner"},
-    {id: "lucas",   name: "Lucas",   role: "employee", whatsapp: "5493434728484"},
+    {id: "lucas",   name: "Lucas",   role: "employee"},
     {id: "gabi",    name: "Gabi",    role: "employee"}
   ],
 
@@ -57,6 +57,10 @@ window.BARBERPRO_CONFIG = {
   // Se completan al desplegar las funciones; vacío = la app funciona igual pero sin notificaciones.
   pushPublicKey:   "BAJbyFqw0Hzsf8cPwK_-N7jDCDcwXl5LT_OqLuTP76ldeKhkSbYCK339CD7GFrihrLcyUHHBU-W0QmsTTAezSHk",
   pushEndpoint:    "",
+
+  // false = la app es SOLO de reservas: no se pide seña ni se muestran pagos, saldos ni comprobantes (el cobro se hace en el local).
+  // Para activar los cobros en la app (seña, Mercado Pago, comprobantes) cambiá esto a true.
+  cobrarEnApp: false,
 
   demoData: false,       // true = la primera vez carga turnos y saldos de ejemplo (para hacer demos). false = arranca vacío.
 

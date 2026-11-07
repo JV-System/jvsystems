@@ -399,14 +399,15 @@
         batch.update(db.doc("debtFlags/" + uid), {chargedBy: null});
         next = Object.assign({}, flag, {chargedBy: null});
       }
-      if(late && !kept && !flag){
+      if(late && !kept && !flag && cobraEnApp()){
         batch.set(db.doc("debts/" + uid), {name: profile.name, lastname: profile.lastname, phone: profile.phone, since: now, bid: t.id});
         batch.set(db.doc("debtFlags/" + uid), {since: now, bid: t.id});
         next = {since: now, bid: t.id};
       }
       return batch.commit().then(function(){
         state.debtFlags[docKey(uid)] = next;
-        showToast(late && kept ? "Turno cancelado. Como es el mismo día, la seña queda en el local."
+        showToast(!cobraEnApp() ? "Turno cancelado."
+          : late && kept ? "Turno cancelado. Como es el mismo día, la seña queda en el local."
           : late ? "Turno cancelado. Quedó una seña pendiente (cancelación del mismo día)."
           : kept ? "Turno cancelado. El local te devuelve la seña." : "Turno cancelado sin cargo.");
       });
@@ -522,7 +523,7 @@
     if(!b) return;
     var noShow = !!(opts && opts.noShow);
     var late = noShow || (b.date === toISO(new Date()) && b.status === "confirmed"), kept = depositKept(b);
-    var penalized = late && !kept;
+    var penalized = late && !kept && cobraEnApp();
     if(b.isExample){                                   // turno de ejemplo: solo en memoria
       b.status = "cancelled"; b.lateCancel = late; if(noShow) b.noShow = true;
       if(penalized) state.debts[b.clientKey] = {name: b.name, lastname: b.lastname, phone: b.phone, since: Date.now(), isExample: true};
@@ -545,7 +546,8 @@
       }
       return batch.commit();
     }).then(function(){
-      showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
+      showToast(!cobraEnApp() ? (noShow ? "Turno suspendido (no vino)." : "Turno cancelado.")
+        : penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
         : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
         : kept ? "Turno cancelado. Hay que devolver la seña." : "Turno cancelado sin cargo.");
     }).catch(function(e){ fail(e); });

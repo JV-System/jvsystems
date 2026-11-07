@@ -630,7 +630,12 @@ function hasMpLinks(){ return !!(state.config.payMpLink || (Array.isArray(state.
 // ---------- seña y saldo ----------
 // Un turno se paga en dos partes: la SEÑA al reservar y el SALDO al terminar el corte. Cada parte pasa por
 // "pendiente" -> "informado" (el cliente avisó que pagó) -> "pagado" (el local lo confirmó o lo cobró en efectivo).
+// ¿La app cobra (seña, saldo, comprobantes)? Con `cobrarEnApp: false` en config.js es solo de reservas: el cobro se hace en el local y
+// no aparece nada de pagos ni de señas para el cliente ni en el panel.
+function cobraEnApp(){ return (window.BARBERPRO_CONFIG || {}).cobrarEnApp !== false; }
+
 function depositFor(price, cfg){
+  if(!cobraEnApp()) return 0;
   var p = (cfg || state.config).depositPercent;
   if(p === undefined || p === null || p === "") p = 50;
   p = Math.max(0, Math.min(100, Number(p) || 0));
@@ -650,7 +655,7 @@ function collectedOf(b){
   if(balState(b) === "paid") c += Math.max(0, total - dep);
   return c;
 }
-function balanceDue(b){ return Math.max(0, bookingTotal(b) - collectedOf(b)); }
+function balanceDue(b){ return cobraEnApp() ? Math.max(0, bookingTotal(b) - collectedOf(b)) : 0; }
 // ya pasó la hora en que termina el turno
 function turnoEnded(b){
   var now = new Date(), today = toISO(now);
@@ -1029,7 +1034,7 @@ function cancelBooking(id, opts){
   var noShow = !!(opts && opts.noShow);
   var late = noShow || (b.date===todayISO && b.status==="confirmed");
   var kept = depositKept(b);
-  var penalized = late && !kept;                        // si ya pagó la seña, esa es la penalidad: no se le suma una deuda
+  var penalized = late && !kept && cobraEnApp();        // si ya pagó la seña, esa es la penalidad: no se le suma una deuda
   if(penalized){
     state.debts[b.clientKey] = {name:b.name, lastname:b.lastname, phone:b.phone, since:Date.now()};
   }
@@ -1039,6 +1044,7 @@ function cancelBooking(id, opts){
   logMove(b, late ? "suspension" : "cancelacion", noShow ? "No vino: turno suspendido" : late ? "Cancelado el mismo día: turno suspendido" : "Turno cancelado con aviso");
   saveState();
   hooks.refresh();
+  if(!cobraEnApp()){ showToast(noShow ? "Turno suspendido (no vino)." : late ? "Turno cancelado (mismo día)." : "Turno cancelado."); return; }
   if(noShow){ showToast(kept ? "Turno suspendido (no vino). La seña queda en el local." : "Turno suspendido (no vino). Se registró un cargo pendiente."); return; }
   showToast(penalized ? "Turno cancelado. Se registró una seña pendiente (cancelación del mismo día)."
     : late && kept ? "Turno cancelado. La seña queda en el local (cancelación del mismo día)."
@@ -1098,7 +1104,7 @@ function reminderText(b){
   var c = state.config;
   return "Hola " + (b.nickname || b.name) + "! Te recordamos que mañana " + formatDateLong(b.date) + " a las " + b.time +
     " hs tenés turno" + (activeBarbers().length > 1 && b.barberName ? " con " + b.barberName : "") + " en " + c.businessName + (c.address ? " (" + c.address + ")" : "") +
-    ". Si no podés venir, avisanos con tiempo: cancelar el mismo día tiene una seña del 50%. ¡Te esperamos!";
+    (cobraEnApp() ? ". Si no podés venir, avisanos con tiempo: cancelar el mismo día tiene una seña del 50%. ¡Te esperamos!" : ". Si no podés venir, avisanos con tiempo. ¡Te esperamos!");
 }
 function reminderWaLink(b){ return "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(reminderText(b)); }
 function reminderMailLink(b){

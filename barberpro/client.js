@@ -290,7 +290,9 @@ function turnoRow(t){
   var label = past ? "Pasado" : (t.status === "cancelled" && t.lateCancel ? "Suspendido" : (TURNO_STATE[t.status] || t.status));
   var total = t.price + (t.debtCharged || 0);
   var pay = "";
-  if(t.status !== "cancelled"){
+  if(!cobraEnApp()){
+    // solo reservas: no se muestra nada de pagos
+  } else if(t.status !== "cancelled"){
     if(t.paid) pay = '<span class="paystate ok">Pagado</span>';
     else if(t.deposit > 0) pay = 'Seña '+money(t.deposit)+' '+stateChip(depState(t)) + (depState(t) === "paid" || balState(t) !== "pending" || turnoEnded(t) ? ' · Saldo '+money(balanceDue(t))+' '+stateChip(balState(t)) : '');
     else pay = '<span class="paystate pend">Pago pendiente</span>';
@@ -316,16 +318,18 @@ function cancelTurnoFlow(id){
   var t = myTurnos(client).filter(function(x){ return x.id === id; })[0];
   if(!t || !canCancelTurno(t)) return;
   var late = (t.date === toISO(new Date())), kept = depositKept(t);
-  var msg = late
+  var msg = !cobraEnApp()
+    ? "Vas a cancelar el turno del " + formatDateLong(t.date) + " a las " + t.time + " hs."
+    : late
     ? (kept ? "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña que ya pagaste (" + money(t.deposit) + "): queda en el local."
             : "Vas a cancelar el turno de hoy a las " + t.time + " hs. Como es el mismo día, perdés la seña del 50% (" + money(currentPenalty()) + "): queda a tu nombre y se suma a tu próximo turno.")
     : "Vas a cancelar el turno del " + formatDateLong(t.date) + " a las " + t.time + " hs. " +
       (kept ? "Como cancelás antes del día del turno, el local te devuelve la seña (" + money(t.deposit) + ")."
             : "No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.");
-  if(t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
-  if(canReschedule(t)) msg += " Si solo necesitás otro día, podés cambiarlo sin costo (un cambio por turno).";
-  if(t.rescheduled) msg += " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo y pagar la seña de nuevo.";
-  askConfirm(late ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
+  if(cobraEnApp() && t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
+  if(canReschedule(t)) msg += cobraEnApp() ? " Si solo necesitás otro día, podés cambiarlo sin costo (un cambio por turno)." : " Si solo necesitás otro día, podés cambiarlo (un cambio por turno).";
+  if(t.rescheduled) msg += cobraEnApp() ? " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo y pagar la seña de nuevo." : " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo.";
+  askConfirm(late && cobraEnApp() ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
     cancelMyTurno(t, client).then(function(){ notifyStaff(t.id, "cancelacion"); renderClient(); }).catch(function(e){
       console.error(e);
       showToast("No pudimos cancelar el turno. Revisá tu conexión e intentá de nuevo.");
@@ -335,6 +339,7 @@ function cancelTurnoFlow(id){
 
 // tarjetas de pago: la seña de un turno que todavía no la pagó y el saldo de un turno que ya terminó
 function pagosPendientesHtml(all){
+  if(!cobraEnApp()) return "";
   var cards = [];
   all.forEach(function(t){
     if(t.status === "cancelled") return;
@@ -368,7 +373,7 @@ function misTurnosHtml(){
 
 // orden de llegada: si justo hay un horario libre de hoy que empieza enseguida, se puede tomar y pagar el total ahora
 function walkInCardHtml(barber){
-  if(!barber) return "";
+  if(!barber || !cobraEnApp()) return "";      // la orden de llegada se paga en el momento: queda para cuando se cobre en la app
   var time = walkInSlot(barber);
   if(!time) return "";
   var m = barberById(barber), price = state.config.price + (activeDebtFor(myDebtKey()) ? currentPenalty() : 0);
@@ -467,6 +472,7 @@ function stepConfirmacion(){
           '<div class="pay-split-item"><span>1. Seña para reservar</span><b>'+money(dep)+'</b><i>Se paga ahora, después de confirmar</i></div>' +
           '<div class="pay-split-item"><span>2. Saldo al terminar</span><b>'+money(total - dep)+'</b><i>Lo pagás desde la app o en efectivo</i></div>' +
         '</div>'
+      : !cobraEnApp() ? ''
       : '<div class="notice info"><div>'+(client.walkIn
           ? 'Orden de llegada: pagás el total ('+money(total)+') ahora, sin seña, desde la app o en efectivo en el local. Tenés que estar en los próximos minutos.'
           : 'Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.')+'</div></div>') +
@@ -480,6 +486,10 @@ function stepConfirmacion(){
 }
 
 function cancelPolicyNote(dep){
+  if(!cobraEnApp()){
+    return '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>' +
+      '<div>Si no podés venir, cancelá o cambiá el día desde “Tus turnos” con tiempo, así otro cliente puede tomar ese horario.</div></div>';
+  }
   var txt = dep > 0
     ? 'Política de cancelación: la seña ('+money(dep)+') asegura tu horario. Si cancelás antes del día del turno te la devolvemos; si cancelás el mismo día, queda en el local.'
     : 'Política de cancelación: si cancelás el mismo día del turno, se cobra el 50% como seña y queda registrado a tu nombre para el próximo turno.';
@@ -589,6 +599,7 @@ function payBox(t, kind, titleOverride){
 
 // pantalla de "turno reservado": cómo pagar la seña
 function payInstructions(b){
+  if(!cobraEnApp()) return '';
   if(b.walkIn) return payBox(b, "balance", "Pagá el total: {monto}") +
     '<div class="pay-note" style="text-align:center;">Orden de llegada: tenés que estar en el local en los próximos minutos.</div>';
   if(!(b.deposit > 0)) return '<div class="pay-box"><div class="pay-box-title">Pagás '+money(bookingTotal(b))+' al terminar</div>' +
@@ -608,6 +619,12 @@ function waNotifyHtml(){
 // ---------- gracias + "tené en cuenta" (aparece al confirmar el turno, con la misma onda que la bienvenida) ----------
 function thanksNotes(b){
   var n = [];
+  if(!cobraEnApp()){
+    n.push("Llegá unos 5 minutos antes de tu horario.");
+    n.push("Podés cambiar el día <b>una vez</b>, hasta 24 horas antes, desde “Tus turnos”.");
+    n.push("Si no podés venir, cancelá desde “Tus turnos” con tiempo para que otro cliente tome tu horario.");
+    return n;
+  }
   if(b.walkIn){
     n.push("Orden de llegada: tenés que estar en el local en los próximos minutos.");
     n.push("Pagás el total ("+money(bookingTotal(b))+") desde la app o en efectivo en el local.");

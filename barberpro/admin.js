@@ -62,18 +62,19 @@
       return b.status !== "cancelled" && ((b.deposit > 0 && depState(b) === "informed") || balState(b) === "informed" || (turnoEnded(b) && balanceDue(b) > 0));
     }).length : 0;
     var hoyBadge = hoyAttentionCount();
+    var cobra = cobraEnApp();
     var navHtml = isEmployee()
-      ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + navBtn("cobros","Cobros", cobrosCount) + navBtn("movimientos","Movimientos") + navBtn("config","Mi cuenta")
+      ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + (cobra ? navBtn("cobros","Cobros", cobrosCount) : "") + navBtn("movimientos","Movimientos") + navBtn("config","Mi cuenta")
       : navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Agenda", unseen) +
         navBtn("clientes","Clientes") +
-        navBtn("pagos","Pagos") +
+        (cobra ? navBtn("pagos","Pagos") : "") +
         navBtn("movimientos","Movimientos") +
         navBtn("equipo","Equipo") +
         navBtn("horarios","Horarios") +
         navBtn("cierres","Cierres") +
         navBtn("negocio","Negocio", needsSetup() ? "!" : 0) +
         navBtn("precios","Precios") +
-        navBtn("saldos","Saldos", Object.keys(state.debts).length) +
+        (cobra ? navBtn("saldos","Saldos", Object.keys(state.debts).length) : "") +
         navBtn("config","Configuración");
     var html = '<div class="owner-nav-row">' +
       (isEmployee() ? '<div class="whoami">'+barberAvatar(myBarber(), "")+'<div><b>'+esc((barberById(myBarber()) || {}).name || "Empleado")+'</b><i>Empleado</i></div></div>' : '') +
@@ -251,7 +252,7 @@
 
     var html = '<div class="agenda-layout"><aside class="agenda-side">' + demoCta() + '<div class="stat-row">' +
       '<div class="stat-tile"><div class="num">'+todays.length+'</div><div class="lbl">Turnos hoy</div></div>' +
-      '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' +
+      (cobraEnApp() ? '<div class="stat-tile"><div class="num">'+money(toCollect)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
       '</div>';
 
     if(hasExampleData()){
@@ -396,6 +397,7 @@
   }
 
   function payLine(b){
+    if(!cobraEnApp()) return "";
     var base = payLineBase(b), chips = receiptChips(b);
     if(!chips) return base;
     if(!base) return '<div class="payline">' + chips + '</div>';
@@ -426,6 +428,7 @@
 
   // botones de cobro: confirmar la seña, confirmar el saldo que avisó el cliente o cobrarlo en efectivo
   function payActions(b){
+    if(!cobraEnApp()) return "";
     var out = "", ds = depState(b), bs = balState(b);
     if(b.deposit > 0 && ds !== "paid"){
       out += '<button class="btn '+(ds === "informed" ? 'btn-primary' : 'btn-ghost')+' btn-sm" data-dep="'+b.id+'">'+(ds === "informed" ? 'Confirmar seña' : 'Seña recibida')+'</button>';
@@ -1830,7 +1833,7 @@
             '<span class="occ-track"><i class="occ-fill '+level+'" style="width:'+pct+'%"></i></span></div>' : '') +
           '<div class="bcard-stats">' +
             '<div><b>'+hechos+'</b><span>Cortes hechos</span></div><div><b>'+porVenir+'</b><span>Por venir</span></div><div><b>'+manana+'</b><span>Mañana</span></div>' +
-            (owner ? '<div><b>'+money(cobrado)+'</b><span>Cobrado hoy</span></div><div><b>'+money(aCobrar)+'</b><span>A cobrar hoy</span></div>' : '') +
+            (owner && cobraEnApp() ? '<div><b>'+money(cobrado)+'</b><span>Cobrado hoy</span></div><div><b>'+money(aCobrar)+'</b><span>A cobrar hoy</span></div>' : '') +
           '</div>' +
           ((porConfirmar || saldos) ? '<div class="bcard-alerts">' + (porConfirmar ? '<span class="pchip seal">'+porConfirmar+' pago'+(porConfirmar === 1 ? '' : 's')+' por confirmar</span>' : '') +
             (saldos ? '<span class="pchip due">'+saldos+' saldo'+(saldos === 1 ? '' : 's')+' por cobrar</span>' : '') + '</div>' : '') +
@@ -1856,7 +1859,7 @@
       '<div class="stat-tile"><div class="num">'+(d.proximo ? d.proximo.time : '—')+'</div><div class="lbl">Próximo turno</div></div>' +
       '<div class="stat-tile'+(d.atencion.length ? ' is-warn' : '')+'"><div class="num">'+d.atencion.length+'</div><div class="lbl">Requieren atención</div></div>' +
       '<div class="stat-tile"><div class="num">'+d.nuevas.length+'</div><div class="lbl">Reservas nuevas</div></div>' +
-      (owner ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
+      (owner && cobraEnApp() ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
       '</div>';
     var teamView = activeBarbers().length > 1;
     var closedNote = (!teamView || crew.length) ? '' : '<div class="notice warn" style="margin-bottom:14px;"><div>El local está cerrado hoy: ningún barbero atiende.</div></div>';
