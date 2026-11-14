@@ -362,7 +362,7 @@
     return '<div class="booking-row">' +
       '<div class="top"><span class="time">'+b.time+'</span><span class="badge '+badgeClass+'">'+badgeLabel+'</span></div>' +
       '<div class="name">'+esc(b.name)+' '+esc(b.lastname)+(b.nickname?' <span class="nick">“'+esc(b.nickname)+'”</span>':'')+(b.isExample?'<span class="example-tag">Ejemplo</span>':'')+'</div>' +
-      '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+'<span class="price">'+money(total)+'</span>' +
+      '<div class="sub">'+(b.phone?esc(b.phone)+' · ':'')+(b.email?esc(b.email)+' · ':'')+(b.service ? '<span class="svc-tag">'+esc(b.service)+'</span> ' : '')+'<span class="price">'+money(total)+'</span>' +
       (!isEmployee() && activeBarbers().length > 1 && barberNameOf(b) ? ' · <span class="with-barber">con '+esc(barberNameOf(b))+'</span>' : '') +
       (b.rescheduled ? ' · <span class="with-barber">cambió de día (antes: '+shortDate(b.originalDate)+' '+esc(b.originalTime||"")+')</span>' : '') +
       (b.debtCharged?' <span class="debt-tag">(incluye '+money(b.debtCharged)+' de cargo anterior)</span>':'') +
@@ -836,12 +836,57 @@
       '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
       '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
       '</div>' +
+      serviciosCardHtml() +
       (CLOUD ? '' :
         '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel del dueño</div>' +
         '<label>Nuevo PIN</label><input type="text" id="inpNewPin" value="'+state.config.ownerPin+'">' +
         '<button class="btn btn-ghost" id="btnSavePin">Guardar PIN</button></div>');
   }
+  // ---- otros servicios con su precio (barba, diseño, combos...) ----
+  function serviciosCardHtml(){
+    var ex = Array.isArray(state.config.services) ? state.config.services : [];
+    return '<div class="card" id="svcCard"><h2>Otros servicios</h2>' +
+      '<div class="sub">Además del corte ('+money(state.config.price)+'), podés ofrecer otros servicios con su propio precio. El cliente elige cuál quiere al reservar y la seña se calcula sobre ese precio.</div>' +
+      '<div class="svc-list">' + ex.map(function(s, i){
+        return '<div class="svc-row"><input type="text" data-svc-name="'+i+'" value="'+esc(s.name)+'" maxlength="40" aria-label="Nombre del servicio">' +
+          '<div class="svc-money"><span>$</span><input type="number" data-svc-price="'+i+'" value="'+s.price+'" min="1" inputmode="numeric" aria-label="Precio"></div>' +
+          '<button type="button" class="btn btn-danger btn-sm svc-x" data-svc-del="'+i+'" aria-label="Quitar servicio">✕</button></div>';
+      }).join("") + '</div>' +
+      '<label style="margin-top:12px;">Agregar un servicio</label>' +
+      '<div class="svc-row svc-add"><input type="text" id="svcNewName" placeholder="Ej: Barba" maxlength="40"><div class="svc-money"><span>$</span><input type="number" id="svcNewPrice" placeholder="15000" min="1" inputmode="numeric"></div>' +
+      '<button type="button" class="btn btn-primary btn-sm" id="svcAdd">Agregar</button></div>' +
+      (ex.length ? '<button class="btn btn-ghost" id="svcSave" type="button" style="margin-top:12px;">Guardar cambios</button>' : '') +
+      '<div class="field-hint" style="margin-top:10px;">Los turnos ya reservados mantienen el precio con el que se reservaron.</div></div>';
+  }
+  function saveServices(list, msg){
+    state.config.services = cleanServices(list);
+    saveState(); renderOwner(); showToast(msg || "Servicios guardados.");
+  }
+  function bindServicios(){
+    var cur = function(){ return Array.isArray(state.config.services) ? state.config.services.slice() : []; };
+    var add = document.getElementById("svcAdd");
+    if(add) add.onclick = function(){
+      var name = document.getElementById("svcNewName").value.trim(), price = Math.round(Number(document.getElementById("svcNewPrice").value));
+      if(!name){ showToast("Escribí el nombre del servicio."); return; }
+      if(!(price > 0)){ showToast("Escribí el precio."); return; }
+      var list = cur(); list.push({name: name, price: price});
+      saveServices(list, "Servicio agregado.");
+    };
+    document.querySelectorAll("[data-svc-del]").forEach(function(el){
+      el.onclick = function(){ var list = cur(); list.splice(parseInt(el.getAttribute("data-svc-del"), 10), 1); saveServices(list, "Servicio quitado."); };
+    });
+    var sv = document.getElementById("svcSave");
+    if(sv) sv.onclick = function(){
+      var list = cur().map(function(s, i){
+        var n = document.querySelector('[data-svc-name="'+i+'"]'), p = document.querySelector('[data-svc-price="'+i+'"]');
+        return {id: s.id, name: n ? n.value.trim() : s.name, price: p ? Math.round(Number(p.value)) : s.price};
+      });
+      saveServices(list);
+    };
+  }
+
   function bindPreciosEvents(){
+    bindServicios();
     var btn = document.getElementById("btnSavePrecios");
     if(btn) btn.onclick = function(){
       var p = parseInt(document.getElementById("inpPrice").value,10);
@@ -2425,8 +2470,8 @@
       what: "<b>Horarios:</b> los días y horas en que atendés. <b>Cierres:</b> días u horas puntuales sin atención, como feriados o vacaciones.",
       how: ["En Horarios tildá cada día y poné de qué hora a qué hora; si cerrás al mediodía usá el segundo horario.", "En Cierres elegí la fecha y guardá: ese día no se puede reservar.", "Los cambios se ven en la app de tus clientes al instante."]});
     s.push({icon: "negocio", tab: "negocio", title: "Negocio y precios",
-      what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor del corte" + (cobra ? ", la seña" : "") + " y la duración del turno.",
-      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás el alias." : "Podés cambiar el precio cuando quieras.", "Se actualiza en la app de tus clientes al instante."]});
+      what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor del corte, tus otros servicios (barba, diseño, combos) con su precio" + (cobra ? ", la seña" : "") + " y la duración del turno.",
+      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", "En Precios, <b>Otros servicios</b> te deja sumar barba, diseño o combos con su precio: el cliente elige uno al reservar.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás el alias." : "Podés cambiar los precios cuando quieras."]});
     s.push({icon: "equipo", tab: "equipo", title: "Equipo",
       what: multi ? "Acá están " + team.map(function(m){ return esc(m.name); }).join(", ") + ": cada uno con su agenda, sus horarios y su WhatsApp."
                   : "Si tenés empleados, cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
@@ -2439,7 +2484,7 @@
     if(cfgOn("precioOferta")){
       var corte = Number(state.config.price) || 0;
       s.push({icon: "precios", label: "Precio", title: "Cuánto cuesta",
-        what: "Un valor pensado en vos: el abono mensual equivale al precio de <b>2 cortes</b>. Con tu corte a <b>" + money(corte) + "</b>, son <b>" + money(corte * 2) + " por mes</b>.",
+        what: "Un valor pensado en vos: el abono mensual equivale al precio de <b>2 cortes</b>. Con tu corte a <b>" + money(corte) + "</b>, son <b>" + money(corte * 2) + " por mes</b>. Siempre se calcula sobre el corte, tengas los servicios que tengas.",
         how: ["Siempre es el valor de 2 cortes: si actualizás el precio de tu corte, el abono se actualiza con él.", "Con evitar que se pierdan dos turnos al mes (olvidos, cancelaciones de último momento) ya se compensa.", "Para tenerla en tu barbería, escribinos por WhatsApp desde la portada de la demo."]});
     }
     s.push({icon: "listo", label: "Listo", title: "Ya lo conocés",

@@ -381,7 +381,8 @@ service cloud.firestore {
     function validBooking(bid, d) {
       return d.keys().hasOnly(['id', 'name', 'lastname', 'nickname', 'phone', 'email', 'date', 'time', 'price',
                                'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'seenByOwner', 'clientKey', 'cid',
-                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn', 'service'])
+          && (!('service' in d) || isStr(d.get('service', ''), 60))
           && d.keys().hasAll(['id', 'name', 'lastname', 'phone', 'email', 'date', 'time', 'price',
                               'debtCharged', 'payMethod', 'paid', 'status', 'createdAt', 'clientKey', 'cid'])
           && d.id == bid
@@ -393,7 +394,9 @@ service cloud.firestore {
           && validDate(d.date) && validTime(d.time)
           && d.price is number && d.price > 0 && d.price <= 10000000
           && (!exists(/databases/$(database)/documents/config/main)
-              || get(/databases/$(database)/documents/config/main).data.price == d.price)
+              || get(/databases/$(database)/documents/config/main).data.price == d.price
+              // el precio de otro servicio del local (la lista de precios válidos la guarda el panel junto con los servicios)
+              || d.price in get(/databases/$(database)/documents/config/main).data.get('prices', []))
           && d.debtCharged is number && d.debtCharged >= 0 && d.debtCharged <= d.price
           && d.payMethod in ['local', 'transfer', 'mp']
           && d.paid == false
@@ -436,8 +439,9 @@ service cloud.firestore {
     // reserva y solo el dueño la actualiza (estado: confirmado / realizado / cancelado, pagado). La lee ese cliente o el dueño.
     function validTurno(tid, d) {
       return d.keys().hasOnly(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt',
-                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn'])
+                               'deposit', 'depositState', 'balanceState', 'barberId', 'barberName', 'walkIn', 'service'])
           && d.keys().hasAll(['id', 'date', 'time', 'price', 'debtCharged', 'payMethod', 'paid', 'status', 'createdAt'])
+          && (!('service' in d) || isStr(d.get('service', ''), 60))
           && d.id == tid
           && validDate(d.date) && validTime(d.time)
           && d.price is number && d.price > 0 && d.price <= 10000000

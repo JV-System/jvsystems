@@ -11,6 +11,7 @@ var client = {
   walkIn:false,       // turno por orden de llegada (de hoy, pago completo, sin seña)
   reschedule:null,    // turno que se está cambiando de día
   payMethod:"local",
+  service:"corte",     // servicio elegido (id)
   lastBooking:null
 };
 // link directo de un barbero (el que se comparte por WhatsApp): ?b=lucas deja a ese barbero ya elegido
@@ -48,18 +49,33 @@ function buildBooking(){
   var key = myDebtKey();
   var hasDebt = !!activeDebtFor(key);
   var debtAmount = hasDebt ? currentPenalty() : 0;
-  var dep = client.walkIn ? 0 : depositFor(state.config.price);
+  var svc = chosenService();
+  var dep = client.walkIn ? 0 : depositFor(svc.price);
   b = {
     id:uid(), name:client.name, lastname:client.lastname, nickname:client.nickname, phone:client.phone, email:realEmail(client.email),
     date:client.selectedDate, time:client.selectedTime,
-    price:state.config.price, debtCharged:debtAmount,
+    price:svc.price, debtCharged:debtAmount,
     barberId:chosenBarber(), barberName:(barberById(chosenBarber()) || {}).name || "",
     payMethod:defaultPayMethod(), paid:false,
     deposit:dep, depositState:dep > 0 ? "pending" : "paid", balanceState:"pending",
     status:"confirmed", createdAt:Date.now(), seenByOwner:false, clientKey:key, cid:client.uid
   };
   if(client.walkIn) b.walkIn = true;
+  if(allServices().length > 1) b.service = svc.name;
   return b;
+}
+
+// ---------- qué servicio ----------
+// con un solo servicio (el corte) no se pregunta nada; si el local cargó más, el cliente elige antes de ver los horarios
+function chosenService(){ var all = allServices(); return all.filter(function(x){ return x.id === client.service; })[0] || all[0]; }
+function servicePickerHtml(){
+  var all = allServices();
+  if(all.length < 2) return "";
+  var cur = chosenService().id;
+  return '<div class="svc-pick"><div class="myt-title">¿Qué servicio querés?</div><div class="svc-opts">' + all.map(function(s){
+    var on = s.id === cur;
+    return '<button type="button" class="svc-opt'+(on ? ' on' : '')+'" data-service="'+esc(s.id)+'" aria-pressed="'+on+'"><span>'+esc(s.name)+'</span><b>'+money(s.price)+'</b></button>';
+  }).join("") + '</div></div>';
 }
 
 // ---------- con quién se corta ----------
@@ -97,7 +113,7 @@ function buildWaLink(b){
   var who = (b.name+" "+(b.lastname || "")).trim()+(b.nickname?" ("+b.nickname+")":"");
   var tgt = waTargetFor(b);
   var msg = "Hola"+(tgt.name ? " "+tgt.name : "")+"! Soy "+who+". Reservé un turno"+(tgt.name ? " con vos" : "")+" en "+state.config.businessName+
-    " para el "+formatDateLong(b.date)+" a las "+b.time+" hs.";
+    " para el "+formatDateLong(b.date)+" a las "+b.time+" hs."+(b.service ? " Servicio: "+b.service+"." : "");
   if(b.walkIn) msg += " (Orden de llegada)";
   msg += " Total: "+money(bookingTotal(b))+(b.deposit > 0 ? " (seña de "+money(b.deposit)+" por "+payMethodLabel(b.payMethod).toLowerCase()+")" : "")+".";
   if(b.debtCharged>0) msg += " Incluye "+money(b.debtCharged)+" de una cancelación anterior.";
@@ -301,7 +317,7 @@ function turnoRow(t){
   }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
     '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') + (t.transferredFromName && t.transferredAt && t.status === "confirmed" && !turnoEnded(t) && Date.now() - t.transferredAt < 3 * 86400000 ? '<span class="myt-with notice">Tu turno pasó de '+esc(t.transferredFromName)+' a '+esc(t.barberName || "otro barbero")+'</span>' : '') +
-      '<span class="myt-sub">'+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
+      '<span class="myt-sub">'+(t.service ? esc(t.service)+' · ' : '')+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
       (canReschedule(t) ? '<button type="button" class="myt-cancel myt-change" data-reschedule="'+t.id+'">Cambiar día</button>' : '') +
       (canCancelTurno(t) ? '<button type="button" class="myt-cancel" data-cancel-turno="'+t.id+'">Cancelar</button>' : '') + '</span></div>';
@@ -376,7 +392,7 @@ function walkInCardHtml(barber){
   if(!barber || !cobraEnApp()) return "";      // la orden de llegada se paga en el momento: queda para cuando se cobre en la app
   var time = walkInSlot(barber);
   if(!time) return "";
-  var m = barberById(barber), price = state.config.price + (activeDebtFor(myDebtKey()) ? currentPenalty() : 0);
+  var m = barberById(barber), price = chosenService().price + (activeDebtFor(myDebtKey()) ? currentPenalty() : 0);
   return '<div class="walkin-card"><div class="walkin-ico">⚡</div><div class="walkin-txt"><b>Orden de llegada</b>' +
     '<span>Hay lugar hoy a las <strong>'+time+' hs</strong>'+(activeBarbers().length > 1 && m ? ' con '+esc(m.name) : '')+'. Pagás el total ('+money(price)+') ahora, sin seña.</span></div>' +
     '<button type="button" class="btn btn-primary btn-sm" data-walkin="'+time+'">Tomar este turno</button></div>';
@@ -429,10 +445,11 @@ function stepFecha(){
 
   var who = client.nickname || client.name;
   return '<div class="card">' +
-    '<div class="hello"><div class="hello-who">'+avatarHtml("")+'<div><h2>Hola, '+esc(who)+'</h2><div class="sub">Elegí fecha y horario · Corte '+money(state.config.price)+'</div></div></div>' +
+    '<div class="hello"><div class="hello-who">'+avatarHtml("")+'<div><h2>Hola, '+esc(who)+'</h2><div class="sub">'+(allServices().length > 1 ? 'Elegí servicio, fecha y horario' : 'Elegí fecha y horario · Corte '+money(state.config.price))+'</div></div></div>' +
     '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mi perfil</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
     misTurnosHtml() +
+    servicePickerHtml() +
     barberPickerHtml() +
     walkInCardHtml(barber) +
     cal +
@@ -455,7 +472,7 @@ function stateChip(st){
 function stepConfirmacion(){
   var debt = activeDebtFor(myDebtKey());
   var debtAmount = debt ? currentPenalty() : 0;
-  var price = state.config.price, total = price + debtAmount;
+  var svc = chosenService(), price = svc.price, total = price + debtAmount;
   var dep = client.walkIn ? 0 : depositFor(price);
   return '<div class="card">' +
     '<h2>Confirmá tu turno</h2>' +
@@ -464,7 +481,7 @@ function stepConfirmacion(){
     '<div class="summary-row"><span class="k">Horario</span><span class="v">'+client.selectedTime+' hs</span></div>' +
     (activeBarbers().length > 1 ? '<div class="summary-row"><span class="k">Con</span><span class="v">'+esc((barberById(chosenBarber()) || {}).name || "")+'</span></div>' : '') +
     (state.config.address ? '<div class="summary-row"><span class="k">Lugar</span><span class="v place-v">'+esc(state.config.address)+'</span></div>' : '') +
-    '<div class="summary-row"><span class="k">Corte</span><span class="v">'+money(price)+'</span></div>' +
+    '<div class="summary-row"><span class="k">'+esc(svc.name)+'</span><span class="v">'+money(price)+'</span></div>' +
     (debtAmount ? '<div class="summary-row"><span class="k">Saldo anterior</span><span class="v" style="color:var(--warn)">'+money(debtAmount)+'</span></div>' : "") +
     '<div class="summary-row total"><span class="k">Total</span><span class="v">'+money(total)+'</span></div>' +
     (dep > 0
@@ -672,7 +689,7 @@ function showThanks(b){
       '<div class="tk-check"><i></i><svg viewBox="0 0 52 52" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 27l8 8 16-17"/></svg></div>' +
       '<h2 class="tk-title"><span class="tk-shine">¡Gracias'+(who ? ', '+who : '')+'!</span></h2>' +
       '<div class="tk-sub">Tu turno quedó reservado</div>' +
-      '<div class="tk-when">'+esc(formatDateLong(b.date))+' · '+esc(b.time)+' hs'+con+'</div>' +
+      '<div class="tk-when">'+esc(formatDateLong(b.date))+' · '+esc(b.time)+' hs'+con+(b.service ? ' · '+esc(b.service) : '')+'</div>' +
       '<div class="tk-card"><div class="tk-card-title">Tené en cuenta</div><ul>' +
         thanksNotes(b).map(function(t, i){ return '<li style="animation-delay:'+(1.5 + i * 0.22).toFixed(2)+'s">'+t+'</li>'; }).join("") +
       '</ul></div>' +
@@ -1003,6 +1020,9 @@ function bindClientEvents(){
       });
     });
   };
+  document.querySelectorAll("[data-service]").forEach(function(el){
+    el.onclick = function(){ client.service = el.getAttribute("data-service"); renderClient(); };
+  });
   document.querySelectorAll("[data-barber]").forEach(function(el){
     el.onclick = function(){
       client.barber = el.getAttribute("data-barber");

@@ -253,7 +253,8 @@ function fileDefaults(){
     if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
   });
   if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
-  if(typeof f.price === "number" && f.price > 0) out.price = f.price;      // precio del corte (se usa en las demos; en la versión real manda el que guarda el dueño)
+  if(typeof f.price === "number" && f.price > 0) out.price = f.price;
+  if(Array.isArray(f.services)) out.services = cleanServices(f.services);      // precio del corte (se usa en las demos; en la versión real manda el que guarda el dueño)
   if(Array.isArray(f.team) && f.team.length) out.team = cleanTeam(f.team);
   if(Array.isArray(f.mapCenter) && f.mapCenter.length === 2 && isFinite(f.mapCenter[0]) && isFinite(f.mapCenter[1])) out.mapCenter = [Number(f.mapCenter[0]), Number(f.mapCenter[1])];
   var h = fileHours(f.hours);
@@ -304,6 +305,7 @@ function baseState(){
       walkInMinutes:90,         // orden de llegada: se ofrece el horario libre de hoy que empiece en los próximos N minutos (0 = no se ofrece)
       team:[],                  // equipo: [{id, name, role:"owner"|"employee", whatsapp, active}]; vacío = un solo barbero
       priceIsExample:true,
+      services:[],              // otros servicios con su precio: [{id, name, price}]. El corte (config.price) es el servicio base
       slotMinutes:30,
       ownerPin:"1234",
       hours:{
@@ -337,12 +339,15 @@ function seedExampleData(s){
     return slots;
   }
   var crew = (Array.isArray(s.config.team) && s.config.team.length ? s.config.team : [{id:"dueno", name:"Dueño"}]), bi = 0;
+  var svs = allServices(s.config), si = 0;       // los turnos de ejemplo reparten los servicios del local
   function mk(name,lastname,phone,date,time){
-    var who = crew[bi++ % crew.length];
-    return {id:uid(), name:name, lastname:lastname, phone:phone||"", email:(name+lastname).toLowerCase().replace(/[^a-z]/g,"")+"@example.com", date:date, time:time,
-      price:s.config.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
+    var who = crew[bi++ % crew.length], sv = svs[(si++ * 2) % svs.length];
+    var o = {id:uid(), name:name, lastname:lastname, phone:phone||"", email:(name+lastname).toLowerCase().replace(/[^a-z]/g,"")+"@example.com", date:date, time:time,
+      price:sv.price, debtCharged:0, status:"confirmed", createdAt:Date.now(),
       barberId:who.id, barberName:who.name,
       seenByOwner:true, clientKey:clientKeyOf(name,lastname,phone), isExample:true};
+    if(svs.length > 1) o.service = sv.name;
+    return o;
   }
 
   var names = [
@@ -529,6 +534,7 @@ function loadState(){
       if(!parsed.config[k] || parsed.config[k]===generic[k]) parsed.config[k] = fd[k];
     });
     if(!Array.isArray(parsed.config.team) || !parsed.config.team.length) parsed.config.team = fd.team || [];
+    if(!Array.isArray(parsed.config.services) || !parsed.config.services.length) parsed.config.services = fd.services || [];
     parsed.config.hours = Object.assign({}, d.config.hours, (parsed.config||{}).hours||{});
     // si cambiaron los horarios en config.js, se adoptan una vez; los que edite el dueño después se respetan
     if(fd.hours && savedSig !== fd.hoursSig){ parsed.config.hours = fd.hours; parsed.config.hoursSig = fd.hoursSig; }
@@ -635,6 +641,37 @@ function hasMpLinks(){ return !!(state.config.payMpLink || (Array.isArray(state.
 // "pendiente" -> "informado" (el cliente avisó que pagó) -> "pagado" (el local lo confirmó o lo cobró en efectivo).
 // ¿La app cobra (seña, saldo, comprobantes)? Con `cobrarEnApp: false` en config.js es solo de reservas: el cobro se hace en el local y
 // no aparece nada de pagos ni de señas para el cliente ni en el panel.
+// ---------- servicios y precios ----------
+// El corte (config.price) es el servicio base y el valor de referencia del abono de la app; los demás servicios (barba, diseño, combos) se
+// cargan aparte con su propio precio. Si un local no carga ninguno, la app se comporta como siempre (un solo precio).
+function cleanServices(list){
+  var seen = {corte: 1}, out = [];
+  (Array.isArray(list) ? list : []).forEach(function(s){
+    var name = String((s && s.name) || "").trim().slice(0, 40), price = Math.round(Number(s && s.price));
+    if(!name || !(price > 0) || price > 10000000 || out.length >= 11) return;
+    var id = String((s && s.id) || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24);
+    if(!id) id = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "").slice(0, 24) || "servicio";
+    var base = id, n = 2;
+    while(seen[id]) id = base + (n++);
+    seen[id] = 1;
+    out.push({id: id, name: name, price: price});
+  });
+  return out;
+}
+function allServices(cfg){
+  cfg = cfg || state.config;
+  var out = [{id: "corte", name: "Corte", price: Number(cfg.price) || 0, base: true}];
+  cleanServices(cfg.services).forEach(function(s){ out.push(s); });
+  return out;
+}
+function serviceById(id, cfg){ var all = allServices(cfg); return all.filter(function(x){ return x.id === id; })[0] || all[0]; }
+// precios válidos (las reglas de la base los usan para aceptar una reserva)
+function priceList(cfg){
+  var seen = {}, out = [];
+  allServices(cfg).forEach(function(s){ if(!seen[s.price]){ seen[s.price] = 1; out.push(s.price); } });
+  return out;
+}
+
 function cobraEnApp(){ return (window.BARBERPRO_CONFIG || {}).cobrarEnApp !== false; }
 
 function depositFor(price, cfg){
@@ -1131,7 +1168,7 @@ function calendarInfo(b){
   return {
     title: "Turno en " + c.businessName,
     where: c.address || "",
-    details: "Corte " + money(b.price) + (b.debtCharged ? " + saldo anterior " + money(b.debtCharged) : "") +
+    details: (b.service || "Corte") + " " + money(b.price) + (b.debtCharged ? " + saldo anterior " + money(b.debtCharged) : "") +
       ". Si cancelás el mismo día se cobra el 50% de seña.",
     start: icsStamp(b.date, b.time, 0),
     end: icsStamp(b.date, b.time, state.config.slotMinutes)

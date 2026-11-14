@@ -32,7 +32,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","payMpLinks","autoReminders","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team","setup"];
+                     "payAlias","payHolder","payMpLink","payMpLinks","autoReminders","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team","setup","services","prices"];
 
   // movimiento suelto (ej. "recordatorio enviado"); los turnos de ejemplo no se registran en la base
   logMovement = function(b, type, text){
@@ -96,7 +96,7 @@
   function turnoCopy(b){
     var t = {id: b.id, date: b.date, time: b.time, price: b.price, debtCharged: b.debtCharged, payMethod: b.payMethod,
              paid: b.paid, status: b.status, createdAt: b.createdAt};
-    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName", "walkIn", "rescheduled", "transferredFromName", "transferredAt"].forEach(function(k){
+    ["deposit", "depositState", "balanceState", "balanceMethod", "depositRefunded", "lateCancel", "barberId", "barberName", "walkIn", "rescheduled", "transferredFromName", "transferredAt", "service"].forEach(function(k){
       if(b[k] !== undefined && b[k] !== null) t[k] = b[k];
     });
     return t;
@@ -442,6 +442,7 @@
     var c = state.config, out = {};
     CONFIG_KEYS.forEach(function(k){ if(c[k] !== undefined) out[k] = c[k]; });
     out.closures = state.closures || [];
+    out.prices = priceList(c);                               // precios válidos de los servicios (las reglas los comprueban al reservar)
     return db.doc("config/main").set(out).catch(function(e){ fail(e, "No se pudo guardar. ¿Iniciaste sesión como dueño?"); });
   };
 

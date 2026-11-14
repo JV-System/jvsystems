@@ -106,3 +106,11 @@ Es la primera demo, con el diseño original de MONTAL (Reyna Montiel) recuperado
 
 `demo/` (la que se manda a todos) ahora tiene la misma presentación que las demás (bienvenida, recorrido por pestañas, navegación de abajo en el celular) y una portada pensada como app: pasos simples, qué incluye y la tarjeta **"Valor pensado en vos"**: el abono mensual equivale al valor de **2 cortes** (con el corte a $15.000, $30.000 por mes) y se ajusta cuando el barbero actualiza el precio de su corte. La portada trae una calculadora (el visitante escribe cuánto cobra su corte y ve su abono) y el botón de WhatsApp sale con ese valor ya escrito. El recorrido del panel suma la tarjeta "Cuánto cuesta" con `precioOferta: true` en `config.js`. El precio de la demo es de ejemplo ($15.000, `price` en `demo/config.js`).
 
+## Servicios con distinto precio
+
+- **El corte es el servicio base** (`config.price`) y la referencia del abono de la app: el abono mensual siempre equivale a 2 cortes, tengan los servicios que tengan. Los demás servicios se cargan en **Precios > Otros servicios** (nombre y precio; hasta 11) o, para las demos, en `services: [{name, price}]` de `config.js`.
+- **Si un local no carga servicios, todo sigue como siempre** (un solo precio, sin selector). Con servicios, el cliente ve **"¿Qué servicio querés?"** antes de elegir barbero, día y hora; el resumen, el total, la seña, el aviso por WhatsApp y "Tus turnos" usan el precio y el nombre del servicio elegido. La reserva guarda `service` (nombre) y su `price`; los turnos ya reservados conservan el precio con el que se reservaron. En el panel, cada turno muestra una etiqueta con su servicio.
+- **Reglas:** además del precio base, una reserva puede traer el precio de otro servicio. El panel guarda junto con los servicios la lista de precios válidos (`config/main.prices`) y las reglas comprueban `d.price in prices`. (En las reglas `service` es una palabra reservada: el campo se lee con `d.get('service', '')`.) No se controla que el nombre del servicio coincida con su precio: el dueño lo ve en la reserva y confirma el pago a mano.
+- Los servicios no cambian la duración del turno (todos ocupan un horario).
+- Demo general: Corte $18.000, Barba $15.000, Corte + diseño $20.000, Corte + barba $22.000 y Corte + barba + diseño $22.000.
+
