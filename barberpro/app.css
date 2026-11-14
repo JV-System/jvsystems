@@ -1358,3 +1358,58 @@ body.no-scroll{overflow:hidden;}
 .pay-step span b{color:var(--text);}
 .pay-steps2 .pay-alias{margin:0;}
 .pay-steps2 .btn{min-height:50px;}
+
+/* =====================================================================================================================
+   Administradores por invitación y guía de configuración
+   ===================================================================================================================== */
+.who-pick{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
+.who-opt{flex:1 1 auto; min-height:50px; padding:10px 14px; border-radius:12px; background:var(--surface-2); border:1.5px solid var(--border); color:var(--text); font:700 16px Manrope,sans-serif; cursor:pointer;}
+.who-opt.on{border-color:var(--accent-1); background:var(--surface-3); box-shadow:inset 0 0 0 1px var(--accent-1);}
+.invite-card{text-align:left;}
+.invite-card h2{text-align:center;}
+.invite-card .sub{text-align:center;}
+
+.inv-list{margin:0 0 12px;}
+.inv-row{display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--border-soft);}
+.inv-row:first-child{border-top:0;}
+.inv-row b{flex:1; font-size:15px;}
+.inv-ok{font-size:13px; font-weight:800; color:var(--success);}
+.inv-pend{font-size:13px; font-weight:700; color:var(--text-faint);}
+
+.wiz-overlay{position:fixed; inset:0; z-index:330; background:#060b12; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; transition:opacity .5s ease, visibility .5s;}
+.wiz-overlay.hide{opacity:0; visibility:hidden; pointer-events:none;}
+.wiz-stripe{position:fixed; top:max(10px, env(safe-area-inset-top)); left:0; right:0; height:8px; z-index:1; background:repeating-linear-gradient(-45deg, #1e88e5 0 14px, #e8eef5 14px 28px); background-size:39.6px 100%; opacity:.85; animation:ivScroll 1.4s linear infinite;}
+.wiz-glow{position:fixed; left:50%; top:22%; width:min(130vw, 640px); height:min(130vw, 640px); border-radius:50%; transform:translate(-50%,-50%); pointer-events:none;
+  background:radial-gradient(circle, rgba(41,151,240,.28) 0%, rgba(30,100,190,.1) 42%, transparent 68%);}
+.wiz-box{position:relative; z-index:2; margin:auto; width:100%; max-width:480px; padding:56px 20px 40px; animation:wizIn .45s ease both;}
+@keyframes wizIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+.wiz-dots{display:flex; gap:6px; margin-bottom:10px;}
+.wiz-dots i{flex:1; height:4px; border-radius:3px; background:var(--surface-3);}
+.wiz-dots i.done{background:var(--accent-2);}
+.wiz-dots i.cur{background:var(--accent-1); box-shadow:0 0 10px rgba(74,168,236,.7);}
+.wiz-count{font-size:12.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-1); margin-bottom:6px;}
+.wiz-title{font-size:clamp(26px, 8vw, 34px); font-weight:800; letter-spacing:-.5px; line-height:1.1; margin:0 0 14px; color:var(--text);}
+.wiz-lead{font-size:16px; line-height:1.5; color:var(--text-muted); margin:0 0 14px;}
+.wiz-lead b{color:var(--text);}
+.wz-list{margin:0 0 14px; padding:0; list-style:none;}
+.wz-list li{position:relative; padding:0 0 10px 22px; font-size:15px; line-height:1.4; color:var(--text-muted);}
+.wz-list li::before{content:""; position:absolute; left:2px; top:6px; width:9px; height:9px; border-radius:50%; background:var(--accent-1); box-shadow:0 0 10px rgba(74,168,236,.8);}
+.wiz-body .notice{margin:0 0 14px;}
+.wiz-btns{display:flex; gap:10px; margin-top:18px;}
+.wiz-btns .btn{flex:1;}
+.wiz-btns #wzBack{flex:0 0 38%;}
+.wz-later{display:block; margin:14px auto 0;}
+.wz-day{background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px;}
+.wz-open{margin-bottom:0;}
+.wz-open span b{color:var(--text);}
+.wz-ranges{margin-top:10px;}
+.wz-range{display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:8px; margin-bottom:8px;}
+.wz-range .checkline{grid-column:1 / -1; margin-bottom:0;}
+.wz-range input[type=time]{min-height:46px; margin-bottom:0; font-size:16px; text-align:center;}
+.wz-range i{font-style:normal; color:var(--text-faint); font-weight:700;}
+.wz-range{grid-template-columns:1fr auto 1fr;}
+@media (prefers-reduced-motion: reduce){ .wiz-stripe{animation:none;} .wiz-box{animation:none;} }
+
+/* ---- panel en el celular: la fila de estados de pago baja de renglón en vez de ensanchar la pantalla ---- */
+.payline{flex-wrap:wrap; gap:6px;}
+.payline .paychip,.payline .paystate{white-space:normal;}

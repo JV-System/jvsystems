@@ -13,13 +13,21 @@ rules_version = '2';
 //  - debtFlags/{key}  aviso de "tiene un saldo pendiente": se consulta de a uno (get), no se puede listar.
 //  - debts/{key}      detalle de saldos pendientes: solo el dueño.
 //
-// El dueño es el usuario de Firebase Authentication cuyo uid figura en isOwner().
+// El dueño es el usuario de Firebase Authentication cuyo uid figura en isOwner(). Los administradores que entran con un link de invitación
+// (staff/{uid} con admin:true) tienen sus mismos permisos: esa condición (isAdminStaff) va SIEMPRE al final de cada regla, después de las
+// condiciones del cliente, para no sumar consultas a las reservas de los clientes (las reglas tienen un tope de consultas por lote).
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isOwner() {
       return request.auth != null && request.auth.uid in ['RQIEHKxHKwPAZXguUzxO2vd6s8k1'];
+    }
+
+    // administrador por invitación: tiene un documento staff/{uid} con admin:true (se da de alta con un link, ver invites y adminClaims)
+    function isAdminStaff() {
+      return request.auth != null && exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+          && get(/databases/$(database)/documents/staff/$(request.auth.uid)).data.get('admin', false) == true;
     }
 
     function signedIn() {
@@ -86,8 +94,47 @@ service cloud.firestore {
 
     // ---------- empleados ----------
     match /staff/{uid} {
-      allow read: if isOwner() || (signedIn() && request.auth.uid == uid);
-      allow write: if isOwner();
+      allow read: if isOwner() || (signedIn() && request.auth.uid == uid) || isAdminStaff();
+      allow write: if isOwner() || isAdminStaff();
+      // alta de un administrador con link de invitación: solo con un código vigente, para un barbero de la lista de la invitación, y reclamando
+      // ese barbero en el mismo lote (adminClaims: se puede tomar una sola vez)
+      allow create: if signedIn() && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly(['barberId', 'name', 'email', 'admin', 'code', 'createdAt', 'onboarded'])
+                    && request.resource.data.keys().hasAll(['barberId', 'name', 'admin', 'code'])
+                    && request.resource.data.admin == true
+                    && validBarberId(request.resource.data.barberId)
+                    && isStr(request.resource.data.name, 60) && request.resource.data.name.size() > 0
+                    && inviteOk(request.resource.data.code, request.resource.data.barberId)
+                    && existsAfter(/databases/$(database)/documents/adminClaims/$(request.resource.data.barberId))
+                    && getAfter(/databases/$(database)/documents/adminClaims/$(request.resource.data.barberId)).data.uid == request.auth.uid;
+    }
+
+    // ---------- administradores por invitación ----------
+    // El dueño (o un administrador) crea un link: un documento invites/{codigo} con un código largo y secreto, que vence y trae la lista de barberos
+    // que se pueden registrar. Nadie puede listar las invitaciones: quien conoce el código puede consultar solo esa (get).
+    function inviteOk(code, barberId) {
+      return isStr(code, 80) && code.size() >= 16
+          && exists(/databases/$(database)/documents/invites/$(code))
+          && get(/databases/$(database)/documents/invites/$(code)).data.expiresAt > request.time
+          && barberId in get(/databases/$(database)/documents/invites/$(code)).data.barbers;
+    }
+
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update, delete: if isOwner() || isAdminStaff();
+    }
+
+    // quién ya reclamó a cada barbero: se crea una sola vez (no se puede pisar); lo ven el dueño, los administradores y el propio usuario
+    match /adminClaims/{barberId} {
+      allow read: if isOwner() || isAdminStaff() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow create: if signedIn() && validBarberId(barberId)
+                    && request.resource.data.keys().hasOnly(['uid', 'code', 'name', 'at'])
+                    && request.resource.data.uid == request.auth.uid
+                    && isStr(request.resource.data.name, 60) && request.resource.data.at is number
+                    && inviteOk(request.resource.data.code, barberId);
+      allow update: if false;
+      allow delete: if isOwner() || isAdminStaff();
     }
 
     // ---------- movimientos ----------
@@ -116,15 +163,16 @@ service cloud.firestore {
     }
 
     match /movements/{mid} {
-      allow read: if isOwner() || (isStaff() && staffBarber() in resource.data.barbers);
+      allow read: if isOwner() || (isStaff() && staffBarber() in resource.data.barbers) || isAdminStaff();
       allow create: if validMovement(request.resource.data)
                     && ((isOwner() && request.resource.data.byRole == 'owner')
                         || (isStaff() && request.resource.data.byRole == 'staff' && staffBarber() in request.resource.data.barbers)
                         || (signedIn() && request.resource.data.byRole == 'client'
                             && getAfter(bookingPath(request.resource.data.bid)).data.cid == request.auth.uid
-                            && clientMoveMatches(request.resource.data)));
+                            && clientMoveMatches(request.resource.data))
+                        || (isAdminStaff() && request.resource.data.byRole == 'owner'));
       allow update: if false;
-      allow delete: if isOwner();
+      allow delete: if isOwner() || isAdminStaff();
     }
 
     // ---------- comprobantes de pago ----------
@@ -144,9 +192,10 @@ service cloud.firestore {
     match /receipts/{id} {
       allow read: if isOwner()
                   || (signedIn() && resource.data.cid == request.auth.uid)
-                  || (isStaff() && get(bookingPath(resource.data.bid)).data.get('barberId', '') == staffBarber());
+                  || (isStaff() && get(bookingPath(resource.data.bid)).data.get('barberId', '') == staffBarber())
+                  || isAdminStaff();
       allow create, update: if signedIn() && validReceipt(id, request.resource.data);
-      allow delete: if isOwner();
+      allow delete: if isOwner() || isAdminStaff();
     }
 
     // ---------- avisos en el celular ----------
@@ -158,7 +207,7 @@ service cloud.firestore {
           && isStr(d.endpoint, 700) && d.endpoint.matches('^https://.+')
           && isStr(d.p256dh, 200) && isStr(d.auth, 100)
           && d.uid == request.auth.uid
-          && ((d.role == 'owner' && isOwner() && d.barberId == '')
+          && ((d.role == 'owner' && (isOwner() || isAdminStaff()) && d.barberId == '')
               || (d.role == 'staff' && isStaff() && d.barberId == staffBarber()))
           && (!('ua' in d) || isStr(d.ua, 200))
           && d.createdAt is number && d.updatedAt is number;
@@ -174,17 +223,17 @@ service cloud.firestore {
     // pública (la ve el cliente al elegir con quién cortarse); la cambia el dueño o el propio empleado en su barbero
     match /barbers/{id} {
       allow read: if true;
-      allow create, update: if (isOwner() || (isStaff() && staffBarber() == id))
+      allow create, update: if (isOwner() || (isStaff() && staffBarber() == id) || isAdminStaff())
                             && request.resource.data.keys().hasOnly(['photo'])
                             && isStr(request.resource.data.photo, 60000)
                             && request.resource.data.photo.matches('^data:image/jpeg;base64,.*');
-      allow delete: if isOwner() || (isStaff() && staffBarber() == id);
+      allow delete: if isOwner() || (isStaff() && staffBarber() == id) || isAdminStaff();
     }
 
     // ---------- datos del negocio ----------
     match /config/{docId} {
       allow read: if true;
-      allow write: if isOwner();
+      allow write: if isOwner() || isAdminStaff();
     }
 
     // ---------- horarios ocupados ----------
@@ -209,13 +258,14 @@ service cloud.firestore {
                         && (getAfter(bookingPath(resource.data.bid)).data.status == 'cancelled'
                             // o la reserva se cambió de día y este horario ya no es el suyo
                             || (getAfter(bookingPath(resource.data.bid)).data.get('rescheduled', 0) == 1
-                                && bookingSlotId(getAfter(bookingPath(resource.data.bid)).data) != id)));
+                                && bookingSlotId(getAfter(bookingPath(resource.data.bid)).data) != id)))
+                    || isAdminStaff();
     }
 
     // ---------- reservas ----------
     match /bookings/{bid} {
-      allow read: if isOwner() || (isStaff() && resource.data.barberId == staffBarber());
-      allow delete: if isOwner();
+      allow read: if isOwner() || (isStaff() && resource.data.barberId == staffBarber()) || isAdminStaff();
+      allow delete: if isOwner() || isAdminStaff();
       // el dueño cambia lo que quiera; el cliente solo puede CANCELAR su propia reserva confirmada (y no una ya pasada).
       // lateCancel lo fija la regla: es true solo si cancela el mismo día del turno (ahí se cobra el 50% de seña).
       allow update: if isOwner()
@@ -225,7 +275,8 @@ service cloud.firestore {
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'lateCancel'])
                         && request.resource.data.status == 'cancelled'
                         && request.resource.data.lateCancel == (resource.data.date == hoyAR()))
-                    || informsDeposit() || informsBalance() || attachesReceipt() || staffEdits() || reschedules() || staffTransfers();
+                    || informsDeposit() || informsBalance() || attachesReceipt() || staffEdits() || reschedules() || staffTransfers()
+                    || isAdminStaff();
       allow create: if signedIn() && validBooking(bid, request.resource.data) && request.resource.data.cid == request.auth.uid;
     }
 
@@ -372,12 +423,12 @@ service cloud.firestore {
     }
 
     match /clients/{id} {
-      allow read: if isOwner() || (signedIn() && request.auth.uid == id);
+      allow read: if isOwner() || (signedIn() && request.auth.uid == id) || isAdminStaff();
       allow create: if signedIn() && request.auth.uid == id && validClient(request.resource.data);
       // se puede corregir todo menos el mail (que es el usuario)
       allow update: if signedIn() && request.auth.uid == id && validClient(request.resource.data)
                     && request.resource.data.email == resource.data.email;
-      allow delete: if isOwner() || (signedIn() && request.auth.uid == id);
+      allow delete: if isOwner() || (signedIn() && request.auth.uid == id) || isAdminStaff();
     }
 
     // ---------- "mis turnos" del cliente ----------
@@ -401,10 +452,11 @@ service cloud.firestore {
     }
 
     match /clients/{id}/turnos/{tid} {
-      allow read: if isOwner() || (signedIn() && request.auth.uid == id);
+      allow read: if isOwner() || (signedIn() && request.auth.uid == id) || isAdminStaff();
       allow create: if isOwner()
                     || (signedIn() && request.auth.uid == id && validTurno(tid, request.resource.data)
-                        && existsAfter(/databases/$(database)/documents/bookings/$(tid)));
+                        && existsAfter(/databases/$(database)/documents/bookings/$(tid)))
+                    || isAdminStaff();
       allow update: if isOwner()
                     || (signedIn() && request.auth.uid == id && resource.data.status == 'confirmed'
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
@@ -430,8 +482,9 @@ service cloud.firestore {
                         && getAfter(bookingPath(tid)).data.barberId == request.resource.data.barberId)
                     || (isStaff() && get(bookingPath(tid)).data.get('barberId', '') == staffBarber()
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paid', 'depositState', 'balanceState', 'balanceMethod'])
-                        && request.resource.data.status in ['confirmed', 'completed'] && resource.data.status in ['confirmed', 'completed']);
-      allow delete: if isOwner();
+                        && request.resource.data.status in ['confirmed', 'completed'] && resource.data.status in ['confirmed', 'completed'])
+                    || isAdminStaff();
+      allow delete: if isOwner() || isAdminStaff();
     }
 
     // ---------- saldos pendientes ----------
@@ -445,10 +498,10 @@ service cloud.firestore {
     }
 
     match /debtFlags/{key} {
-      allow get: if isOwner() || (signedIn() && request.auth.uid == key);
-      allow list: if isOwner();
+      allow get: if isOwner() || (signedIn() && request.auth.uid == key) || isAdminStaff();
+      allow list: if isOwner() || isAdminStaff();
       allow delete: if isOwner() || isStaff();
-      allow create: if isOwner() || (request.resource.data.keys().hasOnly(['since', 'bid']) && validLateDebt(key, request.resource.data));
+      allow create: if isOwner() || (request.resource.data.keys().hasOnly(['since', 'bid']) && validLateDebt(key, request.resource.data)) || isAdminStaff();
       allow update: if isOwner()
                     || (signedIn() && request.auth.uid == key
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['chargedBy'])
@@ -458,17 +511,19 @@ service cloud.firestore {
                           // o ese turno se cancela y el saldo vuelve a quedar pendiente
                           || (resource.data.get('chargedBy', null) != null && request.resource.data.chargedBy == null
                               && getAfter(bookingPath(resource.data.chargedBy)).data.cid == key
-                              && getAfter(bookingPath(resource.data.chargedBy)).data.status == 'cancelled')));
+                              && getAfter(bookingPath(resource.data.chargedBy)).data.status == 'cancelled')))
+                    || isAdminStaff();
     }
 
     match /debts/{key} {
-      allow read, update: if isOwner();
+      allow read, update: if isOwner() || isAdminStaff();
       allow delete: if isOwner() || isStaff();
       allow create: if isOwner()
                     || (request.resource.data.keys().hasOnly(['name', 'lastname', 'phone', 'since', 'bid'])
                         && isStr(request.resource.data.name, 60) && isStr(request.resource.data.lastname, 60)
                         && isStr(request.resource.data.phone, 40) && request.resource.data.since is number
-                        && validLateDebt(key, request.resource.data));
+                        && validLateDebt(key, request.resource.data))
+                    || isAdminStaff();
     }
   }
 }

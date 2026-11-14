@@ -121,6 +121,7 @@
     else if(session.ownerTab==="cobros") bindCobrosEvents();
     else if(session.ownerTab==="config") bindConfigEvents();
     else bindSaldosEvents();
+    maybeWizard();
   }
 
   function navBtn(id,label,count){
@@ -147,10 +148,11 @@
       if(!cloudAuth.isReady()){
         return '<div class="card lockcard"><div class="lockicon">⏳</div><h2>Un momento...</h2><div class="sub">Verificando tu sesión</div></div>';
       }
+      if(inviteCode() && !session.inviteSkip) return inviteRegisterHtml();
       return '<div class="card lockcard">' +
         '<div class="lockicon">🔒</div>' +
-        '<h2>Acceso del dueño</h2>' +
-        '<div class="sub">Ingresá con tu mail y contraseña</div>' +
+        '<h2>Acceso al panel</h2>' +
+        '<div class="sub">Ingresá con tu usuario (o mail) y tu contraseña</div>' +
         '<input type="text" id="inpOwnerEmail" inputmode="email" placeholder="'+(((window.BARBERPRO_CONFIG || {}).ownerEmail) ? 'usuario o mail' : 'tu@mail.com')+'" autocomplete="username" autocapitalize="off" value="'+esc(rememberedOwnerEmail())+'" style="text-align:center;">' +
         '<div class="pw-wrap"><input type="password" id="inpOwnerPass" placeholder="Contraseña" autocomplete="current-password" style="text-align:center;">' +
           '<button type="button" class="pw-eye" id="btnPwEye" aria-label="Mostrar contraseña" aria-pressed="false">' + EYE_SVG + '</button></div>' +
@@ -170,17 +172,18 @@
   }
 
   function bindOwnerLogin(){
+    if(CLOUD && bindInviteRegister()) return;
     var btn = document.getElementById("btnOwnerLogin");
     if(!btn) return;
     if(CLOUD){
       var emailEl = document.getElementById("inpOwnerEmail"), passEl = document.getElementById("inpOwnerPass");
       function go(){
         var email = emailEl.value.trim(), pass = passEl.value;
-        // atajo: si escribe un usuario sin @ (ej. "admin") se usa el mail del dueño cargado en config.js
+        // un usuario sin @: "admin" es el atajo al mail del dueño (config.js); cualquier otro es un usuario de administrador creado con un link
         var ownerMail = (window.BARBERPRO_CONFIG || {}).ownerEmail;
-        if(email && email.indexOf("@") < 0 && ownerMail) email = ownerMail;
+        if(email && email.indexOf("@") < 0) email = (email.toLowerCase() === "admin" && ownerMail) ? ownerMail : loginId(email);
         var remember = document.getElementById("inpOwnerRemember").checked;
-        if(!email || !pass){ showToast("Escribí tu mail y tu contraseña."); return; }
+        if(!email || !pass){ showToast("Escribí tu usuario y tu contraseña."); return; }
         btn.disabled = true; btn.textContent = "Ingresando...";
         try{ if(remember) localStorage.setItem(OWNER_EMAIL_KEY, emailEl.value.trim()); else localStorage.removeItem(OWNER_EMAIL_KEY); }catch(e){}
         cloudAuth.login(email, pass, remember).catch(function(e){
@@ -200,7 +203,10 @@
       passEl.onkeydown = function(e){ if(e.key === "Enter") go(); };
       document.getElementById("btnOwnerReset").onclick = function(){
         var email = emailEl.value.trim(), ownerMail = (window.BARBERPRO_CONFIG || {}).ownerEmail;
-        if(email && email.indexOf("@") < 0 && ownerMail) email = ownerMail;
+        if(email && email.indexOf("@") < 0){
+          if(email.toLowerCase() === "admin" && ownerMail) email = ownerMail;
+          else { showToast("Los usuarios sin mail no pueden recuperar la contraseña: pedile al dueño que te quite el acceso y te mande un link nuevo."); return; }
+        }
         if(!email){ showToast("Escribí tu mail arriba y volvé a tocar este botón."); return; }
         cloudAuth.resetPassword(email).then(function(){
           showToast("Si ese mail es el del dueño, te mandamos un correo para cambiar la contraseña.");
@@ -1592,7 +1598,7 @@
       if(emp){
         if(CLOUD){
           access = rec
-            ? '<div class="tm-access">Usuario: <b>'+esc(rec.email)+'</b> <button class="link-btn" type="button" data-tm-reset="'+esc(rec.email)+'">Mandarle mail para cambiar la contraseña</button></div>'
+            ? '<div class="tm-access">Usuario: <b>'+esc(userOf(rec.email))+'</b>'+(rec.admin ? ' · administrador' : '')+(isUserEmail(rec.email) ? '' : ' <button class="link-btn" type="button" data-tm-reset="'+esc(rec.email)+'">Mandarle mail para cambiar la contraseña</button>')+'</div>'
             : '<div class="tm-access"><div class="field-hint" style="margin:0 0 6px;">Todavía no tiene usuario para entrar al panel.</div>' +
               '<div class="row2"><div><label>Mail</label><input type="email" data-tm-email="'+esc(m.id)+'" placeholder="empleado@mail.com" autocapitalize="off"></div>' +
               '<div><label>Contraseña</label><input type="text" data-tm-pass="'+esc(m.id)+'" placeholder="Mínimo 6 caracteres"></div></div>' +
@@ -1618,6 +1624,8 @@
     }).join("");
     html += '</div>';
 
+    html += inviteCardHtml();
+
     html += '<div class="card"><h2>Agregar empleado</h2><div class="sub">Se crea su usuario para que entre al panel y aparece como opción al reservar.</div>' +
       '<div class="row2"><div><label>Nombre</label><input type="text" id="inpNewTmName" maxlength="40" placeholder="Ej: Julián"></div>' +
       '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" id="inpNewTmWa" placeholder="5493415551234"></div></div>' +
@@ -1638,6 +1646,7 @@
 
   function bindEquipoEvents(){
     bindPhotoControls();
+    fillInviteCard();
     document.querySelectorAll("[data-trange]").forEach(function(el){
       el.onclick = function(){ session.teamRange = el.getAttribute("data-trange"); renderOwner(); };
     });
@@ -2250,24 +2259,386 @@
     });
   }
 
+  // ================= ADMINISTRADORES POR INVITACIÓN + GUÍA DE CONFIGURACIÓN =================
+  // El dueño (o un administrador) crea un link en Equipo. Quien lo abre crea su usuario, elige quién es y entra como administrador (mismos permisos
+  // que el dueño). La primera vez ve una guía en pasos cortos; lo que se carga una vez para todo el local (cobros, datos del local, horarios) queda
+  // marcado en config.setup y a los demás no se les vuelve a pedir.
+  function inviteCode(){
+    try{
+      var c = new URLSearchParams(location.search).get("invite");
+      return c && /^[A-Za-z0-9_-]{16,80}$/.test(c) ? c : "";
+    }catch(e){ return ""; }
+  }
+
+  // ---- pantalla de registro (admin.html?invite=...) ----
+  function inviteRegisterHtml(){
+    var team = activeBarbers();
+    return '<div class="card lockcard invite-card">' +
+      '<h2>Sumate como administrador</h2>' +
+      '<div class="sub">Creá tu usuario para manejar la agenda de '+esc(state.config.businessName)+'</div>' +
+      '<label>¿Quién sos?</label><div class="who-pick" id="invWho">' +
+        team.map(function(m){ return '<button type="button" class="who-opt" data-who="'+esc(m.id)+'" data-name="'+esc(m.name)+'">'+esc(m.name)+'</button>'; }).join("") + '</div>' +
+      '<label>Elegí un usuario</label>' +
+      '<input type="text" id="invUser" placeholder="ej: lucas" maxlength="20" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+      '<div class="field-hint">De 3 a 20 letras, números, punto o guion.</div>' +
+      '<label>Contraseña</label>' + pwField("invPass", "Mínimo 6 caracteres", "new-password") +
+      '<button class="btn btn-primary" id="btnInvGo" type="button">Crear mi usuario</button>' +
+      '<div class="field-hint" style="margin-top:12px; text-align:center;">¿Ya tenés usuario? <button class="link-btn" id="btnInvLogin" type="button">Ingresar</button></div>' +
+      '</div>';
+  }
+
+  function bindInviteRegister(){
+    var go = document.getElementById("btnInvGo");
+    if(!go) return false;
+    bindPwEyes();
+    var who = "", name = "";
+    document.querySelectorAll(".who-opt").forEach(function(el){
+      el.onclick = function(){
+        who = el.getAttribute("data-who"); name = el.getAttribute("data-name");
+        document.querySelectorAll(".who-opt").forEach(function(x){ x.classList.toggle("on", x === el); });
+      };
+    });
+    document.getElementById("btnInvLogin").onclick = function(){ session.inviteSkip = true; renderOwner(); };
+    go.onclick = function(){
+      var user = normUser(document.getElementById("invUser").value), pass = document.getElementById("invPass").value, created = true;
+      if(!who){ showToast("Elegí quién sos."); return; }
+      if(!validUser(user)){ showToast("El usuario tiene de 3 a 20 letras, números, punto o guion."); return; }
+      if(pass.length < 6){ showToast("La contraseña tiene que tener al menos 6 caracteres."); return; }
+      go.disabled = true; go.textContent = "Creando tu usuario...";
+      cloudAuth.register(user, pass).then(function(r){
+        created = r.created;
+        return cloudAuth.claimAdmin(inviteCode(), who, name).catch(function(e){
+          return cloudAuth.discardAccount(created).then(function(){ throw {claim: true, e: e}; });
+        });
+      }).then(function(){
+        try{ history.replaceState(null, "", location.pathname); }catch(e){}
+        showToast("¡Listo, ya sos administrador!");
+      }).catch(function(e){
+        go.disabled = false; go.textContent = "Crear mi usuario";
+        if(e && e.claim){ console.error(e.e); showToast("Ese perfil ya fue tomado o el link venció. Pedile al dueño que te mande uno nuevo."); }
+        else if(e && e.code === "auth/invalid-credential"){ showToast("Ese usuario ya existe. Elegí otro."); }
+        else showToast(authMessage(e));
+      });
+    };
+    return true;
+  }
+
+  // ---- link de invitación (Equipo) ----
+  var INVITE_KEY = "barberpro_last_invite";
+  function lastInvite(){ try{ return localStorage.getItem(INVITE_KEY) || ""; }catch(e){ return ""; } }
+  function inviteLink(code){ return new URL("admin.html?invite=" + code, location.href).href; }
+
+  function inviteCardHtml(){
+    if(!CLOUD || !window.cloudAuth || !cloudAuth.createInvite) return "";
+    return '<div class="card" id="inviteCard"><h2>Sumar administradores</h2>' +
+      '<div class="sub">Mandales un link por WhatsApp: cada uno crea su usuario, elige quién es y una guía corta lo ayuda a dejar todo configurado. ' +
+      'Los administradores ven y editan lo mismo que vos. El link vence a los 14 días.</div><div id="inviteBody"><div class="field-hint">Cargando...</div></div></div>';
+  }
+
+  function fillInviteCard(){
+    var box = document.getElementById("inviteBody");
+    if(!box || !CLOUD || !window.cloudAuth || !cloudAuth.claims) return;
+    cloudAuth.claims().catch(function(){ return {}; }).then(function(claims){
+      var b = document.getElementById("inviteBody");
+      if(!b) return;
+      var team = activeBarbers(), code = lastInvite();
+      var h = '<div class="inv-list">' + team.map(function(m){
+        var c = claims[m.id];
+        return '<div class="inv-row"><b>'+esc(m.name)+'</b>' + (c
+          ? '<span class="inv-ok">Registrado</span><button type="button" class="link-btn link-out" data-inv-remove="'+esc(m.id)+'|'+esc(c.uid)+'">Quitar acceso</button>'
+          : '<span class="inv-pend">Pendiente</span>') + '</div>';
+      }).join("") + '</div>';
+      if(code){
+        var link = inviteLink(code), text = "Sumate como administrador de " + (state.config.businessName || "la barbería") + ": " + link;
+        h += '<div class="share-row"><div class="share-txt"><b>Link de invitación</b><span>'+esc(link)+'</span></div>' +
+          '<div class="share-btns"><button class="btn btn-ghost btn-sm" type="button" data-copy-link="'+esc(link)+'">Copiar</button>' +
+          '<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(text)+'">WhatsApp</a></div></div>' +
+          '<div class="btn-row"><button class="btn btn-ghost btn-sm" type="button" id="btnInvNew">Crear link nuevo</button><button class="btn btn-danger btn-sm" type="button" id="btnInvRevoke">Anular este link</button></div>';
+      } else {
+        h += '<button class="btn btn-primary" type="button" id="btnInvNew">Crear link de invitación</button>';
+      }
+      b.innerHTML = h;
+      bindShareLinks();
+      var nw = document.getElementById("btnInvNew"), rv = document.getElementById("btnInvRevoke");
+      if(nw) nw.onclick = function(){
+        nw.disabled = true; nw.textContent = "Creando...";
+        cloudAuth.createInvite(team.map(function(m){ return m.id; })).then(function(c){
+          try{ localStorage.setItem(INVITE_KEY, c); }catch(e){}
+          showToast("Link creado."); fillInviteCard();
+        }).catch(function(e){ console.error(e); nw.disabled = false; nw.textContent = "Crear link de invitación"; showToast("No se pudo crear el link. ¿Iniciaste sesión como dueño o administrador?"); });
+      };
+      if(rv) rv.onclick = function(){
+        askConfirm("Anular el link", "Quien todavía no se registró ya no va a poder usarlo. Los que ya se registraron siguen con su acceso. ¿Anulamos?", function(){
+          cloudAuth.revokeInvite(code).then(function(){ try{ localStorage.removeItem(INVITE_KEY); }catch(e){} showToast("Link anulado."); fillInviteCard(); })
+            .catch(function(){ showToast("No se pudo anular el link."); });
+        });
+      };
+      b.querySelectorAll("[data-inv-remove]").forEach(function(el){
+        el.onclick = function(){
+          var p = el.getAttribute("data-inv-remove").split("|");
+          askConfirm("Quitar acceso", "Esa persona deja de poder entrar al panel y el perfil queda libre para volver a registrarse con un link nuevo. ¿Seguimos?", function(){
+            cloudAuth.removeAdmin(p[0], p[1]).then(function(){ showToast("Acceso quitado."); fillInviteCard(); }).catch(function(){ showToast("No se pudo quitar el acceso."); });
+          });
+        };
+      });
+    });
+  }
+
+  // ---- guía de configuración (pantalla completa, en pasos cortos) ----
+  var wiz = {id: "", dismissed: false, busy: false, steps: null};
+  var WIZ_DAYS = {
+    weekdays: {label: "Lunes a viernes", keys: ["mon", "tue", "wed", "thu", "fri"], from: "tue"},
+    sat: {label: "Sábado", keys: ["sat"], from: "sat"},
+    sun: {label: "Domingo", keys: ["sun"], from: "sun"}
+  };
+
+  function wizNeeded(){
+    if(wiz.dismissed) return false;
+    if(CLOUD) return !!(window.cloudAuth && cloudAuth.isAdminStaff && cloudAuth.isAdminStaff() && !cloudAuth.onboarded());
+    return /[?&]guia=1\b/.test(location.search);        // en la versión de prueba solo se ve con ?guia=1
+  }
+  function wizMember(){
+    var id = CLOUD ? (cloudAuth.barberId() || "") : ((location.search.match(/[?&]quien=([a-z0-9]+)/) || [])[1] || "");
+    return barberById(id) || ownerBarber();
+  }
+  function wizName(){ return (CLOUD && cloudAuth.staffName && cloudAuth.staffName()) || wizMember().name; }
+  function wizSetup(){ return state.config.setup || {}; }
+  function wizSteps(){
+    if(wiz.steps) return wiz.steps;               // la lista queda fija mientras la guía está abierta, así la cuenta de pasos no salta
+    var s = wizSetup(), st = ["welcome", "perfil"];
+    if(!s.cobros) st.push("cobros");
+    if(!s.local) st.push("local");
+    if(!s.horarios) st.push("horarios");
+    st.push("app", "fin");
+    return st;
+  }
+  function markSetup(key){ var o = Object.assign({}, state.config.setup || {}); o[key] = true; state.config.setup = o; }
+  function waShow(n){ var d = digitsOnly(n); return d.replace(/^549/, "").replace(/^54/, ""); }
+
+  function wizOverlay(){
+    var ov = document.getElementById("wizOverlay");
+    if(!ov){
+      ov = document.createElement("div"); ov.id = "wizOverlay"; ov.className = "wiz-overlay";
+      ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Guía de configuración");
+      document.body.appendChild(ov); document.body.classList.add("no-scroll");
+    }
+    return ov;
+  }
+  function wizClose(){
+    wiz.steps = null;
+    var ov = document.getElementById("wizOverlay");
+    if(ov){ ov.classList.add("hide"); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 600); }
+    document.body.classList.remove("no-scroll");
+  }
+  function maybeWizard(){
+    if(!session.ownerAuthed || !wizNeeded()){ return; }
+    if(document.getElementById("wizOverlay")) return;
+    wiz.steps = null; wiz.steps = wizSteps();
+    wiz.id = wiz.steps[0];
+    wizOverlay();
+    wizRender();
+  }
+
+  function wizHoursHtml(){
+    var h = state.config.hours;
+    return Object.keys(WIZ_DAYS).map(function(g){
+      var def = WIZ_DAYS[g], d = h[def.from] || defaultHoursDay(true, true), open = !!(d.morning.active || d.afternoon.active);
+      function row(rk, label, r){
+        return '<div class="wz-range"><label class="checkline"><input type="checkbox" data-wg="'+g+'" data-wr="'+rk+'" '+(r.active ? 'checked' : '')+'><span>'+label+'</span></label>' +
+          '<input type="time" step="1800" data-wg="'+g+'" data-wr="'+rk+'" data-wt="start" value="'+r.start+'"><i>a</i><input type="time" step="1800" data-wg="'+g+'" data-wr="'+rk+'" data-wt="end" value="'+r.end+'"></div>';
+      }
+      return '<div class="wz-day"><label class="checkline wz-open"><input type="checkbox" data-wg-open="'+g+'" '+(open ? 'checked' : '')+'><span><b>'+def.label+'</b> · abre</span></label>' +
+        '<div class="wz-ranges" data-wg-box="'+g+'"'+(open ? '' : ' hidden')+'>' + row("morning", "Horario", d.morning) + row("afternoon", "Segundo horario (si cerrás al mediodía)", d.afternoon) + '</div></div>';
+    }).join("");
+  }
+
+  function wizStepDef(id){
+    var m = wizMember(), s = wizSetup(), c = state.config;
+    var link = new URL("./", location.href).href;
+    if(id === "welcome"){
+      var done = [];
+      if(s.cobros) done.push("los cobros"); if(s.local) done.push("los datos del local"); if(s.horarios) done.push("los horarios");
+      return {
+        title: "¡Bienvenido, " + esc(wizName()) + "!",
+        body: '<p class="wz-lead">Vamos a dejar el panel listo en unos pocos pasos, de a uno por pantalla.</p>' +
+          '<ul class="wz-list"><li>Tus datos y tu WhatsApp, para que te avisen cuando un cliente reserva con vos</li>' +
+          (s.cobros ? '' : '<li>El alias de Mercado Pago para cobrar la seña</li>') + (s.local ? '' : '<li>Los datos del local</li>') + (s.horarios ? '' : '<li>Los horarios de atención</li>') +
+          '<li>Cómo tener la app en tu celular</li></ul>' +
+          (done.length ? '<div class="notice info"><div>Tu equipo ya cargó '+done.join(", ")+': esos pasos te los salteamos.</div></div>' : ''),
+        next: "Empezar", back: false
+      };
+    }
+    if(id === "perfil"){
+      return {
+        title: "Tus datos",
+        body: '<p class="wz-lead">Sos <b>'+esc(m.name)+'</b> en la agenda. Cargá tu WhatsApp: cuando un cliente reserva con vos, se abre un mensaje a este número.</p>' +
+          '<label>Tu WhatsApp</label><input type="tel" id="wzWa" inputmode="tel" value="'+esc(waShow(m.whatsapp))+'" placeholder="3415551234">' +
+          '<div class="field-hint">Con código de área, sin 0 ni 15. Ej: 3415551234</div>',
+        next: "Siguiente", back: true,
+        save: function(){
+          var raw = digitsOnly(document.getElementById("wzWa").value);
+          if(raw && raw.replace(/^0+/, "").length < 10){ showToast("Revisá el número: código de área + número (10 dígitos)."); return false; }
+          var num = raw ? waNumber(raw) : "";
+          state.config.team = cleanTeam(teamList().map(function(x){ return x.id === m.id ? Object.assign({}, x, {whatsapp: num}) : x; }));
+          return true;
+        }
+      };
+    }
+    if(id === "cobros"){
+      return {
+        title: "Cobros",
+        body: '<div class="notice info"><div>Este paso lo completa <b>una sola persona</b>: lo que cargues vale para todo el equipo y a los demás no se les pide.</div></div>' +
+          '<label>Alias de Mercado Pago</label><input type="text" id="wzAlias" value="'+esc(c.payAlias || "")+'" placeholder="barberia.parisi" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+          '<label>Titular <span class="opt">(nombre que ve el cliente)</span></label><input type="text" id="wzHolder" value="'+esc(c.payHolder || "")+'" placeholder="Nombre y apellido">' +
+          '<div class="row2"><div><label>Precio del corte ($)</label><input type="number" id="wzPrice" min="1" value="'+(c.price || "")+'" inputmode="numeric"></div>' +
+          '<div><label>Seña al reservar</label><select id="wzDep"><option value="0">Sin seña</option><option value="30">30%</option><option value="50">50%</option><option value="100">Todo (100%)</option></select></div></div>',
+        next: "Siguiente", back: true,
+        after: function(){ var sel = document.getElementById("wzDep"); if(sel) sel.value = String(c.depositPercent === undefined ? 50 : c.depositPercent); },
+        save: function(){
+          var alias = document.getElementById("wzAlias").value.trim(), price = Math.round(Number(document.getElementById("wzPrice").value));
+          if(!/^[A-Za-z0-9._-]{6,30}$/.test(alias)){ showToast("El alias tiene entre 6 y 30 letras, números, puntos o guiones."); return false; }
+          if(!(price > 0)){ showToast("Escribí el precio del corte."); return false; }
+          c.payAlias = alias; c.payHolder = document.getElementById("wzHolder").value.trim();
+          c.price = price; c.priceIsExample = false; c.depositPercent = Number(document.getElementById("wzDep").value);
+          markSetup("cobros");
+          return true;
+        }
+      };
+    }
+    if(id === "local"){
+      return {
+        title: "El local",
+        body: '<div class="notice info"><div>Otro paso <b>de una sola vez</b> para todo el equipo.</div></div>' +
+          '<label>Dirección</label><input type="text" id="wzAddr" value="'+esc(c.address || "")+'" placeholder="Calle y número, ciudad">' +
+          '<label>WhatsApp del local <span class="opt">(opcional)</span></label><input type="tel" id="wzLocalWa" inputmode="tel" value="'+esc(waShow(c.whatsappLink || c.whatsappDisplay || ""))+'" placeholder="3415551234">' +
+          '<div class="field-hint">Si un barbero no cargó el suyo, los avisos van a este número.</div>',
+        next: "Siguiente", back: true,
+        save: function(){
+          var addr = document.getElementById("wzAddr").value.trim(), raw = digitsOnly(document.getElementById("wzLocalWa").value);
+          if(!addr){ showToast("Escribí la dirección del local."); return false; }
+          if(raw && raw.replace(/^0+/, "").length < 10){ showToast("Revisá el WhatsApp del local: código de área + número."); return false; }
+          c.address = addr; c.whatsappLink = raw ? waNumber(raw) : ""; c.whatsappDisplay = c.whatsappLink;
+          markSetup("local");
+          return true;
+        }
+      };
+    }
+    if(id === "horarios"){
+      return {
+        title: "Horarios de atención",
+        body: '<div class="notice info"><div>Último paso <b>de una sola vez</b>. Después podés ajustar día por día en <b>Horarios</b>.</div></div>' + wizHoursHtml(),
+        next: "Siguiente", back: true,
+        after: function(){
+          document.querySelectorAll("[data-wg-open]").forEach(function(el){
+            el.onchange = function(){ var box = document.querySelector('[data-wg-box="'+el.getAttribute("data-wg-open")+'"]'); if(box) box.hidden = !el.checked; };
+          });
+        },
+        save: function(){
+          var next = {};
+          for(var g in WIZ_DAYS){
+            var open = document.querySelector('[data-wg-open="'+g+'"]').checked, day = {};
+            ["morning", "afternoon"].forEach(function(rk){
+              var on = open && document.querySelector('input[type=checkbox][data-wg="'+g+'"][data-wr="'+rk+'"]').checked;
+              var st = document.querySelector('[data-wg="'+g+'"][data-wr="'+rk+'"][data-wt="start"]').value, en = document.querySelector('[data-wg="'+g+'"][data-wr="'+rk+'"][data-wt="end"]').value;
+              if(on && (!st || !en || timeToMin(en) <= timeToMin(st))){ day.bad = true; }
+              day[rk] = {active: on, start: st || "09:00", end: en || "13:00"};
+            });
+            if(day.bad){ showToast("Revisá los horarios de " + WIZ_DAYS[g].label.toLowerCase() + ": la hora de cierre tiene que ser después de la de apertura."); return false; }
+            next[g] = {morning: day.morning, afternoon: day.afternoon};
+          }
+          for(var gg in WIZ_DAYS){ WIZ_DAYS[gg].keys.forEach(function(k){ state.config.hours[k] = JSON.parse(JSON.stringify(next[gg])); }); }
+          markSetup("horarios");
+          return true;
+        }
+      };
+    }
+    if(id === "app"){
+      var ios = window.PWA && PWA.isIOS && PWA.isIOS();
+      return {
+        title: "Tené el panel en tu celular",
+        body: '<p class="wz-lead">Podés instalarlo como una app, con su ícono, para entrar con un toque.</p>' +
+          (ios
+            ? '<ol class="pwa-steps"><li>Abrí esta página en <b>Safari</b>.</li><li>Tocá <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</li><li>Elegí <b>Agregar a inicio</b>.</li></ol>'
+            : '<ol class="pwa-steps"><li>En Chrome tocá el menú <b>⋮</b>.</li><li>Elegí <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>.</li></ol>') +
+          '<div class="field-hint">Los avisos de turnos nuevos los activás después desde Configuración, “App en tu celular”.</div>',
+        next: "Siguiente", back: true
+      };
+    }
+    // fin
+    return {
+      title: "¡Todo listo!",
+      body: '<p class="wz-lead">Ya podés usar el panel. Este es el link para que tus clientes reserven; mandalo por WhatsApp o ponelo en tu perfil:</p>' +
+        '<div class="share-row"><div class="share-txt"><b>Link para clientes</b><span>'+esc(link + (m.id ? "?b=" + m.id : ""))+'</span></div>' +
+        '<div class="share-btns"><button class="btn btn-ghost btn-sm" type="button" data-copy-link="'+esc(link + (m.id ? "?b=" + m.id : ""))+'">Copiar</button></div></div>' +
+        '<div class="field-hint">Con este link el cliente entra y ya te tiene elegido a vos.</div>',
+      next: "Ir al panel", back: true, last: true
+    };
+  }
+
+  function wizRender(){
+    var ov = document.getElementById("wizOverlay");
+    if(!ov) return;
+    var steps = wizSteps();
+    if(steps.indexOf(wiz.id) < 0) wiz.id = steps[0];
+    var i = steps.indexOf(wiz.id), n = steps.length, def = wizStepDef(wiz.id);
+    ov.classList.remove("hide");
+    ov.innerHTML = '<div class="wiz-stripe"></div><div class="wiz-glow"></div>' +
+      '<div class="wiz-box" data-step="'+wiz.id+'">' +
+        '<div class="wiz-dots" aria-hidden="true">' + steps.map(function(s, k){ return '<i class="'+(k < i ? 'done' : k === i ? 'cur' : '')+'"></i>'; }).join("") + '</div>' +
+        '<div class="wiz-count">Paso '+(i + 1)+' de '+n+'</div>' +
+        '<h2 class="wiz-title">'+def.title+'</h2>' +
+        '<div class="wiz-body">'+def.body+'</div>' +
+        '<div class="wiz-btns">' + (def.back && i > 0 ? '<button type="button" class="btn btn-ghost" id="wzBack">Atrás</button>' : '') +
+          '<button type="button" class="btn btn-primary" id="wzNext">'+def.next+'</button></div>' +
+        (def.last ? '' : '<button type="button" class="link-btn plain wz-later" id="wzLater">Seguir después</button>') +
+      '</div>';
+    if(def.after) def.after();
+    bindShareLinks();
+    var box = ov.querySelector(".wiz-box"); if(box) box.scrollTop = 0;
+    document.getElementById("wzNext").onclick = function(){
+      if(wiz.busy) return;
+      if(def.save && def.save() === false) return;
+      var finish = function(){
+        wiz.busy = false;
+        if(def.last){
+          var done = function(){ wizClose(); wiz.dismissed = true; showToast("¡Listo! Ya podés usar el panel."); renderOwner(); };
+          if(CLOUD) cloudAuth.setOnboarded().then(done).catch(function(){ done(); }); else done();
+          return;
+        }
+        wiz.id = steps[Math.min(steps.indexOf(wiz.id) + 1, steps.length - 1)];
+        wizRender();
+      };
+      if(def.save){
+        wiz.busy = true;
+        var nb = document.getElementById("wzNext"); nb.disabled = true; nb.textContent = "Guardando...";
+        var p = saveState();
+        Promise.resolve(p).then(finish).catch(function(){ wiz.busy = false; nb.disabled = false; nb.textContent = def.next; showToast("No se pudo guardar. Revisá tu conexión e intentá de nuevo."); });
+      } else finish();
+    };
+    var bk = document.getElementById("wzBack");
+    if(bk) bk.onclick = function(){ var steps2 = wizSteps(), k = steps2.indexOf(wiz.id); if(k > 0){ wiz.id = steps2[k - 1]; wizRender(); } };
+    var lt = document.getElementById("wzLater");
+    if(lt) lt.onclick = function(){ wiz.dismissed = true; wizClose(); };
+  }
+
   // ================= CONFIGURACIÓN =================
   function ownerConfig(){
     var user = CLOUD && window.cloudAuth ? cloudAuth.user() : null;
     var html = pwaCardShell() + shareLinksHtml() + '<div class="card"><h2>Tu cuenta</h2>';
     if(CLOUD){
-      html += '<div class="summary-row"><span class="k">Usuario</span><span class="v">'+esc(user ? user.email : "")+'</span></div>' +
+      html += '<div class="summary-row"><span class="k">Usuario</span><span class="v">'+esc(user ? userOf(user.email) : "")+'</span></div>' +
         '<div class="sub" style="margin-top:14px;">Cambiar contraseña</div>' +
         '<label>Contraseña actual</label>' + pwField("inpPassCur", "Tu contraseña actual", "current-password") +
         '<label>Contraseña nueva</label>' + pwField("inpPassNew", "Mínimo 6 caracteres", "new-password") +
         '<label>Repetir contraseña nueva</label>' + pwField("inpPassNew2", "Repetila", "new-password") +
         '<button class="btn btn-primary" id="btnChangePass">Cambiar contraseña</button>' +
-        '<div class="field-hint" style="margin-top:10px;">Si no te acordás de la actual, cerrá sesión y usá “Olvidé mi contraseña” en la pantalla de acceso.</div>';
+        '<div class="field-hint" style="margin-top:10px;">'+(user && isUserEmail(user.email) ? 'Si no te acordás de la actual, pedile al dueño que te quite el acceso y te mande un link nuevo.' : 'Si no te acordás de la actual, cerrá sesión y usá “Olvidé mi contraseña” en la pantalla de acceso.')+'</div>';
     } else {
       html += '<div class="sub">Versión de prueba: se entra con un PIN. Podés cambiarlo en Precios → Acceso.</div>';
     }
     html += '</div>';
 
-    var myId = isEmployee() ? myBarber() : ownerBarber().id;
+    var myId = isEmployee() ? myBarber() : (myBarber() || ownerBarber().id);
     html += '<div class="card"><h2>Mi foto de perfil</h2><div class="sub">La ven tu equipo y los clientes cuando eligen con quién cortarse.</div>' + photoEditHtml(myId) + '</div>';
     html += '<div class="card"><h2>Sesión</h2>' +
       '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +

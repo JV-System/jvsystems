@@ -32,7 +32,7 @@
 
   // campos de config que se guardan en Firestore (el PIN, el mapa y la foto del encabezado quedan fuera: son de config.js)
   var CONFIG_KEYS = ["businessName","tagline","address","mapsLink","whatsappDisplay","whatsappLink",
-                     "payAlias","payHolder","payMpLink","payMpLinks","autoReminders","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team"];
+                     "payAlias","payHolder","payMpLink","payMpLinks","autoReminders","price","depositPercent","walkInMinutes","priceIsExample","slotMinutes","hours","team","setup"];
 
   // movimiento suelto (ej. "recordatorio enviado"); los turnos de ejemplo no se registran en la base
   logMovement = function(b, type, text){
@@ -260,7 +260,7 @@
     }
   }
   // Roles: el dueño ve todo; un empleado (documento staff/{uid}) ve solo las reservas de su barbero.
-  var role = null, staffBarber = null;
+  var role = null, staffBarber = null, adminStaff = false, onboardedFlag = false, staffNameStr = "", registering = false;
   state.staff = [];
   function startAdminListeners(){
     stopAdminListeners();
@@ -300,21 +300,31 @@
 
   var authReady = false;
   if(auth && isAdminPage){
-    auth.onAuthStateChanged(function(u){
-      if(!u){
-        authReady = true; role = null; staffBarber = null;
-        stopAdminListeners(); realBookings = []; realDebts = {}; applyReal();
-        hooks.authChanged(); hooks.refresh();
-        return;
-      }
-      // ¿es empleado? (tiene un documento en staff); si no, se asume dueño y las reglas lo confirman al leer los datos
-      db.doc("staff/" + u.uid).get().then(function(snap){
-        if(snap.exists){ role = "employee"; staffBarber = snap.data().barberId; } else { role = "owner"; staffBarber = null; }
-      }).catch(function(){ role = "owner"; staffBarber = null; }).then(function(){
+    // ¿qué es este usuario? Tiene un documento staff/{uid}: con admin:true es administrador (mismos permisos que el dueño, con su barbero),
+    // sin eso es empleado; si no tiene documento se asume dueño y las reglas lo confirman al leer los datos
+    var loadRole = function(u){
+      return db.doc("staff/" + u.uid).get().then(function(snap){
+        adminStaff = false; onboardedFlag = false; staffNameStr = "";
+        if(snap.exists){
+          var d = snap.data();
+          staffBarber = d.barberId; staffNameStr = d.name || "";
+          if(d.admin === true){ role = "owner"; adminStaff = true; onboardedFlag = !!d.onboarded; } else { role = "employee"; }
+        } else { role = "owner"; staffBarber = null; }
+      }).catch(function(){ role = "owner"; staffBarber = null; adminStaff = false; }).then(function(){
         authReady = true;
         startAdminListeners();
         hooks.authChanged(); hooks.refresh();
       });
+    };
+    auth.onAuthStateChanged(function(u){
+      if(!u){
+        authReady = true; role = null; staffBarber = null; adminStaff = false; onboardedFlag = false;
+        stopAdminListeners(); realBookings = []; realDebts = {}; applyReal();
+        hooks.authChanged(); hooks.refresh();
+        return;
+      }
+      if(registering) return;               // se está dando de alta con una invitación: el rol se carga cuando termina
+      loadRole(u);
     });
   }
   window.cloudAuth = {
@@ -331,6 +341,61 @@
     logout: function(){ return auth.signOut(); },
     role: function(){ return role; },
     barberId: function(){ return staffBarber; },
+    isAdminStaff: function(){ return adminStaff; },
+    onboarded: function(){ return onboardedFlag; },
+    staffName: function(){ return staffNameStr; },
+    // ---- administradores por invitación ----
+    // crea la cuenta (usuario sin mail); si ese usuario ya existía y la clave es la suya, entra con él. Devuelve {created}
+    register: function(user, pass){
+      var P = firebase.auth.Auth.Persistence, id = loginId(user), created = true;
+      registering = true;
+      return auth.setPersistence(P.LOCAL).then(function(){ return auth.createUserWithEmailAndPassword(id, pass); }).catch(function(e){
+        if(e && e.code === "auth/email-already-in-use"){ created = false; return auth.signInWithEmailAndPassword(id, pass); }
+        throw e;
+      }).then(function(){ return {created: created}; }).catch(function(e){ registering = false; throw e; });
+    },
+    // se da de alta como administrador de un barbero con el código de la invitación (un solo lote: reclamo del barbero + documento de staff)
+    claimAdmin: function(code, barberId, name){
+      var u = auth.currentUser, now = Date.now();
+      if(!u) return Promise.reject(authErr("auth/user-not-found"));
+      var batch = db.batch();
+      batch.set(db.doc("adminClaims/" + barberId), {uid: u.uid, code: code, name: name, at: now});
+      batch.set(db.doc("staff/" + u.uid), {barberId: barberId, name: name, email: u.email, admin: true, code: code, createdAt: now, onboarded: false});
+      return batch.commit().then(function(){ registering = false; return loadRole(u); });
+    },
+    // si el alta falló (perfil tomado, link vencido) y la cuenta se acababa de crear, se borra para no dejarla a medias
+    discardAccount: function(created){
+      var u = auth.currentUser;
+      registering = false;
+      var done = (created && u) ? u.delete().catch(function(){ return auth.signOut(); }) : auth.signOut();
+      return done.then(function(){ hooks.authChanged(); });
+    },
+    // el dueño o un administrador crea un link: documento invites/{código} (secreto, vence a los 14 días) con los barberos que se pueden registrar
+    createInvite: function(barberIds){
+      var u = auth.currentUser;
+      if(!u) return Promise.reject(authErr("auth/user-not-found"));
+      var bytes = new Uint8Array(24), code = "";
+      (window.crypto || window.msCrypto).getRandomValues(bytes);
+      for(var i = 0; i < bytes.length; i++) code += (bytes[i] % 36).toString(36);
+      var exp = firebase.firestore.Timestamp.fromMillis(Date.now() + 14 * 86400000);
+      return db.doc("invites/" + code).set({barbers: barberIds, expiresAt: exp, createdAt: Date.now(), by: u.uid}).then(function(){ return code; });
+    },
+    revokeInvite: function(code){ return db.doc("invites/" + code).delete(); },
+    // quiénes ya se registraron: { idBarbero: {uid, name, at} }
+    claims: function(){
+      return db.collection("adminClaims").get().then(function(snap){ var m = {}; snap.forEach(function(d){ m[d.id] = d.data(); }); return m; });
+    },
+    removeAdmin: function(barberId, uid){
+      var batch = db.batch();
+      batch.delete(db.doc("adminClaims/" + barberId));
+      batch.delete(db.doc("staff/" + uid));
+      return batch.commit();
+    },
+    setOnboarded: function(){
+      var u = auth.currentUser;
+      if(!u) return Promise.reject(authErr("auth/user-not-found"));
+      return db.doc("staff/" + u.uid).update({onboarded: true}).then(function(){ onboardedFlag = true; });
+    },
     // el dueño crea el usuario de un empleado: se usa una segunda app de Firebase para no cerrar la sesión del dueño
     createStaff: function(email, password, member){
       var app2 = firebase.apps.filter(function(a){ return a.name === "staffcreate"; })[0] || firebase.initializeApp(cfg.firebase, "staffcreate");
