@@ -9,8 +9,7 @@ window.BARBERPRO_CONFIG = {
   ownerEmail:      "",
   logo:            "logo.png",
   team: [
-    {id: "barbero1", name: "Barbero 1", role: "owner"},
-    {id: "barbero2", name: "Barbero 2", role: "employee"}
+    {id: "dueno", name: "Dueño", role: "owner"}          // un solo barbero: el dueño (no se muestra selector de barbero al reservar)
   ],
   heroImage:       "",
   mapboxToken:     "",
