@@ -1416,3 +1416,66 @@ body.no-scroll{overflow:hidden;}
 /* ---- panel en el celular: la fila de estados de pago baja de renglón en vez de ensanchar la pantalla ---- */
 .payline{flex-wrap:wrap; gap:6px;}
 .payline .paychip,.payline .paystate{white-space:normal;}
+
+/* =====================================================================================================================
+   Presentación del panel: PIN con teclado, recorrido por pestañas y barra de navegación de abajo (pensado para el celular)
+   ===================================================================================================================== */
+/* ---- PIN con teclado numérico ---- */
+.pin-card{max-width:360px; margin:18px auto; text-align:center; padding:24px 18px 20px;}
+.pin-logo{display:block; width:96px; height:96px; object-fit:contain; margin:0 auto 12px; border-radius:50%;}
+.pin-logo[hidden]{display:none;}
+.pin-card h2{font-size:22px; margin-bottom:4px;}
+.pin-dots{display:flex; justify-content:center; gap:14px; margin:18px 0 20px;}
+.pin-dots i{width:16px; height:16px; border-radius:50%; border:2px solid var(--border); background:transparent; transition:background .12s, border-color .12s, transform .12s;}
+.pin-dots i.on{background:var(--accent-1); border-color:var(--accent-1); transform:scale(1.12);}
+.pin-dots.bad{animation:pinShake .4s ease;}
+.pin-dots.bad i{border-color:var(--danger); background:var(--danger);}
+@keyframes pinShake{ 0%,100%{transform:translateX(0);} 20%{transform:translateX(-9px);} 40%{transform:translateX(9px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(6px);} }
+.pin-pad{display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; max-width:280px; margin:0 auto;}
+.pin-key{height:64px; border-radius:50%; width:64px; justify-self:center; background:var(--surface-2); border:1.5px solid var(--border); color:var(--text); font:700 26px Manrope,sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent;}
+.pin-key:active{background:var(--accent-2); border-color:var(--accent-2); color:var(--on-accent, #fff);}
+.pin-del{font-size:0; color:var(--text-muted);}
+
+/* ---- recorrido ---- */
+.tour-box{padding-top:60px;}
+.tour-ico{width:74px; height:74px; border-radius:20px; background:var(--surface-2); border:1.5px solid rgba(var(--accent-rgb),.5); color:var(--accent-1); display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+  box-shadow:0 0 28px rgba(var(--accent-rgb),.22);}
+.tour-what{font-size:16px; line-height:1.5; color:var(--text); margin:0 0 16px;}
+.tour-what span,.tour-how span{display:block; font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-1); margin-bottom:4px;}
+.tour-what b,.tour-how b{color:var(--text);}
+.tour-how{background:var(--surface); border:1px solid var(--border-soft); border-radius:14px; padding:14px 16px 6px;}
+.tour-how ol{margin:6px 0 0; padding:0; list-style:none; counter-reset:tr;}
+.tour-how li{counter-increment:tr; position:relative; padding:0 0 12px 34px; font-size:15px; line-height:1.45; color:var(--text-muted);}
+.tour-how li::before{content:counter(tr); position:absolute; left:0; top:0; width:24px; height:24px; border-radius:50%; background:var(--accent-2); color:var(--on-accent, #fff); font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;}
+.tour-go{margin-top:10px;}
+
+/* ---- barra de abajo ---- */
+.bnav{display:none;}
+.more-sheet{display:none;}
+@media (max-width:760px){
+  body.has-bottom-nav .owner-nav-scroll,body.has-bottom-nav .btn-logout{display:none;}
+  body.has-bottom-nav .owner-nav-row{margin-bottom:0;}
+  body.has-bottom-nav .app-admin{padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+  .bnav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:70; background:rgba(10,10,10,.97); border-top:1px solid var(--border);
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom)); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);}
+  .bnav-btn{position:relative; flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 2px 6px; border:0; background:none; color:var(--text-faint); font:700 11.5px Manrope,sans-serif; cursor:pointer; border-radius:12px; -webkit-tap-highlight-color:transparent;}
+  .bnav-btn span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+  .bnav-btn.on{color:var(--accent-1);}
+  .bnav-btn.on::before{content:""; position:absolute; top:0; left:26%; right:26%; height:3px; border-radius:0 0 3px 3px; background:var(--accent-1);}
+  .bnav-badge{position:absolute; top:2px; left:calc(50% + 6px); min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:var(--danger); color:#fff; font:800 11px/18px Manrope,sans-serif; font-style:normal; text-align:center;}
+  body.has-bottom-nav .demo-bar{bottom:calc(76px + env(safe-area-inset-bottom));}
+  body.has-bottom-nav .toast{bottom:calc(92px + env(safe-area-inset-bottom));}
+
+  .more-sheet{display:flex; position:fixed; inset:0; z-index:340; background:rgba(0,0,0,.55); align-items:flex-end; animation:fadeIn .2s ease;}
+  .more-sheet.out{opacity:0; transition:opacity .2s;}
+  .more-panel{width:100%; background:var(--surface); border-radius:20px 20px 0 0; border-top:1px solid var(--border); padding:10px 16px calc(20px + env(safe-area-inset-bottom)); animation:sheetUp .25s ease;}
+  .more-grip{width:44px; height:5px; border-radius:3px; background:var(--surface-3); margin:0 auto 12px;}
+  .more-title{font-size:13px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--text-faint); margin:0 0 12px;}
+  .more-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;}
+  .more-item{position:relative; display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 4px 12px; border-radius:14px; background:var(--surface-2); border:1.5px solid var(--border-soft); color:var(--text); font:700 13px Manrope,sans-serif; cursor:pointer;}
+  .more-item.on{border-color:var(--accent-1); color:var(--accent-1);}
+  .more-item .bnav-badge{top:6px; left:auto; right:8px;}
+  .more-out{color:var(--danger);}
+}
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+@keyframes sheetUp{ from{transform:translateY(40px); opacity:.6;} to{transform:none; opacity:1;} }

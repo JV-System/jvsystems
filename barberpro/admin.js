@@ -51,6 +51,7 @@
     var main = document.getElementById("main");
     main.className = session.ownerAuthed ? "is-owner" : "";
     if(!session.ownerAuthed){
+      document.body.classList.remove("has-bottom-nav");
       main.innerHTML = ownerLogin();
       bindOwnerLogin();
       return;
@@ -97,10 +98,13 @@
     else if(session.ownerTab==="config") html += ownerConfig();
     else html += ownerSaldos();
     html += '</div>';
+    if(bottomNavOn()) html += bottomNavHtml(cobra, {hoy: hoyBadge, unseen: unseen, cobros: cobrosCount});
+    document.body.classList.toggle("has-bottom-nav", bottomNavOn());
 
     main.innerHTML = html;
     if(CLOUD && window.PWA && !session.pwaSynced){ session.pwaSynced = true; PWA.resync(); }     // deja guardado este celular para los avisos
     bindOwnerNav();
+    bindBottomNav();
     bindPwEyes();
     document.querySelectorAll("[data-demo-on]").forEach(function(el){
       el.onclick = function(){ loadExampleData(); renderOwner(); };
@@ -161,17 +165,11 @@
         '<button class="link-btn" id="btnOwnerReset" type="button" style="margin-top:14px;">Olvidé mi contraseña</button>' +
         '</div>';
     }
-    return '<div class="card lockcard">' +
-      '<div class="lockicon">🔒</div>' +
-      '<h2>Acceso del dueño</h2>' +
-      '<div class="sub">Ingresá el PIN para ver la agenda</div>' +
-      '<input type="password" id="inpPin" placeholder="PIN" style="text-align:center; letter-spacing:4px; max-width:160px; margin:0 auto 14px;">' +
-      '<button class="btn btn-primary" id="btnOwnerLogin" style="max-width:220px; margin:0 auto;">Ingresar</button>' +
-      '<div class="field-hint" style="margin-top:12px;">PIN de ejemplo: 1234 (cambialo en Precios → Acceso)</div>' +
-      '</div>';
+    return pinLockHtml();
   }
 
   function bindOwnerLogin(){
+    if(!CLOUD && bindPinPad()) return;
     if(CLOUD && bindInviteRegister()) return;
     var btn = document.getElementById("btnOwnerLogin");
     if(!btn) return;
@@ -719,7 +717,7 @@
     });
   }
 
-  function needsSetup(){ return !state.config.whatsappLink || !state.config.address; }
+  function needsSetup(){ return !cfgOn("demoData") && (!state.config.whatsappLink || !state.config.address); }
 
   function ownerNegocio(){
     var c = state.config;
@@ -2259,6 +2257,266 @@
     });
   }
 
+  // ================= PRESENTACIÓN DEL PANEL: PIN con teclado, bienvenida, recorrido y navegación de abajo =================
+  function cfgOn(k){ return !!(window.BARBERPRO_CONFIG || {})[k]; }
+  function bottomNavOn(){ return cfgOn("navInferior"); }
+
+  var ICONS = {
+    hoy: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    agenda: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    clientes: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.2 5 2.4 5 5.3"/>',
+    pagos: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/>',
+    cobros: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="16.5" cy="14.5" r="1.2"/>',
+    movimientos: '<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+    horarios: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    cierres: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>',
+    negocio: '<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M5 12v8h14v-8"/>',
+    precios: '<path d="M12 3v18M16.5 7.5C15.6 6.4 14 6 12 6c-2.4 0-4 1-4 2.7 0 4 8.2 1.8 8.2 6 0 1.8-1.7 3.3-4.2 3.3-2.2 0-3.9-.6-4.8-1.9"/>',
+    saldos: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/>',
+    equipo: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.2 5 2.4 5 5.3"/>',
+    config: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/>',
+    mas: '<circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>',
+    celular: '<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>',
+    listo: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>',
+    salir: '<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
+    recorrido: '<circle cx="12" cy="12" r="9"/><path d="M10 9.5a2.2 2.2 0 1 1 3.2 2c-.8.5-1.2 1-1.2 2M12 16.5v.5"/>'
+  };
+  function ico(name, size){
+    return '<svg class="ico" width="'+(size || 24)+'" height="'+(size || 24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[name] || "")+'</svg>';
+  }
+
+  // ---- PIN con teclado numérico grande (versión de prueba / demo) ----
+  function pinLength(){
+    var n = String(state.config.ownerPin || "").length, pins = state.config.staffPins || {};
+    Object.keys(pins).forEach(function(k){ n = Math.max(n, String(pins[k] || "").length); });
+    return Math.max(4, n);
+  }
+  function pinLockHtml(){
+    var n = pinLength(), keys = "";
+    for(var k = 1; k <= 9; k++) keys += '<button type="button" class="pin-key" data-k="'+k+'">'+k+'</button>';
+    keys += '<span></span><button type="button" class="pin-key" data-k="0">0</button><button type="button" class="pin-key pin-del" data-k="del" aria-label="Borrar">' +
+      '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9.5l-5 5M12 9.5l5 5"/></svg></button>';
+    return '<div class="card lockcard pin-card">' +
+      '<img class="pin-logo" data-brand-logo hidden alt="">' +
+      '<h2>'+esc(state.config.businessName)+'</h2>' +
+      '<div class="sub">Panel del dueño · ingresá tu PIN</div>' +
+      '<div class="pin-dots" id="pinDots" aria-live="polite">' + new Array(n + 1).join("<i></i>") + '</div>' +
+      '<div class="pin-pad" id="pinPad">' + keys + '</div>' +
+      '<div class="field-hint" style="margin:14px 0 0; text-align:center;">' +
+        (cfgOn("demoData") ? 'PIN de la demo: <b>'+esc(state.config.ownerPin)+'</b>' : 'PIN de ejemplo: 1234 (cambialo en Precios → Acceso)') + '</div></div>';
+  }
+
+  // ¿este PIN abre el panel? Devuelve true si entró
+  function localPinLogin(pin){
+    var pins = state.config.staffPins || {};
+    var empId = Object.keys(pins).filter(function(id){ return pins[id] && pins[id] === pin && barberById(id) && barberById(id).role === "employee"; })[0];
+    if(pin === state.config.ownerPin){
+      session.ownerAuthed = true; session.localRole = "owner"; session.localBarber = null; sessionStorage.setItem(OWNER_KEY, "1");
+    } else if(empId){
+      session.ownerAuthed = true; session.localRole = "employee"; session.localBarber = empId; sessionStorage.setItem(OWNER_KEY, "emp:" + empId);
+    } else return false;
+    document.onkeydown = null;
+    renderOwner();
+    startPresentation();
+    return true;
+  }
+
+  function bindPinPad(){
+    var pad = document.getElementById("pinPad");
+    if(!pad) return false;
+    applyLogo();
+    var pin = "", n = pinLength(), dots = document.querySelectorAll("#pinDots i"), busy = false;
+    function paint(){ dots.forEach(function(d, i){ d.classList.toggle("on", i < pin.length); }); }
+    function press(k){
+      if(busy) return;
+      if(k === "del") pin = pin.slice(0, -1);
+      else if(pin.length < n) pin += k;
+      paint();
+      if(!pin) return;
+      if(localPinLogin(pin)) return;
+      if(pin.length >= n){
+        busy = true;
+        var box = document.getElementById("pinDots"); if(box) box.classList.add("bad");
+        showToast("PIN incorrecto.");
+        setTimeout(function(){ pin = ""; busy = false; if(box) box.classList.remove("bad"); paint(); }, 450);
+      }
+    }
+    pad.querySelectorAll(".pin-key").forEach(function(el){ el.onclick = function(){ press(el.getAttribute("data-k")); }; });
+    document.onkeydown = function(e){
+      if(!document.getElementById("pinPad")){ document.onkeydown = null; return; }
+      if(/^[0-9]$/.test(e.key)) press(e.key); else if(e.key === "Backspace") press("del");
+    };
+    return true;
+  }
+
+  // ---- bienvenida animada al abrir el panel ----
+  var PANEL_INTRO_KEY = "barberpro_panel_intro" + NS, TOUR_KEY = "barberpro_tour_seen" + NS;
+  function startPresentation(){
+    if(!cfgOn("presentacion") || isEmployee()) return;
+    var seen = false;
+    try{ seen = sessionStorage.getItem(PANEL_INTRO_KEY) === "1"; }catch(e){}
+    if(seen) return;
+    try{ sessionStorage.setItem(PANEL_INTRO_KEY, "1"); }catch(e){}
+    showPanelIntro(function(){ openTour(0); });
+  }
+  function showPanelIntro(done){
+    var old = document.getElementById("introOverlay"); if(old) old.remove();
+    var ov = document.createElement("div");
+    ov.id = "introOverlay"; ov.className = "intro-overlay";
+    ov.innerHTML = '<div class="intro-band top"></div><div class="intro-band bottom"></div>' +
+      '<i class="spark s1"></i><i class="spark s2"></i><i class="spark s3"></i><i class="spark s4"></i><i class="spark s5"></i>' +
+      '<div class="intro-stage"><div class="intro-glow"></div><img class="intro-photo" data-brand-logo hidden alt="">' +
+      '<div class="intro-welcome">Bienvenido</div><h1 class="intro-name">'+brandMarkup(state.config.businessName || "")+'</h1><div class="intro-line"></div>' +
+      '<div class="intro-tag">Tu panel de turnos</div></div>';
+    document.body.appendChild(ov);
+    applyLogo();
+    var closed = false;
+    var close = function(){
+      if(closed) return; closed = true;
+      ov.classList.add("hide");
+      setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); if(done) done(); }, 750);
+    };
+    ov.onclick = close;
+    setTimeout(close, 3400);
+  }
+
+  // ---- recorrido: una tarjeta por pestaña (para qué sirve y cómo se usa) ----
+  function tourSlides(){
+    var cobra = cobraEnApp(), demo = cfgOn("demoData"), s = [];
+    s.push({icon: "celular", title: "Así funciona tu panel",
+      what: "Tus clientes reservan solos desde el celular y vos ves todo acá, en una sola pantalla.",
+      how: ["Compartís tu link o ponés el QR en el local.", "El cliente elige día y hora" + (cobra ? " y deja la seña" : "") + ".", "Vos lo ves al instante en <b>Hoy</b> y en <b>Agenda</b>."]});
+    s.push({icon: "hoy", tab: "hoy", title: "Hoy",
+      what: "Lo primero que ves cada día: cuántos turnos tenés, cuál es el próximo y qué necesita tu atención.",
+      how: ["Los números de arriba resumen el día de un vistazo.", "Tocá un turno para abrirlo y ver los datos del cliente.", "<b>Recordatorios de mañana</b> arma el mensaje de WhatsApp para avisarle a cada cliente."]});
+    s.push({icon: "agenda", tab: "agenda", title: "Agenda",
+      what: "Todos los turnos, por día, por semana o por mes.",
+      how: ["Elegí <b>Día</b>, <b>Semana</b> o <b>Mes</b> arriba.", "En el mes, la barra de cada día muestra qué tan lleno está.", "Tocá un turno para ver al cliente, cancelarlo o marcar que no vino."]});
+    s.push({icon: "clientes", tab: "clientes", title: "Clientes",
+      what: "Todos los que reservaron, con cuántas veces vinieron y cuánto gastaron.",
+      how: ["Buscá por nombre o usuario.", "Ordená por más turnos, última visita o más gastó.", "Tocá un cliente para ver todo su historial."]});
+    if(cobra) s.push({icon: "pagos", tab: "pagos", title: "Pagos",
+      what: "Lo cobrado, las señas por venir y lo que falta cobrar.",
+      how: ["Elegí el período: este mes, últimos 30 días, este año…", "Cuando un cliente avisa <b>Ya pagué</b>, abrí su turno: ves el comprobante y tocás <b>Confirmar seña</b>.", "Si pagan el saldo en efectivo, tocá <b>Cobrado en efectivo</b>."]});
+    s.push({icon: "movimientos", tab: "movimientos", title: "Movimientos",
+      what: "El registro de todo lo que pasa con cada turno: reservas, pagos, cambios de día y cancelaciones.",
+      how: ["Filtrá por tipo: Pagos, Cancelaciones, Cambios de día…", "Buscá por cliente.", "Sirve para aclarar cualquier duda de quién hizo qué y cuándo."]});
+    s.push({icon: "horarios", tab: "horarios", title: "Horarios y cierres",
+      what: "<b>Horarios:</b> los días y horas en que atendés. <b>Cierres:</b> días u horas puntuales sin atención, como feriados o vacaciones.",
+      how: ["En Horarios tildá cada día y poné de qué hora a qué hora; si cerrás al mediodía usá el segundo horario.", "En Cierres elegí la fecha y guardá: ese día no se puede reservar.", "Los cambios se ven en la app de tus clientes al instante."]});
+    s.push({icon: "negocio", tab: "negocio", title: "Negocio y precios",
+      what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor del corte" + (cobra ? ", la seña" : "") + " y la duración del turno.",
+      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás tu alias." : "Podés cambiar el precio cuando quieras.", "Se actualiza en la app de tus clientes al instante."]});
+    s.push({icon: "equipo", tab: "equipo", title: "Equipo",
+      what: "Si tenés empleados, cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
+      how: ["<b>Agregar empleado:</b> nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar.", "Cada barbero ve solo su propia agenda."]});
+    s.push({icon: "config", tab: "config", title: "Configuración",
+      what: "Tu link para clientes, cómo tener el panel como app en el celular y tu cuenta.",
+      how: ["Copiá tu link y mandalo por WhatsApp o ponelo en tu perfil.", "Instalá el panel como app: en iPhone, <b>Compartir</b> y <b>Agregar a inicio</b>; en Android, <b>Instalar app</b>.", "Desde acá también volvés a ver este recorrido."]});
+    s.push({icon: "listo", title: "Ya lo conocés",
+      what: demo ? "Esta demo trae turnos y clientes de ejemplo para que pruebes sin miedo." : "Cuando quieras, volvés a ver este recorrido desde Configuración.",
+      how: demo ? ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Reservá desde <b>Ver app del cliente</b> y mirá cómo aparece acá.", "El botón <b>Reiniciar</b> vuelve todo al principio."]
+                : ["Cada pestaña tiene su botón de ayuda en este recorrido.", "Si algo no te cierra, escribinos.", "¡Éxitos!"],
+      last: true});
+    return s;
+  }
+
+  var tour = {i: 0};
+  function closeTour(){
+    var ov = document.getElementById("tourOverlay");
+    if(ov){ ov.classList.add("hide"); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 550); }
+    document.body.classList.remove("no-scroll");
+    try{ sessionStorage.setItem(TOUR_KEY, "1"); }catch(e){}
+  }
+  function openTour(at){
+    tour.i = at || 0;
+    var ov = document.getElementById("tourOverlay");
+    if(!ov){
+      ov = document.createElement("div"); ov.id = "tourOverlay"; ov.className = "wiz-overlay tour-overlay";
+      ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true"); ov.setAttribute("aria-label", "Recorrido del panel");
+      document.body.appendChild(ov); document.body.classList.add("no-scroll");
+    }
+    renderTour();
+  }
+  window.BP_openTour = function(){ if(session.ownerAuthed) openTour(0); };
+
+  function renderTour(){
+    var ov = document.getElementById("tourOverlay"); if(!ov) return;
+    var slides = tourSlides(), n = slides.length;
+    tour.i = Math.max(0, Math.min(tour.i, n - 1));
+    var s = slides[tour.i], first = tour.i === 0;
+    ov.classList.remove("hide");
+    ov.innerHTML = '<div class="wiz-stripe"></div><div class="wiz-glow"></div>' +
+      '<div class="wiz-box tour-box" data-slide="'+tour.i+'">' +
+        '<div class="wiz-dots" aria-hidden="true">' + slides.map(function(x, k){ return '<i class="'+(k < tour.i ? 'done' : k === tour.i ? 'cur' : '')+'"></i>'; }).join("") + '</div>' +
+        '<div class="tour-ico">' + ico(s.icon, 38) + '</div>' +
+        '<div class="wiz-count">'+(first ? 'Recorrido' : s.last ? 'Listo' : 'Pestaña ' + tour.i + ' de ' + (n - 2))+'</div>' +
+        '<h2 class="wiz-title">'+s.title+'</h2>' +
+        '<div class="tour-what"><span>Para qué sirve</span>'+s.what+'</div>' +
+        '<div class="tour-how"><span>Cómo se usa</span><ol>' + s.how.map(function(h){ return '<li>'+h+'</li>'; }).join("") + '</ol></div>' +
+        '<div class="wiz-btns">' + (first ? '' : '<button type="button" class="btn btn-ghost" id="trBack">Atrás</button>') +
+          '<button type="button" class="btn btn-primary" id="trNext">'+(s.last ? 'Empezar a usar' : first ? 'Empezar recorrido' : 'Siguiente')+'</button></div>' +
+        (s.tab ? '<button type="button" class="btn btn-ghost tour-go" id="trGo">Ver esta pestaña ahora</button>' : '') +
+        (s.last ? '' : '<button type="button" class="link-btn plain wz-later" id="trSkip">Saltar recorrido</button>') +
+      '</div>';
+    var box = ov.querySelector(".wiz-box"); if(box) box.scrollTop = 0; ov.scrollTop = 0;
+    document.getElementById("trNext").onclick = function(){ if(s.last){ closeTour(); window.scrollTo(0, 0); } else { tour.i++; renderTour(); } };
+    var bk = document.getElementById("trBack"); if(bk) bk.onclick = function(){ tour.i--; renderTour(); };
+    var go = document.getElementById("trGo"); if(go) go.onclick = function(){ closeTour(); session.ownerTab = s.tab; session.clientDetail = null; renderOwner(); window.scrollTo(0, 0); };
+    var sk = document.getElementById("trSkip"); if(sk) sk.onclick = closeTour;
+  }
+
+  // ---- barra de navegación de abajo (celular) ----
+  function bottomTabs(cobra, badges){
+    if(isEmployee()){
+      var e = [{id: "hoy", l: "Hoy", c: badges.hoy}, {id: "agenda", l: "Agenda", c: badges.unseen}];
+      if(cobra) e.push({id: "cobros", l: "Cobros", c: badges.cobros});
+      e.push({id: "movimientos", l: "Movim."}, {id: "config", l: "Cuenta"});
+      return {main: e, more: []};
+    }
+    var main = [{id: "hoy", l: "Hoy", c: badges.hoy}, {id: "agenda", l: "Agenda", c: badges.unseen}, {id: "clientes", l: "Clientes"}];
+    if(cobra) main.push({id: "pagos", l: "Pagos"}); else main.push({id: "movimientos", l: "Movim."});
+    var more = [];
+    if(cobra) more.push({id: "movimientos", l: "Movimientos"});
+    more.push({id: "equipo", l: "Equipo"}, {id: "horarios", l: "Horarios"}, {id: "cierres", l: "Cierres"}, {id: "negocio", l: "Negocio", c: needsSetup() ? "!" : 0}, {id: "precios", l: "Precios"});
+    if(cobra) more.push({id: "saldos", l: "Saldos", c: Object.keys(state.debts).length});
+    more.push({id: "config", l: "Configuración"});
+    return {main: main, more: more};
+  }
+  function bottomNavHtml(cobra, badges){
+    var t = bottomTabs(cobra, badges), moreActive = t.more.some(function(x){ return x.id === session.ownerTab; });
+    function btn(x){
+      return '<button type="button" class="bnav-btn'+(session.ownerTab === x.id ? ' on' : '')+'" data-tab="'+x.id+'">' + ico(x.id, 24) +
+        (x.c ? '<em class="bnav-badge">'+x.c+'</em>' : '') + '<span>'+x.l+'</span></button>';
+    }
+    return '<nav class="bnav" id="bnav" aria-label="Secciones">' + t.main.map(btn).join("") +
+      (t.more.length ? '<button type="button" class="bnav-btn'+(moreActive ? ' on' : '')+'" id="bnavMore">' + ico("mas", 24) + '<span>Más</span></button>' : '') + '</nav>';
+  }
+  function openMoreSheet(){
+    var t = bottomTabs(cobraEnApp(), {hoy: 0, unseen: 0, cobros: 0});
+    var old = document.getElementById("moreSheet"); if(old) old.remove();
+    var ov = document.createElement("div");
+    ov.id = "moreSheet"; ov.className = "more-sheet";
+    ov.innerHTML = '<div class="more-panel"><div class="more-grip"></div><div class="more-title">Más secciones</div><div class="more-grid">' +
+      t.more.map(function(x){ return '<button type="button" class="more-item'+(session.ownerTab === x.id ? ' on' : '')+'" data-tab="'+x.id+'">'+ico(x.id, 26)+'<span>'+x.l+'</span>' + (x.c ? '<em class="bnav-badge">'+x.c+'</em>' : '') + '</button>'; }).join("") +
+      '<button type="button" class="more-item" id="moreTour">'+ico("recorrido", 26)+'<span>Recorrido</span></button>' +
+      '<button type="button" class="more-item more-out" id="moreOut">'+ico("salir", 26)+'<span>Salir</span></button></div></div>';
+    document.body.appendChild(ov);
+    var close = function(){ ov.classList.add("out"); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 220); };
+    ov.onclick = function(e){ if(e.target === ov) close(); };
+    ov.querySelectorAll(".more-item[data-tab]").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); session.clientDetail = null; close(); renderOwner(); window.scrollTo(0, 0); };
+    });
+    document.getElementById("moreTour").onclick = function(){ close(); openTour(0); };
+    document.getElementById("moreOut").onclick = function(){ close(); var b = document.getElementById("btnLogout"); if(b) b.click(); };
+  }
+  function bindBottomNav(){
+    document.querySelectorAll(".bnav-btn[data-tab]").forEach(function(el){
+      el.onclick = function(){ session.ownerTab = el.getAttribute("data-tab"); session.clientDetail = null; renderOwner(); window.scrollTo(0, 0); };
+    });
+    var more = document.getElementById("bnavMore"); if(more) more.onclick = openMoreSheet;
+  }
+
   // ================= ADMINISTRADORES POR INVITACIÓN + GUÍA DE CONFIGURACIÓN =================
   // El dueño (o un administrador) crea un link en Equipo. Quien lo abre crea su usuario, elige quién es y entra como administrador (mismos permisos
   // que el dueño). La primera vez ve una guía en pasos cortos; lo que se carga una vez para todo el local (cobros, datos del local, horarios) queda
@@ -2622,9 +2880,14 @@
   }
 
   // ================= CONFIGURACIÓN =================
+  function tourCardHtml(){
+    return '<div class="card"><h2>Recorrido del panel</h2><div class="sub">Una tarjeta por pestaña: para qué sirve y cómo se usa.</div>' +
+      '<button class="btn btn-ghost" id="btnTourOpen" type="button">Ver el recorrido</button></div>';
+  }
+
   function ownerConfig(){
     var user = CLOUD && window.cloudAuth ? cloudAuth.user() : null;
-    var html = pwaCardShell() + shareLinksHtml() + '<div class="card"><h2>Tu cuenta</h2>';
+    var html = pwaCardShell() + shareLinksHtml() + tourCardHtml() + '<div class="card"><h2>Tu cuenta</h2>';
     if(CLOUD){
       html += '<div class="summary-row"><span class="k">Usuario</span><span class="v">'+esc(user ? userOf(user.email) : "")+'</span></div>' +
         '<div class="sub" style="margin-top:14px;">Cambiar contraseña</div>' +
@@ -2671,6 +2934,7 @@
 
   function bindConfigEvents(){
     bindPhotoControls();
+    var tb = document.getElementById("btnTourOpen"); if(tb) tb.onclick = function(){ openTour(0); };
     bindShareLinks();
     fillPwaCard();
     var ar = document.getElementById("chkAutoRem");

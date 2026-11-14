@@ -18,6 +18,8 @@ window.BARBERPRO_CONFIG = {
   payHolder:       "Barbería 352 (ejemplo)",
   payMpLink:       "",
   cobrarEnApp:     true,
+  presentacion:    true,                // al abrir el panel: bienvenida animada y recorrido por las pestañas
+  navInferior:     true,                // en el celular, la navegación del panel va abajo (pulgar)
   clientPage:      "app.html",
   demoData:        true,
   hours: {

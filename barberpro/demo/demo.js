@@ -35,8 +35,11 @@
       '<span class="demo-tag">DEMO</span>' +
       '<span class="demo-txt">' + (panel ? pinTxt : "Reservá como si fueras un cliente") + '</span>' +
       '<a href="' + (panel ? "app.html" : "panel.html") + '" target="_blank" rel="noopener">' + (panel ? "Ver app del cliente" : "Ver panel del dueño") + '</a>' +
+      (panel ? '<button type="button" id="demoTour">Recorrido</button>' : '') +
       '<button type="button" id="demoReset">Reiniciar</button>';
     document.body.appendChild(bar);
+    var tb = document.getElementById("demoTour");
+    if(tb) tb.onclick = function(){ if(window.BP_openTour) BP_openTour(); };
     document.getElementById("demoReset").onclick = function(){
       if(confirm("¿Reiniciar la demo? Se borra lo que cargaste y vuelven los datos de ejemplo.")) reiniciar();
     };

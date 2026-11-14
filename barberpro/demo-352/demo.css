@@ -7,3 +7,9 @@
 .demo-bar button{color:#9fb0c1; border-left:1px solid rgba(255,255,255,.14); border-radius:0; padding-left:10px;}
 @media (max-width:560px){ .demo-bar:not(.is-panel) .demo-txt{display:none;} .demo-bar.is-panel{border-radius:16px; flex-wrap:wrap; justify-content:center; white-space:normal; width:calc(100vw - 20px);} }
 body{padding-bottom:64px;}
+
+/* con la barra de abajo, la barra de la demo queda en una sola línea (el PIN ya se ve en la pantalla de acceso) */
+@media (max-width:760px){
+  body.has-bottom-nav .demo-bar{flex-wrap:nowrap; border-radius:999px; width:auto; white-space:nowrap; padding:6px 10px;}
+  body.has-bottom-nav .demo-bar .demo-txt{display:none;}
+}
