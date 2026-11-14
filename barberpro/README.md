@@ -98,3 +98,7 @@ Para mostrarle la app a una barbería con su propia imagen: copiá la carpeta `d
 
 Con `presentacion: true` y `navInferior: true` en `config.js`, el panel real también muestra la bienvenida animada (una vez por sesión) y el **recorrido la primera vez en cada dispositivo** (se guarda por usuario en el navegador; se vuelve a abrir desde Configuración o Más > Recorrido). Si el administrador entra por primera vez con un link de invitación, primero hace la guía de configuración y al terminar ve el recorrido. En la versión real y si el panel todavía no está instalado, el recorrido arranca con una tarjeta **"Instalalo como app en tu celular"** con los pasos para iPhone (Safari > Compartir > Agregar a inicio; al abrir la app desde el ícono hay que volver a entrar porque el iPhone guarda una sesión aparte) o para Android (menú ⋮ > Instalar app). Los textos de Equipo y Configuración se adaptan al local (varios barberos, link de invitación, link por barbero).
 
+### Demo de MONTAL (`demo-montal/`)
+
+Es la primera demo, con el diseño original de MONTAL (Reyna Montiel) recuperado del historial del repo: fondo negro con brillo violeta, botones con degradé naranja a rojo, cartel en Anton, texto crema y la franja de poste de barbero. El `logo.png` es un emblema provisorio armado con el nombre y la paleta (no hay un logo oficial en el repo); la imagen de portada de la versión original era arte de un anime de terceros y no se reutilizó. Un solo dueño, sin WhatsApp cargado, con la presentación y la navegación de abajo activadas.
+

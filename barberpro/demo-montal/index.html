@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>MONTAL · Turnos online (demo)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07060a">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--bg:#07060a; --surface:#18161b; --border:#332f39; --text:#f4eee5; --muted:#b6adb9; --o1:#ff9d3d; --o2:#ff5b3d; --o3:#e42952; --grad:linear-gradient(120deg,#ff9d3d 0%,#ff5b3d 50%,#e42952 100%);}
+*{box-sizing:border-box;}
+body{margin:0; color:var(--text); font:500 15px/1.5 Manrope,sans-serif;
+  background:radial-gradient(ellipse 820px 520px at 18% -12%, rgba(155,92,255,.2), transparent 60%), radial-gradient(ellipse 700px 520px at 108% 12%, rgba(228,41,82,.15), transparent 55%), radial-gradient(ellipse 900px 620px at 50% 118%, rgba(155,92,255,.1), transparent 62%), var(--bg); background-attachment:fixed;}
+.stripe{height:6px; background:repeating-linear-gradient(-45deg, #d7263d 0 9px, #ece5da 9px 18px, #3a63c2 18px 27px, #ece5da 27px 36px);}
+.wrap{max-width:760px; margin:0 auto; padding:26px 16px 60px;}
+.brand{display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:22px;}
+.brand img{width:140px; height:140px; border-radius:50%; box-shadow:0 0 0 2px rgba(155,92,255,.35), 0 0 40px rgba(155,92,255,.25);}
+.brand small{margin-top:12px; color:var(--muted); font-weight:600;}
+h1{font:400 clamp(30px,8vw,46px)/1.08 Anton,Impact,sans-serif; letter-spacing:1px; text-transform:uppercase; margin:0 0 12px; text-align:center;}
+h1 em{font-style:normal; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.lead{color:var(--muted); font-size:16px; margin:0 auto 24px; text-align:center; max-width:560px;}
+.cards{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:6px; text-decoration:none; color:inherit; transition:transform .15s,border-color .15s;}
+.card:hover{transform:translateY(-2px); border-color:#9b5cff;}
+.card h2{margin:0; font-size:18px;}
+.card p{margin:0; color:var(--muted); font-size:13.5px; flex:1;}
+.card .go{margin-top:10px; background:var(--grad); color:#1a0d06; text-align:center; font-weight:800; border-radius:12px; padding:12px;}
+.card .pin{font-size:12px; color:var(--muted);}
+.card .pin b{color:var(--text);}
+h3{margin:30px 0 10px; font-size:16px;}
+ul{margin:0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
+li{padding-left:22px; position:relative; font-size:14px; color:#d9d2c8;}
+li::before{content:"✓"; position:absolute; left:0; color:var(--o1); font-weight:800;}
+.note{background:rgba(155,92,255,.08); border:1px solid rgba(155,92,255,.3); border-radius:14px; padding:12px 14px; font-size:13.5px; color:#d9d2c8; margin-top:26px;}
+.cta{display:inline-block; margin-top:18px; background:#25d366; color:#06210f; font-weight:800; text-decoration:none; padding:13px 20px; border-radius:12px;}
+.foot{margin-top:36px; color:#847b88; font-size:12px; text-align:center;}
+@media (max-width:560px){ .cards,ul{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <div class="brand"><img src="logo.png" alt="MONTAL"><small>Barbería · Reyna Montiel · Pasaje Misiones 280</small></div>
+
+  <h1>Tus turnos, <em>sin vueltas</em></h1>
+  <p class="lead">Así se ve la app de turnos de MONTAL: tus clientes reservan solos desde el celular y vos ves toda la agenda en un panel. Probala, no hace falta registrarse.</p>
+
+  <div class="cards">
+    <a class="card" href="app.html" target="_blank" rel="noopener">
+      <h2>Como cliente</h2>
+      <p>Elegí día y hora, creá tu usuario y reservá. Mirá cómo se paga la seña y cómo se cambia o cancela un turno.</p>
+      <div class="go">Probar la app</div>
+    </a>
+    <a class="card" href="panel.html" target="_blank" rel="noopener">
+      <h2>Como dueña</h2>
+      <p>Tu agenda del día y del mes, clientes, pagos y horarios, con datos de ejemplo ya cargados y un recorrido que explica cada pestaña.</p>
+      <div class="pin">PIN de la dueña: <b>1234</b></div>
+      <div class="go">Entrar al panel</div>
+    </a>
+  </div>
+
+  <h3>Qué incluye</h3>
+  <ul>
+    <li>Reservas online las 24 horas, sin llamadas ni mensajes</li>
+    <li>Seña al reservar con el alias de Mercado Pago</li>
+    <li>Horarios de la mañana y de la tarde, y cierres por feriados</li>
+    <li>Agenda del día y del mes, con el porcentaje de ocupación</li>
+    <li>Cambio de día y cancelación desde la app del cliente</li>
+    <li>Comprobante de pago y aviso por WhatsApp</li>
+    <li>Panel con clientes, pagos y registro de movimientos</li>
+    <li>Se instala como app en el celular, también en iPhone</li>
+  </ul>
+
+  <div class="note"><b>Es una demo:</b> usa el nombre, la dirección y el diseño original de MONTAL, con clientes, turnos, horarios y precios de ejemplo. Lo que cargues queda solo en tu navegador y nadie más lo ve. El botón <b>Reiniciar</b> de la barra de abajo vuelve a empezar. La versión real se instala con tus datos y tu alias de cobro.</div>
+
+  <a class="cta" href="https://wa.me/543434728484?text=Hola!%20Prob%C3%A9%20la%20demo%20de%20MONTAL%20y%20quiero%20m%C3%A1s%20info" target="_blank" rel="noopener">Quiero esta app para mi barbería</a>
+
+  <div class="foot">BarberPro Turnos · JV Systems · Rosario, Argentina</div>
+</div>
+</body>
+</html>

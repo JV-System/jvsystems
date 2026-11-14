@@ -1,0 +1,40 @@
+/* Tema de MONTAL: el diseño original de la marca. Negro profundo con brillo violeta, botones con degradé naranja a rojo, texto crema y la
+   franja de poste de barbero (rojo, crema y azul). Todo sale de estas variables. */
+:root{
+  --bg:#07060a;
+  --bg-image:
+    radial-gradient(ellipse 820px 520px at 18% -12%, rgba(155,92,255,.16), transparent 60%),
+    radial-gradient(ellipse 700px 520px at 108% 12%, rgba(228,41,82,.13), transparent 55%),
+    radial-gradient(ellipse 900px 620px at 50% 118%, rgba(155,92,255,.09), transparent 62%);
+  --surface:#18161b; --surface-2:#221f26; --surface-3:#2b2731;
+  --border:#332f39; --border-soft:#26232a;
+  --text:#f4eee5; --text-muted:#b6adb9; --text-faint:#847b88;
+  --accent-1:#ff9d3d; --accent-2:#ff5b3d; --accent-3:#e42952;
+  --accent-grad:linear-gradient(120deg,#ff9d3d 0%,#ff5b3d 50%,#e42952 100%);
+  --accent-rgb:155,92,255;           /* brillos y fondos translúcidos: violeta, como en el diseño original */
+  --accent-glint:#c98bff; --on-accent:#1a0d06;
+  --pole:repeating-linear-gradient(-45deg, #d7263d 0 9px, #ece5da 9px 18px, #3a63c2 18px 27px, #ece5da 27px 36px);
+}
+body{background:#07060a;}
+.backdrop{background-image:var(--bg-image);}
+/* botones y selecciones con el degradé de la marca; el texto va en marrón oscuro para que se lea */
+.btn-primary,.slot-btn.selected,.cal-day.selected,.avatar,.app-admin .owner-nav button.active,.roletabs button.active,.who-opt.on,.pin-key:active{background:var(--accent-grad) !important; border-color:transparent !important;}
+.btn-primary,.btn-primary:active,.slot-btn.selected,.cal-day.selected,.avatar,.pay-step > b,.app-admin .owner-nav button.active,.roletabs button.active,.who-opt.on,.pwa-nudge .btn,.tour-how li::before{color:var(--on-accent) !important;}
+.pay-step > b,.tour-how li::before{background:var(--accent-grad);}
+.pin-key:active{color:var(--on-accent) !important;}
+.tk-check svg{stroke:#1a0d06;}
+.cal-day.selected .dot{background:#1a0d06;}
+/* cartel MONTAL en Anton, con el degradé de la marca */
+.bm-top{font-family:'Anton','Impact',sans-serif !important; font-style:normal; font-weight:400; letter-spacing:2px; text-transform:uppercase;}
+.bm-first,.bm-second{background-image:var(--accent-grad) !important; background-size:100% 100% !important; background-position:0 0 !important; -webkit-background-clip:text !important; background-clip:text !important; color:transparent !important; -webkit-text-fill-color:transparent !important;}
+.adminbar-biz{font-family:'Anton','Impact',sans-serif; font-weight:400; letter-spacing:1.5px;}
+/* franja de poste de barbero */
+.top-stripe{background:var(--pole); opacity:1; height:6px;}
+#introOverlay .intro-band,.thanks-overlay .intro-band,.wiz-stripe{background:var(--pole); background-size:50.9px 100%;}
+#introOverlay,.thanks-overlay,.wiz-overlay,.intro-overlay{background:#050407;}
+#introOverlay .bm-first,#introOverlay .bm-second{--c:#ff9d3d;}
+.adminlogo,.brand-logo,.intro-photo,.pin-logo{border-radius:50%;}
+.brand-logo{max-height:132px; width:auto;}
+.intro-photo{box-shadow:0 0 0 2px rgba(var(--accent-rgb),.4);}
+.demo-tag{background:var(--accent-grad); color:#1a0d06;}
+.demo-bar a{color:var(--accent-1);}
