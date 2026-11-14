@@ -2436,6 +2436,12 @@
     s.push({icon: "config", tab: "config", title: "Configuración",
       what: "Tu link para clientes" + (multi ? " (el general y uno por barbero)" : "") + ", cómo tener el panel como app en el celular y tu cuenta.",
       how: ["Copiá tu link y mandalo por WhatsApp o ponelo en tu perfil.", CLOUD ? "En <b>App en tu celular</b> ves si ya la instalaste y activás los avisos." : "Instalá el panel como app: en iPhone, <b>Compartir</b> y <b>Agregar a inicio</b>; en Android, <b>Instalar app</b>.", "Desde acá también cambiás tu contraseña o volvés a ver este recorrido."]});
+    if(cfgOn("precioOferta")){
+      var corte = Number(state.config.price) || 0;
+      s.push({icon: "precios", label: "Precio", title: "Cuánto cuesta",
+        what: "Un valor pensado en vos: el abono mensual equivale al precio de <b>2 cortes</b>. Con tu corte a <b>" + money(corte) + "</b>, son <b>" + money(corte * 2) + " por mes</b>.",
+        how: ["Siempre es el valor de 2 cortes: si actualizás el precio de tu corte, el abono se actualiza con él.", "Con evitar que se pierdan dos turnos al mes (olvidos, cancelaciones de último momento) ya se compensa.", "Para tenerla en tu barbería, escribinos por WhatsApp desde la portada de la demo."]});
+    }
     s.push({icon: "listo", label: "Listo", title: "Ya lo conocés",
       what: demo ? "Esta demo trae turnos y clientes de ejemplo para que pruebes sin miedo." : "Ya está todo listo para que lo uses. Cuando quieras, volvés a ver este recorrido desde Configuración.",
       how: demo ? ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Reservá desde <b>Ver app del cliente</b> y mirá cómo aparece acá.", "El botón <b>Reiniciar</b> vuelve todo al principio."]

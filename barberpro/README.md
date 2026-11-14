@@ -102,3 +102,7 @@ Con `presentacion: true` y `navInferior: true` en `config.js`, el panel real tam
 
 Es la primera demo, con el diseño original de MONTAL (Reyna Montiel) recuperado del historial del repo: fondo negro con brillo violeta, botones con degradé naranja a rojo, cartel en Anton, texto crema y la franja de poste de barbero. El `logo.png` es un emblema provisorio armado con el nombre y la paleta (no hay un logo oficial en el repo); la imagen de portada de la versión original era arte de un anime de terceros y no se reutilizó. Un solo dueño, sin WhatsApp cargado, con la presentación y la navegación de abajo activadas.
 
+### Demo general y precio de oferta
+
+`demo/` (la que se manda a todos) ahora tiene la misma presentación que las demás (bienvenida, recorrido por pestañas, navegación de abajo en el celular) y una portada pensada como app: pasos simples, qué incluye y la tarjeta **"Valor pensado en vos"**: el abono mensual equivale al valor de **2 cortes** (con el corte a $15.000, $30.000 por mes) y se ajusta cuando el barbero actualiza el precio de su corte. La portada trae una calculadora (el visitante escribe cuánto cobra su corte y ve su abono) y el botón de WhatsApp sale con ese valor ya escrito. El recorrido del panel suma la tarjeta "Cuánto cuesta" con `precioOferta: true` en `config.js`. El precio de la demo es de ejemplo ($15.000, `price` en `demo/config.js`).
+

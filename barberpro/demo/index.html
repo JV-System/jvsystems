@@ -3,81 +3,138 @@
 <head>
 <meta charset="utf-8">
 <title>BarberPro Turnos · Probá la demo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#05080d">
-<meta name="description" content="Probá BarberPro Turnos: reservas online, seña, equipo y cobros para tu barbería. Demo gratis, sin registrarte.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1118">
+<meta name="description" content="La app de turnos para tu barbería: tus clientes reservan solos desde el celular y vos ves todo en un panel. Probá la demo, sin registrarte.">
 <link rel="icon" href="../barberpro-logo.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
-:root{--bg:#05080d; --surface:#0d1520; --border:rgba(255,255,255,.1); --text:#eef3f8; --muted:#9fb0c1; --accent:#29b6f6; --grad:linear-gradient(135deg,#29b6f6,#1e88e5);}
+:root{--bg:#0b1118; --surface:#131c27; --surface2:#1a2431; --border:#2c3a4b; --text:#f1f5f9; --muted:#b3c0cd; --accent:#4aa8ec; --accent2:#1e88e5;}
 *{box-sizing:border-box;}
-body{margin:0; background:radial-gradient(ellipse at 50% -10%,#10263a 0,var(--bg) 60%) fixed; color:var(--text); font:500 15px/1.5 Manrope,sans-serif;}
-.wrap{max-width:760px; margin:0 auto; padding:28px 16px 60px;}
-.top{display:flex; align-items:center; gap:12px; margin-bottom:26px;}
-.top img{width:44px; height:44px; border-radius:50%;}
-.top b{font-family:Anton,sans-serif; font-weight:400; letter-spacing:1px; font-size:20px;}
-.top span{color:var(--muted); font-size:12px; display:block;}
-h1{font:400 clamp(32px,7vw,48px)/1.05 Anton,sans-serif; letter-spacing:.5px; margin:0 0 12px;}
-h1 em{font-style:normal; background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;}
-.lead{color:var(--muted); font-size:16px; margin:0 0 24px;}
-.cards{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px;}
-.card{background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:6px; text-decoration:none; color:inherit; transition:transform .15s,border-color .15s;}
-.card:hover{transform:translateY(-2px); border-color:var(--accent);}
-.card h2{margin:0; font-size:18px;}
-.card p{margin:0; color:var(--muted); font-size:13.5px; flex:1;}
-.card .go{margin-top:10px; background:var(--grad); color:#fff; text-align:center; font-weight:800; border-radius:12px; padding:11px;}
-.card .pin{font-size:12px; color:var(--muted);}
-.card .pin b{color:var(--text);}
-h3{margin:30px 0 10px; font-size:16px;}
-ul{margin:0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
-li{padding-left:22px; position:relative; font-size:14px; color:#cfd8e3;}
-li::before{content:"✓"; position:absolute; left:0; color:var(--accent); font-weight:800;}
-.note{background:rgba(41,182,246,.08); border:1px solid rgba(41,182,246,.25); border-radius:14px; padding:12px 14px; font-size:13.5px; color:#cfd8e3; margin-top:26px;}
-.cta{display:inline-block; margin-top:18px; background:#25d366; color:#06210f; font-weight:800; text-decoration:none; padding:13px 20px; border-radius:12px;}
-.foot{margin-top:36px; color:var(--muted); font-size:12px;}
-@media (max-width:560px){ .cards,ul{grid-template-columns:1fr;} }
+html{scroll-behavior:smooth;}
+body{margin:0; background:var(--bg); color:var(--text); font:500 16px/1.5 Manrope,sans-serif; padding-bottom:calc(86px + env(safe-area-inset-bottom));}
+.stripe{height:6px; background:repeating-linear-gradient(-45deg, var(--accent2) 0 9px, #dbe5ef 9px 18px);}
+.wrap{max-width:560px; margin:0 auto; padding:22px 16px 30px;}
+.top{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
+.top img{width:40px; height:40px; border-radius:50%;}
+.top b{font:400 19px Anton,sans-serif; letter-spacing:1px;}
+.top span{display:block; font-size:11.5px; color:var(--muted); font-weight:600; margin-top:-2px;}
+h1{font:800 clamp(30px,9vw,40px)/1.08 Manrope,sans-serif; letter-spacing:-.8px; margin:0 0 12px;}
+h1 em{font-style:normal; color:var(--accent);}
+.lead{color:var(--muted); font-size:17px; margin:0 0 22px;}
+.btn{display:flex; align-items:center; justify-content:center; gap:8px; min-height:56px; border-radius:14px; font:800 17px Manrope,sans-serif; text-decoration:none; width:100%; border:0; cursor:pointer;}
+.btn-main{background:var(--accent2); color:#fff;}
+.btn-line{background:transparent; color:var(--text); border:1.5px solid var(--border); margin-top:10px;}
+.btn small{font-weight:600; font-size:13px; opacity:.85;}
+.sec{margin-top:34px;}
+h2{font-size:21px; letter-spacing:-.3px; margin:0 0 6px;}
+.sub{color:var(--muted); font-size:15px; margin:0 0 14px;}
+.steps{display:grid; gap:10px;}
+.step{display:flex; gap:14px; align-items:flex-start; background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px;}
+.step i{flex:none; width:34px; height:34px; border-radius:50%; background:var(--accent2); color:#fff; font:800 16px/34px Manrope,sans-serif; font-style:normal; text-align:center;}
+.step b{display:block; font-size:16px;}
+.step span{color:var(--muted); font-size:14.5px;}
+ul.list{margin:0; padding:0; list-style:none; display:grid; gap:10px;}
+ul.list li{position:relative; padding-left:28px; font-size:15.5px;}
+ul.list li::before{content:"✓"; position:absolute; left:0; top:0; width:20px; height:20px; border-radius:50%; background:rgba(74,168,236,.16); color:var(--accent); font:800 12px/20px Manrope,sans-serif; text-align:center;}
+.price{background:linear-gradient(180deg,#16212e,#101923); border:1.5px solid rgba(74,168,236,.45); border-radius:20px; padding:20px 18px;}
+.kicker{font-size:12.5px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);}
+.price h2{margin:6px 0 14px; font-size:23px; line-height:1.2;}
+.price label{display:block; font-size:14px; color:var(--muted); font-weight:700; margin-bottom:6px;}
+.pin{display:flex; align-items:center; gap:8px; background:var(--surface2); border:1.5px solid var(--border); border-radius:14px; padding:0 14px; min-height:56px;}
+.pin span{font:800 22px Manrope,sans-serif; color:var(--muted);}
+.pin input{flex:1; min-width:0; background:none; border:0; outline:0; color:var(--text); font:800 24px Manrope,sans-serif; padding:10px 0;}
+.pin:focus-within{border-color:var(--accent);}
+.total{margin:16px 0 4px; text-align:center;}
+.total small{display:block; color:var(--muted); font-weight:700; font-size:14px;}
+.total b{display:block; font:800 clamp(38px,12vw,50px)/1.1 Manrope,sans-serif; letter-spacing:-1px; color:#fff;}
+.total em{font-style:normal; color:var(--accent); font-weight:800; font-size:15px;}
+.price ul{margin:14px 0 0; padding:0; list-style:none; display:grid; gap:8px; font-size:14.5px; color:var(--muted);}
+.price li{padding-left:22px; position:relative;}
+.price li::before{content:""; position:absolute; left:2px; top:7px; width:8px; height:8px; border-radius:50%; background:var(--accent);}
+.fine{font-size:13px; color:var(--muted); margin-top:12px; text-align:center;}
+.note{background:rgba(74,168,236,.08); border:1px solid rgba(74,168,236,.28); border-radius:14px; padding:12px 14px; font-size:14px; color:#d3dde7; margin-top:20px;}
+.foot{margin-top:30px; color:#8393a3; font-size:12.5px; text-align:center;}
+.sticky{position:fixed; left:0; right:0; bottom:0; z-index:20; background:rgba(11,17,24,.96); border-top:1px solid var(--border); padding:10px 16px calc(10px + env(safe-area-inset-bottom)); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);}
+.sticky .btn{max-width:528px; margin:0 auto; background:#25d366; color:#06210f; min-height:52px;}
 </style>
 </head>
 <body>
+<div class="stripe"></div>
 <div class="wrap">
-  <div class="top"><img src="../barberpro-logo.png" alt=""><div><b>BARBERPRO TURNOS</b><span>by JV Systems</span></div></div>
+  <div class="top"><img src="../barberpro-logo.png" alt=""><div><b>BARBERPRO</b><span>La app de turnos para tu barbería</span></div></div>
 
-  <h1>Tus turnos, <em>llenos y sin vueltas</em></h1>
-  <p class="lead">Tus clientes reservan solos desde el celular, dejan la seña y vos ves toda la agenda de tu equipo en un panel. Probalo acá, sin registrarte.</p>
+  <h1>Tus clientes reservan solos. <em>Vos cortás.</em></h1>
+  <p class="lead">Una app de turnos para tu barbería: se usa desde el celular, sin instalar nada y sin llamadas ni mensajes para agendar.</p>
 
-  <div class="cards">
-    <a class="card" href="app.html" target="_blank" rel="noopener">
-      <h2>📱 Como cliente</h2>
-      <p>Elegí barbero, día y hora, creá tu cuenta y reservá. Mirá cómo se paga la seña y cómo cambiás o cancelás tu turno.</p>
-      <div class="go">Probar la app</div>
-    </a>
-    <a class="card" href="panel.html" target="_blank" rel="noopener">
-      <h2>💈 Como dueño</h2>
-      <p>Agenda por barbero, pagos, clientes, equipo, cortes por empleado y recordatorios, con datos de ejemplo ya cargados.</p>
-      <div class="pin">PIN dueño: <b>1234</b> · empleados: Lucas <b>1111</b>, Nico <b>2222</b></div>
-      <div class="go">Entrar al panel</div>
-    </a>
+  <a class="btn btn-main" href="panel.html" target="_blank" rel="noopener">Ver cómo la usa el dueño<small>PIN 1234</small></a>
+  <a class="btn btn-line" href="app.html" target="_blank" rel="noopener">Ver cómo reserva un cliente</a>
+
+  <div class="sec">
+    <h2>Cómo funciona</h2>
+    <p class="sub">Tres pasos, sin complicaciones.</p>
+    <div class="steps">
+      <div class="step"><i>1</i><div><b>Mandás tu link o ponés el QR</b><span>Por WhatsApp, en tu perfil o en un cartel en el local.</span></div></div>
+      <div class="step"><i>2</i><div><b>El cliente elige día y hora</b><span>Crea su usuario en un minuto y deja la seña con tu alias de Mercado Pago.</span></div></div>
+      <div class="step"><i>3</i><div><b>Vos lo ves en tu panel</b><span>Agenda del día, clientes y pagos en una sola pantalla.</span></div></div>
+    </div>
   </div>
 
-  <h3>Qué incluye</h3>
-  <ul>
-    <li>Reservas online 24 h, sin llamadas ni chats</li>
-    <li>Seña al reservar (Mercado Pago o alias) y saldo al terminar</li>
-    <li>Cada barbero con sus horarios y su cupo</li>
-    <li>Cambio de día y cancelación desde la app del cliente</li>
-    <li>Orden de llegada para los que van sin turno</li>
-    <li>Pasar un corte a un compañero, con registro</li>
-    <li>Recordatorios del turno del día siguiente</li>
-    <li>Clientes, pagos y movimientos en un solo panel</li>
-  </ul>
+  <div class="sec">
+    <h2>Todo lo que incluye</h2>
+    <p class="sub">Lo que ya viene listo.</p>
+    <ul class="list">
+      <li>Reservas las 24 horas desde el celular del cliente</li>
+      <li>Seña al reservar y comprobante de pago</li>
+      <li>Agenda por día, semana y mes, con tus horarios y feriados</li>
+      <li>Varios barberos, cada uno con su agenda</li>
+      <li>El cliente cambia el día o cancela solo desde la app</li>
+      <li>Aviso por WhatsApp al barbero cuando reservan</li>
+      <li>Clientes, pagos y registro de todo lo que pasa</li>
+      <li>Se instala como app en el celular, también en iPhone</li>
+    </ul>
+  </div>
 
-  <div class="note"><b>Es una demo:</b> lo que cargues queda solo en tu navegador, nadie más lo ve. Los datos de ejemplo se renuevan cada día y podés volver a empezar con el botón <b>Reiniciar</b> de la barra de abajo. La versión real se instala con tu nombre, tus horarios y tu equipo.</div>
+  <div class="sec" id="precio">
+    <div class="price">
+      <div class="kicker">Valor pensado en vos</div>
+      <h2>El abono mensual es lo que cobrás por <b>2 cortes</b></h2>
+      <label for="corte">¿Cuánto cobrás tu corte hoy?</label>
+      <div class="pin"><span>$</span><input id="corte" type="text" inputmode="numeric" autocomplete="off" value="15.000" aria-label="Precio del corte"></div>
+      <div class="total"><small>Tu abono mensual</small><b id="abono">$30.000</b><em>por mes</em></div>
+      <ul>
+        <li>Siempre equivale al valor de 2 cortes.</li>
+        <li>Si actualizás el precio de tu corte, el abono se actualiza con él.</li>
+        <li>Con evitar que se pierdan dos turnos al mes (olvidos, cancelaciones de último momento) ya se compensa.</li>
+      </ul>
+    </div>
+    <p class="fine">Ejemplo: con el corte a $15.000, el abono es de $30.000 por mes.</p>
+  </div>
 
-  <p style="margin:18px 0 0;"><a href="instructivo.html" style="color:var(--accent); font-weight:700;">Ver instructivo de uso (para imprimir o guardar en PDF)</a></p>
-
-  <a class="cta" href="https://wa.me/543434728484?text=Hola!%20Probé%20la%20demo%20de%20BarberPro%20y%20quiero%20más%20info" target="_blank" rel="noopener">Quiero BarberPro en mi barbería</a>
+  <div class="note"><b>Es una demo:</b> usa una barbería de ejemplo, con clientes y turnos inventados. Lo que cargues queda solo en tu navegador y nadie más lo ve. Con <b>Reiniciar</b>, en la barra de abajo, vuelve a empezar. La versión real se instala con tu nombre, tus horarios, tu equipo y tu alias de cobro.</div>
 
   <div class="foot">BarberPro Turnos · JV Systems · Rosario, Argentina</div>
 </div>
+
+<div class="sticky"><a class="btn" id="cta" href="#" target="_blank" rel="noopener">Quiero esta app para mi barbería</a></div>
+
+<script>
+(function(){
+  var inp = document.getElementById("corte"), out = document.getElementById("abono"), cta = document.getElementById("cta");
+  function money(n){ return "$" + Math.round(n).toLocaleString("es-AR"); }
+  function digits(v){ return parseInt(String(v).replace(/\D/g, ""), 10) || 0; }
+  function update(){
+    var corte = digits(inp.value), abono = corte * 2;
+    out.textContent = money(abono);
+    cta.href = "https://wa.me/543434728484?text=" + encodeURIComponent("Hola! Vi la demo de BarberPro. Cobro el corte " + money(corte) + " y quiero info del abono de " + money(abono) + " por mes.");
+  }
+  inp.addEventListener("input", function(){
+    var d = digits(inp.value);
+    inp.value = d ? d.toLocaleString("es-AR") : "";
+    update();
+  });
+  update();
+})();
+</script>
 </body>
 </html>
