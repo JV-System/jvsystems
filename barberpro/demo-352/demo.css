@@ -1,0 +1,9 @@
+.demo-bar{position:fixed; left:50%; bottom:12px; transform:translateX(-50%); z-index:60; display:flex; align-items:center; gap:10px; max-width:calc(100vw - 20px);
+  background:rgba(8,14,22,.92); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:7px 8px 7px 12px; font:600 12px Manrope,sans-serif; color:#cfd8e3;
+  box-shadow:0 8px 24px rgba(0,0,0,.45); backdrop-filter:blur(8px); white-space:nowrap;}
+.demo-bar b{color:#fff;}
+.demo-tag{background:linear-gradient(135deg,#29b6f6,#1e88e5); color:#fff; font-weight:800; letter-spacing:.6px; padding:3px 9px; border-radius:999px; font-size:11px;}
+.demo-bar a,.demo-bar button{color:#29b6f6; font:700 12px Manrope,sans-serif; background:none; border:0; text-decoration:none; cursor:pointer; padding:4px 6px;}
+.demo-bar button{color:#9fb0c1; border-left:1px solid rgba(255,255,255,.14); border-radius:0; padding-left:10px;}
+@media (max-width:560px){ .demo-bar:not(.is-panel) .demo-txt{display:none;} .demo-bar.is-panel{border-radius:16px; flex-wrap:wrap; justify-content:center; white-space:normal; width:calc(100vw - 20px);} }
+body{padding-bottom:64px;}

@@ -3,14 +3,16 @@
 // true cuando hay Firebase configurado y cargado (lo activa cloud.js); false = modo local de demo
 var CLOUD = false;
 
-var STORAGE_KEY = "barberpro_turnos_v2";
-var PROFILE_KEY = "barberpro_client_profile_v2";
+// cada demo con su propia marca usa un prefijo (storageNs en su config.js) para que los datos de una no se mezclen con los de otra en el mismo navegador
+var NS = (window.BARBERPRO_CONFIG && window.BARBERPRO_CONFIG.storageNs) || "";
+var STORAGE_KEY = "barberpro_turnos_v2" + NS;
+var PROFILE_KEY = "barberpro_client_profile_v2" + NS;
 // versiones anteriores (datos de prueba): se borran del dispositivo la primera vez que se abre la app
 ["barberpro_turnos_v1","barberpro_client_profile","montal_turnos_v4","montal_client_profile"].forEach(function(k){
   try{ localStorage.removeItem(k); }catch(e){}
 });
-var OWNER_KEY = "barberpro_owner_authed";
-var INTRO_KEY = "barberpro_intro_seen";
+var OWNER_KEY = "barberpro_owner_authed" + NS;
+var INTRO_KEY = "barberpro_intro_seen" + NS;
 var DOW_KEYS = ["sun","mon","tue","wed","thu","fri","sat"];
 var DOW_LABEL = {sun:"Domingo",mon:"Lunes",tue:"Martes",wed:"Miércoles",thu:"Jueves",fri:"Viernes",sat:"Sábado"};
 var DOW_SHORT = {sun:"DOM",mon:"LUN",tue:"MAR",wed:"MIÉ",thu:"JUE",fri:"VIE",sat:"SÁB"};
@@ -910,7 +912,7 @@ function cleanProfile(p){
 }
 function authErr(code){ var e = new Error(code); e.code = code; return e; }
 
-var ACCOUNTS_KEY = "barberpro_accounts_v2";
+var ACCOUNTS_KEY = "barberpro_accounts_v2" + NS;
 function localAccounts(){ try{ return JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "{}"); }catch(e){ return {}; } }
 function saveLocalAccounts(m){ try{ localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(m)); }catch(e){} }
 function withUid(p){ var o = cleanProfile(p); o.uid = o.email; return o; }

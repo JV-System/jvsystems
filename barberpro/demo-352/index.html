@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Barbería 352 · Turnos online (demo)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080808">
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--bg:#080808; --surface:#141414; --border:#363636; --text:#f6f6f6; --muted:#c4c4c4; --accent:#f6b434; --accent2:#f0a21a;}
+*{box-sizing:border-box;}
+body{margin:0; background:radial-gradient(ellipse at 50% -10%,#2a2110 0,var(--bg) 58%) fixed; color:var(--text); font:500 15px/1.5 Manrope,sans-serif;}
+.stripe{height:6px; background:repeating-linear-gradient(-45deg, var(--accent2) 0 9px, #111 9px 18px);}
+.wrap{max-width:760px; margin:0 auto; padding:26px 16px 60px;}
+.brand{display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:22px;}
+.brand img{width:132px; height:132px; border-radius:50%; box-shadow:0 0 0 2px rgba(246,180,52,.35);}
+.brand small{margin-top:12px; color:var(--muted); font-weight:600;}
+h1{font:800 clamp(28px,7vw,40px)/1.1 Manrope,sans-serif; letter-spacing:-.5px; margin:0 0 12px; text-align:center;}
+h1 em{font-style:normal; color:var(--accent);}
+.lead{color:var(--muted); font-size:16px; margin:0 auto 24px; text-align:center; max-width:560px;}
+.cards{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px; display:flex; flex-direction:column; gap:6px; text-decoration:none; color:inherit; transition:transform .15s,border-color .15s;}
+.card:hover{transform:translateY(-2px); border-color:var(--accent);}
+.card h2{margin:0; font-size:18px;}
+.card p{margin:0; color:var(--muted); font-size:13.5px; flex:1;}
+.card .go{margin-top:10px; background:var(--accent2); color:#111; text-align:center; font-weight:800; border-radius:12px; padding:12px;}
+.card .pin{font-size:12px; color:var(--muted);}
+.card .pin b{color:var(--text);}
+h3{margin:30px 0 10px; font-size:16px;}
+ul{margin:0; padding:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px;}
+li{padding-left:22px; position:relative; font-size:14px; color:#d6d6d6;}
+li::before{content:"✓"; position:absolute; left:0; color:var(--accent); font-weight:800;}
+.note{background:rgba(246,180,52,.08); border:1px solid rgba(246,180,52,.28); border-radius:14px; padding:12px 14px; font-size:13.5px; color:#d6d6d6; margin-top:26px;}
+.cta{display:inline-block; margin-top:18px; background:#25d366; color:#06210f; font-weight:800; text-decoration:none; padding:13px 20px; border-radius:12px;}
+.foot{margin-top:36px; color:#8d8d8d; font-size:12px; text-align:center;}
+@media (max-width:560px){ .cards,ul{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap">
+  <div class="brand"><img src="logo.png" alt="Barbería 352"><small>Sarmiento 346 · General Lagos</small></div>
+
+  <h1>Los turnos de tu barbería, <em>sin vueltas</em></h1>
+  <p class="lead">Así se vería la app de turnos de Barbería 352: tus clientes reservan solos desde el celular y vos ves toda la agenda en un panel. Probala, no hace falta registrarse.</p>
+
+  <div class="cards">
+    <a class="card" href="app.html" target="_blank" rel="noopener">
+      <h2>Como cliente</h2>
+      <p>Elegí barbero, día y hora, creá tu usuario y reservá. Mirá cómo se paga la seña y cómo se cambia o cancela un turno.</p>
+      <div class="go">Probar la app</div>
+    </a>
+    <a class="card" href="panel.html" target="_blank" rel="noopener">
+      <h2>Como dueño</h2>
+      <p>La agenda de todos los barberos, clientes, pagos, equipo y horarios, con datos de ejemplo ya cargados.</p>
+      <div class="pin">PIN dueño: <b>1234</b> · empleado: <b>1111</b></div>
+      <div class="go">Entrar al panel</div>
+    </a>
+  </div>
+
+  <h3>Qué incluye</h3>
+  <ul>
+    <li>Reservas online las 24 horas, sin llamadas ni mensajes</li>
+    <li>Seña al reservar con el alias de Mercado Pago</li>
+    <li>Horarios de lunes a viernes de 17:00 a 20:30 y sábados de 10 a 20</li>
+    <li>Cada barbero con su agenda y sus horarios</li>
+    <li>Cambio de día y cancelación desde la app del cliente</li>
+    <li>Comprobante de pago y aviso por WhatsApp al barbero</li>
+    <li>Panel con clientes, pagos y registro de movimientos</li>
+    <li>Guía paso a paso para que cada barbero deje todo configurado</li>
+  </ul>
+
+  <div class="note"><b>Es una demo:</b> usa el logo, el nombre, la dirección y los horarios de tu perfil de Instagram, con barberos, clientes y precios de ejemplo. Lo que cargues queda solo en tu navegador y nadie más lo ve. El botón <b>Reiniciar</b> de la barra de abajo vuelve a empezar. La versión real se instala con tus datos, tu equipo y tu alias.</div>
+
+  <a class="cta" href="https://wa.me/543434728484?text=Hola!%20Prob%C3%A9%20la%20demo%20de%20Barber%C3%ADa%20352%20y%20quiero%20m%C3%A1s%20info" target="_blank" rel="noopener">Quiero esta app para mi barbería</a>
+
+  <div class="foot">BarberPro Turnos · JV Systems · Rosario, Argentina</div>
+</div>
+</body>
+</html>

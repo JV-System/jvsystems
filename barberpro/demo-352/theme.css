@@ -1,0 +1,27 @@
+/* Tema de Barbería 352: negro y ámbar, como su logo. Pisa los colores de la marca (todo sale de estas variables). */
+:root{
+  --bg:#080808; --bg-image:none;
+  --surface:#141414; --surface-2:#1d1d1d; --surface-3:#282828;
+  --border:#363636; --border-soft:#262626;
+  --text:#f6f6f6; --text-muted:#c4c4c4; --text-faint:#8d8d8d;
+  --accent-1:#f6b434; --accent-2:#f0a21a; --accent-3:#b9740a; --accent-grad:#f0a21a;
+  --accent-rgb:246,180,52; --accent-glint:#ffe2a0; --on-accent:#111111;
+}
+body{background:#080808;}
+/* lo que va sobre el color de la marca se lee en negro */
+.btn-primary,.btn-primary:active,.slot-btn.selected,.cal-day.selected,.avatar,.pay-step > b,.app-admin .owner-nav button.active,.roletabs button.active,
+.who-opt.on,.pwa-nudge .btn{color:var(--on-accent) !important;}
+.who-opt.on{background:var(--accent-2); border-color:var(--accent-2);}
+.btn-primary:active{background:var(--accent-3);}
+.tk-check svg{stroke:#111;}
+.cal-day.selected .dot{background:#111;}
+/* franja de barbero en negro y ámbar */
+.top-stripe{background:repeating-linear-gradient(-45deg, var(--accent-2) 0 9px, #111 9px 18px); opacity:1;}
+#introOverlay .intro-band,.thanks-overlay .intro-band,.wiz-stripe{background:repeating-linear-gradient(-45deg, var(--accent-2) 0 14px, #111 14px 28px); background-size:39.6px 100%;}
+#introOverlay,.thanks-overlay,.wiz-overlay,.intro-overlay{background:#050505;}
+.adminlogo,.brand-logo,.intro-photo{border-radius:50%;}
+.brand-logo{max-height:132px; width:auto;}
+.intro-photo{box-shadow:0 0 0 2px rgba(var(--accent-rgb),.35);}
+#introOverlay .bm-second{--c:#f6b434;}
+.demo-tag{background:var(--accent-2); color:#111;}
+.demo-bar a{color:var(--accent-1);}
