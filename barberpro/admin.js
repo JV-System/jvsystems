@@ -126,6 +126,7 @@
     else if(session.ownerTab==="config") bindConfigEvents();
     else bindSaldosEvents();
     maybeWizard();
+    if(CLOUD && !session.presentChecked && !document.getElementById("wizOverlay") && !wizNeeded()){ session.presentChecked = true; startPresentation(); }
   }
 
   function navBtn(id,label,count){
@@ -2351,13 +2352,19 @@
 
   // ---- bienvenida animada al abrir el panel ----
   var PANEL_INTRO_KEY = "barberpro_panel_intro" + NS, TOUR_KEY = "barberpro_tour_seen" + NS;
+  function tourStore(){ return CLOUD ? localStorage : sessionStorage; }
+  function tourSeenKey(){ var u = CLOUD && window.cloudAuth && cloudAuth.user(); return TOUR_KEY + (u ? "_" + u.uid : ""); }
+  function tourSeen(){ try{ return tourStore().getItem(tourSeenKey()) === "1"; }catch(e){ return false; } }
+  // la bienvenida animada se ve una vez por sesión; el recorrido, la primera vez en cada dispositivo (en la demo, una vez por sesión)
   function startPresentation(){
     if(!cfgOn("presentacion") || isEmployee()) return;
-    var seen = false;
-    try{ seen = sessionStorage.getItem(PANEL_INTRO_KEY) === "1"; }catch(e){}
-    if(seen) return;
+    var introSeen = false;
+    try{ introSeen = sessionStorage.getItem(PANEL_INTRO_KEY) === "1"; }catch(e){}
+    var runTour = !tourSeen();
+    if(introSeen && !runTour) return;
     try{ sessionStorage.setItem(PANEL_INTRO_KEY, "1"); }catch(e){}
-    showPanelIntro(function(){ openTour(0); });
+    var after = function(){ if(runTour) openTour(0); };
+    if(introSeen) after(); else showPanelIntro(after);
   }
   function showPanelIntro(done){
     var old = document.getElementById("introOverlay"); if(old) old.remove();
@@ -2381,16 +2388,29 @@
   }
 
   // ---- recorrido: una tarjeta por pestaña (para qué sirve y cómo se usa) ----
+  function isIOSDevice(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+  function isStandaloneApp(){ return window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches); }
+
   function tourSlides(){
-    var cobra = cobraEnApp(), demo = cfgOn("demoData"), s = [];
-    s.push({icon: "celular", title: "Así funciona tu panel",
+    var cobra = cobraEnApp(), demo = cfgOn("demoData"), s = [], team = activeBarbers(), multi = team.length > 1;
+    s.push({icon: "celular", label: "Recorrido", title: "Así funciona tu panel",
       what: "Tus clientes reservan solos desde el celular y vos ves todo acá, en una sola pantalla.",
       how: ["Compartís tu link o ponés el QR en el local.", "El cliente elige día y hora" + (cobra ? " y deja la seña" : "") + ".", "Vos lo ves al instante en <b>Hoy</b> y en <b>Agenda</b>."]});
+    // en la versión real, lo primero es dejar el panel instalado como app (si todavía no lo está)
+    if(CLOUD && !isStandaloneApp()){
+      var ios = isIOSDevice();
+      s.push({icon: "celular", label: "Primero", title: "Instalalo como app en tu celular",
+        what: "Así lo abrís con un toque desde la pantalla de inicio, a pantalla completa y sin buscar el link.",
+        how: ios
+          ? ["Abrí esta página en <b>Safari</b> y tocá <b>Compartir</b> (el cuadrado con la flecha hacia arriba).", "Elegí <b>Agregar a inicio</b> y confirmá.", "Abrí la app desde el ícono nuevo y entrá con tu usuario: en el iPhone la app guarda su propia sesión, por eso te lo pide una vez más."]
+          : ["En Chrome tocá el menú <b>⋮</b>.", "Elegí <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>.", "Abrí la app desde el ícono nuevo y entrá con tu usuario."],
+        note: ios ? "Tiene que ser Safari. Para recibir avisos en el iPhone hace falta iOS 16.4 o más nuevo y tener la app instalada." : "Si no ves la opción, abrí esta página en Chrome."});
+    }
     s.push({icon: "hoy", tab: "hoy", title: "Hoy",
       what: "Lo primero que ves cada día: cuántos turnos tenés, cuál es el próximo y qué necesita tu atención.",
       how: ["Los números de arriba resumen el día de un vistazo.", "Tocá un turno para abrirlo y ver los datos del cliente.", "<b>Recordatorios de mañana</b> arma el mensaje de WhatsApp para avisarle a cada cliente."]});
     s.push({icon: "agenda", tab: "agenda", title: "Agenda",
-      what: "Todos los turnos, por día, por semana o por mes.",
+      what: "Todos los turnos" + (multi ? " de cada barbero" : "") + ", por día, por semana o por mes.",
       how: ["Elegí <b>Día</b>, <b>Semana</b> o <b>Mes</b> arriba.", "En el mes, la barra de cada día muestra qué tan lleno está.", "Tocá un turno para ver al cliente, cancelarlo o marcar que no vino."]});
     s.push({icon: "clientes", tab: "clientes", title: "Clientes",
       what: "Todos los que reservaron, con cuántas veces vinieron y cuánto gastaron.",
@@ -2406,17 +2426,20 @@
       how: ["En Horarios tildá cada día y poné de qué hora a qué hora; si cerrás al mediodía usá el segundo horario.", "En Cierres elegí la fecha y guardá: ese día no se puede reservar.", "Los cambios se ven en la app de tus clientes al instante."]});
     s.push({icon: "negocio", tab: "negocio", title: "Negocio y precios",
       what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor del corte" + (cobra ? ", la seña" : "") + " y la duración del turno.",
-      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás tu alias." : "Podés cambiar el precio cuando quieras.", "Se actualiza en la app de tus clientes al instante."]});
+      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás el alias." : "Podés cambiar el precio cuando quieras.", "Se actualiza en la app de tus clientes al instante."]});
     s.push({icon: "equipo", tab: "equipo", title: "Equipo",
-      what: "Si tenés empleados, cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
-      how: ["<b>Agregar empleado:</b> nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar.", "Cada barbero ve solo su propia agenda."]});
+      what: multi ? "Acá están " + team.map(function(m){ return esc(m.name); }).join(", ") + ": cada uno con su agenda, sus horarios y su WhatsApp."
+                  : "Si tenés empleados, cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
+      how: multi
+        ? ["Tocá a cada uno para cambiar su foto, su WhatsApp o sus horarios.", CLOUD ? "<b>Sumar administradores</b> arma un link para que cada uno cree su usuario." : "<b>Agregar empleado</b>: nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar."]
+        : ["<b>Agregar empleado:</b> nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar.", "Cada barbero ve solo su propia agenda."]});
     s.push({icon: "config", tab: "config", title: "Configuración",
-      what: "Tu link para clientes, cómo tener el panel como app en el celular y tu cuenta.",
-      how: ["Copiá tu link y mandalo por WhatsApp o ponelo en tu perfil.", "Instalá el panel como app: en iPhone, <b>Compartir</b> y <b>Agregar a inicio</b>; en Android, <b>Instalar app</b>.", "Desde acá también volvés a ver este recorrido."]});
-    s.push({icon: "listo", title: "Ya lo conocés",
-      what: demo ? "Esta demo trae turnos y clientes de ejemplo para que pruebes sin miedo." : "Cuando quieras, volvés a ver este recorrido desde Configuración.",
+      what: "Tu link para clientes" + (multi ? " (el general y uno por barbero)" : "") + ", cómo tener el panel como app en el celular y tu cuenta.",
+      how: ["Copiá tu link y mandalo por WhatsApp o ponelo en tu perfil.", CLOUD ? "En <b>App en tu celular</b> ves si ya la instalaste y activás los avisos." : "Instalá el panel como app: en iPhone, <b>Compartir</b> y <b>Agregar a inicio</b>; en Android, <b>Instalar app</b>.", "Desde acá también cambiás tu contraseña o volvés a ver este recorrido."]});
+    s.push({icon: "listo", label: "Listo", title: "Ya lo conocés",
+      what: demo ? "Esta demo trae turnos y clientes de ejemplo para que pruebes sin miedo." : "Ya está todo listo para que lo uses. Cuando quieras, volvés a ver este recorrido desde Configuración.",
       how: demo ? ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Reservá desde <b>Ver app del cliente</b> y mirá cómo aparece acá.", "El botón <b>Reiniciar</b> vuelve todo al principio."]
-                : ["Cada pestaña tiene su botón de ayuda en este recorrido.", "Si algo no te cierra, escribinos.", "¡Éxitos!"],
+                : ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Mandá el link a tus clientes o poné el QR en el local.", "Si algo no te cierra, escribinos."],
       last: true});
     return s;
   }
@@ -2426,7 +2449,7 @@
     var ov = document.getElementById("tourOverlay");
     if(ov){ ov.classList.add("hide"); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 550); }
     document.body.classList.remove("no-scroll");
-    try{ sessionStorage.setItem(TOUR_KEY, "1"); }catch(e){}
+    try{ tourStore().setItem(tourSeenKey(), "1"); }catch(e){}
   }
   function openTour(at){
     tour.i = at || 0;
@@ -2450,10 +2473,11 @@
       '<div class="wiz-box tour-box" data-slide="'+tour.i+'">' +
         '<div class="wiz-dots" aria-hidden="true">' + slides.map(function(x, k){ return '<i class="'+(k < tour.i ? 'done' : k === tour.i ? 'cur' : '')+'"></i>'; }).join("") + '</div>' +
         '<div class="tour-ico">' + ico(s.icon, 38) + '</div>' +
-        '<div class="wiz-count">'+(first ? 'Recorrido' : s.last ? 'Listo' : 'Pestaña ' + tour.i + ' de ' + (n - 2))+'</div>' +
+        '<div class="wiz-count">'+(s.tab ? 'Pestaña ' + (slides.filter(function(x){ return x.tab; }).indexOf(s) + 1) + ' de ' + slides.filter(function(x){ return x.tab; }).length : (s.label || ''))+'</div>' +
         '<h2 class="wiz-title">'+s.title+'</h2>' +
         '<div class="tour-what"><span>Para qué sirve</span>'+s.what+'</div>' +
         '<div class="tour-how"><span>Cómo se usa</span><ol>' + s.how.map(function(h){ return '<li>'+h+'</li>'; }).join("") + '</ol></div>' +
+        (s.note ? '<div class="tour-note">'+s.note+'</div>' : '') +
         '<div class="wiz-btns">' + (first ? '' : '<button type="button" class="btn btn-ghost" id="trBack">Atrás</button>') +
           '<button type="button" class="btn btn-primary" id="trNext">'+(s.last ? 'Empezar a usar' : first ? 'Empezar recorrido' : 'Siguiente')+'</button></div>' +
         (s.tab ? '<button type="button" class="btn btn-ghost tour-go" id="trGo">Ver esta pestaña ahora</button>' : '') +
@@ -2859,7 +2883,7 @@
       var finish = function(){
         wiz.busy = false;
         if(def.last){
-          var done = function(){ wizClose(); wiz.dismissed = true; showToast("¡Listo! Ya podés usar el panel."); renderOwner(); };
+          var done = function(){ wizClose(); wiz.dismissed = true; showToast("¡Listo! Ya podés usar el panel."); renderOwner(); session.presentChecked = true; startPresentation(); };
           if(CLOUD) cloudAuth.setOnboarded().then(done).catch(function(){ done(); }); else done();
           return;
         }

@@ -61,6 +61,9 @@ window.BARBERPRO_CONFIG = {
   // true = la app cobra la seña (alias de Mercado Pago, aviso por WhatsApp y comprobante opcional). false = solo reservas: no se pide seña ni se
   // muestran pagos, saldos ni comprobantes (el cobro se hace en el local).
   cobrarEnApp: true,        // la app cobra la seña con el alias de Mercado Pago (Negocio > datos de cobro) y avisa por WhatsApp
+  // Presentación del panel: bienvenida animada y recorrido por las pestañas (con cómo instalarlo como app); en el celular, la navegación va abajo.
+  presentacion: true,
+  navInferior: true,
 
   demoData: false,       // true = la primera vez carga turnos y saldos de ejemplo (para hacer demos). false = arranca vacío.
 
