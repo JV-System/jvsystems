@@ -253,6 +253,7 @@ function fileDefaults(){
     if(typeof f[k] === "string" && f[k].trim()) out[k] = f[k].trim();
   });
   if(out.whatsappDisplay && !out.whatsappLink) out.whatsappLink = out.whatsappDisplay.replace(/\D/g,"");
+  if(typeof f.price === "number" && f.price > 0) out.price = f.price;      // precio del corte (se usa en las demos; en la versión real manda el que guarda el dueño)
   if(Array.isArray(f.team) && f.team.length) out.team = cleanTeam(f.team);
   if(Array.isArray(f.mapCenter) && f.mapCenter.length === 2 && isFinite(f.mapCenter[0]) && isFinite(f.mapCenter[1])) out.mapCenter = [Number(f.mapCenter[0]), Number(f.mapCenter[1])];
   var h = fileHours(f.hours);

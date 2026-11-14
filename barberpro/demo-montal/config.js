@@ -14,6 +14,7 @@ window.BARBERPRO_CONFIG = {
   heroImage:       "",
   mapboxToken:     "",
   whatsappDisplay: "",                  // sin número: la demo no manda mensajes a nadie
+  price:           16000,               // precio del corte de la demo
   payAlias:        "montal.demo",
   payHolder:       "MONTAL (ejemplo)",
   payMpLink:       "",
