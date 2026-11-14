@@ -312,7 +312,7 @@ service cloud.firestore {
     // ¿La app cobra la seña? Va a la par de `cobrarEnApp` en config.js: con `false` (solo reservas, el cobro se hace en el local) se aceptan
     // reservas sin seña; con `true` la seña tiene que ser, como mínimo, el porcentaje configurado. Se cambia en las dos a la vez.
     function seniaObligatoria() {
-      return false;
+      return true;
     }
 
     function validPayFieldsNormal(d) {

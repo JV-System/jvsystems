@@ -48,7 +48,7 @@ window.BARBERPRO_CONFIG = {
   // ojo, Google las muestra como "latitud, longitud") o del código plus del local. Mapbox no encuentra bien muchas calles
   // argentinas por dirección, por eso se indican a mano. Parisi Barbers = código plus 3946+H9 Rosario.
   mapCenter:       [-60.639063, -32.943562],
-  whatsappDisplay: "",   // Ej: "5493413699728" (código de país, sin +)
+  whatsappDisplay: "5493434728484",   // PRUEBA: WhatsApp al que llegan los avisos de reserva si el barbero no tiene el suyo; cambiar por el del local   // Ej: "5493413699728" (código de país, sin +)
   payAlias:        "",   // Alias o CBU para transferencias (sirve el alias de Mercado Pago)
   payHolder:        "",  // Titular de la cuenta
   payMpLink:       "",   // Link de pago de Mercado Pago (https://mpago.la/...) por el precio del corte
@@ -60,7 +60,7 @@ window.BARBERPRO_CONFIG = {
 
   // true = la app cobra la seña (alias de Mercado Pago, aviso por WhatsApp y comprobante opcional). false = solo reservas: no se pide seña ni se
   // muestran pagos, saldos ni comprobantes (el cobro se hace en el local).
-  cobrarEnApp: false,       // pasar a true cuando esté cargado el alias real de Parisi (Negocio > datos de cobro) y los WhatsApp del equipo
+  cobrarEnApp: true,        // la app cobra la seña con el alias de Mercado Pago (Negocio > datos de cobro) y avisa por WhatsApp
 
   demoData: false,       // true = la primera vez carga turnos y saldos de ejemplo (para hacer demos). false = arranca vacío.
 

@@ -55,7 +55,8 @@
   db.doc("config/main").onSnapshot(function(snap){
     if(snap.exists){
       var d = snap.data(), c = defaultState().config;
-      CONFIG_KEYS.forEach(function(k){ if(d[k] !== undefined && d[k] !== null) c[k] = d[k]; });
+      // un texto vacío guardado en la base no pisa al que viene en config.js (ej. el WhatsApp del local)
+      CONFIG_KEYS.forEach(function(k){ if(d[k] !== undefined && d[k] !== null && !(d[k] === "" && typeof c[k] === "string" && c[k])) c[k] = d[k]; });
       state.config = c;
       state.closures = Array.isArray(d.closures) ? d.closures : [];
     }
