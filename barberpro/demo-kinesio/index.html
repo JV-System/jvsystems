@@ -97,23 +97,6 @@ ul.list li::before{content:"✓"; position:absolute; left:0; top:0; width:20px; 
     </ul>
   </div>
 
-  <div class="sec" id="precio">
-    <div class="price">
-      <div class="kicker">Valor pensado en vos</div>
-      <h2>El abono mensual es lo que cobrás por <b>2 sesiones</b></h2>
-      <label for="sesion">¿Cuánto cobrás la sesión hoy?</label>
-      <div class="pin"><span>$</span><input id="sesion" type="text" inputmode="numeric" autocomplete="off" value="25.000" aria-label="Precio de la sesión"></div>
-      <div class="total"><small>Tu abono mensual</small><b id="abono">$50.000</b><em>por mes</em></div>
-      <ul>
-        <li>Siempre equivale al valor de 2 sesiones.</li>
-        <li>Se calcula sobre el precio de la sesión, sin importar cuántos servicios cargues (evaluación inicial, rehabilitación, RPG…).</li>
-        <li>Si actualizás el precio de tu sesión, el abono se actualiza con él.</li>
-        <li>Con evitar que se pierdan dos turnos al mes (ausencias, cancelaciones de último momento) ya se compensa.</li>
-      </ul>
-    </div>
-    <p class="fine">Ejemplo: con la sesión a $25.000, el abono es de $50.000 por mes.</p>
-  </div>
-
   <div class="note"><b>Es una demo:</b> usa un consultorio de ejemplo, con pacientes y turnos inventados. Lo que cargues queda solo en tu navegador y nadie más lo ve. Con <b>Reiniciar</b>, en la barra de abajo, vuelve a empezar. La versión real se arma con el nombre, los colores, los profesionales y los horarios de tu centro.</div>
 
   <div class="foot">Turnos online · JV Systems · Rosario, Argentina</div>
@@ -122,22 +105,7 @@ ul.list li::before{content:"✓"; position:absolute; left:0; top:0; width:20px; 
 <div class="sticky"><a class="btn" id="cta" href="#" target="_blank" rel="noopener">Quiero esta app para mi consultorio</a></div>
 
 <script>
-(function(){
-  var inp = document.getElementById("sesion"), out = document.getElementById("abono"), cta = document.getElementById("cta");
-  function money(n){ return "$" + Math.round(n).toLocaleString("es-AR"); }
-  function digits(v){ return parseInt(String(v).replace(/\D/g, ""), 10) || 0; }
-  function update(){
-    var sesion = digits(inp.value), abono = sesion * 2;
-    out.textContent = money(abono);
-    cta.href = "https://wa.me/543434728484?text=" + encodeURIComponent("Hola! Vi la demo de turnos para kinesiología y fisiatría. Cobro la sesión " + money(sesion) + " y quiero info del abono de " + money(abono) + " por mes.");
-  }
-  inp.addEventListener("input", function(){
-    var d = digits(inp.value);
-    inp.value = d ? d.toLocaleString("es-AR") : "";
-    update();
-  });
-  update();
-})();
+document.getElementById("cta").href = "https://wa.me/543434728484?text=" + encodeURIComponent("Hola! Vi la demo de turnos para kinesiología y quiero más info.");
 </script>
 </body>
 </html>

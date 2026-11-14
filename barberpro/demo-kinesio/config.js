@@ -42,7 +42,7 @@ window.BARBERPRO_CONFIG = {
   ],
   presentacion:    true,                // al abrir el panel: bienvenida animada y recorrido por las pestañas
   navInferior:     true,                // en el celular, la navegación del panel va abajo (pulgar)
-  precioOferta:    true,                // el recorrido incluye la tarjeta "Cuánto cuesta" (abono = 2 sesiones)
+  precioOferta:    false,               // sin tarjeta de precio del sistema en el recorrido (se define más adelante)
   demoData:        true,
   hours: {
     mon: [["08:00", "13:00"], ["15:00", "20:00"]],
