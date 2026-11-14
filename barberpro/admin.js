@@ -67,7 +67,7 @@
     var navHtml = isEmployee()
       ? navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Mi agenda", unseen) + (cobra ? navBtn("cobros","Cobros", cobrosCount) : "") + navBtn("movimientos","Movimientos") + navBtn("config","Mi cuenta")
       : navBtn("hoy","Hoy", hoyBadge) + navBtn("agenda","Agenda", unseen) +
-        navBtn("clientes","Clientes") +
+        navBtn("clientes",""+VCap(V("clients"))+"") +
         (cobra ? navBtn("pagos","Pagos") : "") +
         navBtn("movimientos","Movimientos") +
         navBtn("equipo","Equipo") +
@@ -78,7 +78,7 @@
         (cobra ? navBtn("saldos","Saldos", Object.keys(state.debts).length) : "") +
         navBtn("config","Configuración");
     var html = '<div class="owner-nav-row">' +
-      (isEmployee() ? '<div class="whoami">'+barberAvatar(myBarber(), "")+'<div><b>'+esc((barberById(myBarber()) || {}).name || "Empleado")+'</b><i>Empleado</i></div></div>' : '') +
+      (isEmployee() ? '<div class="whoami">'+barberAvatar(myBarber(), "")+'<div><b>'+esc((barberById(myBarber()) || {}).name || ""+VCap(V("staff"))+"")+'</b><i>'+VCap(V("staff"))+'</i></div></div>' : '') +
       '<div class="owner-nav-scroll"><div class="owner-nav">' + navHtml + '</div></div>' +
       '<button class="btn-logout" id="btnLogout">Salir</button>' +
       '</div>';
@@ -246,7 +246,7 @@
   function demoCta(){
     if(isEmployee() || state.bookings.length || hasExampleData()) return "";
     return '<div class="card demo-cta"><h2>Todavía no hay turnos</h2>' +
-      '<div class="sub">¿Querés ver cómo se ve el panel con actividad? Cargá clientes y turnos de ejemplo' + (CLOUD ? ' (solo en este navegador, no se guardan en tu base).' : '.') + '</div>' +
+      '<div class="sub">¿Querés ver cómo se ve el panel con actividad? Cargá '+V("clients")+' y turnos de ejemplo' + (CLOUD ? ' (solo en este navegador, no se guardan en tu base).' : '.') + '</div>' +
       '<button class="btn btn-primary" data-demo-on="1">Cargar datos de ejemplo</button></div>';
   }
 
@@ -352,7 +352,7 @@
         (b.status==="confirmed" ? '<button class="btn btn-ghost btn-sm" data-complete="'+b.id+'">Completar</button>' +
                                    (isEmployee() ? '' : '<button class="btn btn-danger btn-sm" data-cancel="'+b.id+'">Cancelar</button>') : '') +
         (b.status==="confirmed" && !isEmployee() && turnoEnded(b) ? '<button class="btn btn-danger btn-sm" data-noshow="'+b.id+'">No vino</button>' : '') +
-        (b.status==="confirmed" && !turnoEnded(b) && activeBarbers().length > 1 ? '<button class="btn btn-ghost btn-sm" data-transfer="'+b.id+'">Pasar a otro barbero</button>' : '') +
+        (b.status==="confirmed" && !turnoEnded(b) && activeBarbers().length > 1 ? '<button class="btn btn-ghost btn-sm" data-transfer="'+b.id+'">Pasar a otro '+V("pro")+'</button>' : '') +
         (b.phone ? '<a class="btn btn-ghost btn-sm" href="https://wa.me/'+waNumber(b.phone)+'" target="_blank" rel="noopener">WhatsApp</a>' : "") +
         (b.email ? '<a class="btn btn-ghost btn-sm" href="mailto:'+esc(b.email)+'">Mail</a>' : "") +
         '</div>';
@@ -468,7 +468,7 @@
     root.querySelectorAll("[data-noshow]").forEach(function(el){
       el.onclick = function(){
         var id = el.getAttribute("data-noshow"), b = findBooking(id);
-        askConfirm("Marcar como suspendido", "El cliente no vino ni avisó. " + (b && depositKept(b) ? "La seña ("+money(b.deposit)+") queda en el local." : "Como no pagó la seña, queda un cargo pendiente del 50% a su nombre.") + " ¿Lo marcamos?", function(){ cancelBooking(id, {noShow: true}); });
+        askConfirm("Marcar como suspendido", "El "+V("client")+" no vino ni avisó. " + (b && depositKept(b) ? "La seña ("+money(b.deposit)+") queda en el local." : "Como no pagó la seña, queda un cargo pendiente del 50% a su nombre.") + " ¿Lo marcamos?", function(){ cancelBooking(id, {noShow: true}); });
       };
     });
     root.querySelectorAll("[data-receipt-view]").forEach(function(el){ el.onclick = function(){ showReceipt(el.getAttribute("data-receipt-view")); }; });
@@ -620,7 +620,7 @@
     document.querySelectorAll("[data-cancel]").forEach(function(el){
       el.onclick = function(){
         var id = el.getAttribute("data-cancel");
-        askConfirm("Cancelar turno", "¿Cancelar este turno? Si es el mismo día, se registrará una seña del 50% a nombre del cliente.", function(){ cancelBooking(id); });
+        askConfirm("Cancelar turno", "¿Cancelar este turno? Si es el mismo día, se registrará una seña del 50% a nombre del "+V("client")+".", function(){ cancelBooking(id); });
       };
     });
     document.querySelectorAll("[data-dnav]").forEach(function(el){
@@ -723,20 +723,20 @@
   function ownerNegocio(){
     var c = state.config;
     return '<div class="card"><h2>Datos del negocio</h2>' +
-      '<div class="sub">Es lo que ven tus clientes al entrar a reservar</div>' +
-      (needsSetup() ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Completá la dirección y el WhatsApp: los clientes los ven arriba y el WhatsApp recibe la confirmación de cada turno.</div></div>' : '') +
-      '<label>Nombre de la barbería</label><input type="text" id="inpBizName" value="'+esc(c.businessName)+'" maxlength="30" placeholder="Ej: Barbería El Corte">' +
-      '<label>Frase corta <span class="opt">(opcional)</span></label><input type="text" id="inpBizTagline" value="'+esc(c.tagline)+'" maxlength="40" placeholder="Ej: Cortes y barba desde 2015">' +
+      '<div class="sub">Es lo que ven tus '+V("clients")+' al entrar a reservar</div>' +
+      (needsSetup() ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Completá la dirección y el WhatsApp: los '+V("clients")+' los ven arriba y el WhatsApp recibe la confirmación de cada turno.</div></div>' : '') +
+      '<label>Nombre '+V("bizDe")+'</label><input type="text" id="inpBizName" value="'+esc(c.businessName)+'" maxlength="30" placeholder="'+esc(V("phBiz"))+'">' +
+      '<label>Frase corta <span class="opt">(opcional)</span></label><input type="text" id="inpBizTagline" value="'+esc(c.tagline)+'" maxlength="40" placeholder="'+esc(V("phTag"))+'">' +
       '<label>Dirección</label><input type="text" id="inpBizAddress" value="'+esc(c.address)+'" maxlength="60" placeholder="Ej: Av. Siempreviva 742">' +
       '<label>WhatsApp del negocio</label><input type="tel" id="inpBizWa" value="'+esc(c.whatsappDisplay)+'" placeholder="Ej: 5491123456789">' +
       '<div class="field-hint">Con código de país y sin el +. Argentina celular: 549 + código de área + número.</div>' +
       '<button class="btn btn-primary" id="btnSaveNegocio">Guardar datos</button></div>' +
       '<div class="card"><h2>Cobros</h2>' +
-      '<div class="sub">Cómo pueden pagar tus clientes al reservar (el pago en el local siempre está)</div>' +
-      '<label>Alias o CBU para transferencias <span class="opt">(opcional)</span></label><input type="text" id="inpPayAlias" value="'+esc(c.payAlias)+'" maxlength="40" placeholder="Ej: barberia.elcorte">' +
+      '<div class="sub">Cómo pueden pagar tus '+V("clients")+' al reservar (el pago en el local siempre está)</div>' +
+      '<label>Alias o CBU para transferencias <span class="opt">(opcional)</span></label><input type="text" id="inpPayAlias" value="'+esc(c.payAlias)+'" maxlength="40" placeholder="'+esc(V("phAlias"))+'">' +
       '<label>Titular de la cuenta <span class="opt">(opcional)</span></label><input type="text" id="inpPayHolder" value="'+esc(c.payHolder)+'" maxlength="40" placeholder="Ej: Juan Pérez">' +
       '<label>Link general de Mercado Pago <span class="opt">(opcional · se usa si no hay uno del monto exacto)</span></label><input type="text" id="inpPayMp" value="'+esc(c.payMpLink)+'" maxlength="200" placeholder="https://mpago.la/...">' +
-      '<div class="field-hint">Un link de Mercado Pago cobra un monto fijo. Por eso abajo podés cargar uno por cada monto y la app le muestra al cliente el que coincide.</div>' +
+      '<div class="field-hint">Un link de Mercado Pago cobra un monto fijo. Por eso abajo podés cargar uno por cada monto y la app le muestra al '+V("client")+' el que coincide.</div>' +
       mpLinksHtml() +
       '<div class="field-hint">Los pagos los confirmás vos a mano desde la agenda (botón "Cobrado").</div>' +
       '<button class="btn btn-primary" id="btnSaveCobros">Guardar cobros</button></div>' +
@@ -809,7 +809,7 @@
     var btn = document.getElementById("btnSaveNegocio");
     if(btn) btn.onclick = function(){
       var name = document.getElementById("inpBizName").value.trim();
-      if(!name){ showToast("Ponele un nombre a tu barbería."); return; }
+      if(!name){ showToast("Ponele un nombre a tu " + V("biz") + "."); return; }
       var wa = document.getElementById("inpBizWa").value.trim();
       var waDigits = digitsOnly(wa);
       if(wa && waDigits.length < 10){ showToast("El WhatsApp parece incompleto (código de país + número)."); return; }
@@ -826,19 +826,19 @@
 
   function ownerPrecios(){
     return '<div class="card"><h2>Precio y duración</h2>' +
-      (state.config.priceIsExample ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Este precio es un valor de ejemplo. Actualizalo con el precio real del corte.</div></div>' : '') +
-      '<label>Precio del corte ($)</label><input type="number" id="inpPrice" value="'+state.config.price+'">' +
+      (state.config.priceIsExample ? '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><div>Este precio es un valor de ejemplo. Actualizalo con el precio real '+VU("del")+'.</div></div>' : '') +
+      '<label>Precio '+VU("del")+' ($)</label><input type="number" id="inpPrice" value="'+state.config.price+'">' +
       '<label>Seña al reservar (% del precio)</label><input type="number" id="inpDeposit" min="0" max="100" value="'+(state.config.depositPercent === undefined ? 50 : state.config.depositPercent)+'">' +
       '<div class="field-hint">0 = sin seña. Con el precio actual, la seña es de '+money(depositFor(state.config.price))+' y el saldo de '+money(state.config.price - depositFor(state.config.price))+'. Si cancelan el mismo día, la seña queda en el local; si cancelan antes, se devuelve.</div>' +
       '<label>Orden de llegada (minutos)</label><input type="number" id="inpWalkIn" min="0" max="240" value="'+(state.config.walkInMinutes === undefined ? 90 : state.config.walkInMinutes)+'">' +
-      '<div class="field-hint">Si hay un horario libre de hoy que empieza dentro de este tiempo, el cliente lo puede tomar al instante pagando el total (sin seña). 0 = no ofrecer.</div>' +
+      '<div class="field-hint">Si hay un horario libre de hoy que empieza dentro de este tiempo, el '+V("client")+' lo puede tomar al instante pagando el total (sin seña). 0 = no ofrecer.</div>' +
       '<label>Duración del turno (minutos)</label>' +
       '<select id="inpSlotMin">' + [15,20,30,45,60].map(function(m){ return '<option value="'+m+'" '+(state.config.slotMinutes===m?'selected':'')+'>'+m+' min</option>'; }).join("") + '</select>' +
       '<button class="btn btn-primary" id="btnSavePrecios">Guardar</button>' +
       '</div>' +
       serviciosCardHtml() +
       (CLOUD ? '' :
-        '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel del dueño</div>' +
+        '<div class="card"><h2>Acceso</h2><div class="sub">PIN para entrar al panel</div>' +
         '<label>Nuevo PIN</label><input type="text" id="inpNewPin" value="'+state.config.ownerPin+'">' +
         '<button class="btn btn-ghost" id="btnSavePin">Guardar PIN</button></div>');
   }
@@ -846,14 +846,14 @@
   function serviciosCardHtml(){
     var ex = Array.isArray(state.config.services) ? state.config.services : [];
     return '<div class="card" id="svcCard"><h2>Otros servicios</h2>' +
-      '<div class="sub">Además del corte ('+money(state.config.price)+'), podés ofrecer otros servicios con su propio precio. El cliente elige cuál quiere al reservar y la seña se calcula sobre ese precio.</div>' +
+      '<div class="sub">Además '+VU("del")+' ('+money(state.config.price)+'), podés ofrecer otros servicios con su propio precio. El '+V("client")+' elige cuál quiere al reservar y la seña se calcula sobre ese precio.</div>' +
       '<div class="svc-list">' + ex.map(function(s, i){
         return '<div class="svc-row"><input type="text" data-svc-name="'+i+'" value="'+esc(s.name)+'" maxlength="40" aria-label="Nombre del servicio">' +
           '<div class="svc-money"><span>$</span><input type="number" data-svc-price="'+i+'" value="'+s.price+'" min="1" inputmode="numeric" aria-label="Precio"></div>' +
           '<button type="button" class="btn btn-danger btn-sm svc-x" data-svc-del="'+i+'" aria-label="Quitar servicio">✕</button></div>';
       }).join("") + '</div>' +
       '<label style="margin-top:12px;">Agregar un servicio</label>' +
-      '<div class="svc-row svc-add"><input type="text" id="svcNewName" placeholder="Ej: Barba" maxlength="40"><div class="svc-money"><span>$</span><input type="number" id="svcNewPrice" placeholder="15000" min="1" inputmode="numeric"></div>' +
+      '<div class="svc-row svc-add"><input type="text" id="svcNewName" placeholder="'+esc(V("svcPh"))+'" maxlength="40"><div class="svc-money"><span>$</span><input type="number" id="svcNewPrice" placeholder="15000" min="1" inputmode="numeric"></div>' +
       '<button type="button" class="btn btn-primary btn-sm" id="svcAdd">Agregar</button></div>' +
       (ex.length ? '<button class="btn btn-ghost" id="svcSave" type="button" style="margin-top:12px;">Guardar cambios</button>' : '') +
       '<div class="field-hint" style="margin-top:10px;">Los turnos ya reservados mantienen el precio con el que se reservaron.</div></div>';
@@ -909,7 +909,7 @@
 
   function ownerSaldos(){
     var keys = Object.keys(state.debts);
-    var html = '<div class="card"><h2>Clientes con saldo pendiente</h2><div class="sub">Cancelaciones del mismo día · se cobra el 50% del precio actual</div>';
+    var html = '<div class="card"><h2>'+VCap(V("clients"))+' con saldo pendiente</h2><div class="sub">Cancelaciones del mismo día · se cobra el 50% del precio actual</div>';
     if(keys.length===0) html += '<div class="empty-note">No hay saldos pendientes.</div>';
     else html += keys.map(function(k){
       var d = state.debts[k];
@@ -1060,7 +1060,7 @@
     var max = top.length ? top[0].turnos : 1;
 
     var html = cta + '<div class="stat-grid">' +
-      '<div class="stat-tile"><div class="num">'+all.length+'</div><div class="lbl">Clientes</div></div>' +
+      '<div class="stat-tile"><div class="num">'+all.length+'</div><div class="lbl">'+VCap(V("clients"))+'</div></div>' +
       '<div class="stat-tile"><div class="num">'+turnosTot+'</div><div class="lbl">Turnos (sin cancelados)</div></div>' +
       '<div class="stat-tile"><div class="num">'+money(facturado)+'</div><div class="lbl">Cobrado en total</div></div>' +
       '<div class="stat-tile"><div class="num">'+recurrentes+'</div><div class="lbl">Vuelven (2+ turnos)</div></div>' +
@@ -1068,7 +1068,7 @@
       '<div class="stat-tile"><div class="num">'+(turnosTot + cancTot ? Math.round(cancTot * 100 / (turnosTot + cancTot)) : 0)+'%</div><div class="lbl">Cancelaciones</div></div>' +
       '</div>';
 
-    html += '<div class="card"><h2>Los que más se cortan</h2><div class="sub">Ranking por cantidad de turnos (sin contar cancelados)</div>' +
+    html += '<div class="card"><h2>'+V("masVienen")+'</h2><div class="sub">Ranking por cantidad de turnos (sin contar cancelados)</div>' +
       (top.length ? '<div class="rank">' + top.map(function(c, i){
         return '<button class="rank-row" type="button" data-client="'+esc(c.key)+'">' +
           '<span class="rank-pos">'+(i + 1)+'</span>' + clientAvatar(c.profile, "sm") +
@@ -1078,7 +1078,7 @@
       }).join("") + '</div>' : '<div class="empty-note">Todavía no hay turnos para armar el ranking.</div>') +
       '</div>';
 
-    html += '<div class="card"><h2>Lista de clientes</h2>' +
+    html += '<div class="card"><h2>Lista de '+V("clients")+'</h2>' +
       '<input type="text" id="inpClientSearch" placeholder="Buscar por nombre, teléfono o mail" value="'+esc(session.clientQuery)+'" autocomplete="off">' +
       '<div class="chips">' + CLIENT_SORTS.map(function(s){
         return '<button type="button" class="chip'+(session.clientSort === s.id ? ' on' : '')+'" data-csort="'+s.id+'">'+s.label+'</button>';
@@ -1089,8 +1089,8 @@
 
   function clientListHtml(all){
     var list = sortClients(filterClients(all || allClients()));
-    if(!list.length) return '<div class="empty-note">'+(session.clientQuery ? 'Ningún cliente coincide con la búsqueda.' : 'Todavía no hay clientes registrados.')+'</div>';
-    return '<div class="clist-head"><span>Cliente</span><span>Turnos</span><span>Última visita</span><span>Cobrado</span><span>Deuda</span></div>' +
+    if(!list.length) return '<div class="empty-note">'+(session.clientQuery ? 'Ningún '+V("client")+' coincide con la búsqueda.' : 'Todavía no hay '+V("clients")+' registrados.')+'</div>';
+    return '<div class="clist-head"><span>'+VCap(V("client"))+'</span><span>Turnos</span><span>Última visita</span><span>Cobrado</span><span>Deuda</span></div>' +
       list.map(function(c){
         var p = c.profile, owes = c.debt + c.toCollect;
         return '<button type="button" class="crow" data-client="'+esc(c.key)+'">' +
@@ -1111,7 +1111,7 @@
     var hist = c.bookings.slice().sort(function(a, b){ return (a.date + a.time) < (b.date + b.time) ? 1 : -1; });
     var line = function(k, v){ return v ? '<div class="summary-row"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>' : ''; };
 
-    var html = '<button class="link-btn" id="btnClientBack" type="button" style="margin-bottom:14px;">‹ Volver a clientes</button>' +
+    var html = '<button class="link-btn" id="btnClientBack" type="button" style="margin-bottom:14px;">‹ Volver a '+V("clients")+'</button>' +
       '<div class="card cdetail-head">' + clientAvatar(p, "lg") +
         '<div class="cdetail-who"><h2>'+esc(p.name)+' '+esc(p.lastname)+(p.nickname ? ' <span class="nick">“'+esc(p.nickname)+'”</span>' : '')+'</h2>' +
         '<div class="sub">'+(p.phone ? esc(p.phone)+' · ' : '')+(isUserEmail(p.email) ? 'Usuario: <b>'+esc(userOf(p.email))+'</b>' : esc(p.email || ""))+'</div>' +
@@ -1353,12 +1353,12 @@
     html += '<div class="stat-grid pay-grid">' +
       payTile(money(cur.paid), 'Cobrado', delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs '+(session.payRange === 'mes' || session.payRange === 'anio' ? 'mismo tramo anterior' : 'período anterior')+'</span>', 'pay-main') +
       payTile(money(cur.upcomingDep), 'Señado · turnos por venir', 'señas pagadas de turnos que todavía faltan') +
-      payTile(money(cur.cortes), 'Saldos cobrados', cur.count + ' turnos con pagos · al terminar el corte') +
+      payTile(money(cur.cortes), 'Saldos cobrados', cur.count + ' turnos con pagos · al terminar ' + VU("el")) +
       payTile(money(cur.kept), 'Señas retenidas', cur.suspCount + (cur.suspCount === 1 ? ' turno suspendido' : ' turnos suspendidos') + ' (no vinieron o cancelaron el mismo día)') +
       payTile(money(cur.refund), 'Señas a devolver', cur.noticeCount + (cur.noticeCount === 1 ? ' turno cancelado con aviso' : ' turnos cancelados con aviso'), cur.refund ? 'is-warn' : '') +
       payTile(money(cur.depositDue), 'Señas por cobrar', 'turnos reservados que todavía no pagaron la seña', cur.depositDue ? 'is-warn' : '') +
       payTile(money(cur.toCollect), 'Saldos por cobrar', cur.toCollectCount + ' turnos ya realizados sin pagar', cur.toCollect ? 'is-warn' : '') +
-      payTile(money(pendingSealAmt), 'Cargos pendientes', pendingSeals + (pendingSeals === 1 ? ' cliente' : ' clientes') + ' por cancelar el mismo día sin seña', pendingSeals ? 'is-warn' : '') +
+      payTile(money(pendingSealAmt), 'Cargos pendientes', pendingSeals + (pendingSeals === 1 ? ' '+V("client")+'' : ' '+V("clients")+'') + ' por cancelar el mismo día sin seña', pendingSeals ? 'is-warn' : '') +
       payTile(money(avg), 'Ticket promedio', 'por turno con pagos') +
       payTile(collectRate + '%', 'Tasa de cobro', 'cobrado sobre lo que ya correspondía') +
       '</div>';
@@ -1390,7 +1390,7 @@
       }
       return c.paidCount || c.toCollect || c.debt || c.sealPaid || c.depositDue;
     });
-    html += '<div class="card"><h2>Pagos por persona</h2><div class="sub">Qué pagó, qué señó y qué debe cada cliente en el período elegido (las señas pendientes son las de hoy)</div>' +
+    html += '<div class="card"><h2>Pagos por persona</h2><div class="sub">Qué pagó, qué señó y qué debe cada '+V("client")+' en el período elegido (las señas pendientes son las de hoy)</div>' +
       '<input type="text" id="inpPaySearch" placeholder="Buscar por nombre, teléfono o mail" value="'+esc(session.payQuery)+'" autocomplete="off">' +
       '<div class="chips">' + [{id: "pagado", l: "Más pagó"}, {id: "debe", l: "Más debe"}, {id: "nombre", l: "A–Z"}].map(function(s){
         return '<button type="button" class="chip'+(session.paySort === s.id ? ' on' : '')+'" data-psort="'+s.id+'">'+s.l+'</button>';
@@ -1408,7 +1408,7 @@
     });
     if(!list.length) return '<div class="empty-note">No hay pagos para ese período o búsqueda.</div>';
     var tot = list.reduce(function(t, c){ t.spent += c.spent; t.up += c.depUpcoming; t.kept += c.depKept; t.refund += c.depRefund; t.due += c.toCollect; return t; }, {spent: 0, up: 0, kept: 0, refund: 0, due: 0});
-    return '<div class="plist-head"><span>Cliente</span><span>Pagado</span><span>Señado (por venir)</span><span>Seña retenida</span><span>Seña a devolver</span><span>Saldo por cobrar</span><span>Estado</span></div>' +
+    return '<div class="plist-head"><span>'+VCap(V("client"))+'</span><span>Pagado</span><span>Señado (por venir)</span><span>Seña retenida</span><span>Seña a devolver</span><span>Saldo por cobrar</span><span>Estado</span></div>' +
       list.map(function(c){
         var p = c.profile;
         return '<button type="button" class="prow" data-pclient="'+esc(c.key)+'">' +
@@ -1421,7 +1421,7 @@
           '<span class="crow-c" data-l="Saldo por cobrar">'+(c.toCollect ? '<span class="owe">'+money(c.toCollect)+'</span>' : '—')+'</span>' +
           '<span class="crow-c pchips" data-l="Estado">'+payChips(c)+'</span></button>';
       }).join("") +
-      '<div class="plist-total"><span>Total ('+list.length+' clientes)</span><span>'+money(tot.spent)+'</span><span>'+money(tot.up)+'</span><span>'+money(tot.kept)+'</span><span>'+money(tot.refund)+'</span><span>'+money(tot.due)+'</span><span></span></div>';
+      '<div class="plist-total"><span>Total ('+list.length+' '+V("clients")+')</span><span>'+money(tot.spent)+'</span><span>'+money(tot.up)+'</span><span>'+money(tot.kept)+'</span><span>'+money(tot.refund)+'</span><span>'+money(tot.due)+'</span><span></span></div>';
   }
 
   function bindPagosEvents(){
@@ -1502,7 +1502,7 @@
   function barberAvatar(id, size){
     var m = barberById(id), cls = "avatar" + (size ? " " + size : ""), photo = barberPhoto(id);
     if(photo) return '<img class="'+cls+'" src="'+esc(photo)+'" alt="">';
-    return '<span class="'+cls+'">'+esc(((m && m.name) || "?").trim().charAt(0).toUpperCase())+'</span>';
+    return '<span class="'+cls+'">'+esc(nameInitial(m && m.name))+'</span>';
   }
 
   // bloque para cambiar la foto (la ven el equipo y los clientes al elegir con quién cortarse)
@@ -1560,18 +1560,18 @@
       return '<button type="button" class="chip'+(session.teamRange === r.id ? ' on' : '')+'" data-trange="'+r.id+'">'+r.label+'</button>';
     }).join("") + '</div>';
 
-    html += '<div class="card"><h2>Cortes por barbero</h2><div class="sub">Turnos completados en el período · '+total+(total === 1 ? ' corte' : ' cortes')+' en total</div>' +
+    html += '<div class="card"><h2>'+VCap(V("units"))+' por '+V("pro")+'</h2><div class="sub">Turnos completados en el período · '+total+(total === 1 ? ' ' + V("unit") : ' ' + V("units"))+' en total</div>' +
       (total ? '<div class="hbars">' + ranked.map(function(r, i){
         var p = total ? Math.round(r.cortes * 100 / total) : 0;
         return '<div class="hbar"><div class="hbar-top"><span class="rk-who">'+(i === 0 && r.cortes ? '🏆 ' : '')+barberAvatar(r.m.id, "xs")+' '+esc(r.m.name)+'</span><b>'+r.cortes+' <small>'+p+'%</small></b></div>' +
           '<span class="hbar-track"><i class="hbar-fill" style="width:'+Math.max(r.cortes ? 3 : 0, max ? Math.round(r.cortes * 100 / max) : 0)+'%"></i></span></div>';
-      }).join("") + '</div>' : '<div class="empty-note">Todavía no hay cortes completados en este período.</div>') + '</div>';
+      }).join("") + '</div>' : '<div class="empty-note">Todavía no hay '+V("units")+' '+VG("completados")+' en este período.</div>') + '</div>';
 
     html += '<div class="team-grid">' + rows.map(function(r){
       var delta = r.prev === null ? null : pctChange(r.cortes, r.prev);
       return '<div class="card tcard">' +
-        '<div class="tcard-head">' + barberAvatar(r.m.id, "") + '<div><b>'+esc(r.m.name)+'</b><i>'+(r.m.role === "owner" ? 'Dueño' : 'Empleado')+(r.m.active === false ? ' · no atiende' : '')+'</i></div></div>' +
-        '<div class="tcard-num"><span class="num">'+r.cortes+'</span><span class="lbl">cortes</span>' +
+        '<div class="tcard-head">' + barberAvatar(r.m.id, "") + '<div><b>'+esc(r.m.name)+'</b><i>'+(r.m.role === "owner" ? V("owner") : ''+VCap(V("staff"))+'')+(r.m.active === false ? ' · no atiende' : '')+'</i></div></div>' +
+        '<div class="tcard-num"><span class="num">'+r.cortes+'</span><span class="lbl">'+V("units")+'</span>' +
           (delta === null ? '' : '<span class="delta '+(delta >= 0 ? 'up' : 'down')+'">'+(delta >= 0 ? '▲ ' : '▼ ')+Math.abs(delta)+'% vs anterior</span>') + '</div>' +
         '<div class="summary-row"><span class="k">Turnos por venir</span><span class="v">'+r.porVenir+'</span></div>' +
         (r.sinCerrar ? '<div class="summary-row"><span class="k">Pasaron sin cerrar</span><span class="v" style="color:var(--warn)">'+r.sinCerrar+'</span></div>' : '') +
@@ -1595,7 +1595,7 @@
       return '<div class="card"><h2>'+title+' <span class="count-pill">'+items.length+'</span></h2><div class="sub">'+sub+'</div>' +
         (items.length ? items.map(function(b){ return '<div class="cobro-date">'+formatDateLong(b.date)+'</div>'+bookingRow(b); }).join("") : '<div class="empty-note">Nada por acá.</div>') + '</div>';
     };
-    return section("Para confirmar", "El cliente avisó que pagó: confirmalo al ver el pago", confirmar) +
+    return section("Para confirmar", "El "+V("client")+" avisó que pagó: confirmalo al ver el pago", confirmar) +
       section("Saldos por cobrar", "Turnos que ya terminaron y tienen saldo pendiente", saldos) +
       section("Señas pendientes", "Turnos reservados que todavía no pagaron la seña", senas);
   }
@@ -1627,14 +1627,14 @@
     return '<label>Horario de trabajo</label>' +
       '<label class="checkline"><input type="checkbox" data-tm-same="'+esc(m.id)+'" '+(custom ? '' : 'checked')+'><span>Igual al horario del local</span></label>' +
       '<details class="tm-hours" '+(custom ? 'open' : '')+'><summary>Ver o cambiar el horario de '+esc(m.name)+'</summary>'+rows+
-      '<div class="field-hint">Cada barbero puede tener su propio horario. Dos barberos pueden tener turnos a la misma hora: cada uno atiende a un cliente distinto.</div></details>';
+      '<div class="field-hint">Cada '+V("pro")+' puede tener su propio horario. Dos '+V("pros")+' pueden tener turnos a la misma hora: cada uno atiende a un '+V("client")+' distinto.</div></details>';
   }
 
   function ownerEquipo(){
     var team = teamList();
     var html = teamStatsHtml() + '<div class="card"><h2>Equipo</h2>' +
-      '<div class="sub">Quiénes atienden. El cliente elige con quién cortarse al reservar y el aviso del turno le llega al WhatsApp de ese barbero. ' +
-      'Los empleados entran al panel con su usuario y ven solo su agenda, sus cobros pendientes y su cuenta (no ven el análisis de dinero ni nada del dueño).</div>';
+      '<div class="sub">Quiénes atienden. El '+V("client")+' elige '+V("quienInf")+' al reservar y el aviso del turno le llega al WhatsApp de ese '+V("pro")+'. ' +
+      'Los '+V("staffs")+' entran al panel con su usuario y ven solo su agenda, sus cobros pendientes y su cuenta (no ven el análisis de dinero ni nada del dueño).</div>';
     html += team.map(function(m){
       var emp = m.role === "employee", rec = emp && CLOUD ? staffRecordFor(m.id) : null;
       var pin = !CLOUD && emp ? ((state.config.staffPins || {})[m.id] || "") : "";
@@ -1653,7 +1653,7 @@
       }
       return '<div class="tm-row" data-tm="'+esc(m.id)+'">' +
         '<div class="tm-head">' + barberAvatar(m.id, "") +
-          '<div><b>'+esc(m.name)+'</b><span class="tm-role">'+(emp ? 'Empleado' : 'Dueño · administrador')+'</span></div>' +
+          '<div><b>'+esc(m.name)+'</b><span class="tm-role">'+(emp ? ''+VCap(V("staff"))+'' : V("owner") + ' · administrador')+'</span></div>' +
           '<label class="checkline tm-active"><input type="checkbox" data-tm-active="'+esc(m.id)+'" '+(m.active !== false ? 'checked' : '')+'><span>Atiende</span></label></div>' +
         '<div class="row2"><div><label>Nombre</label><input type="text" data-tm-name="'+esc(m.id)+'" value="'+esc(m.name)+'" maxlength="40"></div>' +
           '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" data-tm-wa="'+esc(m.id)+'" value="'+esc(m.whatsapp || "")+'" placeholder="5493415551234"></div></div>' +
@@ -1670,7 +1670,7 @@
 
     html += inviteCardHtml();
 
-    html += '<div class="card"><h2>Agregar empleado</h2><div class="sub">Se crea su usuario para que entre al panel y aparece como opción al reservar.</div>' +
+    html += '<div class="card"><h2>Agregar '+V("staff")+'</h2><div class="sub">Se crea su usuario para que entre al panel y aparece como opción al reservar.</div>' +
       '<div class="row2"><div><label>Nombre</label><input type="text" id="inpNewTmName" maxlength="40" placeholder="Ej: Julián"></div>' +
       '<div><label>WhatsApp <span class="opt">(con código de país)</span></label><input type="tel" id="inpNewTmWa" placeholder="5493415551234"></div></div>' +
       (CLOUD
@@ -1745,18 +1745,18 @@
           if(pinEl){ state.config.staffPins = Object.assign({}, state.config.staffPins || {}); state.config.staffPins[id] = pinEl.value.trim(); }
         }
         if(bad){ showToast(bad); return; }
-        if(!team.filter(function(m){ return m.active !== false; }).length){ showToast("Tiene que haber al menos un barbero que atienda."); return; }
+        if(!team.filter(function(m){ return m.active !== false; }).length){ showToast("Tiene que haber al menos un " + V("pro") + " que atienda."); return; }
         saveTeam(team);
       };
     });
     document.querySelectorAll("[data-tm-del]").forEach(function(el){
       el.onclick = function(){
         var id = el.getAttribute("data-tm-del"), m = barberById(id);
-        askConfirm("Quitar del equipo", "¿Quitar a " + (m ? m.name : "este empleado") + "? Deja de aparecer al reservar y pierde el acceso al panel. Sus turnos ya reservados no se borran.", function(){
+        askConfirm("Quitar del equipo", "¿Quitar a " + (m ? m.name : "este "+V("staff")+"") + "? Deja de aparecer al reservar y pierde el acceso al panel. Sus turnos ya reservados no se borran.", function(){
           var rec = CLOUD ? staffRecordFor(id) : null;
           if(rec) cloudAuth.removeStaff(rec.uid).catch(function(e){ console.error(e); });
           if(!CLOUD && state.config.staffPins) delete state.config.staffPins[id];
-          saveTeam(teamList().filter(function(x){ return x.id !== id; }), "Empleado quitado del equipo.");
+          saveTeam(teamList().filter(function(x){ return x.id !== id; }), ""+VCap(V("staff"))+" quitado del equipo.");
         });
       };
     });
@@ -1780,7 +1780,7 @@
     var add = document.getElementById("btnAddTm");
     if(add) add.onclick = function(){
       var name = document.getElementById("inpNewTmName").value.trim(), wa = document.getElementById("inpNewTmWa").value.trim();
-      if(!name){ showToast("Escribí el nombre del empleado."); return; }
+      if(!name){ showToast("Escribí el nombre del "+V("staff")+"."); return; }
       var team = teamList().slice(), id = cleanTeam([{name: name}])[0].id, n = 2, base = id;
       while(team.some(function(m){ return m.id === id; })) id = base + (n++);
       var member = {id: id, name: name, role: "employee", whatsapp: wa, active: true};
@@ -1864,7 +1864,7 @@
     var today = d.today, ago60 = addDays(today, -60);
     var byTime = function(a, b){ return a.time < b.time ? -1 : 1; };
     var members = isEmployee() ? viewBarbers() : activeBarbers();
-    return '<div class="hoy-team-head"><h2>Cómo está cada barbero hoy</h2><div class="sub">Capacidad según la jornada de cada uno · tocá un turno para abrir su día</div></div>' +
+    return '<div class="hoy-team-head"><h2>Cómo está cada '+V("pro")+' hoy</h2><div class="sub">Capacidad según la jornada de cada uno · tocá un turno para abrir su día</div></div>' +
       '<div class="hoy-team">' + members.map(function(m){
         var mine = myBookings().filter(function(b){ return barberOfBooking(b) === m.id; });
         var live = mine.filter(function(b){ return b.status !== "cancelled"; });
@@ -1885,7 +1885,7 @@
           (works ? '<div class="bcard-cap"><div class="bcard-cap-top"><span>'+hoy.length+' de '+cap+' turnos</span><b>'+pct+'%</b></div>' +
             '<span class="occ-track"><i class="occ-fill '+level+'" style="width:'+pct+'%"></i></span></div>' : '') +
           '<div class="bcard-stats">' +
-            '<div><b>'+hechos+'</b><span>Cortes hechos</span></div><div><b>'+porVenir+'</b><span>Por venir</span></div><div><b>'+manana+'</b><span>Mañana</span></div>' +
+            '<div><b>'+hechos+'</b><span>'+VCap(V("units"))+' '+VG("hechos")+'</span></div><div><b>'+porVenir+'</b><span>Por venir</span></div><div><b>'+manana+'</b><span>Mañana</span></div>' +
             (owner && cobraEnApp() ? '<div><b>'+money(cobrado)+'</b><span>Cobrado hoy</span></div><div><b>'+money(aCobrar)+'</b><span>A cobrar hoy</span></div>' : '') +
           '</div>' +
           ((porConfirmar || saldos) ? '<div class="bcard-alerts">' + (porConfirmar ? '<span class="pchip seal">'+porConfirmar+' pago'+(porConfirmar === 1 ? '' : 's')+' por confirmar</span>' : '') +
@@ -1915,7 +1915,7 @@
       (owner && cobraEnApp() ? '<div class="stat-tile"><div class="num">'+money(toCollectToday)+'</div><div class="lbl">A cobrar hoy</div></div>' : '') +
       '</div>';
     var teamView = activeBarbers().length > 1;
-    var closedNote = (!teamView || crew.length) ? '' : '<div class="notice warn" style="margin-bottom:14px;"><div>El local está cerrado hoy: ningún barbero atiende.</div></div>';
+    var closedNote = (!teamView || crew.length) ? '' : '<div class="notice warn" style="margin-bottom:14px;"><div>El local está cerrado hoy: ningún '+V("pro")+' atiende.</div></div>';
     var local = '<div class="card news-card"><h2>El local hoy</h2>' +
       (crew.length ? crew.map(function(m){ return '<div class="summary-row"><span class="k">'+(team.length > 1 ? esc(m.name) : 'Horario')+'</span><span class="v">'+hoursOf(m)+'</span></div>'; }).join("")
                    : '<div class="notice warn"><div>El local está cerrado hoy.</div></div>') +
@@ -1924,11 +1924,11 @@
     var avisos = [];
     if(owner){
       var debts = Object.keys(state.debts).length;
-      if(debts) avisos.push('<div class="news-row tone-warn"><span>💰</span><div><b>'+debts+(debts === 1 ? ' cliente con cargo pendiente' : ' clientes con cargo pendiente')+'</b><i>Por cancelar el mismo día o no venir sin haber pagado la seña</i></div><button class="btn btn-ghost btn-sm" data-goto="saldos">Ver saldos</button></div>');
-      if(!state.config.payAlias && !hasMpLinks()) avisos.push('<div class="news-row tone-warn"><span>🔗</span><div><b>Falta cargar un medio de pago online</b><i>Sin alias ni link de Mercado Pago el cliente no puede pagar desde la app</i></div><button class="btn btn-ghost btn-sm" data-goto="negocio">Cargar</button></div>');
+      if(debts) avisos.push('<div class="news-row tone-warn"><span>💰</span><div><b>'+debts+(debts === 1 ? ' '+V("client")+' con cargo pendiente' : ' '+V("clients")+' con cargo pendiente')+'</b><i>Por cancelar el mismo día o no venir sin haber pagado la seña</i></div><button class="btn btn-ghost btn-sm" data-goto="saldos">Ver saldos</button></div>');
+      if(!state.config.payAlias && !hasMpLinks()) avisos.push('<div class="news-row tone-warn"><span>🔗</span><div><b>Falta cargar un medio de pago online</b><i>Sin alias ni link de Mercado Pago el '+V("client")+' no puede pagar desde la app</i></div><button class="btn btn-ghost btn-sm" data-goto="negocio">Cargar</button></div>');
       var sinWa = teamList().filter(function(m){ return m.active !== false && !m.whatsapp; });
       if(sinWa.length && activeBarbers().length > 1) avisos.push('<div class="news-row tone-info"><span>📱</span><div><b>Falta el WhatsApp de '+sinWa.map(function(m){ return esc(m.name); }).join(", ")+'</b><i>Con el número, el aviso del turno le llega directo</i></div><button class="btn btn-ghost btn-sm" data-goto="equipo">Cargar</button></div>');
-      if(state.config.priceIsExample) avisos.push('<div class="news-row tone-info"><span>🏷️</span><div><b>El precio del corte es el de ejemplo</b><i>Cargá el precio real</i></div><button class="btn btn-ghost btn-sm" data-goto="precios">Cambiar</button></div>');
+      if(state.config.priceIsExample) avisos.push('<div class="news-row tone-info"><span>🏷️</span><div><b>El precio '+VU("del")+' es el de ejemplo</b><i>Cargá el precio real</i></div><button class="btn btn-ghost btn-sm" data-goto="precios">Cambiar</button></div>');
     }
     var side = (teamView ? '' : local) + (avisos.length ? '<div class="card news-card"><h2>Avisos <span class="count-pill">'+avisos.length+'</span></h2>'+avisos.join("")+'</div>' : '');
 
@@ -1973,7 +1973,7 @@
         }).join(""), "warn");
     }
     if(d.cambios.length){
-      right += newsCard("Cambios de día", "Turnos que el cliente movió (próximos 7 días)", d.cambios.length,
+      right += newsCard("Cambios de día", "Turnos que el "+V("client")+" movió (próximos 7 días)", d.cambios.length,
         d.cambios.map(function(b){ return newsLine(b, '<span class="pchip none">antes: '+shortDate(b.originalDate)+' '+esc(b.originalTime || "")+'</span>', true); }).join(""));
     }
     right += reminderCard();
@@ -2026,7 +2026,7 @@
   // ================= PASAR EL CORTE A UN COMPAÑERO + MOVIMIENTOS =================
   // quién hace cada cosa en el registro de movimientos
   actor = function(){
-    return isEmployee() ? {role: "staff", name: (barberById(myBarber()) || {}).name || "Empleado"} : {role: "owner", name: (ownerBarber() || {}).name || "Dueño"};
+    return isEmployee() ? {role: "staff", name: (barberById(myBarber()) || {}).name || ""+VCap(V("staff"))+""} : {role: "owner", name: (ownerBarber() || {}).name || "Dueño"};
   };
 
   function barberBusyAt(m, b){
@@ -2042,25 +2042,25 @@
       var works = barberSlotTimes(b.date, m).indexOf(b.time) >= 0, busy = works && barberBusyAt(m, b);
       return {id: m.id, label: m.name, sub: !works ? "Fuera de su horario a esa hora" : busy ? "Ya tiene un turno a esa hora" : "Libre a esa hora", disabled: !works || busy};
     });
-    if(!opts.length){ showToast("No hay otro barbero para pasarle el corte."); return; }
+    if(!opts.length){ showToast("No hay otro " + V("pro") + " para pasarle " + VU("el") + "."); return; }
     var note = shouldNotifyChange(b)
-      ? "Faltan más de 30 minutos: al pasarlo te armo el mensaje para avisarle al cliente."
-      : "Falta menos de media hora: se pasa sin avisarle al cliente.";
-    askChoose("Pasar este corte a otro barbero", esc2(b.name + " " + b.lastname) + " · " + formatDateLong(b.date) + " · " + b.time + " hs. " + note, opts, function(toId){
+      ? "Faltan más de 30 minutos: al pasarlo te armo el mensaje para avisarle al "+V("client")+"."
+      : "Falta menos de media hora: se pasa sin avisarle al "+V("client")+".";
+    askChoose("Pasar " + VU("este") + " a otro " + V("pro"), esc2(b.name + " " + b.lastname) + " · " + formatDateLong(b.date) + " · " + b.time + " hs. " + note, opts, function(toId){
       transferBooking(id, toId).then(function(res){
         if(!res.notify){
-          showToast("Listo: el corte pasó a " + res.to + ". Faltaba menos de media hora, así que no se le avisa al cliente.");
+          showToast("Listo: " + VU("el") + " pasó a " + res.to + ". Faltaba menos de media hora, así que no se le avisa al "+V("client")+".");
           return;
         }
         var nb = Object.assign({}, b, {barberName: res.to}), txt = transferText(nb, res.from), links = [];
         if(b.phone) links.push({label: "Avisar por WhatsApp", sub: "Se abre el mensaje ya escrito para " + b.name, href: "https://wa.me/" + waNumber(b.phone) + "?text=" + encodeURIComponent(txt)});
         if(b.email) links.push({label: "Avisar por mail", sub: b.email, href: "mailto:" + b.email + "?subject=" + encodeURIComponent("Tu turno en " + state.config.businessName) + "&body=" + encodeURIComponent(txt)});
-        if(!links.length){ showToast("Corte pasado a " + res.to + ". El cliente no tiene teléfono ni mail cargados para avisarle."); return; }
-        askChoose("Corte pasado a " + res.to, "El cliente ya lo ve en su app. Como faltaba más de media hora, avisale por acá:", links, null);
+        if(!links.length){ showToast(VCap(VU()) + " " + VG("pasado") + " a " + res.to + ". El "+V("client")+" no tiene teléfono ni mail cargados para avisarle."); return; }
+        askChoose(VCap(VU()) + " " + VG("pasado") + " a " + res.to, "El "+V("client")+" ya lo ve en su app. Como faltaba más de media hora, avisale por acá:", links, null);
       }).catch(function(e){
         console.error(e);
         var busy = e && (e.code === "slot-taken" || e.code === "permission-denied" || e.code === "already-exists" || e.code === "aborted");
-        showToast(busy ? "Ese compañero ya tiene un turno a esa hora (o no se puede pasar este turno)." : "No se pudo pasar el corte. Intentá de nuevo.");
+        showToast(busy ? "Ese compañero ya tiene un turno a esa hora (o no se puede pasar este turno)." : "No se pudo pasar " + VU("el") + ". Intentá de nuevo.");
       });
     });
   }
@@ -2077,7 +2077,7 @@
     {id: "completado", label: "Completados", types: ["completado"]},
     {id: "recordatorio", label: "Recordatorios", types: ["recordatorio"]}
   ];
-  var MOVE_ROLE = {owner: "Dueño", staff: "Empleado", client: "Cliente", system: "Automático"};
+  var MOVE_ROLE = {owner: V("owner"), staff: ""+VCap(V("staff"))+"", client: ""+VCap(V("client"))+"", system: "Automático"};
 
   function fmtStamp(ts){
     var d = new Date(ts);
@@ -2110,8 +2110,8 @@
   function ownerMovimientos(){
     var list = visibleMovements();
     var count = function(g){ return g.types ? list.filter(function(m){ return g.types.indexOf(m.type) >= 0; }).length : list.length; };
-    return '<div class="card"><h2>Movimientos</h2><div class="sub">Registro de todo lo que pasa con los turnos: reservas, pagos, cancelaciones, cambios de día y cortes pasados entre barberos' + (isEmployee() ? ' (los de tu agenda)' : '') + '</div>' +
-      '<input type="text" id="inpMoveSearch" placeholder="Buscar por cliente, barbero o detalle" value="'+esc(session.moveQuery)+'" autocomplete="off">' +
+    return '<div class="card"><h2>Movimientos</h2><div class="sub">Registro de todo lo que pasa con los turnos: reservas, pagos, cancelaciones, cambios de día y '+V("units")+' '+VG("pasados")+' entre '+V("pros")+'' + (isEmployee() ? ' (los de tu agenda)' : '') + '</div>' +
+      '<input type="text" id="inpMoveSearch" placeholder="Buscar por '+V("client")+', '+V("pro")+' o detalle" value="'+esc(session.moveQuery)+'" autocomplete="off">' +
       '<div class="chips">' + MOVE_GROUPS.map(function(g){
         return '<button type="button" class="chip'+(session.moveFilter === g.id ? ' on' : '')+'" data-mfilter="'+g.id+'">'+g.label+' <small>'+count(g)+'</small></button>';
       }).join("") + '</div><div id="moveList">'+movesHtml(list)+'</div></div>';
@@ -2166,7 +2166,7 @@
     var nWa = todo.filter(function(b){ return b.phone; }).length, nMail = todo.filter(function(b){ return b.email; }).length;
     var box = document.getElementById("remindBox") || (remindOverlay(), document.getElementById("remindBox"));
     box.innerHTML = '<h3>Enviar recordatorios de mañana</h3>' +
-      '<p>'+(repeat ? 'Todos ya estaban avisados: se manda de nuevo a los ' : 'Faltan avisar ')+todo.length+(todo.length === 1 ? ' cliente' : ' clientes')+'. Elegí por dónde:</p>' +
+      '<p>'+(repeat ? 'Todos ya estaban avisados: se manda de nuevo a los ' : 'Faltan avisar ')+todo.length+(todo.length === 1 ? ' '+V("client")+'' : ' '+V("clients")+'')+'. Elegí por dónde:</p>' +
       '<label class="checkline"><input type="checkbox" id="rmWa" '+(nWa ? 'checked' : 'disabled')+'><span>WhatsApp ('+nWa+')</span></label>' +
       '<label class="checkline"><input type="checkbox" id="rmMail" '+(nMail ? 'checked' : 'disabled')+'><span>Mail ('+nMail+')</span></label>' +
       '<div class="field-hint" style="margin:2px 0 12px;">Te voy abriendo cada mensaje ya escrito, uno por uno: solo tocás Enviar en WhatsApp o en tu mail. Lo que mandes queda marcado como avisado.</div>' +
@@ -2180,7 +2180,7 @@
         if(wa && b.phone) rem.steps.push({b: b, ch: "wa"});
         if(mail && b.email) rem.steps.push({b: b, ch: "mail"});
       });
-      if(!rem.steps.length){ showToast("Esos clientes no tienen ese dato de contacto."); return; }
+      if(!rem.steps.length){ showToast("Esos "+V("clients")+" no tienen ese dato de contacto."); return; }
       remindStep();
     };
   }
@@ -2190,7 +2190,7 @@
     if(!rem) return;
     if(rem.i >= rem.steps.length){
       var clients = Object.keys(rem.done).length;
-      box.innerHTML = '<h3>¡Listo!</h3><p>Mandaste '+rem.sent+(rem.sent === 1 ? ' recordatorio' : ' recordatorios')+' a '+clients+(clients === 1 ? ' cliente' : ' clientes')+'. Quedaron marcados como avisados y registrados en Movimientos.</p>' +
+      box.innerHTML = '<h3>¡Listo!</h3><p>Mandaste '+rem.sent+(rem.sent === 1 ? ' recordatorio' : ' recordatorios')+' a '+clients+(clients === 1 ? ' '+V("client")+'' : ' '+V("clients")+'')+'. Quedaron marcados como avisados y registrados en Movimientos.</p>' +
         '<button class="btn btn-primary" id="rmEnd">Cerrar</button>';
       document.getElementById("rmEnd").onclick = closeRemind;
       return;
@@ -2219,7 +2219,7 @@
   function clientLink(barberId){ return clientBase() + (barberId ? "?b=" + encodeURIComponent(barberId) : ""); }
 
   function shareLinksHtml(){
-    var rows = [], biz = state.config.businessName || "la barbería";
+    var rows = [], biz = state.config.businessName || V("bizThe");
     if(isEmployee()){
       var me = barberById(myBarber());
       rows.push({label: "Tu link" + (me ? " (" + me.name + ")" : ""), url: clientLink(myBarber())});
@@ -2227,8 +2227,8 @@
       rows.push({label: "Link general", url: clientLink("")});
       if(activeBarbers().length > 1) activeBarbers().forEach(function(m){ rows.push({label: "Link de " + m.name, url: clientLink(m.id)}); });
     }
-    return '<div class="card"><h2>Link para tus clientes</h2>' +
-      '<div class="sub">Mandalo por WhatsApp. El cliente lo abre, crea su usuario y pide el turno'+(isEmployee() ? ' ya con vos elegido' : '')+'.</div>' +
+    return '<div class="card"><h2>Link para tus '+V("clients")+'</h2>' +
+      '<div class="sub">Mandalo por WhatsApp. El '+V("client")+' lo abre, crea su usuario y pide el turno'+(isEmployee() ? ' ya con vos elegido' : '')+'.</div>' +
       rows.map(function(r, i){
         var text = "Reservá tu turno en " + biz + ": " + r.url;
         return '<div class="share-row"><div class="share-txt"><b>'+esc(r.label)+'</b><span>'+esc(r.url)+'</span></div>' +
@@ -2345,7 +2345,7 @@
     return '<div class="card lockcard pin-card">' +
       '<img class="pin-logo" data-brand-logo hidden alt="">' +
       '<h2>'+esc(state.config.businessName)+'</h2>' +
-      '<div class="sub">Panel del dueño · ingresá tu PIN</div>' +
+      '<div class="sub">Panel de administración · ingresá tu PIN</div>' +
       '<div class="pin-dots" id="pinDots" aria-live="polite">' + new Array(n + 1).join("<i></i>") + '</div>' +
       '<div class="pin-pad" id="pinPad">' + keys + '</div>' +
       '<div class="field-hint" style="margin:14px 0 0; text-align:center;">' +
@@ -2439,8 +2439,8 @@
   function tourSlides(){
     var cobra = cobraEnApp(), demo = cfgOn("demoData"), s = [], team = activeBarbers(), multi = team.length > 1;
     s.push({icon: "celular", label: "Recorrido", title: "Así funciona tu panel",
-      what: "Tus clientes reservan solos desde el celular y vos ves todo acá, en una sola pantalla.",
-      how: ["Compartís tu link o ponés el QR en el local.", "El cliente elige día y hora" + (cobra ? " y deja la seña" : "") + ".", "Vos lo ves al instante en <b>Hoy</b> y en <b>Agenda</b>."]});
+      what: "Tus "+V("clients")+" reservan solos desde el celular y vos ves todo acá, en una sola pantalla.",
+      how: ["Compartís tu link o ponés el QR en el local.", "El "+V("client")+" elige día y hora" + (cobra ? " y deja la seña" : "") + ".", "Vos lo ves al instante en <b>Hoy</b> y en <b>Agenda</b>."]});
     // en la versión real, lo primero es dejar el panel instalado como app (si todavía no lo está)
     if(CLOUD && !isStandaloneApp()){
       var ios = isIOSDevice();
@@ -2453,44 +2453,44 @@
     }
     s.push({icon: "hoy", tab: "hoy", title: "Hoy",
       what: "Lo primero que ves cada día: cuántos turnos tenés, cuál es el próximo y qué necesita tu atención.",
-      how: ["Los números de arriba resumen el día de un vistazo.", "Tocá un turno para abrirlo y ver los datos del cliente.", "<b>Recordatorios de mañana</b> arma el mensaje de WhatsApp para avisarle a cada cliente."]});
+      how: ["Los números de arriba resumen el día de un vistazo.", "Tocá un turno para abrirlo y ver los datos del "+V("client")+".", "<b>Recordatorios de mañana</b> arma el mensaje de WhatsApp para avisarle a cada "+V("client")+"."]});
     s.push({icon: "agenda", tab: "agenda", title: "Agenda",
-      what: "Todos los turnos" + (multi ? " de cada barbero" : "") + ", por día, por semana o por mes.",
-      how: ["Elegí <b>Día</b>, <b>Semana</b> o <b>Mes</b> arriba.", "En el mes, la barra de cada día muestra qué tan lleno está.", "Tocá un turno para ver al cliente, cancelarlo o marcar que no vino."]});
-    s.push({icon: "clientes", tab: "clientes", title: "Clientes",
+      what: "Todos los turnos" + (multi ? " de cada " + V("pro") : "") + ", por día, por semana o por mes.",
+      how: ["Elegí <b>Día</b>, <b>Semana</b> o <b>Mes</b> arriba.", "En el mes, la barra de cada día muestra qué tan lleno está.", "Tocá un turno para ver al "+V("client")+", cancelarlo o marcar que no vino."]});
+    s.push({icon: "clientes", tab: "clientes", title: ""+VCap(V("clients"))+"",
       what: "Todos los que reservaron, con cuántas veces vinieron y cuánto gastaron.",
-      how: ["Buscá por nombre o usuario.", "Ordená por más turnos, última visita o más gastó.", "Tocá un cliente para ver todo su historial."]});
+      how: ["Buscá por nombre o usuario.", "Ordená por más turnos, última visita o más gastó.", "Tocá un "+V("client")+" para ver todo su historial."]});
     if(cobra) s.push({icon: "pagos", tab: "pagos", title: "Pagos",
       what: "Lo cobrado, las señas por venir y lo que falta cobrar.",
-      how: ["Elegí el período: este mes, últimos 30 días, este año…", "Cuando un cliente avisa <b>Ya pagué</b>, abrí su turno: ves el comprobante y tocás <b>Confirmar seña</b>.", "Si pagan el saldo en efectivo, tocá <b>Cobrado en efectivo</b>."]});
+      how: ["Elegí el período: este mes, últimos 30 días, este año…", "Cuando un "+V("client")+" avisa <b>Ya pagué</b>, abrí su turno: ves el comprobante y tocás <b>Confirmar seña</b>.", "Si pagan el saldo en efectivo, tocá <b>Cobrado en efectivo</b>."]});
     s.push({icon: "movimientos", tab: "movimientos", title: "Movimientos",
       what: "El registro de todo lo que pasa con cada turno: reservas, pagos, cambios de día y cancelaciones.",
-      how: ["Filtrá por tipo: Pagos, Cancelaciones, Cambios de día…", "Buscá por cliente.", "Sirve para aclarar cualquier duda de quién hizo qué y cuándo."]});
+      how: ["Filtrá por tipo: Pagos, Cancelaciones, Cambios de día…", "Buscá por "+V("client")+".", "Sirve para aclarar cualquier duda de quién hizo qué y cuándo."]});
     s.push({icon: "horarios", tab: "horarios", title: "Horarios y cierres",
       what: "<b>Horarios:</b> los días y horas en que atendés. <b>Cierres:</b> días u horas puntuales sin atención, como feriados o vacaciones.",
-      how: ["En Horarios tildá cada día y poné de qué hora a qué hora; si cerrás al mediodía usá el segundo horario.", "En Cierres elegí la fecha y guardá: ese día no se puede reservar.", "Los cambios se ven en la app de tus clientes al instante."]});
+      how: ["En Horarios tildá cada día y poné de qué hora a qué hora; si cerrás al mediodía usá el segundo horario.", "En Cierres elegí la fecha y guardá: ese día no se puede reservar.", "Los cambios se ven en la app de tus "+V("clients")+" al instante."]});
     s.push({icon: "negocio", tab: "negocio", title: "Negocio y precios",
-      what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor del corte, tus otros servicios (barba, diseño, combos) con su precio" + (cobra ? ", la seña" : "") + " y la duración del turno.",
-      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", "En Precios, <b>Otros servicios</b> te deja sumar barba, diseño o combos con su precio: el cliente elige uno al reservar.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás el alias." : "Podés cambiar los precios cuando quieras."]});
+      what: "<b>Negocio:</b> nombre, dirección y WhatsApp del local" + (cobra ? ", y tu alias de Mercado Pago" : "") + ". <b>Precios:</b> el valor " + VU("del") + ", tus otros servicios (" + V("svcEj") + ") con su precio" + (cobra ? ", la seña" : "") + " y la duración del turno.",
+      how: ["Cambiá lo que necesites y tocá <b>Guardar</b>.", "En Precios, <b>Otros servicios</b> te deja sumar " + V("svcEj2") + " con su precio: el "+V("client")+" elige uno al reservar.", cobra ? "En Negocio, <b>Cobros</b> es donde cargás el alias." : "Podés cambiar los precios cuando quieras."]});
     s.push({icon: "equipo", tab: "equipo", title: "Equipo",
       what: multi ? "Acá están " + team.map(function(m){ return esc(m.name); }).join(", ") + ": cada uno con su agenda, sus horarios y su WhatsApp."
-                  : "Si tenés empleados, cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
+                  : "Si tenés "+V("staffs")+", cada uno tiene su agenda, sus horarios y su usuario para entrar. Si atendés solo, no tenés que tocar nada acá.",
       how: multi
-        ? ["Tocá a cada uno para cambiar su foto, su WhatsApp o sus horarios.", CLOUD ? "<b>Sumar administradores</b> arma un link para que cada uno cree su usuario." : "<b>Agregar empleado</b>: nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar."]
-        : ["<b>Agregar empleado:</b> nombre, WhatsApp y su usuario.", "El cliente elige con quién cortarse al reservar.", "Cada barbero ve solo su propia agenda."]});
+        ? ["Tocá a cada uno para cambiar su foto, su WhatsApp o sus horarios.", CLOUD ? "<b>Sumar administradores</b> arma un link para que cada uno cree su usuario." : "<b>Agregar "+V("staff")+"</b>: nombre, WhatsApp y su usuario.", "El "+V("client")+" elige " + V("quienInf") + " al reservar."]
+        : ["<b>Agregar "+V("staff")+":</b> nombre, WhatsApp y su usuario.", "El "+V("client")+" elige " + V("quienInf") + " al reservar.", "Cada " + V("pro") + " ve solo su propia agenda."]});
     s.push({icon: "config", tab: "config", title: "Configuración",
-      what: "Tu link para clientes" + (multi ? " (el general y uno por barbero)" : "") + ", cómo tener el panel como app en el celular y tu cuenta.",
+      what: "Tu link para "+V("clients")+"" + (multi ? " (el general y uno por " + V("pro") + ")" : "") + ", cómo tener el panel como app en el celular y tu cuenta.",
       how: ["Copiá tu link y mandalo por WhatsApp o ponelo en tu perfil.", CLOUD ? "En <b>App en tu celular</b> ves si ya la instalaste y activás los avisos." : "Instalá el panel como app: en iPhone, <b>Compartir</b> y <b>Agregar a inicio</b>; en Android, <b>Instalar app</b>.", "Desde acá también cambiás tu contraseña o volvés a ver este recorrido."]});
     if(cfgOn("precioOferta")){
       var corte = Number(state.config.price) || 0;
       s.push({icon: "precios", label: "Precio", title: "Cuánto cuesta",
-        what: "Un valor pensado en vos: el abono mensual equivale al precio de <b>2 cortes</b>. Con tu corte a <b>" + money(corte) + "</b>, son <b>" + money(corte * 2) + " por mes</b>. Siempre se calcula sobre el corte, tengas los servicios que tengas.",
-        how: ["Siempre es el valor de 2 cortes: si actualizás el precio de tu corte, el abono se actualiza con él.", "Con evitar que se pierdan dos turnos al mes (olvidos, cancelaciones de último momento) ya se compensa.", "Para tenerla en tu barbería, escribinos por WhatsApp desde la portada de la demo."]});
+        what: "Un valor pensado en vos: el abono mensual equivale al precio de <b>2 " + V("units") + "</b>. Con tu " + V("unit") + " a <b>" + money(corte) + "</b>, son <b>" + money(corte * 2) + " por mes</b>. Siempre se calcula sobre " + VU("el") + ", tengas los servicios que tengas.",
+        how: ["Siempre es el valor de 2 " + V("units") + ": si actualizás el precio de tu " + V("unit") + ", el abono se actualiza con él.", "Con evitar que se pierdan dos turnos al mes (olvidos, cancelaciones de último momento) ya se compensa.", "Para tenerla en tu " + V("biz") + ", escribinos por WhatsApp desde la portada de la demo."]});
     }
     s.push({icon: "listo", label: "Listo", title: "Ya lo conocés",
-      what: demo ? "Esta demo trae turnos y clientes de ejemplo para que pruebes sin miedo." : "Ya está todo listo para que lo uses. Cuando quieras, volvés a ver este recorrido desde Configuración.",
-      how: demo ? ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Reservá desde <b>Ver app del cliente</b> y mirá cómo aparece acá.", "El botón <b>Reiniciar</b> vuelve todo al principio."]
-                : ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Mandá el link a tus clientes o poné el QR en el local.", "Si algo no te cierra, escribinos."],
+      what: demo ? "Esta demo trae turnos y "+V("clients")+" de ejemplo para que pruebes sin miedo." : "Ya está todo listo para que lo uses. Cuando quieras, volvés a ver este recorrido desde Configuración.",
+      how: demo ? ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Reservá desde <b>Ver app del "+V("client")+"</b> y mirá cómo aparece acá.", "El botón <b>Reiniciar</b> vuelve todo al principio."]
+                : ["Tocá cualquier pestaña" + (bottomNavOn() ? " de la barra de abajo" : " de arriba") + ".", "Mandá el link a tus "+V("clients")+" o poné el QR en el local.", "Si algo no te cierra, escribinos."],
       last: true});
     return s;
   }
@@ -2549,7 +2549,7 @@
       e.push({id: "movimientos", l: "Movim."}, {id: "config", l: "Cuenta"});
       return {main: e, more: []};
     }
-    var main = [{id: "hoy", l: "Hoy", c: badges.hoy}, {id: "agenda", l: "Agenda", c: badges.unseen}, {id: "clientes", l: "Clientes"}];
+    var main = [{id: "hoy", l: "Hoy", c: badges.hoy}, {id: "agenda", l: "Agenda", c: badges.unseen}, {id: "clientes", l: ""+VCap(V("clients"))+""}];
     if(cobra) main.push({id: "pagos", l: "Pagos"}); else main.push({id: "movimientos", l: "Movim."});
     var more = [];
     if(cobra) more.push({id: "movimientos", l: "Movimientos"});
@@ -2682,7 +2682,7 @@
           : '<span class="inv-pend">Pendiente</span>') + '</div>';
       }).join("") + '</div>';
       if(code){
-        var link = inviteLink(code), text = "Sumate como administrador de " + (state.config.businessName || "la barbería") + ": " + link;
+        var link = inviteLink(code), text = "Sumate como administrador de " + (state.config.businessName || V("bizThe")) + ": " + link;
         h += '<div class="share-row"><div class="share-txt"><b>Link de invitación</b><span>'+esc(link)+'</span></div>' +
           '<div class="share-btns"><button class="btn btn-ghost btn-sm" type="button" data-copy-link="'+esc(link)+'">Copiar</button>' +
           '<a class="btn btn-wa btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(text)+'">WhatsApp</a></div></div>' +
@@ -2794,7 +2794,7 @@
       return {
         title: "¡Bienvenido, " + esc(wizName()) + "!",
         body: '<p class="wz-lead">Vamos a dejar el panel listo en unos pocos pasos, de a uno por pantalla.</p>' +
-          '<ul class="wz-list"><li>Tus datos y tu WhatsApp, para que te avisen cuando un cliente reserva con vos</li>' +
+          '<ul class="wz-list"><li>Tus datos y tu WhatsApp, para que te avisen cuando un '+V("client")+' reserva con vos</li>' +
           (s.cobros ? '' : '<li>El alias de Mercado Pago para cobrar la seña</li>') + (s.local ? '' : '<li>Los datos del local</li>') + (s.horarios ? '' : '<li>Los horarios de atención</li>') +
           '<li>Cómo tener la app en tu celular</li></ul>' +
           (done.length ? '<div class="notice info"><div>Tu equipo ya cargó '+done.join(", ")+': esos pasos te los salteamos.</div></div>' : ''),
@@ -2804,7 +2804,7 @@
     if(id === "perfil"){
       return {
         title: "Tus datos",
-        body: '<p class="wz-lead">Sos <b>'+esc(m.name)+'</b> en la agenda. Cargá tu WhatsApp: cuando un cliente reserva con vos, se abre un mensaje a este número.</p>' +
+        body: '<p class="wz-lead">Sos <b>'+esc(m.name)+'</b> en la agenda. Cargá tu WhatsApp: cuando un '+V("client")+' reserva con vos, se abre un mensaje a este número.</p>' +
           '<label>Tu WhatsApp</label><input type="tel" id="wzWa" inputmode="tel" value="'+esc(waShow(m.whatsapp))+'" placeholder="3415551234">' +
           '<div class="field-hint">Con código de área, sin 0 ni 15. Ej: 3415551234</div>',
         next: "Siguiente", back: true,
@@ -2821,16 +2821,16 @@
       return {
         title: "Cobros",
         body: '<div class="notice info"><div>Este paso lo completa <b>una sola persona</b>: lo que cargues vale para todo el equipo y a los demás no se les pide.</div></div>' +
-          '<label>Alias de Mercado Pago</label><input type="text" id="wzAlias" value="'+esc(c.payAlias || "")+'" placeholder="barberia.parisi" autocapitalize="off" autocorrect="off" spellcheck="false">' +
-          '<label>Titular <span class="opt">(nombre que ve el cliente)</span></label><input type="text" id="wzHolder" value="'+esc(c.payHolder || "")+'" placeholder="Nombre y apellido">' +
-          '<div class="row2"><div><label>Precio del corte ($)</label><input type="number" id="wzPrice" min="1" value="'+(c.price || "")+'" inputmode="numeric"></div>' +
+          '<label>Alias de Mercado Pago</label><input type="text" id="wzAlias" value="'+esc(c.payAlias || "")+'" placeholder="'+esc(V("phAlias").replace(/^Ej: /, ""))+'" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+          '<label>Titular <span class="opt">(nombre que ve el '+V("client")+')</span></label><input type="text" id="wzHolder" value="'+esc(c.payHolder || "")+'" placeholder="Nombre y apellido">' +
+          '<div class="row2"><div><label>Precio '+VU("del")+' ($)</label><input type="number" id="wzPrice" min="1" value="'+(c.price || "")+'" inputmode="numeric"></div>' +
           '<div><label>Seña al reservar</label><select id="wzDep"><option value="0">Sin seña</option><option value="30">30%</option><option value="50">50%</option><option value="100">Todo (100%)</option></select></div></div>',
         next: "Siguiente", back: true,
         after: function(){ var sel = document.getElementById("wzDep"); if(sel) sel.value = String(c.depositPercent === undefined ? 50 : c.depositPercent); },
         save: function(){
           var alias = document.getElementById("wzAlias").value.trim(), price = Math.round(Number(document.getElementById("wzPrice").value));
           if(!/^[A-Za-z0-9._-]{6,30}$/.test(alias)){ showToast("El alias tiene entre 6 y 30 letras, números, puntos o guiones."); return false; }
-          if(!(price > 0)){ showToast("Escribí el precio del corte."); return false; }
+          if(!(price > 0)){ showToast("Escribí el precio " + VU("del") + "."); return false; }
           c.payAlias = alias; c.payHolder = document.getElementById("wzHolder").value.trim();
           c.price = price; c.priceIsExample = false; c.depositPercent = Number(document.getElementById("wzDep").value);
           markSetup("cobros");
@@ -2844,7 +2844,7 @@
         body: '<div class="notice info"><div>Otro paso <b>de una sola vez</b> para todo el equipo.</div></div>' +
           '<label>Dirección</label><input type="text" id="wzAddr" value="'+esc(c.address || "")+'" placeholder="Calle y número, ciudad">' +
           '<label>WhatsApp del local <span class="opt">(opcional)</span></label><input type="tel" id="wzLocalWa" inputmode="tel" value="'+esc(waShow(c.whatsappLink || c.whatsappDisplay || ""))+'" placeholder="3415551234">' +
-          '<div class="field-hint">Si un barbero no cargó el suyo, los avisos van a este número.</div>',
+          '<div class="field-hint">Si un '+V("pro")+' no cargó el suyo, los avisos van a este número.</div>',
         next: "Siguiente", back: true,
         save: function(){
           var addr = document.getElementById("wzAddr").value.trim(), raw = digitsOnly(document.getElementById("wzLocalWa").value);
@@ -2900,10 +2900,10 @@
     // fin
     return {
       title: "¡Todo listo!",
-      body: '<p class="wz-lead">Ya podés usar el panel. Este es el link para que tus clientes reserven; mandalo por WhatsApp o ponelo en tu perfil:</p>' +
-        '<div class="share-row"><div class="share-txt"><b>Link para clientes</b><span>'+esc(link + (m.id ? "?b=" + m.id : ""))+'</span></div>' +
+      body: '<p class="wz-lead">Ya podés usar el panel. Este es el link para que tus '+V("clients")+' reserven; mandalo por WhatsApp o ponelo en tu perfil:</p>' +
+        '<div class="share-row"><div class="share-txt"><b>Link para '+V("clients")+'</b><span>'+esc(link + (m.id ? "?b=" + m.id : ""))+'</span></div>' +
         '<div class="share-btns"><button class="btn btn-ghost btn-sm" type="button" data-copy-link="'+esc(link + (m.id ? "?b=" + m.id : ""))+'">Copiar</button></div></div>' +
-        '<div class="field-hint">Con este link el cliente entra y ya te tiene elegido a vos.</div>',
+        '<div class="field-hint">Con este link el '+V("client")+' entra y ya te tiene elegido a vos.</div>',
       next: "Ir al panel", back: true, last: true
     };
   }
@@ -2977,7 +2977,7 @@
     html += '</div>';
 
     var myId = isEmployee() ? myBarber() : (myBarber() || ownerBarber().id);
-    html += '<div class="card"><h2>Mi foto de perfil</h2><div class="sub">La ven tu equipo y los clientes cuando eligen con quién cortarse.</div>' + photoEditHtml(myId) + '</div>';
+    html += '<div class="card"><h2>Mi foto de perfil</h2><div class="sub">La ven tu equipo y los '+V("clients")+' cuando eligen '+V("quienInf")+'.</div>' + photoEditHtml(myId) + '</div>';
     html += '<div class="card"><h2>Sesión</h2>' +
       '<div class="sub">Cerrá sesión si usás una computadora que no es tuya.</div>' +
       '<button class="btn btn-ghost" id="btnConfigLogout">Cerrar sesión</button></div>';
@@ -2985,12 +2985,12 @@
     if(isEmployee()) return html;       // el empleado solo ve su cuenta y su sesión
     if(CLOUD){
       html += '<div class="card"><h2>Recordatorios automáticos</h2>' +
-        '<div class="sub">Todos los días a las 10:00 se manda solo un mail de recordatorio a los clientes que tienen turno mañana. Los que ya avisaste a mano desde el botón se saltean, y cada envío queda en Movimientos.</div>' +
+        '<div class="sub">Todos los días a las 10:00 se manda solo un mail de recordatorio a los '+V("clients")+' que tienen turno mañana. Los que ya avisaste a mano desde el botón se saltean, y cada envío queda en Movimientos.</div>' +
         '<label class="checkline"><input type="checkbox" id="chkAutoRem" '+(state.config.autoReminders === false ? '' : 'checked')+'><span>Enviar recordatorios automáticos por mail</span></label></div>';
     }
     html += '<div class="card"><h2>Datos de ejemplo</h2>' +
-      '<div class="sub">Cargá clientes, turnos y saldos inventados para ver cómo se ve el panel con actividad (clientes fieles, cancelaciones, deudas, recordatorios). ' +
-      (CLOUD ? 'Solo se ven en este navegador: no se guardan en tu base ni los ven los clientes.' : 'Se guardan en este navegador.') + '</div>' +
+      '<div class="sub">Cargá '+V("clients")+', turnos y saldos inventados para ver cómo se ve el panel con actividad ('+V("clients")+' fieles, cancelaciones, deudas, recordatorios). ' +
+      (CLOUD ? 'Solo se ven en este navegador: no se guardan en tu base ni los ven los '+V("clients")+'.' : 'Se guardan en este navegador.') + '</div>' +
       (hasExampleData()
         ? '<button class="btn btn-danger" id="btnDemoOff">Borrar datos de ejemplo</button>'
         : '<button class="btn btn-ghost" id="btnDemoOn">Cargar datos de ejemplo</button>') +
@@ -3002,7 +3002,7 @@
         '<button class="btn btn-ghost btn-sm" data-tab-go="negocio">Datos del local</button>' +
         '<button class="btn btn-ghost btn-sm" data-tab-go="horarios">Horarios</button>' +
         '<button class="btn btn-ghost btn-sm" data-tab-go="precios">Precio</button>' +
-        '<a class="btn btn-ghost btn-sm" href="index.html" target="_blank" rel="noopener">Ver la app del cliente</a>' +
+        '<a class="btn btn-ghost btn-sm" href="index.html" target="_blank" rel="noopener">Ver la app del '+V("client")+'</a>' +
       '</div></div>';
     return html;
   }

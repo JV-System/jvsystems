@@ -25,6 +25,42 @@ function defaultHoursDay(morningActive, afternoonActive){
   };
 }
 
+// ---------- vocabulario del rubro ----------
+// La app habla de "barbero" y "corte" por defecto. Un negocio de otro rubro (kinesiología, estética...) cambia las palabras con
+// `vocab` en su config.js; lo que no cambie queda como barbería. fem:"1" = el servicio es femenino (la sesión, esta sesión).
+var VOCAB_DEFAULT = {
+  pro: "barbero", pros: "barberos", Pro: "Barbero",                 // quien atiende
+  unit: "corte", units: "cortes", Unit: "Corte", fem: "",           // el servicio base (el que da el precio de referencia)
+  baseName: "",                                                     // nombre del servicio base al reservar (vacío = Unit)
+  owner: "Dueño", biz: "barbería", bizDe: "de la barbería", bizDefault: "Tu Barbería",
+  quienQ: "¿Con quién te querés cortar?", quien: "con quién te querés cortar", quienInf: "con quién cortarse",
+  staff: "empleado", staffs: "empleados",                             // el resto del equipo (no el dueño)
+  client: "cliente", clients: "clientes",                             // quien reserva
+  masVienen: "Los que más se cortan", volver: "cortarte",
+  svcEj: "barba, diseño, combos", svcEj2: "barba, diseño o combos", svcPh: "Ej: Barba", bizThe: "la barbería",
+  phBiz: "Ej: Barbería El Corte", phTag: "Ej: Cortes y barba desde 2015", phAlias: "Ej: barberia.elcorte"
+};
+function V(k){
+  var v = (window.BARBERPRO_CONFIG && window.BARBERPRO_CONFIG.vocab) || {};
+  return v[k] != null && v[k] !== "" ? v[k] : VOCAB_DEFAULT[k];
+}
+// el servicio base con su artículo: VU("el") = "el corte" / "la sesión"; VU("del") = "del corte" / "de la sesión"; VU("al"), VU("este"), VU("un"); VU() = "corte"
+function VU(f, plural){
+  var fem = !!V("fem"), word = plural ? V("units") : V("unit");
+  var m = plural
+    ? {el: fem ? "las" : "los", del: fem ? "de las" : "de los", este: fem ? "estas" : "estos", un: fem ? "unas" : "unos"}
+    : {el: fem ? "la" : "el", del: fem ? "de la" : "del", al: fem ? "a la" : "al", este: fem ? "esta" : "este", un: fem ? "una" : "un"};
+  return (m[f] ? m[f] + " " : "") + word;
+}
+// concuerda un participio con el género del servicio: VG("pasado") = "pasado" / "pasada"; VG("hechos") = "hechos" / "hechas"
+function VG(w){ return V("fem") ? w.replace(/o(s?)$/, "a$1") : w; }
+function VCap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+// inicial para el avatar: saltea el título ("Dra. Paula" -> P, "Lic. Martín" -> M)
+function nameInitial(name){
+  var n = String(name || "?").trim().replace(/^(dra?|lic|licda?|lic\.|kgo|klgo)\.?\s+/i, "");
+  return (n.charAt(0) || "?").toUpperCase();
+}
+
 // ---------- equipo ----------
 // horario de trabajo de un barbero: acepta el formato completo {mon:{morning:{active,start,end},afternoon:{...}}, ...} o el compacto de config.js
 function cleanHours(h){
@@ -51,6 +87,7 @@ function cleanTeam(list){
     seen[id] = 1;
     var out = {id: id, name: String(m.name || id).slice(0, 40), role: m.role === "employee" ? "employee" : "owner",
                whatsapp: String(m.whatsapp || "").replace(/[^\d]/g, ""), active: m.active !== false};
+    if(m.title) out.title = String(m.title).slice(0, 40);      // especialidad o cargo que ve el cliente al elegir (ej: "Fisiatra")
     // horario propio (mismo formato que el del local, o el compacto de config.js: {mon:[["09:30","17:00"]], ...}); sin horario propio usa el del local
     var hh = cleanHours(m.hours);
     if(hh) out.hours = hh;
@@ -98,7 +135,7 @@ function moveFromPatch(b, patch){
   if(patch.status === "completed") out.push(["completado", "Turno completado"]);
   if(patch.depositState === "paid") out.push(["pago", "Seña confirmada" + ((b.deposit > 0) ? " ("+money(b.deposit)+")" : "") + (b.payMethod ? " · " + (mName[b.payMethod] || b.payMethod) : "")]);
   if(patch.balanceState === "paid") out.push(["pago", (patch.balanceMethod === "cash" ? "Cobrado en efectivo" : "Pago confirmado") + (patch.balanceMethod && patch.balanceMethod !== "cash" ? " · " + (mName[patch.balanceMethod] || patch.balanceMethod) : "")]);
-  if(patch.depositRefunded) out.push(["pago", "Seña devuelta al cliente"]);
+  if(patch.depositRefunded) out.push(["pago", "Seña devuelta al "+V("client")+""]);
   return out;
 }
 function minsUntil(b){ return hoursUntil(b) * 60; }
@@ -115,7 +152,7 @@ function transferBooking(id, toId){
   var notify = shouldNotifyChange(b);
   b.transferredFrom = from.id; b.transferredFromName = from.name; b.transferredAt = Date.now(); b.transferCount = (b.transferCount || 0) + 1;
   b.barberId = to.id; b.barberName = to.name;
-  logMove(b, "transferencia", "Pasó el corte de " + from.name + " a " + to.name + (notify ? " (se avisa al cliente)" : " (en el momento: sin aviso al cliente)"),
+  logMove(b, "transferencia", "Pasó " + VU("el") + " de " + from.name + " a " + to.name + (notify ? " (se avisa al "+V("client")+")" : " (en el momento: sin aviso al "+V("client")+")"),
           {barbers: [from.id, to.id], fromName: from.name, toName: to.name});
   saveState();
   hooks.refresh();
@@ -124,7 +161,7 @@ function transferBooking(id, toId){
 // aviso al cliente de que su turno pasó a otro barbero (mensaje ya escrito, lo manda quien lo pasó)
 function transferText(b, fromName){
   return "Hola " + b.name + "! Te avisamos que tu turno del " + formatDateLong(b.date) + " a las " + b.time + " hs en " + state.config.businessName +
-    " pasó a ser con " + (b.barberName || "otro barbero") + (fromName ? " (antes era con " + fromName + ")" : "") + ". Te esperamos igual, ¡gracias!";
+    " pasó a ser con " + (b.barberName || "otro " + V("pro")) + (fromName ? " (antes era con " + fromName + ")" : "") + ". Te esperamos igual, ¡gracias!";
 }
 
 // elegir una opción (o leer un aviso con botones): options = [{id, label, sub, disabled, href}]; onPick(id) para las que no tienen href
@@ -286,7 +323,7 @@ function defaultState(){
 function baseState(){
   return {
     config:{
-      businessName:"Tu Barbería",
+      businessName:V("bizDefault"),
       tagline:"Reservá tu turno online",
       address:"",
       whatsappDisplay:"",
@@ -472,7 +509,7 @@ function seedClientStories(s){
   }
 
   // 1) Matías: 12 cortes, ~cada 14 días, todos pagados (casi siempre por transferencia) + próximo turno
-  var matias = person("Matías", "Romero", "El Gato", "3415550101", 0);
+  var matias = person("Matías", "Romero", V("client") === "cliente" ? "El Gato" : "Mati", "3415550101", 0);
   var gaps = [9, 14, 15, 13, 14, 14, 16, 12, 14, 15, 14, 13];
   var off = -4;
   gaps.forEach(function(g, i){
@@ -660,7 +697,7 @@ function cleanServices(list){
 }
 function allServices(cfg){
   cfg = cfg || state.config;
-  var out = [{id: "corte", name: "Corte", price: Number(cfg.price) || 0, base: true}];
+  var out = [{id: "corte", name: V("baseName") || V("Unit"), price: Number(cfg.price) || 0, base: true}];
   cleanServices(cfg.services).forEach(function(s){ out.push(s); });
   return out;
 }
@@ -1168,7 +1205,7 @@ function calendarInfo(b){
   return {
     title: "Turno en " + c.businessName,
     where: c.address || "",
-    details: (b.service || "Corte") + " " + money(b.price) + (b.debtCharged ? " + saldo anterior " + money(b.debtCharged) : "") +
+    details: (b.service || V("baseName") || V("Unit")) + " " + money(b.price) + (b.debtCharged ? " + saldo anterior " + money(b.debtCharged) : "") +
       ". Si cancelás el mismo día se cobra el 50% de seña.",
     start: icsStamp(b.date, b.time, 0),
     end: icsStamp(b.date, b.time, state.config.slotMinutes)
@@ -1197,7 +1234,7 @@ function googleCalendarLink(b){
 function mapsQuery(){
   var c = state.config;
   if(!c.address) return "";
-  var named = c.businessName && c.businessName !== "Tu Barbería";
+  var named = c.businessName && c.businessName !== V("bizDefault");
   return (named ? c.businessName + ", " : "") + c.address;
 }
 function mapsLink(){

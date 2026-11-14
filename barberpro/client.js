@@ -91,11 +91,11 @@ function barberPickerHtml(){
   var a = activeBarbers();
   if(a.length < 2) return "";
   var cur = chosenBarber();
-  return '<div class="barber-pick"><div class="myt-title">¿Con quién te querés cortar?</div><div class="barber-opts">' + a.map(function(m){
+  return '<div class="barber-pick"><div class="myt-title">'+V("quienQ")+'</div><div class="barber-opts">' + a.map(function(m){
     var on = m.id === cur;
     return '<button type="button" class="barber-opt'+(on ? ' on' : '')+'" data-barber="'+esc(m.id)+'" aria-pressed="'+on+'">' +
-      (barberPhoto(m.id) ? '<img class="avatar" src="'+esc(barberPhoto(m.id))+'" alt="">' : '<span class="avatar">'+esc(m.name.trim().charAt(0).toUpperCase())+'</span>') +
-      '<b>'+esc(m.name)+'</b><i>'+(m.role === "owner" ? 'Dueño' : 'Barbero')+'</i></button>';
+      (barberPhoto(m.id) ? '<img class="avatar" src="'+esc(barberPhoto(m.id))+'" alt="">' : '<span class="avatar">'+esc(nameInitial(m.name))+'</span>') +
+      '<b>'+esc(m.name)+'</b><i>'+esc(m.title || (m.role === "owner" ? V("owner") : V("Pro")))+'</i></button>';
   }).join("") + '</div></div>';
 }
 
@@ -316,7 +316,7 @@ function turnoRow(t){
     pay = t.lateCancel ? '<span class="paystate pend">Seña retenida</span>' : '<span class="paystate info">Seña a devolver</span>';
   }
   return '<div class="myt-row'+(t.status === "cancelled" ? ' off' : '')+'">' +
-    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') + (t.transferredFromName && t.transferredAt && t.status === "confirmed" && !turnoEnded(t) && Date.now() - t.transferredAt < 3 * 86400000 ? '<span class="myt-with notice">Tu turno pasó de '+esc(t.transferredFromName)+' a '+esc(t.barberName || "otro barbero")+'</span>' : '') +
+    '<div class="myt-main"><b>'+formatDateLong(t.date)+' · '+t.time+' hs</b>' + (t.barberName && activeBarbers().length > 1 ? '<span class="myt-with">con '+esc(t.barberName)+(t.walkIn ? ' · orden de llegada' : '')+'</span>' : (t.walkIn ? '<span class="myt-with">Orden de llegada</span>' : '')) + (t.rescheduled ? '<span class="myt-with muted">Ya cambiaste el día de este turno</span>' : '') + (t.transferredFromName && t.transferredAt && t.status === "confirmed" && !turnoEnded(t) && Date.now() - t.transferredAt < 3 * 86400000 ? '<span class="myt-with notice">Tu turno pasó de '+esc(t.transferredFromName)+' a '+esc(t.barberName || "otro " + V("pro"))+'</span>' : '') +
       '<span class="myt-sub">'+(t.service ? esc(t.service)+' · ' : '')+money(total)+(pay ? ' · ' : '')+pay+'</span></div>' +
     '<span class="myt-side"><span class="badge '+(past ? 'completed' : t.status)+'">'+label+'</span>' +
       (canReschedule(t) ? '<button type="button" class="myt-cancel myt-change" data-reschedule="'+t.id+'">Cambiar día</button>' : '') +
@@ -344,7 +344,7 @@ function cancelTurnoFlow(id){
             : "No tiene costo, pero si cancelás el mismo día del turno se cobra el 50% de seña.");
   if(cobraEnApp() && t.debtCharged > 0) msg += " El saldo anterior de " + money(t.debtCharged) + " vuelve a quedar pendiente.";
   if(canReschedule(t)) msg += cobraEnApp() ? " Si solo necesitás otro día, podés cambiarlo sin costo (un cambio por turno)." : " Si solo necesitás otro día, podés cambiarlo (un cambio por turno).";
-  if(t.rescheduled) msg += cobraEnApp() ? " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo y pagar la seña de nuevo." : " Ya usaste tu cambio de día: para volver a cortarte tendrías que reservar un turno nuevo.";
+  if(t.rescheduled) msg += cobraEnApp() ? " Ya usaste tu cambio de día: para volver a " + V("volver") + " tendrías que reservar un turno nuevo y pagar la seña de nuevo." : " Ya usaste tu cambio de día: para volver a " + V("volver") + " tendrías que reservar un turno nuevo.";
   askConfirm(late && cobraEnApp() ? "Cancelar y perder la seña" : "Cancelar turno", msg + " ¿Cancelamos?", function(){
     cancelMyTurno(t, client).then(function(){ notifyStaff(t.id, "cancelacion"); renderClient(); }).catch(function(e){
       console.error(e);
@@ -422,7 +422,7 @@ function stepReprogramar(){
 
 function stepFecha(){
   var barber = chosenBarber();
-  var cal = barber ? calendarHtml() : '<div class="empty-note">Elegí con quién te querés cortar para ver los horarios.</div>';
+  var cal = barber ? calendarHtml() : '<div class="empty-note">Elegí '+V("quien")+' para ver los horarios.</div>';
 
   var debt = activeDebtFor(myDebtKey());
   var debtNotice = debt ? '<div class="notice warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div>Tenés un saldo pendiente de '+money(currentPenalty())+' por una cancelación anterior. Se va a sumar a este turno.</div></div>' : "";
@@ -445,7 +445,7 @@ function stepFecha(){
 
   var who = client.nickname || client.name;
   return '<div class="card">' +
-    '<div class="hello"><div class="hello-who">'+avatarHtml("")+'<div><h2>Hola, '+esc(who)+'</h2><div class="sub">'+(allServices().length > 1 ? 'Elegí servicio, fecha y horario' : 'Elegí fecha y horario · Corte '+money(state.config.price))+'</div></div></div>' +
+    '<div class="hello"><div class="hello-who">'+avatarHtml("")+'<div><h2>Hola, '+esc(who)+'</h2><div class="sub">'+(allServices().length > 1 ? 'Elegí servicio, fecha y horario' : 'Elegí fecha y horario · '+V("Unit")+' '+money(state.config.price))+'</div></div></div>' +
     '<div class="hello-btns"><button class="link-btn" id="btnEditProfile">Mi perfil</button><button class="link-btn link-out" data-logout="1">Salir</button></div></div>' +
     debtNotice +
     misTurnosHtml() +
@@ -492,7 +492,7 @@ function stepConfirmacion(){
       : !cobraEnApp() ? ''
       : '<div class="notice info"><div>'+(client.walkIn
           ? 'Orden de llegada: pagás el total ('+money(total)+') ahora, sin seña, desde la app o en efectivo en el local. Tenés que estar en los próximos minutos.'
-          : 'Pagás el total ('+money(total)+') al terminar el corte, desde la app o en efectivo.')+'</div></div>') +
+          : 'Pagás el total ('+money(total)+') al terminar '+VU("el")+', desde la app o en efectivo.')+'</div></div>') +
     '</div>' +
     (client.walkIn ? '' : cancelPolicyNote(dep)) +
     waNotifyHtml() +
@@ -505,7 +505,7 @@ function stepConfirmacion(){
 function cancelPolicyNote(dep){
   if(!cobraEnApp()){
     return '<div class="notice info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg>' +
-      '<div>Si no podés venir, cancelá o cambiá el día desde “Tus turnos” con tiempo, así otro cliente puede tomar ese horario.</div></div>';
+      '<div>Si no podés venir, cancelá o cambiá el día desde “Tus turnos” con tiempo, así otro '+V("client")+' puede tomar ese horario.</div></div>';
   }
   var txt = dep > 0
     ? 'Política de cancelación: la seña ('+money(dep)+') asegura tu horario. Si cancelás antes del día del turno te la devolvemos; si cancelás el mismo día, queda en el local.'
@@ -626,7 +626,7 @@ function payBox(t, kind, titleOverride){
   }
   if(!opts) opts = '<div class="pay-note">El local todavía no cargó un medio de pago online: pagás en efectivo en el local.</div>';
   return '<div class="pay-box"><div class="pay-box-title">'+title+'</div>' + opts +
-    '<div class="pay-note">'+(deposit ? 'Si preferís, dejás la seña en efectivo en el local.' : 'Si pagás en efectivo en el local, el barbero lo registra y el turno queda completo.')+'</div></div>';
+    '<div class="pay-note">'+(deposit ? 'Si preferís, dejás la seña en efectivo en el local.' : 'Si pagás en efectivo en el local, '+'el '+V("pro")+' lo registra y el turno queda completo.')+'</div></div>';
 }
 
 // pantalla de "turno reservado": cómo pagar la seña
@@ -635,9 +635,9 @@ function payInstructions(b){
   if(b.walkIn) return payBox(b, "balance", "Pagá el total: {monto}") +
     '<div class="pay-note" style="text-align:center;">Orden de llegada: tenés que estar en el local en los próximos minutos.</div>';
   if(!(b.deposit > 0)) return '<div class="pay-box"><div class="pay-box-title">Pagás '+money(bookingTotal(b))+' al terminar</div>' +
-    '<div class="pay-note">Cuando termine el corte, entrás a la app y pagás desde acá, o en efectivo en el local.</div></div>';
+    '<div class="pay-note">Cuando termine '+VU("el")+', entrás a la app y pagás desde acá, o en efectivo en el local.</div></div>';
   return payBox(b, "deposit") +
-    '<div class="pay-note" style="text-align:center;">El saldo ('+money(bookingTotal(b) - b.deposit)+') lo pagás cuando termina el corte: te aparece acá en la app.</div>';
+    '<div class="pay-note" style="text-align:center;">El saldo ('+money(bookingTotal(b) - b.deposit)+') lo pagás cuando termina '+VU("el")+': te aparece acá en la app.</div>';
 }
 
 // "avisarle al barbero por WhatsApp": al confirmar se abre WhatsApp con el mensaje ya escrito y el cliente solo toca Enviar
@@ -655,7 +655,7 @@ function thanksNotes(b){
   if(!cobraEnApp()){
     n.push("Llegá unos 5 minutos antes de tu horario.");
     n.push("Podés cambiar el día <b>una vez</b>, hasta 24 horas antes, desde “Tus turnos”.");
-    n.push("Si no podés venir, cancelá desde “Tus turnos” con tiempo para que otro cliente tome tu horario.");
+    n.push("Si no podés venir, cancelá desde “Tus turnos” con tiempo para que otro "+V("client")+" tome tu horario.");
     return n;
   }
   if(b.walkIn){
@@ -665,7 +665,7 @@ function thanksNotes(b){
   }
   n.push("Llegá unos 5 minutos antes de tu horario.");
   if(b.deposit > 0) n.push("Pagá la seña de <b>"+money(b.deposit)+"</b> con Mercado Pago para asegurar tu horario. Cuando pagues, volvé y tocá <b>“Ya pagué”</b>: se abre WhatsApp para avisar.");
-  else n.push("Pagás <b>"+money(bookingTotal(b))+"</b> al terminar el corte, desde la app o en efectivo.");
+  else n.push("Pagás <b>"+money(bookingTotal(b))+"</b> al terminar "+VU("el")+", desde la app o en efectivo.");
   n.push("Podés cambiar el día <b>una vez</b>, hasta 24 horas antes, desde “Tus turnos”.");
   n.push(b.deposit > 0
     ? "Si cancelás antes del día del turno te devolvemos la seña; si cancelás el mismo día, queda en el local."

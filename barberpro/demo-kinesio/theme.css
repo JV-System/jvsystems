@@ -1,0 +1,35 @@
+/* Tema de la demo de Kinesiología y Fisiatría: fondo azul petróleo profundo, verde agua como acento y texto claro, más calmo y clínico que el de una barbería.
+   Todo sale de estas variables; el resto de la app es la misma. */
+:root{
+  --bg:#061014;
+  --bg-image:
+    radial-gradient(ellipse 820px 520px at 16% -10%, rgba(37,179,173,.20), transparent 60%),
+    radial-gradient(ellipse 700px 520px at 108% 10%, rgba(22,134,143,.16), transparent 56%),
+    radial-gradient(ellipse 900px 620px at 50% 118%, rgba(37,179,173,.10), transparent 62%);
+  --surface:#0e1a1f; --surface-2:#142329; --surface-3:#1b2f37;
+  --border:#233b43; --border-soft:#182a30;
+  --text:#eaf5f4; --text-muted:#a3bcc0; --text-faint:#72898e;
+  --accent-1:#43d6c4; --accent-2:#25b3ad; --accent-3:#16868f;
+  --accent-grad:linear-gradient(120deg,#43d6c4 0%,#25b3ad 55%,#1a9aa0 100%);
+  --accent-rgb:37,179,173;
+  --accent-glint:#9af2e6; --on-accent:#04211f;
+  --wave:linear-gradient(90deg,#16868f 0%,#43d6c4 50%,#16868f 100%);
+}
+body{background:#061014;}
+.backdrop{background-image:var(--bg-image);}
+/* botones y selecciones con el degradé verde agua; el texto va oscuro para que se lea */
+.btn-primary,.slot-btn.selected,.cal-day.selected,.avatar,.app-admin .owner-nav button.active,.roletabs button.active,.who-opt.on,.pin-key:active{background:var(--accent-grad) !important; border-color:transparent !important;}
+.btn-primary,.btn-primary:active,.slot-btn.selected,.cal-day.selected,.avatar,.pay-step > b,.app-admin .owner-nav button.active,.roletabs button.active,.who-opt.on,.pwa-nudge .btn,.tour-how li::before{color:var(--on-accent) !important;}
+.pay-step > b,.tour-how li::before{background:var(--accent-grad);}
+.pin-key:active{color:var(--on-accent) !important;}
+.tk-check svg{stroke:#04211f;}
+.cal-day.selected .dot{background:#04211f;}
+/* en lugar de la franja de poste de barbero: una línea suave de brillo verde agua */
+.top-stripe{background:var(--wave); opacity:.9; height:4px;}
+#introOverlay .intro-band,.thanks-overlay .intro-band,.wiz-stripe{background:var(--wave); background-size:39.6px 100%;}
+#introOverlay,.thanks-overlay,.wiz-overlay,.intro-overlay{background:#040b0e;}
+.adminlogo,.brand-logo,.intro-photo,.pin-logo{border-radius:50%;}
+.brand-logo{max-height:132px; width:auto;}
+.intro-photo{box-shadow:0 0 0 2px rgba(var(--accent-rgb),.4);}
+.demo-tag{background:var(--accent-grad); color:#04211f;}
+.demo-bar a{color:var(--accent-1);}

@@ -255,7 +255,7 @@
   function adminError(e){
     console.error("panel", e);
     if(e && e.code === "permission-denied"){
-      showToast("Esta cuenta no tiene permisos en el panel de la barbería.");
+      showToast("Esta cuenta no tiene permisos en el panel " + V("bizDe") + ".");
       if(auth) auth.signOut();
     }
   }
@@ -497,7 +497,7 @@
       if(ref) batch.set(ref, {barberId: toId, barberName: to.name, transferredFromName: from.name, transferredAt: now}, {merge: true});
       batch.delete(db.doc("slots/" + slotDocId(b)));
       batch.set(db.doc("slots/" + slotDocId(nb)), slot);
-      moveSet(batch, nb, "transferencia", "Pasó el corte de " + from.name + " a " + to.name + (notify ? " (se avisa al cliente)" : " (en el momento: sin aviso al cliente)"),
+      moveSet(batch, nb, "transferencia", "Pasó " + VU("el") + " de " + from.name + " a " + to.name + (notify ? " (se avisa al "+V("client")+")" : " (en el momento: sin aviso al "+V("client")+")"),
               {barbers: [from.id, toId], fromName: from.name, toName: to.name});
       return batch.commit();
     }).then(function(){ return {notify: notify, from: from.name, to: to.name}; });

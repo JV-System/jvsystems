@@ -114,3 +114,13 @@ Es la primera demo, con el diseño original de MONTAL (Reyna Montiel) recuperado
 - Los servicios no cambian la duración del turno (todos ocupan un horario).
 - Demo general: Corte $18.000, Barba $15.000, Corte + diseño $20.000, Corte + barba $22.000 y Corte + barba + diseño $22.000.
 
+
+## Otros rubros: vocabulario por negocio (`vocab`) y demo de kinesiología (`demo-kinesio/`)
+
+El mismo sistema sirve para cualquier negocio que dé turnos. Las palabras de la app ("barbero", "corte", "cliente", "empleado", "barbería") salen de `config.vocab`; lo que no se cambie queda como en una barbería, así que los locales existentes no se tocan.
+
+- Claves de `vocab` (ver `VOCAB_DEFAULT` en `core.js`): `pro/pros/Pro` (quien atiende), `unit/units/Unit` + `fem:"1"` si es femenino (la sesión), `baseName` (nombre del servicio base al reservar), `client/clients`, `staff/staffs`, `owner`, `biz/bizDe/bizThe/bizDefault`, `quienQ/quien/quienInf` (con quién atenderse), `masVienen`, `volver`, `svcEj/svcEj2/svcPh` y placeholders `phBiz/phTag/phAlias`.
+- En el código se usan `V("clave")`, `VU("el"|"del"|"al"|"este"|"un")` (el servicio con su artículo: "la sesión", "de la sesión"), `VG("pasado")` (concuerda el género) y `VCap()`. `nameInitial()` saltea el título (Dra., Lic.) en los avatares.
+- Cada miembro del equipo puede llevar `title` (ej. "Kinesiólogo"): es lo que ve el paciente al elegir.
+- `demo-kinesio/`: demo de un consultorio de kinesiología con un solo profesional (Julián Ledesma), sesión a $25.000 y servicios (evaluación inicial, rehabilitación post-quirúrgica, RPG, drenaje linfático), tema azul petróleo y verde agua, y portada con calculadora del abono (2 sesiones). Los datos (nombre, dirección, precios) son de ejemplo.
+- Para un rubro nuevo: copiar `demo-kinesio/`, cambiar `config.js` (vocab, equipo, servicios), `theme.css` y el emblema.
